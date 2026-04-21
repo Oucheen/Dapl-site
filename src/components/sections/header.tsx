@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const navItems = [
+  { href: "#offer", label: "Offer" },
   { href: "#appliances", label: "Appliances" },
   { href: "#brands", label: "Brands" },
   { href: "#why-us", label: "Why Choose Us" },

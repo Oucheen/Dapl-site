@@ -2,7 +2,7 @@ import { FadeUp } from "@/components/ui/fade-up";
 
 export function BottomCtaSection() {
   return (
-    <section id="contact" className="bg-primary py-20">
+    <section id="book" className="bg-primary py-20" aria-label="Book service call to action">
       <div className="container-shell py-2">
         <FadeUp>
           <div className="rounded-3xl border border-white/20 bg-gradient-to-br from-primary to-[#12366f] px-6 py-10 text-center text-primary-foreground shadow-xl shadow-black/20 sm:px-10">

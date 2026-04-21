@@ -1,9 +1,11 @@
 import { AppliancesSection } from "@/components/sections/appliances";
 import { BottomCtaSection } from "@/components/sections/bottom-cta";
+import { ContactSection } from "@/components/sections/contact-section";
 import { BrandsSection } from "@/components/sections/brands";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
+import { OfferSection } from "@/components/sections/offer";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 
 const localBusinessSchema = {
@@ -33,9 +35,11 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
+        <OfferSection />
         <AppliancesSection />
         <BrandsSection />
         <WhyChooseUsSection />
+        <ContactSection />
         <BottomCtaSection />
       </main>
       <Footer />
