@@ -27,6 +27,22 @@ const localBusinessSchema = {
   areaServed: "Charlotte, NC and surrounding areas",
   url: "https://www.daplrepair.com",
   serviceType: "Appliance Repair Service",
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "08:00",
+      closes: "20:00",
+    },
+  ],
 };
 
 export default function Home() {
