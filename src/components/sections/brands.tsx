@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -17,6 +18,29 @@ const brands = [
 ] as const;
 
 export function BrandsSection() {
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+
+    if (!carousel || !window.matchMedia("(max-width: 767px)").matches) {
+      return;
+    }
+
+    const centeredCard = carousel.querySelector<HTMLElement>(`[data-brand-index="${brands.length}"]`);
+
+    if (!centeredCard) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const centeredLeft = centeredCard.offsetLeft - (carousel.clientWidth - centeredCard.offsetWidth) / 2;
+      carousel.scrollTo({ left: centeredLeft, behavior: "auto" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <section id="brands" className="bg-surface py-20">
       <div className="container-shell">
@@ -29,7 +53,7 @@ export function BrandsSection() {
         </FadeUp>
 
         <FadeUp delay={0.1} className="mt-10">
-          <div className="relative overflow-hidden">
+          <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden md:left-auto md:w-auto md:translate-x-0">
             <div
               className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-surface to-transparent"
               aria-hidden
@@ -40,18 +64,20 @@ export function BrandsSection() {
             />
 
             <div
-              className="brands-carousel-track flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-4 touch-pan-x [scrollbar-width:none] md:w-max md:overflow-visible [&::-webkit-scrollbar]:hidden"
+              ref={carouselRef}
+              className="brands-carousel-track flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[calc((100vw-240px)/2)] pb-4 touch-pan-x [scrollbar-width:none] sm:px-[calc((100vw-280px)/2)] md:w-max md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
               aria-label="Supported appliance brands"
             >
               {[...brands, ...brands].map((brand, index) => (
                 <motion.article
+                  data-brand-index={index}
                   key={`${brand.name}-${index}`}
                   initial={{ opacity: 0, y: 14 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.35, delay: index * 0.04 }}
                   whileHover={{ y: -4 }}
-                  className="group grid h-32 min-w-[240px] snap-start place-items-center rounded-lg border border-border bg-[#f8fbff] p-6 shadow-sm transition-shadow hover:shadow-md sm:min-w-[280px]"
+                  className="group grid h-32 w-[240px] flex-none snap-center place-items-center rounded-lg border border-border bg-[#f8fbff] p-6 shadow-sm transition-shadow hover:shadow-md sm:w-[280px] md:snap-start"
                 >
                   <Image
                     src={brand.logo}
