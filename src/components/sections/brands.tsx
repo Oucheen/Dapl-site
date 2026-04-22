@@ -40,7 +40,7 @@ export function BrandsSection() {
             />
 
             <div
-              className="flex w-max animate-brands-marquee gap-4 pb-4 hover:[animation-play-state:paused]"
+              className="brands-carousel-track flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-4 touch-pan-x [scrollbar-width:none] md:w-max md:overflow-visible [&::-webkit-scrollbar]:hidden"
               aria-label="Supported appliance brands"
             >
               {[...brands, ...brands].map((brand, index) => (

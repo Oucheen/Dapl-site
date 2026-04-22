@@ -50,7 +50,7 @@ export function Hero() {
         <FadeUp delay={0.1} className="relative">
           <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
             <Image
-              src="/hero-placeholder.svg"
+              src="/hero-placeholder.png"
               alt="Technician repairing a kitchen appliance"
               width={1000}
               height={760}

@@ -33,7 +33,7 @@ export function AppliancesSection() {
             description="Our technicians diagnose and repair a wide range of appliance issues quickly, with quality parts and workmanship."
           />
         </FadeUp>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
           {appliances.map((item, index) => (
             <motion.article
               key={item.slug}
@@ -42,10 +42,10 @@ export function AppliancesSection() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
               whileHover={{ y: -5 }}
-              className="group overflow-hidden rounded-2xl border border-border bg-surface text-center shadow-sm transition-shadow hover:shadow-md"
+              className="group overflow-hidden rounded-lg border border-border bg-surface text-center shadow-sm transition-shadow hover:shadow-md sm:rounded-2xl"
             >
               {/* Нейтральний суцільний фон під PNG зі своїм сірим полем — без «рамки в рамці» від градієнта */}
-              <div className="relative h-52 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
+              <div className="relative h-36 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
                 <Image
                   src={item.image}
                   alt=""
@@ -58,7 +58,9 @@ export function AppliancesSection() {
                   aria-hidden
                 />
               </div>
-              <h3 className="px-3 py-4 text-sm font-semibold leading-snug text-foreground">{item.name}</h3>
+              <h3 className="px-2 py-3 text-xs font-semibold leading-snug text-foreground sm:px-3 sm:py-4 sm:text-sm">
+                {item.name}
+              </h3>
             </motion.article>
           ))}
         </div>

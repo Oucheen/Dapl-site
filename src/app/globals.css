@@ -50,12 +50,22 @@ html {
   }
 }
 
-.animate-brands-marquee {
-  animation: brands-marquee 26s linear infinite;
+.brands-carousel-track {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 768px) {
+  .brands-carousel-track {
+    animation: brands-marquee 26s linear infinite;
+  }
+
+  .brands-carousel-track:hover {
+    animation-play-state: paused;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-brands-marquee {
+  .brands-carousel-track {
     animation: none;
   }
 }
