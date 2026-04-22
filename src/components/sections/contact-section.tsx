@@ -42,6 +42,7 @@ export function ContactSection() {
       name: String(fd.get("name") ?? "").trim(),
       phone: String(fd.get("phone") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
+      address: String(fd.get("address") ?? "").trim(),
       appliance: String(fd.get("appliance") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
       message: String(fd.get("message") ?? "").trim(),
@@ -138,6 +139,20 @@ export function ContactSection() {
                 />
               </div>
               <div className="sm:col-span-2">
+                <label htmlFor="contact-address" className="text-sm font-semibold text-foreground">
+                  Address <span className="text-accent">*</span>
+                </label>
+                <input
+                  id="contact-address"
+                  name="address"
+                  type="text"
+                  required
+                  autoComplete="street-address"
+                  placeholder="Street address, city, ZIP"
+                  className="mt-1.5 w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                />
+              </div>
+              <div className="sm:col-span-2">
                 <label htmlFor="contact-appliance" className="text-sm font-semibold text-foreground">
                   Appliance (optional)
                 </label>
@@ -160,7 +175,7 @@ export function ContactSection() {
                   )}
                 </select>
               </div>
-              <div className="sm:col-span-2 sm:max-w-xs">
+              <div className="min-w-0 sm:col-span-2 sm:max-w-xs">
                 <label htmlFor="contact-preferred-date" className="text-sm font-semibold text-foreground">
                   Preferred service date (optional)
                 </label>
@@ -169,7 +184,7 @@ export function ContactSection() {
                   name="preferredDate"
                   type="date"
                   min={minDate}
-                  className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  className="mt-1.5 block w-full min-w-0 max-w-full appearance-none rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
                 />
                 <p className="mt-1.5 text-xs text-muted">
                   We will confirm availability. Same-day and emergency visits when possible.
