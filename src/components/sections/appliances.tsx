@@ -1,21 +1,26 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 const appliances = [
-  "Refrigerator",
-  "Washer",
-  "Dryer",
-  "Dishwasher",
-  "Oven",
-  "Cooktop",
-  "Freezer",
-  "Ice Machine",
-  "Wine Cooler",
-  "Commercial Refrigerator",
-];
+  { name: "Refrigerator", slug: "refrigerator", image: "/appliances/refrigerator.png" },
+  { name: "Washer", slug: "washer", image: "/appliances/washer.png" },
+  { name: "Dryer", slug: "dryer", image: "/appliances/dryer.png" },
+  { name: "Dishwasher", slug: "dishwasher", image: "/appliances/dishwasher.png" },
+  { name: "Oven", slug: "oven", image: "/appliances/oven.png" },
+  { name: "Cooktop", slug: "cooktop", image: "/appliances/cooktop.png" },
+  { name: "Freezer", slug: "freezer", image: "/appliances/freezer.png" },
+  { name: "Ice Machine", slug: "ice-machine", image: "/appliances/ice-machine.png" },
+  { name: "Wine Cooler", slug: "wine-cooler", image: "/appliances/wine-cooler.png" },
+  {
+    name: "Commercial Refrigerator",
+    slug: "commercial-refrigerator",
+    image: "/appliances/commercial-refrigerator.png",
+  },
+] as const;
 
 export function AppliancesSection() {
   return (
@@ -28,19 +33,33 @@ export function AppliancesSection() {
             description="Our technicians diagnose and repair a wide range of appliance issues quickly, with quality parts and workmanship."
           />
         </FadeUp>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {appliances.map((item, index) => (
-            <motion.div
-              key={item}
+            <motion.article
+              key={item.slug}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
               whileHover={{ y: -5 }}
-              className="rounded-2xl border border-border bg-surface p-5 text-center text-sm font-semibold text-foreground shadow-sm transition-shadow hover:shadow-md"
+              className="group overflow-hidden rounded-2xl border border-border bg-surface text-center shadow-sm transition-shadow hover:shadow-md"
             >
-              {item}
-            </motion.div>
+              {/* Нейтральний суцільний фон під PNG зі своїм сірим полем — без «рамки в рамці» від градієнта */}
+              <div className="relative h-52 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
+                <Image
+                  src={item.image}
+                  alt=""
+                  fill
+                  className="object-contain object-center p-2 sm:p-3"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 shadow-[inset_0_0_32px_rgba(0,0,0,0.06)] ring-1 ring-inset ring-black/[0.04] transition duration-300 group-hover:shadow-[inset_0_0_40px_rgba(0,0,0,0.08)]"
+                  aria-hidden
+                />
+              </div>
+              <h3 className="px-3 py-4 text-sm font-semibold leading-snug text-foreground">{item.name}</h3>
+            </motion.article>
           ))}
         </div>
       </div>
