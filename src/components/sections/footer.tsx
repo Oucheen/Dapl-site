@@ -43,9 +43,12 @@ export function Footer() {
                 href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Charlotte%2C%20NC%2028227"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 inline-flex text-primary underline-offset-4 hover:underline"
+                className="mt-1 inline-flex items-center gap-1 font-semibold underline-offset-4 hover:underline"
               >
-                Open in Google Maps
+                <span className="text-[#4285f4]">Open</span>
+                <span className="text-[#ea4335]">in</span>
+                <span className="text-[#fbbc05]">Google</span>
+                <span className="text-[#34a853]">Maps</span>
               </a>
             </div>
 
