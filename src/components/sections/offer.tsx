@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { FadeUp } from "@/components/ui/fade-up";
 
 /** Edit this block to change the promo for your client. */
@@ -11,8 +14,53 @@ export const SITE_OFFER = {
   finePrint: "Cannot be combined with other offers. Labor and parts billed separately. Restrictions may apply.",
 } as const;
 
+const emptyCountdown = { hours: "--", minutes: "--", seconds: "--" };
+
+function getOfferCountdown() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const getPart = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  const hour = getPart("hour");
+  const minute = getPart("minute");
+  const second = getPart("second");
+  const secondsLeft = 24 * 60 * 60 - (hour * 60 * 60 + minute * 60 + second);
+
+  const hours = Math.floor(secondsLeft / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  const seconds = secondsLeft % 60;
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return {
+    hours: pad(hours),
+    minutes: pad(minutes),
+    seconds: pad(seconds),
+  };
+}
+
 export function OfferSection() {
   const { eyebrow, title, description, code, codeLabel, finePrint } = SITE_OFFER;
+  const [countdown, setCountdown] = useState(emptyCountdown);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setCountdown(getOfferCountdown());
+    }, 0);
+
+    const interval = window.setInterval(() => {
+      setCountdown(getOfferCountdown());
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+    };
+  }, []);
 
   return (
     <section
@@ -40,7 +88,27 @@ export function OfferSection() {
                 </p>
                 <p className="mt-4 text-xs leading-5 text-muted">{finePrint}</p>
               </div>
-              <div className="flex flex-col justify-center gap-3 border-t border-border bg-[#f8fbff] p-6 sm:flex-row sm:items-center md:flex-col md:border-l md:border-t-0 md:px-8">
+              <div className="flex flex-col justify-center gap-4 border-t border-border bg-[#f8fbff] p-6 sm:flex-row sm:items-center md:flex-col md:border-l md:border-t-0 md:px-8">
+                <div className="w-full rounded-2xl border border-accent/20 bg-white p-4 text-center shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
+                    Offer ends in
+                  </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {[
+                      ["Hours", countdown.hours],
+                      ["Min", countdown.minutes],
+                      ["Sec", countdown.seconds],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl bg-primary/5 px-2 py-2">
+                        <p className="font-mono text-xl font-black text-primary">{value}</p>
+                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                          {label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-muted">Today only, until midnight ET</p>
+                </div>
                 <a
                   href="tel:+17042660508"
                   className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95"
