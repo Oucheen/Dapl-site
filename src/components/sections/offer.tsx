@@ -15,8 +15,17 @@ export const SITE_OFFER = {
 } as const;
 
 const emptyCountdown = { hours: "--", minutes: "--", seconds: "--" };
+const OFFER_START_HOUR = 2;
+const OFFER_START_MINUTE = 0;
+const OFFER_END_HOUR = 21;
+const OFFER_END_MINUTE = 0;
 
-function getOfferCountdown() {
+type OfferTimerState = {
+  isActive: boolean;
+  countdown: typeof emptyCountdown;
+};
+
+function getSecondsSinceEasternMidnight() {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     hour: "2-digit",
@@ -29,11 +38,14 @@ function getOfferCountdown() {
   const hour = getPart("hour");
   const minute = getPart("minute");
   const second = getPart("second");
-  const secondsLeft = 24 * 60 * 60 - (hour * 60 * 60 + minute * 60 + second);
 
-  const hours = Math.floor(secondsLeft / 3600);
-  const minutes = Math.floor((secondsLeft % 3600) / 60);
-  const seconds = secondsLeft % 60;
+  return hour * 60 * 60 + minute * 60 + second;
+}
+
+function formatCountdown(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
   const pad = (value: number) => String(value).padStart(2, "0");
 
   return {
@@ -43,17 +55,49 @@ function getOfferCountdown() {
   };
 }
 
+function formatOfferEndLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(Date.UTC(2000, 0, 1, OFFER_END_HOUR, OFFER_END_MINUTE)));
+}
+
+function getOfferTimerState(): OfferTimerState {
+  const secondsSinceMidnight = getSecondsSinceEasternMidnight();
+  const offerStartSeconds = OFFER_START_HOUR * 60 * 60 + OFFER_START_MINUTE * 60;
+  const offerEndSeconds = OFFER_END_HOUR * 60 * 60 + OFFER_END_MINUTE * 60;
+
+  if (secondsSinceMidnight < offerStartSeconds || secondsSinceMidnight >= offerEndSeconds) {
+    return {
+      isActive: false,
+      countdown: emptyCountdown,
+    };
+  }
+
+  const secondsLeft = offerEndSeconds - secondsSinceMidnight;
+
+  return {
+    isActive: true,
+    countdown: formatCountdown(secondsLeft),
+  };
+}
+
 export function OfferSection() {
   const { eyebrow, title, description, code, codeLabel, finePrint } = SITE_OFFER;
-  const [countdown, setCountdown] = useState(emptyCountdown);
+  const offerEndsLabel = formatOfferEndLabel();
+  const [timer, setTimer] = useState<OfferTimerState>({
+    isActive: true,
+    countdown: emptyCountdown,
+  });
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setCountdown(getOfferCountdown());
+      setTimer(getOfferTimerState());
     }, 0);
 
     const interval = window.setInterval(() => {
-      setCountdown(getOfferCountdown());
+      setTimer(getOfferTimerState());
     }, 1000);
 
     return () => {
@@ -91,23 +135,31 @@ export function OfferSection() {
               <div className="flex flex-col justify-center gap-4 border-t border-border bg-[#f8fbff] p-6 sm:flex-row sm:items-center md:flex-col md:border-l md:border-t-0 md:px-8">
                 <div className="w-full rounded-2xl border border-accent/20 bg-white p-4 text-center shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
-                    Offer ends in
+                    {timer.isActive ? "Offer ends in" : "Offer ended"}
                   </p>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {[
-                      ["Hours", countdown.hours],
-                      ["Min", countdown.minutes],
-                      ["Sec", countdown.seconds],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-xl bg-primary/5 px-2 py-2">
-                        <p className="font-mono text-xl font-black text-primary">{value}</p>
-                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                          {label}
-                        </p>
+                  {timer.isActive ? (
+                    <>
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {[
+                          ["Hours", timer.countdown.hours],
+                          ["Min", timer.countdown.minutes],
+                          ["Sec", timer.countdown.seconds],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-xl bg-primary/5 px-2 py-2">
+                            <p className="font-mono text-xl font-black text-primary">{value}</p>
+                            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                              {label}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-xs text-muted">Today only, until midnight ET</p>
+                      <p className="mt-2 text-xs text-muted">Today only, until {offerEndsLabel}</p>
+                    </>
+                  ) : (
+                    <p className="mt-3 rounded-xl bg-primary/5 px-4 py-3 text-base font-bold text-primary">
+                      Next offer soon
+                    </p>
+                  )}
                 </div>
                 <a
                   href="tel:+17042660508"
