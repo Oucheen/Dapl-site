@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.daplrepair.com"),
+  metadataBase: new URL("https://www.daplappliance.com"),
   title: "Dapl Appliance Repair | Appliance Repair in Charlotte, NC",
   description:
     "Expert appliance repair in Charlotte, NC and surrounding areas. Same-day service, certified technicians, and affordable pricing.",
