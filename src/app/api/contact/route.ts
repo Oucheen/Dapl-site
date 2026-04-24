@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
 const MAX = {
   name: 120,
@@ -139,24 +140,25 @@ export async function POST(request: Request) {
     <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
   `;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  try {
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({
       from,
       to: [to],
-      reply_to: email,
+      replyTo: email,
       subject: `Dapl website: ${name}`,
       html,
-    }),
-  });
+    });
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    console.error("Resend error:", res.status, errText);
+    if (error) {
+      console.error("Resend error:", error);
+      return NextResponse.json(
+        { error: "Could not send message. Please call or email us directly." },
+        { status: 502 },
+      );
+    }
+  } catch (error) {
+    console.error("Resend error:", error);
     return NextResponse.json(
       { error: "Could not send message. Please call or email us directly." },
       { status: 502 },
