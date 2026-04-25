@@ -8,6 +8,7 @@ const MAX = {
   address: 300,
   message: 4000,
   appliance: 80,
+  promoCode: 40,
   preferredDate: 10,
 };
 
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
   const email = typeof data.email === "string" ? data.email.trim() : "";
   const address = typeof data.address === "string" ? data.address.trim() : "";
   const appliance = typeof data.appliance === "string" ? data.appliance.trim() : "";
+  const promoCode = typeof data.promoCode === "string" ? data.promoCode.trim() : "";
   const preferredDateRaw =
     typeof data.preferredDate === "string" ? data.preferredDate.trim() : "";
   const message = typeof data.message === "string" ? data.message.trim() : "";
@@ -99,6 +101,9 @@ export async function POST(request: Request) {
   }
   if (appliance.length > MAX.appliance) {
     return NextResponse.json({ error: "Invalid appliance selection." }, { status: 400 });
+  }
+  if (promoCode.length > MAX.promoCode) {
+    return NextResponse.json({ error: "Promo code is too long." }, { status: 400 });
   }
 
   const preferred = validatePreferredDate(preferredDateRaw);
@@ -131,6 +136,7 @@ export async function POST(request: Request) {
     <p><strong>Email:</strong> ${escapeHtml(email)}</p>
     <p><strong>Address:</strong> ${escapeHtml(address)}</p>
     ${appliance ? `<p><strong>Appliance:</strong> ${escapeHtml(appliance)}</p>` : ""}
+    ${promoCode ? `<p><strong>Promo code:</strong> ${escapeHtml(promoCode)}</p>` : ""}
     ${
       preferred.iso
         ? `<p><strong>Preferred service date:</strong> ${escapeHtml(preferred.label)} (${escapeHtml(preferred.iso)})</p>`

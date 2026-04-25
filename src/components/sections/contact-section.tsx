@@ -44,6 +44,7 @@ export function ContactSection() {
       email: String(fd.get("email") ?? "").trim(),
       address: String(fd.get("address") ?? "").trim(),
       appliance: String(fd.get("appliance") ?? "").trim(),
+      promoCode: String(fd.get("promoCode") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
       message: String(fd.get("message") ?? "").trim(),
       company: String(fd.get("company") ?? "").trim(),
@@ -175,7 +176,20 @@ export function ContactSection() {
                   )}
                 </select>
               </div>
-              <div className="min-w-0 sm:col-span-2 sm:max-w-xs">
+              <div className="sm:max-w-xs">
+                <label htmlFor="contact-promo-code" className="text-sm font-semibold text-foreground">
+                  Promo code (optional)
+                </label>
+                <input
+                  id="contact-promo-code"
+                  name="promoCode"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="WEB25 or RETURN15"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm uppercase text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                />
+              </div>
+              <div className="min-w-0 sm:max-w-xs">
                 <label htmlFor="contact-preferred-date" className="text-sm font-semibold text-foreground">
                   Preferred service date (optional)
                 </label>
