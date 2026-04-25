@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const navItems = [
@@ -12,12 +13,19 @@ const navItems = [
   { href: "/#contact", label: "Contact" },
 ];
 
-export function Header() {
+type HeaderProps = {
+  logoHref?: string;
+};
+
+export function Header({ logoHref }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   const scrollToTop = () => {
     setIsMenuOpen(false);
+    if (logoHref) {
+      return;
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -38,20 +46,32 @@ export function Header() {
     >
       <div className="container-shell">
         <div className="flex h-20 items-center justify-between">
-          <button
-            type="button"
-            onClick={scrollToTop}
-            className="flex items-center gap-3 text-left"
-            aria-label="Scroll to top"
-          >
-            <Image src="/logo.jpg" alt="Dapl Appliance Repair logo" width={80} height={80} />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-                Dapl
-              </p>
-              <p className="text-base font-bold text-primary">Appliance Repair</p>
-            </div>
-          </button>
+          {logoHref ? (
+            <Link href={logoHref} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 text-left" aria-label="Go to homepage">
+              <Image src="/logo.jpg" alt="Dapl Appliance Repair logo" width={80} height={80} />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                  Dapl
+                </p>
+                <p className="text-base font-bold text-primary">Appliance Repair</p>
+              </div>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={scrollToTop}
+              className="flex items-center gap-3 text-left"
+              aria-label="Scroll to top"
+            >
+              <Image src="/logo.jpg" alt="Dapl Appliance Repair logo" width={80} height={80} />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                  Dapl
+                </p>
+                <p className="text-base font-bold text-primary">Appliance Repair</p>
+              </div>
+            </button>
+          )}
 
           <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (

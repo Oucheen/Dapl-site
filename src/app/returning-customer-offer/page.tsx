@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function ReturningCustomerOfferPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header logoHref="/" />
       <main>
         <section className="relative overflow-hidden bg-surface pb-16 pt-16 sm:pb-20 sm:pt-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
