@@ -56,8 +56,15 @@ export default function ReturningCustomerOfferPage() {
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <a
+                  href="#contact"
+                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                >
+                  <span className="mr-2 inline-flex h-2.5 w-2.5 rounded-full bg-white/90 shadow-[0_0_0_6px_rgba(255,255,255,0.12)]" />
+                  Claim Your Offer
+                </a>
+                <a
                   href="tel:+17042660508"
-                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
+                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   Call +1 (704) 266-0508
                 </a>
