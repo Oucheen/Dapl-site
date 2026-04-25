@@ -88,7 +88,7 @@ export default function ReturningCustomerOfferPage() {
                     </div>
                     <Image
                       src="/logo.jpg"
-                      alt="Dapl Appliance Repair"
+                      alt="Dapl Appliance Repair company logo"
                       width={88}
                       height={88}
                       className="rounded-2xl border border-border bg-white object-cover shadow-sm"

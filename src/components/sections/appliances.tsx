@@ -48,7 +48,7 @@ export function AppliancesSection() {
               <div className="relative h-36 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
                 <Image
                   src={item.image}
-                  alt=""
+                  alt={`${item.name} appliance we repair`}
                   fill
                   className="object-contain object-center p-2 sm:p-3"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
