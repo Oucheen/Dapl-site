@@ -21,7 +21,27 @@ const applianceOptions = [
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 
-export function ContactSection() {
+type ContactSectionProps = {
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  source?: string;
+  defaultPromoCode?: string;
+  promoCodeReadOnly?: boolean;
+  promoCodeLabel?: string;
+  successMessage?: string;
+};
+
+export function ContactSection({
+  eyebrow = "Contact",
+  title = "Request a callback or schedule service",
+  description = "Tell us what is going on and we will get back to you shortly. For urgent issues, call us directly.",
+  source = "main-contact-form",
+  defaultPromoCode = "",
+  promoCodeReadOnly = false,
+  promoCodeLabel = "Promo code (optional)",
+  successMessage = "Thank you — your message was sent. We will contact you soon.",
+}: ContactSectionProps = {}) {
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -45,6 +65,7 @@ export function ContactSection() {
       address: String(fd.get("address") ?? "").trim(),
       appliance: String(fd.get("appliance") ?? "").trim(),
       promoCode: String(fd.get("promoCode") ?? "").trim(),
+      leadSource: String(fd.get("leadSource") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
       message: String(fd.get("message") ?? "").trim(),
       company: String(fd.get("company") ?? "").trim(),
@@ -79,11 +100,7 @@ export function ContactSection() {
     <section id="contact" className="bg-surface py-20">
       <div className="container-shell">
         <FadeUp>
-          <SectionHeading
-            eyebrow="Contact"
-            title="Request a callback or schedule service"
-            description="Tell us what is going on and we will get back to you shortly. For urgent issues, call us directly."
-          />
+          <SectionHeading eyebrow={eyebrow} title={title} description={description} />
         </FadeUp>
 
         <FadeUp delay={0.08} className="mx-auto mt-10 max-w-2xl">
@@ -92,11 +109,14 @@ export function ContactSection() {
             className="relative rounded-3xl border border-border bg-[#f8fbff] p-6 shadow-sm sm:p-8"
             noValidate
           >
-            {/* Honeypot — leave hidden; real users never see it */}
-            <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+            <div
+              className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0"
+              aria-hidden="true"
+            >
               <label htmlFor="contact-company">Company</label>
               <input id="contact-company" name="company" type="text" tabIndex={-1} autoComplete="off" />
             </div>
+            <input type="hidden" name="leadSource" value={source} />
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -178,7 +198,7 @@ export function ContactSection() {
               </div>
               <div className="sm:max-w-xs">
                 <label htmlFor="contact-promo-code" className="text-sm font-semibold text-foreground">
-                  Promo code (optional)
+                  {promoCodeLabel}
                 </label>
                 <input
                   id="contact-promo-code"
@@ -186,7 +206,9 @@ export function ContactSection() {
                   type="text"
                   autoComplete="off"
                   placeholder="WEB25 or RETURN15"
-                  className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm uppercase text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  defaultValue={defaultPromoCode}
+                  readOnly={promoCodeReadOnly}
+                  className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm uppercase text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2 read-only:bg-slate-50 read-only:text-primary"
                 />
               </div>
               <div className="min-w-0 sm:max-w-xs">
@@ -220,13 +242,19 @@ export function ContactSection() {
             </div>
 
             {status === "success" ? (
-              <p className="mt-5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary" role="status">
-                Thank you — your message was sent. We will contact you soon.
+              <p
+                className="mt-5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
+                role="status"
+              >
+                {successMessage}
               </p>
             ) : null}
 
             {status === "error" && errorMessage ? (
-              <p className="mt-5 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground" role="alert">
+              <p
+                className="mt-5 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                role="alert"
+              >
                 {errorMessage}
               </p>
             ) : null}
@@ -237,7 +265,7 @@ export function ContactSection() {
                 disabled={status === "submitting"}
                 className="inline-flex flex-1 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
               >
-                {status === "submitting" ? "Sending…" : "Send message"}
+                {status === "submitting" ? "Sending..." : "Send message"}
               </button>
               <a
                 href="tel:+17042660508"
@@ -247,7 +275,8 @@ export function ContactSection() {
               </a>
             </div>
             <p className="mt-4 text-xs leading-5 text-muted">
-              By submitting this form, you agree we may contact you about your request. We do not sell your information.
+              By submitting this form, you agree we may contact you about your request. We do not
+              sell your information.
             </p>
           </form>
         </FadeUp>

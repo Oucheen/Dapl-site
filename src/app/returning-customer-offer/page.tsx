@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { FadeUp } from "@/components/ui/fade-up";
@@ -55,15 +55,9 @@ export default function ReturningCustomerOfferPage() {
               </div>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/#contact"
-                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
-                >
-                  Schedule Your Repair
-                </Link>
                 <a
                   href="tel:+17042660508"
-                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
                 >
                   Call +1 (704) 266-0508
                 </a>
@@ -110,6 +104,16 @@ export default function ReturningCustomerOfferPage() {
             </FadeUp>
           </div>
         </section>
+        <ContactSection
+          eyebrow="Claim Offer"
+          title="Claim your returning customer offer"
+          description="Use this form for your repeat-customer discount. We will tag this request separately so your RETURN15 offer is easy to identify."
+          source="returning-customer-offer"
+          defaultPromoCode="RETURN15"
+          promoCodeReadOnly
+          promoCodeLabel="Promo code"
+          successMessage="Thank you — your returning customer offer request was sent. We will contact you soon."
+        />
       </main>
       <Footer />
     </div>
