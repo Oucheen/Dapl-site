@@ -205,7 +205,7 @@ export function ContactSection({
                   name="promoCode"
                   type="text"
                   autoComplete="off"
-                  placeholder="WEB25 or RETURN15"
+                  placeholder="Enter your promo code"
                   defaultValue={defaultPromoCode}
                   readOnly={promoCodeReadOnly}
                   className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm uppercase text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2 read-only:bg-slate-50 read-only:text-primary"
