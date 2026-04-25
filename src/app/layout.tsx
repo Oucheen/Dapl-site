@@ -29,11 +29,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon-96x96.png", type: "image/png", sizes: "96x96" },
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+      { url: "/favicon.ico", rel: "icon" },
     ],
-    shortcut: "/icon-96x96.png",
-    apple: "/icon-96x96.png",
+    shortcut: "/favicon-96x96.png",
+    apple: "/favicon-96x96.png",
   },
   openGraph: {
     title: "Dapl Appliance Repair | We Fix It Right. The First Time.",
