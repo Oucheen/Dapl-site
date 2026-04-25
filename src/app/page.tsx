@@ -2,6 +2,8 @@ import { AppliancesSection } from "@/components/sections/appliances";
 import { BottomCtaSection } from "@/components/sections/bottom-cta";
 import { ContactSection } from "@/components/sections/contact-section";
 import { BrandsSection } from "@/components/sections/brands";
+import { faqItems } from "@/components/sections/faq-data";
+import { FAQSection } from "@/components/sections/faq";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
@@ -45,6 +47,19 @@ const localBusinessSchema = {
   ],
 };
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -55,6 +70,7 @@ export default function Home() {
         <AppliancesSection />
         <BrandsSection />
         <WhyChooseUsSection />
+        <FAQSection />
         <ContactSection />
         <BottomCtaSection />
       </main>
@@ -62,6 +78,10 @@ export default function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
     </div>
   );

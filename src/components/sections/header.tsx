@@ -10,6 +10,7 @@ const navItems = [
   { href: "/#appliances", label: "Appliances" },
   { href: "/#brands", label: "Brands" },
   { href: "/#why-us", label: "Why Choose Us" },
+  { href: "/#faq", label: "FAQ" },
   { href: "/#contact", label: "Contact" },
 ];
 
