@@ -5,11 +5,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  { href: "#offer", label: "Offer" },
-  { href: "#appliances", label: "Appliances" },
-  { href: "#brands", label: "Brands" },
-  { href: "#why-us", label: "Why Choose Us" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#offer", label: "Offer" },
+  { href: "/#appliances", label: "Appliances" },
+  { href: "/#brands", label: "Brands" },
+  { href: "/#why-us", label: "Why Choose Us" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function Header() {
