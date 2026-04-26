@@ -19,6 +19,8 @@ For production / Vercel:
 RESEND_API_KEY=...
 CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
 CONTACT_FROM_EMAIL=Dapl Website <noreply@daplappliance.com>
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
 ```
 
 For local development, create `.env.local` with the same keys if you want the form to work on `localhost`.
@@ -27,6 +29,12 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Resend domain **daplappliance.com** is already verified
 - Contact form is configured to send email through Resend
 - If local form shows `Add RESEND_API_KEY to your server environment`, that means `.env.local` is missing or the dev server needs a restart
+
+## Telegram notifications
+- Telegram delivery is supported in `src/app/api/contact/route.ts`
+- If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set, each new lead is also sent to Telegram
+- Email and Telegram now work as parallel notification channels
+- The request succeeds if at least one notification channel delivers successfully
 
 ## Main implemented features
 
@@ -64,6 +72,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - preferred date cannot be in the past
   - hidden honeypot field
   - support for `leadSource`
+  - backend can notify via both email and Telegram
 
 ### Returning customer offer page
 - Route: `/returning-customer-offer`

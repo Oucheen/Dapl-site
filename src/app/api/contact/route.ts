@@ -55,6 +55,129 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function buildInquiryHtml(input: {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  appliance: string;
+  promoCode: string;
+  leadSource: string;
+  preferredIso: string;
+  preferredLabel: string;
+  message: string;
+}) {
+  const {
+    name,
+    phone,
+    email,
+    address,
+    appliance,
+    promoCode,
+    leadSource,
+    preferredIso,
+    preferredLabel,
+    message,
+  } = input;
+
+  return `
+    <h2>New website inquiry</h2>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <p><strong>Address:</strong> ${escapeHtml(address)}</p>
+    ${leadSource ? `<p><strong>Lead source:</strong> ${escapeHtml(leadSource)}</p>` : ""}
+    ${appliance ? `<p><strong>Appliance:</strong> ${escapeHtml(appliance)}</p>` : ""}
+    ${promoCode ? `<p><strong>Promo code:</strong> ${escapeHtml(promoCode)}</p>` : ""}
+    ${
+      preferredIso
+        ? `<p><strong>Preferred service date:</strong> ${escapeHtml(preferredLabel)} (${escapeHtml(preferredIso)})</p>`
+        : ""
+    }
+    <p><strong>Message:</strong></p>
+    <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
+  `;
+}
+
+function buildTelegramMessage(input: {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  appliance: string;
+  promoCode: string;
+  leadSource: string;
+  preferredIso: string;
+  preferredLabel: string;
+  message: string;
+}) {
+  const lines = [
+    "New website inquiry",
+    `Name: ${input.name}`,
+    `Phone: ${input.phone}`,
+    `Email: ${input.email}`,
+    `Address: ${input.address}`,
+    input.leadSource ? `Lead source: ${input.leadSource}` : "",
+    input.appliance ? `Appliance: ${input.appliance}` : "",
+    input.promoCode ? `Promo code: ${input.promoCode}` : "",
+    input.preferredIso
+      ? `Preferred date: ${input.preferredLabel} (${input.preferredIso})`
+      : "",
+    "",
+    "Message:",
+    input.message,
+  ];
+
+  return lines.filter(Boolean).join("\n");
+}
+
+async function sendEmailNotification(input: {
+  apiKey: string;
+  to: string;
+  from: string;
+  replyTo: string;
+  subject: string;
+  html: string;
+}) {
+  const resend = new Resend(input.apiKey);
+  const { error } = await resend.emails.send({
+    from: input.from,
+    to: [input.to],
+    replyTo: input.replyTo,
+    subject: input.subject,
+    html: input.html,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function sendTelegramNotification(input: {
+  botToken: string;
+  chatId: string;
+  text: string;
+}) {
+  const response = await fetch(
+    `https://api.telegram.org/bot${input.botToken}/sendMessage`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: input.chatId,
+        text: input.text,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Telegram error: ${response.status} ${details}`);
+  }
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -123,54 +246,80 @@ export async function POST(request: Request) {
   const from =
     process.env.CONTACT_FROM_EMAIL ?? "Dapl Website <onboarding@resend.dev>";
   const apiKey = process.env.RESEND_API_KEY;
+  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!apiKey) {
+  const hasEmailChannel = Boolean(apiKey);
+  const hasTelegramChannel = Boolean(telegramBotToken && telegramChatId);
+
+  if (!hasEmailChannel && !hasTelegramChannel) {
     return NextResponse.json(
       {
         error:
-          "Email is not configured yet. Add RESEND_API_KEY to your server environment.",
+          "Notifications are not configured yet. Add email or Telegram settings to your server environment.",
       },
       { status: 503 },
     );
   }
 
-  const html = `
-    <h2>New website inquiry</h2>
-    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-    <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-    <p><strong>Address:</strong> ${escapeHtml(address)}</p>
-    ${leadSource ? `<p><strong>Lead source:</strong> ${escapeHtml(leadSource)}</p>` : ""}
-    ${appliance ? `<p><strong>Appliance:</strong> ${escapeHtml(appliance)}</p>` : ""}
-    ${promoCode ? `<p><strong>Promo code:</strong> ${escapeHtml(promoCode)}</p>` : ""}
-    ${
-      preferred.iso
-        ? `<p><strong>Preferred service date:</strong> ${escapeHtml(preferred.label)} (${escapeHtml(preferred.iso)})</p>`
-        : ""
-    }
-    <p><strong>Message:</strong></p>
-    <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
-  `;
+  const subject = `Dapl website: ${name}`;
+  const html = buildInquiryHtml({
+    name,
+    phone,
+    email,
+    address,
+    appliance,
+    promoCode,
+    leadSource,
+    preferredIso: preferred.iso,
+    preferredLabel: preferred.label,
+    message,
+  });
+  const telegramText = buildTelegramMessage({
+    name,
+    phone,
+    email,
+    address,
+    appliance,
+    promoCode,
+    leadSource,
+    preferredIso: preferred.iso,
+    preferredLabel: preferred.label,
+    message,
+  });
 
-  try {
-    const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from,
-      to: [to],
-      replyTo: email,
-      subject: `Dapl website: ${name}`,
-      html,
-    });
+  let delivered = false;
 
-    if (error) {
+  if (hasEmailChannel && apiKey) {
+    try {
+      await sendEmailNotification({
+        apiKey,
+        to,
+        from,
+        replyTo: email,
+        subject,
+        html,
+      });
+      delivered = true;
+    } catch (error) {
       console.error("Resend error:", error);
-      return NextResponse.json(
-        { error: "Could not send message. Please call or email us directly." },
-        { status: 502 },
-      );
     }
-  } catch (error) {
-    console.error("Resend error:", error);
+  }
+
+  if (hasTelegramChannel && telegramBotToken && telegramChatId) {
+    try {
+      await sendTelegramNotification({
+        botToken: telegramBotToken,
+        chatId: telegramChatId,
+        text: telegramText,
+      });
+      delivered = true;
+    } catch (error) {
+      console.error("Telegram error:", error);
+    }
+  }
+
+  if (!delivered) {
     return NextResponse.json(
       { error: "Could not send message. Please call or email us directly." },
       { status: 502 },
