@@ -99,7 +99,8 @@ export function RelatedServicesCarousel({ items }: RelatedServicesCarouselProps)
     }
 
     const card = element.querySelector<HTMLElement>("[data-related-card]");
-    const gap = 20;
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    const gap = isDesktop ? 20 : 16;
     const amount = (card?.offsetWidth ?? 320) + gap;
 
     element.scrollBy({
@@ -131,9 +132,13 @@ export function RelatedServicesCarousel({ items }: RelatedServicesCarouselProps)
         </button>
       </div>
 
+      <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary/55 md:hidden">
+        {"\u2190"} Swipe for more {"\u2192"}
+      </p>
+
       <div
         ref={scrollRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 scroll-smooth md:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, index) => (
           <motion.div
@@ -143,12 +148,12 @@ export function RelatedServicesCarousel({ items }: RelatedServicesCarouselProps)
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.35, delay: index * 0.04 }}
-            className="w-[248px] shrink-0 snap-center md:min-w-[340px] xl:min-w-[360px]"
+            className="w-[220px] shrink-0 snap-center min-[390px]:w-[236px] md:min-w-[340px] xl:min-w-[360px]"
           >
             <Link
               href={`/${item.slug}`}
               data-related-card
-              className="flex h-full min-h-[220px] flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md md:min-h-[240px] md:p-6"
+              className="flex h-full min-h-[208px] flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md md:min-h-[240px] md:p-6"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent/85">
                 Service Page

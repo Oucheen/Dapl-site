@@ -250,29 +250,29 @@ export function ServicePageTemplate({
 
             <FadeUp delay={0.08}>
               <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
-                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
-                  <div className="flex items-start justify-between gap-5">
-                    <div>
+                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-5 sm:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="max-w-none sm:max-w-sm">
                       <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
                         Local Service
                       </p>
                       <h2 className="mt-3 text-3xl font-black tracking-tight text-primary sm:text-4xl">
                         {page.localServiceTitle}
                       </h2>
-                      <p className="mt-3 max-w-sm text-sm leading-7 text-muted">
+                      <p className="mt-3 text-sm leading-7 text-muted sm:max-w-sm">
                         {page.localServiceDescription}
                       </p>
                     </div>
                     <Image
                       src={page.image}
                       alt={`${page.applianceName} appliance we repair`}
-                      width={120}
-                      height={120}
-                      className="rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm"
+                      width={112}
+                      height={112}
+                      className="mx-auto rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm sm:mx-0 sm:h-[120px] sm:w-[120px]"
                     />
                   </div>
 
-                  <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
                     {page.serviceHighlights.map((item) => (
                       <div
                         key={item}
