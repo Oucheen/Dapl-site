@@ -1,7 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        destination: "https://www.daplappliance.com/:path*",
+        permanent: true,
+        has: [
+          {
+            type: "host",
+            value: "daplappliance.com",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

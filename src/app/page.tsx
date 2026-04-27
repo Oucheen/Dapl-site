@@ -27,7 +27,7 @@ const localBusinessSchema = {
     addressCountry: "US",
   },
   areaServed: "Charlotte, NC and surrounding areas",
-  url: "https://www.daplrepair.com",
+  url: "https://www.daplappliance.com",
   serviceType: "Appliance Repair Service",
   openingHoursSpecification: [
     {
