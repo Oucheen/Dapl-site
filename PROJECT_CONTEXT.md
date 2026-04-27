@@ -121,6 +121,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Purpose: separate landing page for repeat-customer promo
 - Promo code prefilled as `RETURN15`
 - Form on this page is separate in behavior, but reuses the shared contact component
+- Mobile promo card now stacks text and logo vertically instead of squeezing them side-by-side
 - It tags submissions with:
 
 ```text
