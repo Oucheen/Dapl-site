@@ -114,7 +114,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - curated related-service ordering, so nearby appliances are shown first in the carousel
   - a shared brand section with calmer, more universal copy across all appliance types
   - a mobile related-services carousel with centered snap behavior, a visible swipe hint, and narrower card widths so the next card peeks in on smaller phones
-  - a mobile-safe `Local Service` hero card layout that stacks text and appliance image vertically instead of squeezing them side-by-side
+  - a mobile-safe `Local Service` hero card layout that places the appliance image under the local-service heading/title, then the description text below it, instead of squeezing image and copy side-by-side
 
 ### Returning customer offer page
 - Route: `/returning-customer-offer`

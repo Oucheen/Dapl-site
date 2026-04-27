@@ -259,16 +259,23 @@ export function ServicePageTemplate({
                       <h2 className="mt-3 text-3xl font-black tracking-tight text-primary sm:text-4xl">
                         {page.localServiceTitle}
                       </h2>
-                      <p className="mt-3 text-sm leading-7 text-muted sm:max-w-sm">
+                      <Image
+                        src={page.image}
+                        alt={`${page.applianceName} appliance we repair`}
+                        width={136}
+                        height={136}
+                        className="mx-auto mt-5 rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm sm:hidden"
+                      />
+                      <p className="mt-5 text-sm leading-7 text-muted sm:mt-3 sm:max-w-sm">
                         {page.localServiceDescription}
                       </p>
                     </div>
                     <Image
                       src={page.image}
                       alt={`${page.applianceName} appliance we repair`}
-                      width={112}
-                      height={112}
-                      className="mx-auto rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm sm:mx-0 sm:h-[120px] sm:w-[120px]"
+                      width={120}
+                      height={120}
+                      className="hidden rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm sm:block sm:h-[120px] sm:w-[120px]"
                     />
                   </div>
 
