@@ -2,25 +2,79 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
-const appliances = [
-  { name: "Refrigerator", slug: "refrigerator", image: "/appliances/refrigerator.png" },
-  { name: "Washer", slug: "washer", image: "/appliances/washer.png" },
-  { name: "Dryer", slug: "dryer", image: "/appliances/dryer.png" },
-  { name: "Dishwasher", slug: "dishwasher", image: "/appliances/dishwasher.png" },
-  { name: "Oven", slug: "oven", image: "/appliances/oven.png" },
-  { name: "Cooktop", slug: "cooktop", image: "/appliances/cooktop.png" },
-  { name: "Freezer", slug: "freezer", image: "/appliances/freezer.png" },
-  { name: "Ice Machine", slug: "ice-machine", image: "/appliances/ice-machine.png" },
-  { name: "Wine Cooler", slug: "wine-cooler", image: "/appliances/wine-cooler.png" },
+type ApplianceCard = {
+  name: string;
+  slug: string;
+  image: string;
+  href?: string;
+};
+
+const appliances: ApplianceCard[] = [
+  {
+    name: "Refrigerator",
+    slug: "refrigerator",
+    image: "/appliances/refrigerator.png",
+    href: "/refrigerator-repair-charlotte-nc",
+  },
+  {
+    name: "Washer",
+    slug: "washer",
+    image: "/appliances/washer.png",
+    href: "/washer-repair-charlotte-nc",
+  },
+  {
+    name: "Dryer",
+    slug: "dryer",
+    image: "/appliances/dryer.png",
+    href: "/dryer-repair-charlotte-nc",
+  },
+  {
+    name: "Dishwasher",
+    slug: "dishwasher",
+    image: "/appliances/dishwasher.png",
+    href: "/dishwasher-repair-charlotte-nc",
+  },
+  {
+    name: "Oven",
+    slug: "oven",
+    image: "/appliances/oven.png",
+    href: "/oven-repair-charlotte-nc",
+  },
+  {
+    name: "Cooktop",
+    slug: "cooktop",
+    image: "/appliances/cooktop.png",
+    href: "/cooktop-repair-charlotte-nc",
+  },
+  {
+    name: "Freezer",
+    slug: "freezer",
+    image: "/appliances/freezer.png",
+    href: "/freezer-repair-charlotte-nc",
+  },
+  {
+    name: "Ice Machine",
+    slug: "ice-machine",
+    image: "/appliances/ice-machine.png",
+    href: "/ice-machine-repair-charlotte-nc",
+  },
+  {
+    name: "Wine Cooler",
+    slug: "wine-cooler",
+    image: "/appliances/wine-cooler.png",
+    href: "/wine-cooler-repair-charlotte-nc",
+  },
   {
     name: "Commercial Refrigerator",
     slug: "commercial-refrigerator",
     image: "/appliances/commercial-refrigerator.png",
+    href: "/commercial-refrigerator-repair-charlotte-nc",
   },
-] as const;
+];
 
 export function AppliancesSection() {
   return (
@@ -34,35 +88,55 @@ export function AppliancesSection() {
           />
         </FadeUp>
         <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
-          {appliances.map((item, index) => (
-            <motion.article
-              key={item.slug}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-              whileHover={{ y: -5 }}
-              className="group overflow-hidden rounded-lg border border-border bg-surface text-center shadow-sm transition-shadow hover:shadow-md sm:rounded-2xl"
-            >
-              {/* Нейтральний суцільний фон під PNG зі своїм сірим полем — без «рамки в рамці» від градієнта */}
-              <div className="relative h-36 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
-                <Image
-                  src={item.image}
-                  alt={`${item.name} appliance we repair`}
-                  fill
-                  className="object-contain object-center p-2 sm:p-3"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 shadow-[inset_0_0_32px_rgba(0,0,0,0.06)] ring-1 ring-inset ring-black/[0.04] transition duration-300 group-hover:shadow-[inset_0_0_40px_rgba(0,0,0,0.08)]"
-                  aria-hidden
-                />
-              </div>
-              <h3 className="px-2 py-3 text-xs font-semibold leading-snug text-foreground sm:px-3 sm:py-4 sm:text-sm">
-                {item.name}
-              </h3>
-            </motion.article>
-          ))}
+          {appliances.map((item, index) => {
+            const cardBody = (
+              <>
+                <div className="relative h-36 w-full overflow-hidden bg-[#ebebeb] sm:h-56">
+                  <Image
+                    src={item.image}
+                    alt={`${item.name} appliance we repair`}
+                    fill
+                    className="object-contain object-center p-2 sm:p-3"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 shadow-[inset_0_0_32px_rgba(0,0,0,0.06)] ring-1 ring-inset ring-black/[0.04] transition duration-300 group-hover:shadow-[inset_0_0_40px_rgba(0,0,0,0.08)]"
+                    aria-hidden
+                  />
+                </div>
+                <div className="px-2 py-3 sm:px-3 sm:py-4">
+                  <h3 className="text-xs font-semibold leading-snug text-foreground sm:text-sm">
+                    {item.name}
+                  </h3>
+                  {item.href ? (
+                    <p className="mt-1 text-[11px] font-medium text-primary sm:text-xs">
+                      Learn more
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            );
+
+            return (
+              <motion.article
+                key={item.slug}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -5 }}
+                className="group overflow-hidden rounded-lg border border-border bg-surface text-center shadow-sm transition-shadow hover:shadow-md sm:rounded-2xl"
+              >
+                {item.href ? (
+                  <Link href={item.href} className="block">
+                    {cardBody}
+                  </Link>
+                ) : (
+                  cardBody
+                )}
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -7,6 +7,16 @@
 
 ## Key routes
 - `/` - main landing page
+- `/refrigerator-repair-charlotte-nc` - first fully built SEO service page
+- `/washer-repair-charlotte-nc` - second fully built SEO service page
+- `/dryer-repair-charlotte-nc` - third fully built SEO service page
+- `/dishwasher-repair-charlotte-nc` - fourth fully built SEO service page
+- `/oven-repair-charlotte-nc` - fifth fully built SEO service page
+- `/cooktop-repair-charlotte-nc` - sixth fully built SEO service page
+- `/freezer-repair-charlotte-nc` - seventh fully built SEO service page
+- `/ice-machine-repair-charlotte-nc` - eighth fully built SEO service page
+- `/wine-cooler-repair-charlotte-nc` - ninth fully built SEO service page
+- `/commercial-refrigerator-repair-charlotte-nc` - tenth fully built SEO service page
 - `/returning-customer-offer` - hidden offer page for repeat customers
 - `/api/contact` - form submission endpoint via Resend
 - `/robots.txt` - generated from `src/app/robots.ts`
@@ -24,6 +34,17 @@ TELEGRAM_CHAT_ID=...
 ```
 
 For local development, create `.env.local` with the same keys if you want the form to work on `localhost`.
+
+## Analytics / tracking status
+- Google Analytics 4 web stream has been created
+- Measurement ID: `G-KBVZ673NP2`
+- Google Tag Manager container has been created
+- GTM container ID: `GTM-M2RWZXK9`
+- GTM is mounted globally from `src/app/layout.tsx` via `@next/third-parties/google`
+- Next tracking step is inside GTM itself:
+  - add a GA4 / Google tag using `G-KBVZ673NP2`
+  - publish the container
+  - then set up conversion events for form submit, phone click, and schedule click
 
 ## Resend status
 - Resend domain **daplappliance.com** is already verified
@@ -48,6 +69,10 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `/#contact`
 - Header logo can point either to top-of-page or back to `/`, depending on the page
 
+### Homepage hero
+- Main homepage hero now fills the viewport height minus the sticky header
+- It includes a standalone down-arrow button below the main CTAs that scrolls to `#offer` on `md+`; the arrow is intentionally hidden on mobile to keep the first screen cleaner
+
 ### Brands section
 - Brand logos are loaded from `public/brands/`
 - Desktop: infinite forward-only marquee
@@ -68,17 +93,52 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `src/components/sections/contact-section.tsx`
 - Features:
   - address field required
+  - appliance can be preselected via `defaultAppliance`
   - promo code field optional
   - preferred date cannot be in the past
   - hidden honeypot field
   - support for `leadSource`
   - backend can notify via both email and Telegram
 
+### Service pages
+- First service pages live in code:
+  - `src/app/refrigerator-repair-charlotte-nc/page.tsx`
+  - `src/app/washer-repair-charlotte-nc/page.tsx`
+  - `src/app/dryer-repair-charlotte-nc/page.tsx`
+  - `src/app/dishwasher-repair-charlotte-nc/page.tsx`
+  - `src/app/oven-repair-charlotte-nc/page.tsx`
+  - `src/app/cooktop-repair-charlotte-nc/page.tsx`
+  - `src/app/freezer-repair-charlotte-nc/page.tsx`
+  - `src/app/ice-machine-repair-charlotte-nc/page.tsx`
+  - `src/app/wine-cooler-repair-charlotte-nc/page.tsx`
+  - `src/app/commercial-refrigerator-repair-charlotte-nc/page.tsx`
+- Supporting content lives in:
+  - `src/content/service-pages.ts`
+- Shared page renderer lives in:
+  - `src/components/service-pages/service-page-template.tsx`
+- Refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and commercial refrigerator cards on the homepage now link to their service pages
+- Each service page includes:
+  - custom metadata
+  - Service schema
+  - BreadcrumbList schema
+  - FAQPage schema
+  - local SEO copy for Charlotte, NC
+  - preselected appliance in the contact form
+  - service-specific lead source
+  - a shared internal-linking section to other appliance service pages
+  - curated related-service ordering, so nearby appliances are shown first in the carousel
+  - a shared brand section with calmer, more universal copy across all appliance types
+  - a first hero section sized to the viewport height minus the sticky header, so the opening screen reads as a full service-page hero
+  - the old `View details` text cue was replaced by a larger standalone down-arrow button positioned below the main CTAs
+  - a mobile related-services carousel with centered snap behavior, a visible swipe hint, and narrower card widths so the next card peeks in on smaller phones
+  - the `Local Service` hero card now uses transparent appliance PNGs without the old gray tile background on both mobile and desktop; desktop images use a soft drop shadow and keep their natural height instead of being forced into a square box
+
 ### Returning customer offer page
 - Route: `/returning-customer-offer`
 - Purpose: separate landing page for repeat-customer promo
 - Promo code prefilled as `RETURN15`
 - Form on this page is separate in behavior, but reuses the shared contact component
+- Mobile promo card now stacks text and logo vertically instead of squeezing them side-by-side
 - It tags submissions with:
 
 ```text
@@ -104,6 +164,17 @@ promoCode: RETURN15
   - quick links to key sections
   - compact contact/help block
 
+### Shared scroll controls
+- Service pages have a standalone down-arrow cue in the hero that scrolls to the next section
+- The old floating `scroll to top` button has been replaced with a shared floating contact widget:
+  - `src/components/ui/contact-widget.tsx`
+- It is mounted from `src/app/layout.tsx`
+- The widget opens three actions:
+  - `Call`
+  - `Schedule`
+  - `Top`
+- The widget is currently in a more minimal visual variant: smaller pills, lighter shadows, and a white main trigger instead of a heavy branded block
+
 ## SEO work already done
 - `metadataBase` set to `https://www.daplappliance.com`
 - title / description / keywords configured
@@ -115,6 +186,16 @@ promoCode: RETURN15
 - `FAQPage` schema added
 - sitemap includes:
   - homepage
+  - refrigerator repair page
+  - washer repair page
+  - dryer repair page
+  - dishwasher repair page
+  - oven repair page
+  - cooktop repair page
+  - freezer repair page
+  - ice machine repair page
+  - wine cooler repair page
+  - commercial refrigerator repair page
   - returning customer offer page
 - some image `alt` text improved for accessibility and SEO
 
@@ -130,8 +211,20 @@ promoCode: RETURN15
 - `src/app/layout.tsx`
 - `src/app/page.tsx`
 - `src/app/not-found.tsx`
+- `src/app/refrigerator-repair-charlotte-nc/page.tsx`
+- `src/app/washer-repair-charlotte-nc/page.tsx`
+- `src/app/dryer-repair-charlotte-nc/page.tsx`
+- `src/app/dishwasher-repair-charlotte-nc/page.tsx`
+- `src/app/oven-repair-charlotte-nc/page.tsx`
+- `src/app/cooktop-repair-charlotte-nc/page.tsx`
+- `src/app/freezer-repair-charlotte-nc/page.tsx`
+- `src/app/ice-machine-repair-charlotte-nc/page.tsx`
+- `src/app/wine-cooler-repair-charlotte-nc/page.tsx`
+- `src/app/commercial-refrigerator-repair-charlotte-nc/page.tsx`
 - `src/app/returning-customer-offer/page.tsx`
 - `src/app/api/contact/route.ts`
+- `src/content/service-pages.ts`
+- `src/components/service-pages/service-page-template.tsx`
 - `src/app/sitemap.ts`
 - `src/app/robots.ts`
 - `src/components/sections/header.tsx`
@@ -151,10 +244,7 @@ Still worth doing or verifying:
 4. Finish / verify Google Business Profile
 5. Add a real reviews/testimonials section using real customer feedback only
 6. Add dedicated service pages later for stronger local SEO:
-   - refrigerator repair
-   - washer repair
-   - dryer repair
-   - dishwasher repair
+   - city/service area pages later if needed
 
 ## Good things to tell the next chat
 - This is an actively customized Next.js landing site, not a fresh template
@@ -166,3 +256,4 @@ Still worth doing or verifying:
 
 ## Maintenance note
 - Keep this file updated when adding new routes, SEO changes, form behavior, domain/email settings, or important UI flows
+-

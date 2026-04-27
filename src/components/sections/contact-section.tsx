@@ -10,12 +10,12 @@ const applianceOptions = [
   "Washer",
   "Dryer",
   "Dishwasher",
-  "Oven / range",
+  "Oven",
   "Cooktop",
   "Freezer",
-  "Ice machine",
-  "Wine cooler",
-  "Commercial refrigerator",
+  "Ice Machine",
+  "Wine Cooler",
+  "Commercial Refrigerator",
   "Other / not sure",
 ];
 
@@ -26,6 +26,7 @@ type ContactSectionProps = {
   title?: string;
   description?: string;
   source?: string;
+  defaultAppliance?: string;
   defaultPromoCode?: string;
   promoCodeReadOnly?: boolean;
   promoCodeLabel?: string;
@@ -37,6 +38,7 @@ export function ContactSection({
   title = "Request a callback or schedule service",
   description = "Tell us what is going on and we will get back to you shortly. For urgent issues, call us directly.",
   source = "main-contact-form",
+  defaultAppliance = "",
   defaultPromoCode = "",
   promoCodeReadOnly = false,
   promoCodeLabel = "Promo code (optional)",
@@ -181,7 +183,7 @@ export function ContactSection({
                   id="contact-appliance"
                   name="appliance"
                   className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                  defaultValue=""
+                  defaultValue={defaultAppliance}
                 >
                   {applianceOptions.map((opt) =>
                     opt === "" ? (

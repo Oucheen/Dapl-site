@@ -73,16 +73,23 @@ export default function ReturningCustomerOfferPage() {
 
             <FadeUp delay={0.08}>
               <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
-                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
+                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-5 sm:p-8">
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="max-w-none sm:max-w-sm">
                       <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
                         Repeat Customer Savings
                       </p>
                       <h2 className="mt-3 text-3xl font-black tracking-tight text-primary sm:text-4xl">
                         $15 OFF
                       </h2>
-                      <p className="mt-3 max-w-sm text-sm leading-7 text-muted">
+                      <Image
+                        src="/logo.jpg"
+                        alt="Dapl Appliance Repair company logo"
+                        width={88}
+                        height={88}
+                        className="mx-auto mt-4 rounded-2xl border border-border bg-white object-cover shadow-sm sm:hidden"
+                      />
+                      <p className="mt-4 text-sm leading-7 text-muted sm:mt-3 sm:max-w-sm">
                         Use this special offer on your next appliance repair service.
                       </p>
                     </div>
@@ -91,7 +98,7 @@ export default function ReturningCustomerOfferPage() {
                       alt="Dapl Appliance Repair company logo"
                       width={88}
                       height={88}
-                      className="rounded-2xl border border-border bg-white object-cover shadow-sm"
+                      className="hidden rounded-2xl border border-border bg-white object-cover shadow-sm sm:block"
                     />
                   </div>
 
@@ -101,7 +108,10 @@ export default function ReturningCustomerOfferPage() {
                       "Applies to next completed repair visit",
                       "Valid in Charlotte and nearby areas",
                     ].map((item) => (
-                      <div key={item} className="rounded-2xl border border-border bg-white px-4 py-4 text-sm font-medium text-foreground shadow-sm">
+                      <div
+                        key={item}
+                        className="rounded-2xl border border-border bg-white px-4 py-4 text-sm font-medium text-foreground shadow-sm"
+                      >
                         {item}
                       </div>
                     ))}
@@ -111,6 +121,7 @@ export default function ReturningCustomerOfferPage() {
             </FadeUp>
           </div>
         </section>
+
         <ContactSection
           eyebrow="Claim Offer"
           title="Claim your returning customer offer"
@@ -119,7 +130,7 @@ export default function ReturningCustomerOfferPage() {
           defaultPromoCode="RETURN15"
           promoCodeReadOnly
           promoCodeLabel="Promo code"
-          successMessage="Thank you — your returning customer offer request was sent. We will contact you soon."
+          successMessage="Thank you - your returning customer offer request was sent. We will contact you soon."
         />
       </main>
       <Footer />
