@@ -10,7 +10,7 @@ const highlights = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface pb-16 pt-16 sm:pb-20 sm:pt-20">
+    <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
       <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <FadeUp>
@@ -43,6 +43,16 @@ export function Hero() {
               className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               Call +1 (704) 266-0508
+            </a>
+          </div>
+
+          <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">
+            <a
+              href="#offer"
+              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"
+              aria-label="Scroll to next section"
+            >
+              {"\u2193"}
             </a>
           </div>
         </FadeUp>

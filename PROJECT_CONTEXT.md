@@ -58,6 +58,10 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `/#contact`
 - Header logo can point either to top-of-page or back to `/`, depending on the page
 
+### Homepage hero
+- Main homepage hero now fills the viewport height minus the sticky header
+- It includes a standalone down-arrow button below the main CTAs that scrolls to `#offer` on `md+`; the arrow is intentionally hidden on mobile to keep the first screen cleaner
+
 ### Brands section
 - Brand logos are loaded from `public/brands/`
 - Desktop: infinite forward-only marquee
@@ -150,10 +154,15 @@ promoCode: RETURN15
   - compact contact/help block
 
 ### Shared scroll controls
-- Service pages have a soft `View details` cue in the hero that scrolls to the next section
-- A shared floating `scroll to top` button now lives in:
-  - `src/components/ui/scroll-to-top-button.tsx`
-- It is mounted from `src/app/layout.tsx`, so it appears across the site instead of only on service pages
+- Service pages have a standalone down-arrow cue in the hero that scrolls to the next section
+- The old floating `scroll to top` button has been replaced with a shared floating contact widget:
+  - `src/components/ui/contact-widget.tsx`
+- It is mounted from `src/app/layout.tsx`
+- The widget opens three actions:
+  - `Call`
+  - `Schedule`
+  - `Top`
+- The widget is currently in a more minimal visual variant: smaller pills, lighter shadows, and a white main trigger instead of a heavy branded block
 
 ## SEO work already done
 - `metadataBase` set to `https://www.daplappliance.com`
