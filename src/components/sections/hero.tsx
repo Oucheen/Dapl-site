@@ -1,4 +1,5 @@
 import { FadeUp } from "@/components/ui/fade-up";
+import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import Image from "next/image";
 
 const highlights = [
@@ -32,18 +33,27 @@ export function Hero() {
             ))}
           </ul>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <a
+            <TrackedAnchor
               href="#contact"
+              gtmEvent={{
+                event: "schedule_click",
+                location: "homepage_hero",
+              }}
               className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
             >
               Schedule Your Repair
-            </a>
-            <a
+            </TrackedAnchor>
+            <TrackedAnchor
               href="tel:+17042660508"
+              gtmEvent={{
+                event: "phone_click",
+                location: "homepage_hero",
+                link_type: "primary_cta",
+              }}
               className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               Call +1 (704) 266-0508
-            </a>
+            </TrackedAnchor>
           </div>
 
           <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">

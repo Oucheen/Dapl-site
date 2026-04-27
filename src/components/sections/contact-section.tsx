@@ -2,6 +2,7 @@
 
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { sendGTMEvent } from "@next/third-parties/google";
 import { useMemo, useState } from "react";
 
 const applianceOptions = [
@@ -89,6 +90,14 @@ export function ContactSection({
         setStatus("error");
         return;
       }
+
+      sendGTMEvent({
+        event: "generate_lead",
+        form_name: source,
+        appliance: payload.appliance || "unknown",
+        promo_code: payload.promoCode || "",
+        lead_source: payload.leadSource || source,
+      });
 
       setStatus("success");
       form.reset();
@@ -271,6 +280,13 @@ export function ContactSection({
               </button>
               <a
                 href="tel:+17042660508"
+                onClick={() =>
+                  sendGTMEvent({
+                    event: "phone_click",
+                    location: source,
+                    link_type: "contact_form",
+                  })
+                }
                 className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-white px-6 py-3 text-center text-sm font-semibold text-primary transition hover:bg-primary/5"
               >
                 Call +1 (704) 266-0508

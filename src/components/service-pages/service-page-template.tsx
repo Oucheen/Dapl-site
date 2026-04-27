@@ -7,6 +7,7 @@ import { Header } from "@/components/sections/header";
 import { RelatedServicesCarousel } from "@/components/service-pages/related-services-carousel";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import { servicePagesDirectory, type ServicePageContent } from "@/content/service-pages";
 
 const brandLogoMap: Record<string, string> = {
@@ -223,18 +224,29 @@ export function ServicePageTemplate({
               </div>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <a
+                <TrackedAnchor
                   href="#contact"
+                  gtmEvent={{
+                    event: "schedule_click",
+                    location: page.slug,
+                    appliance: page.applianceName,
+                  }}
                   className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                 >
                   Schedule {serviceLabel}
-                </a>
-                <a
+                </TrackedAnchor>
+                <TrackedAnchor
                   href="tel:+17042660508"
+                  gtmEvent={{
+                    event: "phone_click",
+                    location: page.slug,
+                    link_type: "primary_cta",
+                    appliance: page.applianceName,
+                  }}
                   className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   Call +1 (704) 266-0508
-                </a>
+                </TrackedAnchor>
               </div>
 
               <div className="mt-10 flex justify-center sm:mt-12 lg:justify-start">

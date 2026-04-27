@@ -45,6 +45,10 @@ For local development, create `.env.local` with the same keys if you want the fo
   - add a GA4 / Google tag using `G-KBVZ673NP2`
   - publish the container
   - then set up conversion events for form submit, phone click, and schedule click
+- Site-side GTM events are now emitted for:
+  - `generate_lead` on successful form submit
+  - `phone_click` from hero, service-page CTA, contact form, and contact widget
+  - `schedule_click` from homepage hero, service-page hero, and contact widget
 
 ## Resend status
 - Resend domain **daplappliance.com** is already verified
