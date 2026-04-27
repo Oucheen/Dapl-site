@@ -193,7 +193,7 @@ export function ServicePageTemplate({
     <div className="min-h-screen bg-background text-foreground">
       <Header logoHref="/" />
       <main>
-        <section className="relative overflow-hidden bg-surface pb-16 pt-16 sm:pb-20 sm:pt-20">
+        <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
           <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <FadeUp>
@@ -237,45 +237,45 @@ export function ServicePageTemplate({
                 </a>
               </div>
 
-              <a
-                href="#details"
-                className="mt-7 inline-flex w-fit items-center gap-3 text-sm font-medium text-primary/80 transition hover:text-primary"
-              >
-                <span>View details</span>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/15 bg-white text-base shadow-sm motion-safe:animate-bounce">
+              <div className="mt-10 flex justify-center sm:mt-12 lg:justify-start">
+                <a
+                  href="#details"
+                  className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"
+                  aria-label="Scroll to details"
+                >
                   {"\u2193"}
-                </span>
-              </a>
+                </a>
+              </div>
             </FadeUp>
 
             <FadeUp delay={0.08}>
               <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
-                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-5 sm:p-8">
+                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
                   <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                       <div className="max-w-none sm:max-w-sm sm:pr-0">
                         <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
                           Local Service
                         </p>
-                        <h2 className="mt-3 text-3xl font-black tracking-tight text-primary sm:text-4xl">
+                        <h2 className="mt-3 text-[2.35rem] leading-[1] font-black tracking-tight text-primary sm:text-4xl sm:leading-tight">
                           {page.localServiceTitle}
                         </h2>
                         <Image
                           src={page.image}
                           alt={`${page.applianceName} appliance we repair`}
-                          width={136}
-                          height={136}
-                          className="mx-auto mt-5 object-contain drop-shadow-[0_12px_20px_rgba(15,42,86,0.12)] sm:hidden"
+                          width={152}
+                          height={152}
+                          className="mx-auto mt-4 object-contain drop-shadow-[0_12px_20px_rgba(15,42,86,0.12)] sm:hidden"
                         />
-                        <p className="mt-5 text-sm leading-7 text-muted sm:mt-3 sm:max-w-sm">
+                        <p className="mx-auto mt-4 max-w-[18rem] text-center text-[0.98rem] leading-7 text-muted sm:mx-0 sm:mt-3 sm:max-w-sm sm:text-left sm:text-sm sm:leading-7">
                           {page.localServiceDescription}
                         </p>
                       </div>
                     <Image
                       src={page.image}
                       alt={`${page.applianceName} appliance we repair`}
-                      width={120}
-                      height={120}
-                      className="hidden rounded-2xl bg-[#ebebeb] object-contain p-2 shadow-sm sm:block sm:h-[120px] sm:w-[120px]"
+                      width={148}
+                      height={148}
+                      className="hidden object-contain drop-shadow-[0_14px_24px_rgba(15,42,86,0.14)] sm:block sm:h-[148px] sm:w-[148px]"
                     />
                   </div>
 
@@ -283,7 +283,7 @@ export function ServicePageTemplate({
                     {page.serviceHighlights.map((item) => (
                       <div
                         key={item}
-                        className="rounded-2xl border border-border bg-white px-4 py-4 text-sm font-medium text-foreground shadow-sm"
+                        className="rounded-2xl border border-border bg-white px-5 py-4 text-[0.95rem] leading-6 font-medium text-foreground shadow-sm sm:px-4 sm:text-sm sm:leading-normal"
                       >
                         {item}
                       </div>
