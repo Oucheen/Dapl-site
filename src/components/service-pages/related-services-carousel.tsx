@@ -110,12 +110,6 @@ export function RelatedServicesCarousel({ items }: RelatedServicesCarouselProps)
 
   return (
     <div className="relative mt-10">
-      <div className="mb-4 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary/60 md:hidden">
-        <span>{"\u2190"}</span>
-        <span>Swipe for more</span>
-        <span>{"\u2192"}</span>
-      </div>
-
       <div className="mb-5 hidden items-center justify-end gap-3 md:flex">
         <button
           type="button"
@@ -149,7 +143,7 @@ export function RelatedServicesCarousel({ items }: RelatedServicesCarouselProps)
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.35, delay: index * 0.04 }}
-            className="w-[228px] shrink-0 snap-center min-[390px]:w-[240px] md:min-w-[340px] xl:min-w-[360px]"
+            className="w-[248px] shrink-0 snap-center md:min-w-[340px] xl:min-w-[360px]"
           >
             <Link
               href={`/${item.slug}`}
