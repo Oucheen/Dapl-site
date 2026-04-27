@@ -1,5 +1,6 @@
 "use client";
 
+import { sendGTMEvent } from "@next/third-parties/google";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -56,6 +57,14 @@ export function ContactWidget() {
       >
         <a
           href="tel:+17042660508"
+          onClick={() => {
+            setIsOpen(false);
+            sendGTMEvent({
+              event: "phone_click",
+              location: "contact_widget",
+              link_type: "widget",
+            });
+          }}
           className="inline-flex min-w-[7.25rem] items-center justify-between rounded-full border border-primary/12 bg-white px-3.5 py-2.5 text-[0.82rem] font-semibold text-primary shadow-md shadow-primary/8 transition hover:-translate-y-0.5 hover:shadow-lg"
         >
           <span>Call</span>
@@ -64,7 +73,13 @@ export function ContactWidget() {
         {scheduleHref.startsWith("#") ? (
           <a
             href={scheduleHref}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              sendGTMEvent({
+                event: "schedule_click",
+                location: "contact_widget",
+              });
+            }}
             className="inline-flex min-w-[7.25rem] items-center justify-between rounded-full bg-accent px-3.5 py-2.5 text-[0.82rem] font-semibold text-accent-foreground shadow-md shadow-accent/15 transition hover:-translate-y-0.5 hover:brightness-95"
           >
             <span>Schedule</span>
@@ -73,7 +88,13 @@ export function ContactWidget() {
         ) : (
           <Link
             href={scheduleHref}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              sendGTMEvent({
+                event: "schedule_click",
+                location: "contact_widget",
+              });
+            }}
             className="inline-flex min-w-[7.25rem] items-center justify-between rounded-full bg-accent px-3.5 py-2.5 text-[0.82rem] font-semibold text-accent-foreground shadow-md shadow-accent/15 transition hover:-translate-y-0.5 hover:brightness-95"
           >
             <span>Schedule</span>
