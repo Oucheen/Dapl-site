@@ -35,6 +35,17 @@ TELEGRAM_CHAT_ID=...
 
 For local development, create `.env.local` with the same keys if you want the form to work on `localhost`.
 
+## Analytics / tracking status
+- Google Analytics 4 web stream has been created
+- Measurement ID: `G-KBVZ673NP2`
+- Google Tag Manager container has been created
+- GTM container ID: `GTM-M2RWZXK9`
+- GTM is mounted globally from `src/app/layout.tsx` via `@next/third-parties/google`
+- Next tracking step is inside GTM itself:
+  - add a GA4 / Google tag using `G-KBVZ673NP2`
+  - publish the container
+  - then set up conversion events for form submit, phone click, and schedule click
+
 ## Resend status
 - Resend domain **daplappliance.com** is already verified
 - Contact form is configured to send email through Resend
