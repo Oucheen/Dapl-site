@@ -275,7 +275,7 @@ export function ServicePageTemplate({
                       alt={`${page.applianceName} appliance we repair`}
                       width={148}
                       height={148}
-                      className="hidden object-contain drop-shadow-[0_14px_24px_rgba(15,42,86,0.14)] sm:block sm:h-[148px] sm:w-[148px]"
+                      className="hidden h-auto max-w-[148px] object-contain drop-shadow-[0_14px_24px_rgba(15,42,86,0.14)] sm:block sm:w-full"
                     />
                   </div>
 
