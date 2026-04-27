@@ -249,7 +249,7 @@ export function ServicePageTemplate({
                 </TrackedAnchor>
               </div>
 
-              <div className="mt-10 flex justify-center sm:mt-12 lg:justify-start">
+              <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">
                 <a
                   href="#details"
                   className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"

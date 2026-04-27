@@ -133,7 +133,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - curated related-service ordering, so nearby appliances are shown first in the carousel
   - a shared brand section with calmer, more universal copy across all appliance types
   - a first hero section sized to the viewport height minus the sticky header, so the opening screen reads as a full service-page hero
-  - the old `View details` text cue was replaced by a larger standalone down-arrow button positioned below the main CTAs
+  - the old `View details` text cue was replaced by a larger standalone down-arrow button positioned below the main CTAs; like the homepage, it is hidden on mobile and shown on `md+`
   - a mobile related-services carousel with centered snap behavior, a visible swipe hint, and narrower card widths so the next card peeks in on smaller phones
   - the `Local Service` hero card now uses transparent appliance PNGs without the old gray tile background on both mobile and desktop; desktop images use a soft drop shadow and keep their natural height instead of being forced into a square box
 
