@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
+import Script from "next/script";
 import { ContactWidget } from "@/components/ui/contact-widget";
 import "./globals.css";
 
@@ -58,6 +59,23 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <GoogleTagManager gtmId="GTM-M2RWZXK9" />
+      <Script
+        id="ga-event-src"
+        src="https://www.googletagmanager.com/gtag/js?id=G-KBVZ673NP2"
+        strategy="afterInteractive"
+      />
+      <Script
+        id="ga-event-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+            window.gtag('js', new Date());
+            window.gtag('config', 'G-KBVZ673NP2', { send_page_view: false });
+          `,
+        }}
+      />
       <body className="min-h-full flex flex-col">
         {children}
         <ContactWidget />

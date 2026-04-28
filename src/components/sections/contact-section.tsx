@@ -34,6 +34,20 @@ type ContactSectionProps = {
   successMessage?: string;
 };
 
+type GtagFn = (
+  command: "event" | "config" | "js",
+  target: string | Date,
+  params?: Record<string, unknown>,
+) => void;
+
+function sendDirectGAEvent(eventName: string, params: Record<string, unknown>) {
+  const gtag = (window as Window & { gtag?: GtagFn }).gtag;
+
+  if (typeof gtag === "function") {
+    gtag("event", eventName, params);
+  }
+}
+
 export function ContactSection({
   eyebrow = "Contact",
   title = "Request a callback or schedule service",
@@ -93,6 +107,12 @@ export function ContactSection({
 
       sendGTMEvent({
         event: "generate_lead",
+        form_name: source,
+        appliance: payload.appliance || "unknown",
+        promo_code: payload.promoCode || "",
+        lead_source: payload.leadSource || source,
+      });
+      sendDirectGAEvent("generate_lead", {
         form_name: source,
         appliance: payload.appliance || "unknown",
         promo_code: payload.promoCode || "",
@@ -247,7 +267,7 @@ export function ContactSection({
                   required
                   rows={5}
                   className="mt-1.5 w-full resize-y rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                  placeholder="Brand, model if known, and what the appliance is doing…"
+                  placeholder="Brand, model if known, and what the appliance is doing..."
                 />
               </div>
             </div>
