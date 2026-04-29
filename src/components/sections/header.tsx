@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { href: "/#offer", label: "Offer" },
@@ -21,6 +21,7 @@ type HeaderProps = {
 export function Header({ logoHref }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   const scrollToTop = () => {
     setIsMenuOpen(false);
@@ -37,8 +38,23 @@ export function Header({ logoHref }: HeaderProps = {}) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
+
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
         isScrolled
           ? "border-border/90 bg-surface/95 shadow-sm backdrop-blur"

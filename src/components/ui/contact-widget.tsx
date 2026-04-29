@@ -3,7 +3,63 @@
 import { sendGTMEvent } from "@next/third-parties/google";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+function PhoneIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.35 1.9.68 2.8a2 2 0 0 1-.45 2.11L8.09 9.88a16 16 0 0 0 6 6l1.25-1.25a2 2 0 0 1 2.11-.45c.9.33 1.84.55 2.8.68A2 2 0 0 1 22 16.92Z" />
+    </svg>
+  );
+}
+
+function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+      <path d="m9 16 2 2 4-4" />
+    </svg>
+  );
+}
+
+function ArrowUpIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  );
+}
 
 export function ContactWidget() {
   const pathname = usePathname();
@@ -90,8 +146,8 @@ export function ContactWidget() {
               className="flex items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
             >
               <span className="flex items-center gap-2.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm text-white shadow-sm shadow-primary/20">
-                  {"\u260E"}
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-sm shadow-primary/20">
+                  <PhoneIcon className="h-4 w-4" />
                 </span>
                 <span>Call</span>
               </span>
@@ -110,8 +166,8 @@ export function ContactWidget() {
                 className="flex items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2.5">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm text-white shadow-sm shadow-accent/20">
-                    {"\u2197"}
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-sm shadow-accent/20">
+                    <CalendarIcon className="h-4 w-4" />
                   </span>
                   <span>Schedule</span>
                 </span>
@@ -129,8 +185,8 @@ export function ContactWidget() {
                 className="flex items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2.5">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm text-white shadow-sm shadow-accent/20">
-                    {"\u2197"}
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-sm shadow-accent/20">
+                    <CalendarIcon className="h-4 w-4" />
                   </span>
                   <span>Schedule</span>
                 </span>
@@ -143,8 +199,8 @@ export function ContactWidget() {
               className="flex items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
             >
               <span className="flex items-center gap-2.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/12 bg-primary/5 text-sm text-primary">
-                  {"\u2191"}
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/12 bg-primary/5 text-primary">
+                  <ArrowUpIcon className="h-4 w-4" />
                 </span>
                 <span>Top</span>
               </span>
@@ -170,7 +226,7 @@ export function ContactWidget() {
             isOpen ? "rounded-xl" : "rounded-full"
           }`}
         >
-          {"\u260E"}
+          <PhoneIcon className="h-5 w-5" />
         </span>
       </button>
     </div>

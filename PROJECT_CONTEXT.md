@@ -195,6 +195,7 @@ promoCode: RETURN15
   - small red notification dot
   - white floating action panel with a thin red accent rail
   - calmer row-style actions instead of heavy standalone pills
+  - stable inline SVG icons for phone, schedule, and top actions so the UI renders consistently across Windows, iOS, and Android
 
 ## SEO work already done
 - `metadataBase` set to `https://www.daplappliance.com`
