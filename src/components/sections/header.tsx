@@ -74,7 +74,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             </button>
           )}
 
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
             {navItems.map((item) => (
               <a
                 key={item.href}
@@ -96,7 +96,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             type="button"
             aria-label="Toggle menu"
             onClick={() => setIsMenuOpen((open) => !open)}
-            className="rounded-lg border border-border p-2 md:hidden"
+            className="rounded-lg border border-border p-2 lg:hidden"
           >
             <span className="block h-0.5 w-5 bg-foreground" />
             <span className="mt-1.5 block h-0.5 w-5 bg-foreground" />
@@ -112,7 +112,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-border bg-surface md:hidden"
+            className="border-t border-border bg-surface lg:hidden"
           >
             <nav className="container-shell flex flex-col gap-4 py-5">
               {navItems.map((item) => (

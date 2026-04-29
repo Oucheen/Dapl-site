@@ -19,6 +19,7 @@
 - `/commercial-refrigerator-repair-charlotte-nc` - tenth fully built SEO service page
 - `/returning-customer-offer` - hidden offer page for repeat customers
 - `/api/contact` - form submission endpoint via Resend
+- `/privacy-policy` - privacy policy page for website, analytics, cookies, and contact-data handling
 - `/robots.txt` - generated from `src/app/robots.ts`
 - `/sitemap.xml` - generated from `src/app/sitemap.ts`
 
@@ -170,6 +171,16 @@ promoCode: RETURN15
   - quick links to key sections
   - compact contact/help block
 
+### Privacy / legal page
+- A dedicated privacy policy page now exists at `src/app/privacy-policy/page.tsx`
+- It covers:
+  - contact form submissions
+  - analytics and cookies
+  - lead notifications
+  - basic service-provider sharing language
+  - user contact/update requests
+- The footer now links to `/privacy-policy`
+
 ### Shared scroll controls
 - Service pages have a standalone down-arrow cue in the hero that scrolls to the next section
 - The old floating `scroll to top` button has been replaced with a shared floating contact widget:
@@ -179,7 +190,11 @@ promoCode: RETURN15
   - `Call`
   - `Schedule`
   - `Top`
-- The widget is currently in a more minimal visual variant: smaller pills, lighter shadows, and a white main trigger instead of a heavy branded block
+- The widget is currently in a more branded minimal variant:
+  - compact dark-blue circular trigger
+  - small red notification dot
+  - white floating action panel with a thin red accent rail
+  - calmer row-style actions instead of heavy standalone pills
 
 ## SEO work already done
 - `metadataBase` set to `https://www.daplappliance.com`
@@ -192,6 +207,7 @@ promoCode: RETURN15
 - `FAQPage` schema added
 - sitemap includes:
   - homepage
+  - privacy policy page
   - refrigerator repair page
   - washer repair page
   - dryer repair page

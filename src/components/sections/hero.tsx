@@ -11,7 +11,7 @@ const highlights = [
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
+    <section className="relative overflow-hidden bg-surface py-16 sm:py-20 xl:flex xl:min-h-[calc(100svh-5rem)] xl:items-center">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
       <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <FadeUp>
@@ -56,14 +56,8 @@ export function Hero() {
             </TrackedAnchor>
           </div>
 
-          <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">
-            <a
-              href="#offer"
-              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"
-              aria-label="Scroll to next section"
-            >
-              {"\u2193"}
-            </a>
+          <div className="mt-10 hidden justify-center sm:mt-12 lg:flex">
+            <span className="h-14 w-14" aria-hidden="true" />
           </div>
         </FadeUp>
 
@@ -78,6 +72,16 @@ export function Hero() {
             />
           </div>
         </FadeUp>
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-14 hidden justify-center xl:flex">
+        <a
+          href="#offer"
+          className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"
+          aria-label="Scroll to next section"
+        >
+          {"\u2193"}
+        </a>
       </div>
     </section>
   );

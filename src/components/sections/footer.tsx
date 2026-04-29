@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -62,7 +63,10 @@ export function Footer() {
         </div>
 
         <p className="mt-6 border-t border-border pt-5 text-xs text-muted">
-          © {new Date().getFullYear()} Dapl Appliance Repair. All rights reserved.
+          © {new Date().getFullYear()} Dapl Appliance Repair. All rights reserved.{" "}
+          <Link href="/privacy-policy" className="font-semibold text-primary hover:underline">
+            Privacy Policy
+          </Link>
         </p>
       </div>
     </footer>
