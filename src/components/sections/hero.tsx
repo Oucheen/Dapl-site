@@ -56,7 +56,7 @@ export function Hero() {
             </TrackedAnchor>
           </div>
 
-          <div className="mt-10 hidden justify-center sm:mt-12 lg:flex">
+          <div className="mt-10 hidden justify-center sm:mt-12 xl:flex">
             <span className="h-14 w-14" aria-hidden="true" />
           </div>
         </FadeUp>

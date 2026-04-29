@@ -78,7 +78,13 @@ For local development, create `.env.local` with the same keys if you want the fo
 
 ### Homepage hero
 - Main homepage hero now fills the viewport height minus the sticky header
-- It includes a standalone down-arrow button below the main CTAs that scrolls to `#offer` on `md+`; the arrow is intentionally hidden on mobile to keep the first screen cleaner
+- It includes a standalone down-arrow button below the main CTAs that scrolls to `#offer` on `xl+`; the arrow is intentionally hidden on mobile/tablet widths to keep the first screen cleaner
+
+### Reviews / trust section
+- `src/components/sections/reviews-section.tsx` contains the selected carousel-style reviews section
+- The homepage imports it, but `REVIEWS_SECTION_ENABLED` in `src/app/page.tsx` is currently `false`, so the section is not visible on the live site
+- Before enabling it, replace sample review text with real Google reviews, set the real Google Business Profile reviews URL, and update the manual Google rating/review count
+- Review carousel behavior: mobile uses swipe and a next-card peek; desktop/tablet shows arrow controls
 
 ### Brands section
 - Brand logos are loaded from `public/brands/`

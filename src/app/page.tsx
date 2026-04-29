@@ -8,7 +8,10 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
 import { OfferSection } from "@/components/sections/offer";
+import { ReviewsSection } from "@/components/sections/reviews-section";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
+
+const REVIEWS_SECTION_ENABLED = false;
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
@@ -70,6 +73,7 @@ export default function Home() {
         <AppliancesSection />
         <BrandsSection />
         <WhyChooseUsSection />
+        {REVIEWS_SECTION_ENABLED ? <ReviewsSection /> : null}
         <FAQSection />
         <ContactSection />
         <BottomCtaSection />
