@@ -75,6 +75,8 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `/#faq`
   - `/#contact`
 - Header logo can point either to top-of-page or back to `/`, depending on the page
+- `Appliances` in the desktop header opens a hover/focus dropdown with direct links to all service pages
+- `Appliances` in the mobile/tablet burger menu opens as an accordion with a plus icon and the same service-page links
 
 ### Homepage hero
 - Main homepage hero now fills the viewport height minus the sticky header
