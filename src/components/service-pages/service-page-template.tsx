@@ -351,7 +351,7 @@ export function ServicePageTemplate({
                         alt={`${brand} logo`}
                         width={180}
                         height={64}
-                        className="max-h-8 w-full object-contain sm:max-h-14"
+                        className="max-h-18 w-full object-contain sm:max-h-14"
                         unoptimized
                       />
                     ) : (
