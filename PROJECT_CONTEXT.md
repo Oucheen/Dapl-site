@@ -81,6 +81,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 ### Homepage hero
 - Main homepage hero now fills the viewport height minus the sticky header
 - It includes a standalone down-arrow button below the main CTAs that scrolls to `#offer` on `xl+`; the arrow is intentionally hidden on mobile/tablet widths to keep the first screen cleaner
+- The main hero image now uses `public/hero-placeholder.webp` instead of the original heavy PNG. The WebP is about 159 KB vs the old PNG at about 2.37 MB.
+- `src/components/sections/hero.tsx` marks the hero image as `priority` and provides responsive `sizes` to improve LCP/PageSpeed behavior.
 
 ### Reviews / trust section
 - `src/components/sections/reviews-section.tsx` contains the selected carousel-style reviews section
