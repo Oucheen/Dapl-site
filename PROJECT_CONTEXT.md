@@ -17,6 +17,16 @@
 - `/ice-machine-repair-charlotte-nc` - eighth fully built SEO service page
 - `/wine-cooler-repair-charlotte-nc` - ninth fully built SEO service page
 - `/commercial-refrigerator-repair-charlotte-nc` - tenth fully built SEO service page
+- `/appliance-repair-charlotte-nc` - city/service-area page for Charlotte, NC
+- `/appliance-repair-matthews-nc` - city/service-area page for Matthews, NC
+- `/appliance-repair-huntersville-nc` - city/service-area page for Huntersville, NC
+- `/appliance-repair-fort-mill-sc` - city/service-area page for Fort Mill, SC
+- `/appliance-repair-waxhaw-nc` - city/service-area page for Waxhaw, NC
+- `/appliance-repair-concord-nc` - city/service-area page for Concord, NC
+- `/appliance-repair-cornelius-nc` - city/service-area page for Cornelius, NC
+- `/appliance-repair-davidson-nc` - city/service-area page for Davidson, NC
+- `/appliance-repair-weddington-nc` - city/service-area page for Weddington, NC
+- `/appliance-repair-rock-hill-sc` - city/service-area page for Rock Hill, SC
 - `/returning-customer-offer` - hidden offer page for repeat customers
 - `/api/contact` - form submission endpoint via Resend
 - `/privacy-policy` - privacy policy page for website, analytics, cookies, and contact-data handling
@@ -150,6 +160,36 @@ For local development, create `.env.local` with the same keys if you want the fo
   - a mobile related-services carousel with centered snap behavior, a visible swipe hint, and narrower card widths so the next card peeks in on smaller phones
   - the `Local Service` hero card now uses transparent appliance PNGs without the old gray tile background on both mobile and desktop; desktop images use a soft drop shadow and keep their natural height instead of being forced into a square box
 
+### Service area / city pages
+- A city/service-area cluster now exists for 10 local markets:
+  - Charlotte, NC
+  - Matthews, NC
+  - Huntersville, NC
+  - Fort Mill, SC
+  - Waxhaw, NC
+  - Concord, NC
+  - Cornelius, NC
+  - Davidson, NC
+  - Weddington, NC
+  - Rock Hill, SC
+- Content lives in:
+  - `src/content/service-areas.ts`
+- Shared renderer lives in:
+  - `src/components/service-areas/service-area-page-template.tsx`
+- Dynamic route lives in:
+  - `src/app/[serviceAreaSlug]/page.tsx`
+- Each city page includes:
+  - unique title / description / keywords
+  - city-specific intro copy
+  - local route notes
+  - common appliance needs for that city
+  - FAQPage schema
+  - Service schema with city-specific `areaServed`
+  - links to nearby city pages
+  - links to all main appliance service pages
+  - city-specific `leadSource` in the contact form
+- Footer uses a compact Service Areas row under the main footer contact columns, with all 10 city pages linked as small wrapping text links instead of a tall card or vertical list.
+
 ### Returning customer offer page
 - Route: `/returning-customer-offer`
 - Purpose: separate landing page for repeat-customer promo
@@ -229,6 +269,7 @@ promoCode: RETURN15
   - ice machine repair page
   - wine cooler repair page
   - commercial refrigerator repair page
+  - all 10 city/service-area pages
   - returning customer offer page
 - some image `alt` text improved for accessibility and SEO
 
@@ -257,7 +298,9 @@ promoCode: RETURN15
 - `src/app/returning-customer-offer/page.tsx`
 - `src/app/api/contact/route.ts`
 - `src/content/service-pages.ts`
+- `src/content/service-areas.ts`
 - `src/components/service-pages/service-page-template.tsx`
+- `src/components/service-areas/service-area-page-template.tsx`
 - `src/app/sitemap.ts`
 - `src/app/robots.ts`
 - `src/components/sections/header.tsx`
@@ -276,8 +319,7 @@ Still worth doing or verifying:
    - `/returning-customer-offer`
 4. Finish / verify Google Business Profile
 5. Add a real reviews/testimonials section using real customer feedback only
-6. Add dedicated service pages later for stronger local SEO:
-   - city/service area pages later if needed
+6. Review the new city/service-area pages after deploy and request indexing for the most important markets first
 
 ## Good things to tell the next chat
 - This is an actively customized Next.js landing site, not a fresh template

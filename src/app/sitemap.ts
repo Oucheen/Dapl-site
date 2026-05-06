@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { serviceAreaPages } from "@/content/service-areas";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://www.daplappliance.com";
@@ -71,6 +72,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    ...serviceAreaPages.map((page) => ({
+      url: `${baseUrl}/${page.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${baseUrl}/returning-customer-offer`,
       lastModified,

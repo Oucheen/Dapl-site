@@ -10,6 +10,7 @@ import { Hero } from "@/components/sections/hero";
 import { OfferSection } from "@/components/sections/offer";
 import { ReviewsSection } from "@/components/sections/reviews-section";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
+import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
 const REVIEWS_SECTION_ENABLED = false;
 
@@ -29,7 +30,12 @@ const localBusinessSchema = {
     postalCode: "28227",
     addressCountry: "US",
   },
-  areaServed: "Charlotte, NC and surrounding areas",
+  areaServed: serviceAreaPagesDirectory.map((area) => ({
+    "@type": "City",
+    name: area.city,
+    addressRegion: area.state,
+    addressCountry: "US",
+  })),
   url: "https://www.daplappliance.com",
   serviceType: "Appliance Repair Service",
   openingHoursSpecification: [
