@@ -276,12 +276,14 @@ leadSource: booking-page
 ### Privacy / legal page
 - A dedicated privacy policy page now exists at `src/app/privacy-policy/page.tsx`
 - It covers:
+  - business identity linking the public brand name **Dapl Appliance Repair** to the legal operator **DAPL Honcharos Appliance Service Corp**
   - contact form submissions
   - analytics and cookies
   - lead notifications
   - basic service-provider sharing language
   - user contact/update requests
 - The footer now links to `/privacy-policy`
+- The footer also includes the short legal identity line: `Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.`
 
 ### Shared scroll controls
 - Service pages have a standalone down-arrow cue in the hero that scrolls to the next section

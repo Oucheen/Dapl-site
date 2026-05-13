@@ -19,6 +19,12 @@ export const metadata: Metadata = {
 
 const sections = [
   {
+    title: "Business identity",
+    body: [
+      "Dapl Appliance Repair is the public-facing service name used on this website and in customer communications. Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.",
+    ],
+  },
+  {
     title: "Information we collect",
     body: [
       "When you contact us through this website, we may collect information you provide directly, including your name, phone number, email address, service address, appliance details, preferred service date, and message contents.",

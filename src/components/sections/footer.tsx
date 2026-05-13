@@ -19,7 +19,8 @@ export function Footer() {
               </div>
             </div>
             <p className="mt-3 max-w-md text-sm leading-6 text-muted">
-              Professional appliance repair services for homeowners and businesses in Charlotte, NC and surrounding areas.
+              Professional appliance repair services for homeowners and businesses in Charlotte, NC
+              and surrounding areas.
             </p>
           </div>
 
@@ -33,7 +34,10 @@ export function Footer() {
                   </a>
                 </p>
                 <p>
-                  <a href="mailto:dapl.appliance.repair@gmail.com" className="break-words hover:text-primary">
+                  <a
+                    href="mailto:dapl.appliance.repair@gmail.com"
+                    className="break-words hover:text-primary"
+                  >
                     dapl.appliance.repair@gmail.com
                   </a>
                 </p>
@@ -95,12 +99,17 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="mt-6 border-t border-border pt-5 text-xs text-muted">
-          © {new Date().getFullYear()} Dapl Appliance Repair. All rights reserved.{" "}
-          <Link href="/privacy-policy" className="font-semibold text-primary hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
+        <div className="mt-6 border-t border-border pt-5 text-xs leading-6 text-muted">
+          <p>
+            &copy; {new Date().getFullYear()} Dapl Appliance Repair. All rights reserved.{" "}
+            <Link href="/privacy-policy" className="font-semibold text-primary hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
+          <p className="mt-1">
+            Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
+          </p>
+        </div>
       </div>
     </footer>
   );
