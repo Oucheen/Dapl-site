@@ -3,6 +3,11 @@ export type ServiceFaq = {
   answer: string;
 };
 
+export type ServiceIssue = {
+  title: string;
+  text: string;
+};
+
 export type ServicePageContent = {
   slug: string;
   applianceName: string;
@@ -14,7 +19,7 @@ export type ServicePageContent = {
   image: string;
   localServiceTitle: string;
   localServiceDescription: string;
-  commonIssues: string[];
+  commonIssues: ServiceIssue[];
   serviceHighlights: string[];
   brands: string[];
   process: {
@@ -51,12 +56,30 @@ export const refrigeratorServicePage: ServicePageContent = {
   localServiceDescription:
     "From cooling issues to leaks and ice maker trouble, we help Charlotte homeowners get their refrigerators back to normal quickly.",
   commonIssues: [
-    "Refrigerator not cooling evenly",
-    "Freezer icing over or running too cold",
-    "Water leaking under or behind the unit",
-    "Ice maker not producing ice",
-    "Unusual buzzing, clicking, or rattling noises",
-    "Door seal, airflow, or temperature control issues",
+    {
+      title: "Refrigerator not cooling evenly",
+      text: "We check airflow, fans, sensors, controls, and sealed compartments to find why food temperatures are drifting.",
+    },
+    {
+      title: "Freezer icing over or running too cold",
+      text: "Frost buildup can point to defrost, gasket, airflow, or temperature control issues that need a closer look.",
+    },
+    {
+      title: "Water leaking under or behind the unit",
+      text: "Leaks may come from the water line, drain system, ice maker connection, or condensation path inside the refrigerator.",
+    },
+    {
+      title: "Ice maker not producing ice",
+      text: "We inspect water flow, fill behavior, freezing temperature, and common ice maker parts before recommending a repair.",
+    },
+    {
+      title: "Unusual buzzing, clicking, or rattling noises",
+      text: "New sounds can come from fans, relays, compressor startup, loose panels, or components working harder than normal.",
+    },
+    {
+      title: "Door seal, airflow, or temperature control issues",
+      text: "Small seal and airflow problems can make the refrigerator run longer and struggle to hold steady temperatures.",
+    },
   ],
   serviceHighlights: [
     "Same-day refrigerator repair when scheduling allows",
@@ -138,12 +161,30 @@ export const washerServicePage: ServicePageContent = {
   localServiceDescription:
     "From drainage problems to shaking, leaks, and cycle failures, we help Charlotte homeowners get their washers working again with practical next-step guidance.",
   commonIssues: [
-    "Washer not spinning or completing the cycle",
-    "Water not draining after the wash",
-    "Unit leaking during or after operation",
-    "Washer not filling with water properly",
-    "Loud vibration, banging, or off-balance movement",
-    "Door lock, control panel, or startup issues",
+    {
+      title: "Washer not spinning or completing the cycle",
+      text: "Spin issues can involve balance, drainage, lid or door locks, controls, or parts that stop the cycle early.",
+    },
+    {
+      title: "Water not draining after the wash",
+      text: "Standing water often points to drain restrictions, pump trouble, hose problems, or cycle control issues.",
+    },
+    {
+      title: "Unit leaking during or after operation",
+      text: "We look for leak sources around hoses, door seals, valves, pumps, and areas that only show up during a cycle.",
+    },
+    {
+      title: "Washer not filling with water properly",
+      text: "Slow or failed filling can come from supply valves, inlet parts, water pressure, or controls not calling for water.",
+    },
+    {
+      title: "Loud vibration, banging, or off-balance movement",
+      text: "Shaking may come from leveling, load balance, suspension wear, or internal movement that needs diagnosis.",
+    },
+    {
+      title: "Door lock, control panel, or startup issues",
+      text: "If the washer will not start, we check lock behavior, controls, power response, and cycle selection problems.",
+    },
   ],
   serviceHighlights: [
     "Same-day washer repair when scheduling allows",
@@ -225,12 +266,30 @@ export const dryerServicePage: ServicePageContent = {
   localServiceDescription:
     "From no-heat issues to long dry cycles, drum problems, and strange sounds, we help Charlotte homeowners get their dryers working properly again.",
   commonIssues: [
-    "Dryer not heating properly",
-    "Clothes taking too long to dry",
-    "Drum not spinning or tumbling",
-    "Dryer making loud or unusual noises",
-    "Unit not starting or stopping mid-cycle",
-    "Burning smell, airflow, or vent-related performance issues",
+    {
+      title: "Dryer not heating properly",
+      text: "No-heat complaints can involve heating parts, sensors, controls, power supply, or airflow restrictions.",
+    },
+    {
+      title: "Clothes taking too long to dry",
+      text: "Long dry times often come from weak airflow, moisture sensing issues, heat problems, or an overloaded system.",
+    },
+    {
+      title: "Drum not spinning or tumbling",
+      text: "A stopped drum can point to belt, motor, roller, pulley, or control issues that prevent normal movement.",
+    },
+    {
+      title: "Dryer making loud or unusual noises",
+      text: "Grinding, squealing, or thumping sounds may come from worn rollers, bearings, belts, or loose internal parts.",
+    },
+    {
+      title: "Unit not starting or stopping mid-cycle",
+      text: "Startup failures can involve door switches, thermal protection, controls, power, or components overheating.",
+    },
+    {
+      title: "Burning smell, airflow, or vent-related performance issues",
+      text: "We treat burning smells seriously and check airflow, lint buildup, heat behavior, and electrical concerns.",
+    },
   ],
   serviceHighlights: [
     "Same-day dryer repair when scheduling allows",
@@ -312,12 +371,30 @@ export const dishwasherServicePage: ServicePageContent = {
   localServiceDescription:
     "From drainage trouble to leaks, poor cleaning results, and noisy cycles, we help Charlotte homeowners get their dishwashers back in working order quickly.",
   commonIssues: [
-    "Dishwasher not draining properly",
-    "Water leaking during or after a cycle",
-    "Dishes not coming out clean",
-    "Dishwasher not starting or not finishing the cycle",
-    "Unusual grinding, humming, or rattling noises",
-    "Door latch, spray arm, or control issues",
+    {
+      title: "Dishwasher not draining properly",
+      text: "Drain problems can come from clogs, pump issues, hose routing, filters, or a cycle that never completes correctly.",
+    },
+    {
+      title: "Water leaking during or after a cycle",
+      text: "We inspect door seals, spray patterns, hoses, valves, and tub areas to narrow down where the leak starts.",
+    },
+    {
+      title: "Dishes not coming out clean",
+      text: "Poor cleaning can involve spray arms, water temperature, circulation, detergent flow, filters, or loading-related issues.",
+    },
+    {
+      title: "Dishwasher not starting or not finishing the cycle",
+      text: "Startup and cycle failures may involve the latch, controls, float system, power, or sensors stopping operation.",
+    },
+    {
+      title: "Unusual grinding, humming, or rattling noises",
+      text: "Noises can point to pump, motor, spray arm, debris, or mounting issues that show up during wash or drain.",
+    },
+    {
+      title: "Door latch, spray arm, or control issues",
+      text: "Small mechanical or control problems can keep the dishwasher from filling, washing, draining, or sealing properly.",
+    },
   ],
   serviceHighlights: [
     "Same-day dishwasher repair when scheduling allows",
@@ -399,12 +476,30 @@ export const ovenServicePage: ServicePageContent = {
   localServiceDescription:
     "From no-heat problems to uneven baking, faulty controls, and door issues, we help Charlotte homeowners get their ovens back in dependable working order.",
   commonIssues: [
-    "Oven not heating properly",
-    "Uneven baking or poor temperature control",
-    "Oven taking too long to preheat",
-    "Unit not turning on or shutting off correctly",
-    "Door not closing, sealing, or latching properly",
-    "Control panel, sensor, or cooking mode issues",
+    {
+      title: "Oven not heating properly",
+      text: "Heating issues can involve the igniter, bake element, temperature sensor, control board, or power supply.",
+    },
+    {
+      title: "Uneven baking or poor temperature control",
+      text: "We check heat consistency, sensor readings, airflow, calibration, and common causes of hot or cold spots.",
+    },
+    {
+      title: "Oven taking too long to preheat",
+      text: "Slow preheat can come from weak heating parts, sensor problems, power issues, or controls not reaching target temperature.",
+    },
+    {
+      title: "Unit not turning on or shutting off correctly",
+      text: "Power and shutdown issues can involve controls, safety circuits, wiring, door switches, or temperature feedback.",
+    },
+    {
+      title: "Door not closing, sealing, or latching properly",
+      text: "A worn gasket, hinge, latch, or alignment issue can let heat escape and make cooking performance uneven.",
+    },
+    {
+      title: "Control panel, sensor, or cooking mode issues",
+      text: "We review display behavior, mode selection, sensor response, and error symptoms before recommending the next step.",
+    },
   ],
   serviceHighlights: [
     "Same-day oven repair when scheduling allows",
@@ -486,12 +581,30 @@ export const cooktopServicePage: ServicePageContent = {
   localServiceDescription:
     "From burners that will not heat to ignition trouble and uneven cooking performance, we help Charlotte homeowners get their cooktops working properly again.",
   commonIssues: [
-    "Cooktop burner not heating properly",
-    "Ignition not clicking or not lighting",
-    "Uneven heat across one or more burners",
-    "Cooktop not turning on or responding correctly",
-    "Broken knobs, controls, or surface elements",
-    "Gas or electric performance issues affecting cooking results",
+    {
+      title: "Cooktop burner not heating properly",
+      text: "Burner problems can involve elements, igniters, switches, controls, or power delivery to a single cooking zone.",
+    },
+    {
+      title: "Ignition not clicking or not lighting",
+      text: "Ignition issues may come from moisture, spark parts, gas flow, wiring, or controls not sending the right signal.",
+    },
+    {
+      title: "Uneven heat across one or more burners",
+      text: "We check burner response, element condition, control behavior, and signs of weak or inconsistent heating.",
+    },
+    {
+      title: "Cooktop not turning on or responding correctly",
+      text: "Startup trouble can involve power, controls, safety locks, switches, or internal components failing to respond.",
+    },
+    {
+      title: "Broken knobs, controls, or surface elements",
+      text: "Physical control and surface issues can affect usability, heat adjustment, and safe day-to-day cooking.",
+    },
+    {
+      title: "Gas or electric performance issues affecting cooking results",
+      text: "We diagnose the appliance type, symptom pattern, and cooking performance before explaining practical repair options.",
+    },
   ],
   serviceHighlights: [
     "Same-day cooktop repair when scheduling allows",
@@ -573,12 +686,30 @@ export const freezerServicePage: ServicePageContent = {
   localServiceDescription:
     "From cooling loss to frost buildup, leaks, and strange sounds, we help Charlotte homeowners get their freezers back to stable performance quickly.",
   commonIssues: [
-    "Freezer not staying cold enough",
-    "Heavy frost or ice buildup inside the unit",
-    "Water leaking around or under the freezer",
-    "Freezer making loud or unusual noises",
-    "Temperature fluctuations affecting food storage",
-    "Door seal, airflow, or control-related issues",
+    {
+      title: "Freezer not staying cold enough",
+      text: "Weak freezing can involve airflow, sensors, sealed sections, controls, fans, or components working harder than normal.",
+    },
+    {
+      title: "Heavy frost or ice buildup inside the unit",
+      text: "Excess frost may point to defrost issues, a poor seal, warm air intrusion, or temperature control trouble.",
+    },
+    {
+      title: "Water leaking around or under the freezer",
+      text: "Leaks can come from drain problems, thaw cycles, condensation paths, or ice buildup melting in the wrong place.",
+    },
+    {
+      title: "Freezer making loud or unusual noises",
+      text: "Buzzing, grinding, or rattling can come from fans, relays, compressor startup, or loose internal parts.",
+    },
+    {
+      title: "Temperature fluctuations affecting food storage",
+      text: "We check temperature stability, door sealing, airflow, and controls to understand why stored food is at risk.",
+    },
+    {
+      title: "Door seal, airflow, or control-related issues",
+      text: "Small seal and circulation problems can create frost, long run times, and inconsistent freezing performance.",
+    },
   ],
   serviceHighlights: [
     "Same-day freezer repair when scheduling allows",
@@ -660,12 +791,30 @@ export const iceMachineServicePage: ServicePageContent = {
   localServiceDescription:
     "From low ice production to leaks, freezing issues, and inconsistent performance, we help Charlotte customers get their ice machines back to reliable operation.",
   commonIssues: [
-    "Ice machine not making enough ice",
-    "Unit not making ice at all",
-    "Water leaking around the machine",
-    "Ice quality, size, or freezing consistency problems",
-    "Unusual buzzing, rattling, or cycling noises",
-    "Startup, control, or cooling-related performance issues",
+    {
+      title: "Ice machine not making enough ice",
+      text: "Low production can involve water supply, freezing performance, sensors, harvest timing, or parts that slow each cycle.",
+    },
+    {
+      title: "Unit not making ice at all",
+      text: "No-ice complaints may come from water flow, controls, freezing issues, safety switches, or a cycle that never starts.",
+    },
+    {
+      title: "Water leaking around the machine",
+      text: "We inspect supply lines, drains, pumps, fill behavior, and internal water paths to locate the leak source.",
+    },
+    {
+      title: "Ice quality, size, or freezing consistency problems",
+      text: "Cloudy, small, or inconsistent ice can point to water flow, temperature, cleaning, or freezing-cycle issues.",
+    },
+    {
+      title: "Unusual buzzing, rattling, or cycling noises",
+      text: "New noises can come from pumps, fans, valves, loose panels, or components cycling at the wrong time.",
+    },
+    {
+      title: "Startup, control, or cooling-related performance issues",
+      text: "We check controls, cooling behavior, water movement, and timing before explaining the most practical repair path.",
+    },
   ],
   serviceHighlights: [
     "Same-day ice machine repair when scheduling allows",
@@ -747,12 +896,30 @@ export const wineCoolerServicePage: ServicePageContent = {
   localServiceDescription:
     "From unstable temperatures to moisture buildup, unusual sounds, and cooling loss, we help Charlotte homeowners protect their wine storage with practical next-step guidance.",
   commonIssues: [
-    "Wine cooler not staying at the right temperature",
-    "Unit not cooling properly at all",
-    "Moisture, condensation, or water collecting inside",
-    "Wine cooler making loud or unusual noises",
-    "Interior light, display, or control panel issues",
-    "Door seal, airflow, or circulation-related problems",
+    {
+      title: "Wine cooler not staying at the right temperature",
+      text: "Temperature drift can involve sensors, controls, airflow, door seals, or cooling parts that no longer cycle correctly.",
+    },
+    {
+      title: "Unit not cooling properly at all",
+      text: "Weak cooling may come from fans, controls, sealed sections, power issues, or components not starting as expected.",
+    },
+    {
+      title: "Moisture, condensation, or water collecting inside",
+      text: "Moisture problems can point to door sealing, airflow, drainage, humidity, or temperature swings inside the cabinet.",
+    },
+    {
+      title: "Wine cooler making loud or unusual noises",
+      text: "Buzzing, rattling, or fan noise can come from airflow parts, mounting issues, or components working too hard.",
+    },
+    {
+      title: "Interior light, display, or control panel issues",
+      text: "Control and display symptoms help us narrow down power, board, sensor, or user-interface problems.",
+    },
+    {
+      title: "Door seal, airflow, or circulation-related problems",
+      text: "Stable wine storage depends on steady airflow and sealing, so small issues can affect the whole cabinet.",
+    },
   ],
   serviceHighlights: [
     "Same-day wine cooler repair when scheduling allows",
@@ -835,12 +1002,30 @@ export const commercialRefrigeratorServicePage: ServicePageContent = {
   localServiceDescription:
     "From unstable temperatures to leaks, noise, and cooling loss, we help Charlotte-area businesses and property owners respond quickly to common commercial refrigeration problems.",
   commonIssues: [
-    "Commercial refrigerator not staying cold enough",
-    "Temperature swings affecting stored product",
-    "Water leaking around or under the unit",
-    "Loud or unusual compressor and fan noises",
-    "Door seal, airflow, or circulation-related performance issues",
-    "Display, control, or startup problems affecting operation",
+    {
+      title: "Commercial refrigerator not staying cold enough",
+      text: "We check airflow, fans, door sealing, controls, and workload factors that can put stored product at risk.",
+    },
+    {
+      title: "Temperature swings affecting stored product",
+      text: "Temperature instability can involve controls, sensors, doors, airflow restrictions, or usage patterns during busy hours.",
+    },
+    {
+      title: "Water leaking around or under the unit",
+      text: "Leaks may come from drain lines, condensate handling, door sweat, ice buildup, or nearby water connections.",
+    },
+    {
+      title: "Loud or unusual compressor and fan noises",
+      text: "New sounds can indicate fan strain, loose panels, compressor startup issues, or components working outside normal range.",
+    },
+    {
+      title: "Door seal, airflow, or circulation-related performance issues",
+      text: "Poor sealing and weak circulation can increase run time, raise temperatures, and affect product consistency.",
+    },
+    {
+      title: "Display, control, or startup problems affecting operation",
+      text: "We review controls, display behavior, power response, and startup patterns before outlining repair options.",
+    },
   ],
   serviceHighlights: [
     "Same-day commercial refrigerator repair when scheduling allows",

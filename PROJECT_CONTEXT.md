@@ -151,6 +151,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - BreadcrumbList schema
   - FAQPage schema
   - local SEO copy for Charlotte, NC
+  - unique short descriptions for every `commonIssues` card, stored as `{ title, text }` objects in `src/content/service-pages.ts`, to avoid repeated boilerplate like "showing signs like this" across service pages
   - preselected appliance in the contact form
   - service-specific lead source
   - a shared internal-linking section to other appliance service pages

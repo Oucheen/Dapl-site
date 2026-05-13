@@ -116,6 +116,10 @@ export function ServicePageTemplate({
 }: ServicePageTemplateProps) {
   const serviceLabel = `${page.applianceName} Repair`;
   const applianceLower = page.applianceName.toLowerCase();
+  const serviceAudience =
+    page.applianceName === "Commercial Refrigerator"
+      ? "Charlotte-area businesses and property owners"
+      : "Charlotte homeowners";
   const preferredRelatedSlugs = relatedServicePriorityMap[page.slug] ?? [];
   const relatedServices = servicePagesDirectory
     .filter((item) => item.slug !== page.slug)
@@ -313,17 +317,16 @@ export function ServicePageTemplate({
               <SectionHeading
                 eyebrow={`Common ${page.applianceName} Problems`}
                 title="What we help fix"
-                description={`We focus on the ${applianceLower} issues Charlotte homeowners deal with most often, from performance problems to leaks, noise, and cycle failures.`}
+                description={`We focus on the ${applianceLower} issues ${serviceAudience} deal with most often, with practical guidance before major repair decisions.`}
               />
             </FadeUp>
             <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {page.commonIssues.map((issue, index) => (
-                <FadeUp key={issue} delay={index * 0.05}>
+                <FadeUp key={issue.title} delay={index * 0.05}>
                   <article className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-primary">{issue}</h3>
+                    <h3 className="text-lg font-bold text-primary">{issue.title}</h3>
                     <p className="mt-3 text-sm leading-7 text-muted">
-                      If your {applianceLower} is showing signs like this, we can inspect it and
-                      explain the most practical next step.
+                      {issue.text}
                     </p>
                   </article>
                 </FadeUp>
