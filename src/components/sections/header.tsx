@@ -11,7 +11,7 @@ const navItems = [
   { href: "/#brands", label: "Brands" },
   { href: "/#why-us", label: "Why Choose Us" },
   { href: "/#faq", label: "FAQ" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/booking", label: "Booking" },
 ];
 
 const applianceLinks = [

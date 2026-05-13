@@ -27,6 +27,7 @@
 - `/appliance-repair-davidson-nc` - city/service-area page for Davidson, NC
 - `/appliance-repair-weddington-nc` - city/service-area page for Weddington, NC
 - `/appliance-repair-rock-hill-sc` - city/service-area page for Rock Hill, SC
+- `/booking` - standalone booking page for Google Business Profile booking link and ad traffic
 - `/returning-customer-offer` - hidden offer page for repeat customers
 - `/api/contact` - form submission endpoint via Resend
 - `/privacy-policy` - privacy policy page for website, analytics, cookies, and contact-data handling
@@ -83,7 +84,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `/#brands`
   - `/#why-us`
   - `/#faq`
-  - `/#contact`
+- Header `Booking` link now points to the standalone `/booking` page instead of `/#contact`
 - Header logo can point either to top-of-page or back to `/`, depending on the page
 - `Appliances` in the desktop header opens a hover/focus dropdown with direct links to all service pages
 - `Appliances` in the mobile/tablet burger menu opens as an accordion with a plus icon and the same service-page links
@@ -193,6 +194,9 @@ For local development, create `.env.local` with the same keys if you want the fo
 ### Returning customer offer page
 - Route: `/returning-customer-offer`
 - Purpose: separate landing page for repeat-customer promo
+- It is intentionally hidden from organic indexing:
+  - removed from `sitemap.ts`
+  - `robots: { index: false, follow: false }`
 - Promo code prefilled as `RETURN15`
 - Form on this page is separate in behavior, but reuses the shared contact component
 - Mobile promo card now stacks text and logo vertically instead of squeezing them side-by-side
@@ -202,6 +206,22 @@ For local development, create `.env.local` with the same keys if you want the fo
 leadSource: returning-customer-offer
 promoCode: RETURN15
 ```
+
+### Booking page
+- Route: `/booking`
+- Purpose:
+  - clean booking URL for Google Business Profile instead of `/#contact`
+  - dedicated scheduling page for paid traffic and direct links
+  - visible contact details, hours, service areas, and the shared request form
+- Uses the shared contact form component with:
+
+```text
+leadSource: booking-page
+```
+
+- Includes booking-focused WebPage and BreadcrumbList structured data
+- Sitemap includes `/booking`
+- `/contact` redirects permanently to `/booking` from `next.config.ts`
 
 ### FAQ
 - FAQ section exists on the homepage
@@ -258,6 +278,7 @@ promoCode: RETURN15
 - `FAQPage` schema added
 - sitemap includes:
   - homepage
+  - booking page
   - privacy policy page
   - refrigerator repair page
   - washer repair page
@@ -270,7 +291,6 @@ promoCode: RETURN15
   - wine cooler repair page
   - commercial refrigerator repair page
   - all 10 city/service-area pages
-  - returning customer offer page
 - some image `alt` text improved for accessibility and SEO
 
 ## Favicon / icon status
@@ -316,7 +336,7 @@ Still worth doing or verifying:
 2. Submit `https://www.daplappliance.com/sitemap.xml` in Google Search Console
 3. Request indexing for:
    - `/`
-   - `/returning-customer-offer`
+   - `/booking`
 4. Finish / verify Google Business Profile
 5. Add a real reviews/testimonials section using real customer feedback only
 6. Review the new city/service-area pages after deploy and request indexing for the most important markets first

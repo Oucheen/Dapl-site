@@ -101,8 +101,9 @@ export function ContactWidget() {
 
   const scheduleHref = useMemo(() => {
     const isServicePage = pathname?.includes("-repair-charlotte-nc");
-    const hasInlineContact = pathname === "/" || pathname === "/returning-customer-offer" || isServicePage;
-    return hasInlineContact ? "#contact" : "/#contact";
+    const hasInlineContact =
+      pathname === "/" || pathname === "/booking" || pathname === "/returning-customer-offer" || isServicePage;
+    return hasInlineContact ? "#contact" : "/booking";
   }, [pathname]);
 
   const scrollToTop = () => {

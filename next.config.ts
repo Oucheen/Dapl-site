@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/contact",
+        destination: "/booking",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         destination: "https://www.daplappliance.com/:path*",
         permanent: true,

@@ -7,7 +7,7 @@ const quickLinks = [
   { href: "/#offer", label: "View current offer" },
   { href: "/#appliances", label: "See appliances we repair" },
   { href: "/#faq", label: "Read FAQs" },
-  { href: "/#contact", label: "Contact us" },
+  { href: "/booking", label: "Book service" },
 ];
 
 const trustItems = [
@@ -51,7 +51,7 @@ export default function NotFound() {
 
                 <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href="/#contact"
+                    href="/booking"
                     className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                   >
                     Schedule Service

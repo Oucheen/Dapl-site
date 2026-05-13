@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: "Returning Customer Offer | $15 Off Your Next Repair",
   description:
     "Exclusive returning customer offer from Dapl Appliance Repair. Save $15 on your next service appointment in Charlotte, NC and surrounding areas.",
+  robots: {
+    index: false,
+    follow: false,
+  },
   alternates: {
     canonical: "/returning-customer-offer",
   },
