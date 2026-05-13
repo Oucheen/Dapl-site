@@ -323,14 +323,16 @@ leadSource: booking-page
   - wine cooler repair page
   - commercial refrigerator repair page
   - all 10 city/service-area pages
+  - all 8 brand repair pages
 - some image `alt` text improved for accessibility and SEO
 
 ## Favicon / icon status
 - Main icon files are in `src/app/`
 - Current setup uses:
-  - `src/app/icon.png`
-  - `src/app/favicon-96x96.png`
-- `layout.tsx` points icons to `/icon.png`
+  - `src/app/icon.png` - 512x512 PNG generated from the main site logo
+  - `src/app/icon1.png` - 96x96 PNG generated from the main site logo
+  - `src/app/favicon-96x96.png` - 96x96 copy of the same logo icon kept for compatibility/context
+- `layout.tsx` points icon metadata to `/icon.png` (`512x512`) and `/icon1.png` (`96x96`), with shortcut using `/icon1.png`
 - Browsers may keep showing the old icon because of aggressive favicon cache; hard refresh / incognito / waiting after deploy may be needed
 
 ## Files worth knowing first
