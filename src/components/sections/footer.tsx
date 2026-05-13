@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { brandPagesDirectory } from "@/content/brand-pages";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
 export function Footer() {
@@ -72,6 +73,21 @@ export function Footer() {
                     className="underline-offset-4 hover:text-primary hover:underline"
                   >
                     {area.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4 text-sm leading-6 text-muted">
+              <p className="font-semibold text-foreground">Brand Repair</p>
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                {brandPagesDirectory.map((brand) => (
+                  <Link
+                    key={brand.slug}
+                    href={`/brands/${brand.slug}`}
+                    className="underline-offset-4 hover:text-primary hover:underline"
+                  >
+                    {brand.name}
                   </Link>
                 ))}
               </div>

@@ -106,6 +106,37 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Desktop: infinite forward-only marquee
 - Mobile: swipeable horizontal list with center-peek behavior
 - Main file: `src/components/sections/brands.tsx`
+- Homepage brand logos now link to dedicated brand SEO pages under `/brands/...`
+
+### Brand SEO pages
+- A brand repair cluster exists for 8 major brands:
+  - Whirlpool
+  - GE
+  - Samsung
+  - LG
+  - KitchenAid
+  - Bosch
+  - Frigidaire
+  - Maytag
+- Routes live under:
+  - `src/app/brands/[brandSlug]/page.tsx`
+- Supporting content lives in:
+  - `src/content/brand-pages.ts`
+- Shared page renderer lives in:
+  - `src/components/brand-pages/brand-page-template.tsx`
+- Current brand page URLs:
+  - `/brands/whirlpool-appliance-repair-charlotte-nc`
+  - `/brands/ge-appliance-repair-charlotte-nc`
+  - `/brands/samsung-appliance-repair-charlotte-nc`
+  - `/brands/lg-appliance-repair-charlotte-nc`
+  - `/brands/kitchenaid-appliance-repair-charlotte-nc`
+  - `/brands/bosch-appliance-repair-charlotte-nc`
+  - `/brands/frigidaire-appliance-repair-charlotte-nc`
+  - `/brands/maytag-appliance-repair-charlotte-nc`
+- Each brand page includes custom metadata, Service schema, BreadcrumbList schema, FAQPage schema, unique issue cards, appliance category links, related brand links, and a brand-specific contact form lead source.
+- Brand pages are included in `src/app/sitemap.ts`.
+- Footer includes compact brand repair links for internal linking.
+- Service page brand-logo cards now link to the matching brand repair page.
 
 ### Offer section
 - Offer timer uses **America/New_York** time

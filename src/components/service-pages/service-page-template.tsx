@@ -8,6 +8,7 @@ import { RelatedServicesCarousel } from "@/components/service-pages/related-serv
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
+import { getBrandPageByName } from "@/content/brand-pages";
 import { servicePagesDirectory, type ServicePageContent } from "@/content/service-pages";
 
 const brandLogoMap: Record<string, string> = {
@@ -120,6 +121,10 @@ export function ServicePageTemplate({
     page.applianceName === "Commercial Refrigerator"
       ? "Charlotte-area businesses and property owners"
       : "Charlotte homeowners";
+  const brandSectionDescription =
+    page.applianceName === "Commercial Refrigerator"
+      ? "We work on many common commercial refrigeration and cooling brands found across Charlotte businesses."
+      : `We work on many common household ${applianceLower} brands found across Charlotte homes.`;
   const preferredRelatedSlugs = relatedServicePriorityMap[page.slug] ?? [];
   const relatedServices = servicePagesDirectory
     .filter((item) => item.slug !== page.slug)
@@ -341,30 +346,38 @@ export function ServicePageTemplate({
               <SectionHeading
                 eyebrow="Brands We Service"
                 title="Major brands we work on"
-                description={`We work on many common household ${applianceLower} brands found across Charlotte homes.`}
+                description={brandSectionDescription}
               />
             </FadeUp>
             <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
-              {page.brands.map((brand, index) => (
-                <FadeUp key={brand} delay={index * 0.05}>
-                  <div className="flex h-full min-h-[88px] items-center justify-center rounded-xl border border-border bg-white px-4 py-4 shadow-sm sm:min-h-[128px] sm:rounded-2xl sm:px-5 sm:py-5">
-                    {brandLogoMap[brand] ? (
-                      <Image
-                        src={brandLogoMap[brand]}
-                        alt={`${brand} logo`}
-                        width={180}
-                        height={64}
-                        className="max-h-18 w-full object-contain sm:max-h-14"
-                        unoptimized
-                      />
-                    ) : (
-                      <span className="text-center text-sm font-semibold text-foreground">
-                        {brand}
-                      </span>
-                    )}
-                  </div>
-                </FadeUp>
-              ))}
+              {page.brands.map((brand, index) => {
+                const brandPage = getBrandPageByName(brand);
+
+                return (
+                  <FadeUp key={brand} delay={index * 0.05}>
+                    <Link
+                      href={brandPage ? `/brands/${brandPage.slug}` : "/#brands"}
+                      className="flex h-full min-h-[88px] items-center justify-center rounded-xl border border-border bg-white px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md sm:min-h-[128px] sm:rounded-2xl sm:px-5 sm:py-5"
+                      aria-label={`${brand} appliance repair in Charlotte, NC`}
+                    >
+                      {brandLogoMap[brand] ? (
+                        <Image
+                          src={brandLogoMap[brand]}
+                          alt={`${brand} logo`}
+                          width={180}
+                          height={64}
+                          className="max-h-18 w-full object-contain sm:max-h-14"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-center text-sm font-semibold text-foreground">
+                          {brand}
+                        </span>
+                      )}
+                    </Link>
+                  </FadeUp>
+                );
+              })}
             </div>
           </div>
         </section>

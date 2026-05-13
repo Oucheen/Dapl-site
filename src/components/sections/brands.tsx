@@ -2,20 +2,11 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
-
-const brands = [
-  { name: "Whirlpool", logo: "/brands/whirlpool.svg" },
-  { name: "GE", logo: "/brands/general-electric.svg" },
-  { name: "Samsung", logo: "/brands/samsung.svg" },
-  { name: "LG", logo: "/brands/lg-electronics.svg" },
-  { name: "KitchenAid", logo: "/brands/kitchen-aid.svg" },
-  { name: "Maytag", logo: "/brands/maytag-3.svg" },
-  { name: "Bosch", logo: "/brands/bosch-1.svg" },
-  { name: "Frigidaire", logo: "/brands/frigidaire.svg" },
-] as const;
+import { brandPagesDirectory as brands } from "@/content/brand-pages";
 
 export function BrandsSection() {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -77,17 +68,23 @@ export function BrandsSection() {
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.35, delay: index * 0.04 }}
                   whileHover={{ y: -4 }}
-                  className="group grid h-32 w-[240px] flex-none snap-center place-items-center rounded-lg border border-border bg-[#f8fbff] p-6 shadow-sm transition-shadow hover:shadow-md sm:w-[280px] md:snap-start"
+                  className="group h-32 w-[240px] flex-none snap-center rounded-lg border border-border bg-[#f8fbff] shadow-sm transition-shadow hover:shadow-md sm:w-[280px] md:snap-start"
                 >
-                  <Image
-                    src={brand.logo}
-                    alt={`${brand.name} logo`}
-                    width={220}
-                    height={90}
-                    className="max-h-20 w-full object-contain"
-                    loading="lazy"
-                    unoptimized
-                  />
+                  <Link
+                    href={`/brands/${brand.slug}`}
+                    className="grid h-full place-items-center p-6"
+                    aria-label={`${brand.name} appliance repair in Charlotte, NC`}
+                  >
+                    <Image
+                      src={brand.logo}
+                      alt={`${brand.name} logo`}
+                      width={220}
+                      height={90}
+                      className="max-h-20 w-full object-contain"
+                      loading="lazy"
+                      unoptimized
+                    />
+                  </Link>
                 </motion.article>
               ))}
             </div>

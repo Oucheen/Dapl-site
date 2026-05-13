@@ -101,8 +101,13 @@ export function ContactWidget() {
 
   const scheduleHref = useMemo(() => {
     const isServicePage = pathname?.includes("-repair-charlotte-nc");
+    const isBrandPage = pathname?.startsWith("/brands/");
     const hasInlineContact =
-      pathname === "/" || pathname === "/booking" || pathname === "/returning-customer-offer" || isServicePage;
+      pathname === "/" ||
+      pathname === "/booking" ||
+      pathname === "/returning-customer-offer" ||
+      isServicePage ||
+      isBrandPage;
     return hasInlineContact ? "#contact" : "/booking";
   }, [pathname]);
 

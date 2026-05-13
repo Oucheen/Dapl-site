@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { brandPages } from "@/content/brand-pages";
 import { serviceAreaPages } from "@/content/service-areas";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -74,6 +75,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...serviceAreaPages.map((page) => ({
       url: `${baseUrl}/${page.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
+    ...brandPages.map((page) => ({
+      url: `${baseUrl}/brands/${page.slug}`,
       lastModified,
       changeFrequency: "weekly" as const,
       priority: 0.8,
