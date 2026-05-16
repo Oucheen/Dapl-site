@@ -131,6 +131,9 @@ export default async function InvoicePage({
                     <p className="mt-1 max-w-sm text-sm leading-6 text-muted">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
+                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted">
+                      Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
+                    </p>
                   </div>
                 </div>
 
