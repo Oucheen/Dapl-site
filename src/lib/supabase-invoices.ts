@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto";
-import { type LeadRecord, updateSupabaseLeadStatus } from "@/lib/supabase-leads";
+import {
+  createManualSupabaseLead,
+  type LeadRecord,
+  type ManualLeadInput,
+  updateSupabaseLeadStatus,
+} from "@/lib/supabase-leads";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "void";
 
@@ -374,6 +379,13 @@ export async function createInvoiceFromLead(leadId: string) {
   await updateSupabaseLeadStatus(lead.id, "invoiced");
 
   return invoice.id;
+}
+
+export async function createManualInvoice(input: ManualLeadInput) {
+  const leadId = await createManualSupabaseLead(input);
+  const invoiceId = await createInvoiceFromLead(leadId);
+
+  return { leadId, invoiceId };
 }
 
 async function getInvoiceLeadId(

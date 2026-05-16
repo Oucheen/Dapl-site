@@ -56,6 +56,18 @@ export type LeadPostInvoiceUpdateInput = {
   adminNotes: string;
 };
 
+export type ManualLeadInput = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  appliance: string;
+  serviceDate: string;
+  estimatedPrice: string;
+  assignedTechnician: string;
+  notes: string;
+};
+
 type SaveLeadResult =
   | { saved: true; id?: string }
   | { saved: false; skipped: true }
@@ -95,6 +107,40 @@ function getSupabaseUrl(config: NonNullable<ReturnType<typeof getSupabaseConfig>
   return `${config.url}/rest/v1/${config.table}`;
 }
 
+function assertUuid(id: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("Invalid lead id.");
+  }
+}
+
+function headers(config: NonNullable<ReturnType<typeof getSupabaseConfig>>) {
+  return {
+    apikey: config.serviceRoleKey,
+    Authorization: `Bearer ${config.serviceRoleKey}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function toOptionalText(value: string) {
+  return value.trim() || null;
+}
+
+function toEstimatedPrice(value: string) {
+  const priceText = value.trim();
+
+  if (!priceText) {
+    return null;
+  }
+
+  const estimatedPrice = Number(priceText);
+
+  if (!Number.isFinite(estimatedPrice) || estimatedPrice < 0) {
+    throw new Error("Invalid estimated price.");
+  }
+
+  return estimatedPrice;
+}
+
 export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLeadResult> {
   const config = getSupabaseConfig();
 
@@ -106,9 +152,7 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
     const response = await fetch(getSupabaseUrl(config), {
       method: "POST",
       headers: {
-        apikey: config.serviceRoleKey,
-        Authorization: `Bearer ${config.serviceRoleKey}`,
-        "Content-Type": "application/json",
+        ...headers(config),
         Prefer: "return=representation",
       },
       body: JSON.stringify({
@@ -137,6 +181,68 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
   }
 }
 
+export async function createManualSupabaseLead(input: ManualLeadInput) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const name = input.name.trim();
+  const phone = input.phone.trim();
+  const address = input.address.trim();
+
+  if (!name) {
+    throw new Error("Customer name is required.");
+  }
+
+  if (!phone) {
+    throw new Error("Customer phone is required.");
+  }
+
+  if (!address) {
+    throw new Error("Service address is required.");
+  }
+
+  const response = await fetch(getSupabaseUrl(config), {
+    method: "POST",
+    headers: {
+      ...headers(config),
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      status: "confirmed" satisfies LeadAdminStatus,
+      name,
+      phone,
+      email: input.email.trim(),
+      service_address: address,
+      appliance: toOptionalText(input.appliance),
+      promo_code: null,
+      lead_source: "manual-admin",
+      preferred_date: null,
+      message: input.notes.trim() || "Manual invoice created from the admin dashboard.",
+      admin_notes: toOptionalText(input.notes),
+      scheduled_date: input.serviceDate || null,
+      estimated_price: toEstimatedPrice(input.estimatedPrice),
+      assigned_technician: toOptionalText(input.assignedTechnician),
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase manual lead insert failed: ${response.status} ${details}`);
+  }
+
+  const rows = (await response.json()) as SupabaseLeadRow[];
+  const leadId = rows[0]?.id;
+
+  if (!leadId) {
+    throw new Error("Supabase manual lead insert returned no lead.");
+  }
+
+  return leadId;
+}
+
 export async function listSupabaseLeads(limit = 100): Promise<LeadRecord[]> {
   const config = getSupabaseConfig();
 
@@ -151,10 +257,7 @@ export async function listSupabaseLeads(limit = 100): Promise<LeadRecord[]> {
   });
 
   const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-    },
+    headers: headers(config),
     cache: "no-store",
   });
 
@@ -173,16 +276,12 @@ export async function updateSupabaseLeadStatus(id: string, status: LeadAdminStat
     throw new Error("Supabase is not configured.");
   }
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
-    throw new Error("Invalid lead id.");
-  }
+  assertUuid(id);
 
   const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
     method: "PATCH",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json",
+      ...headers(config),
       Prefer: "return=minimal",
     },
     body: JSON.stringify({ status }),
@@ -201,23 +300,14 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
     throw new Error("Supabase is not configured.");
   }
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
-    throw new Error("Invalid lead id.");
-  }
+  assertUuid(id);
 
-  const priceText = input.estimatedPrice.trim();
-  const estimatedPrice = priceText ? Number(priceText) : null;
-
-  if (estimatedPrice !== null && !Number.isFinite(estimatedPrice)) {
-    throw new Error("Invalid estimated price.");
-  }
+  const estimatedPrice = toEstimatedPrice(input.estimatedPrice);
 
   const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
     method: "PATCH",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json",
+      ...headers(config),
       Prefer: "return=minimal",
     },
     body: JSON.stringify({
@@ -245,16 +335,12 @@ export async function updateSupabaseLeadAfterInvoice(
     throw new Error("Supabase is not configured.");
   }
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
-    throw new Error("Invalid lead id.");
-  }
+  assertUuid(id);
 
   const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
     method: "PATCH",
     headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json",
+      ...headers(config),
       Prefer: "return=minimal",
     },
     body: JSON.stringify({

@@ -100,6 +100,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Admin entry point: `/admin/leads`
 - Login page: `/admin/leads/login`
 - Invoice list route: `/admin/invoices`
+- Manual invoice route: `/admin/invoices/new`
 - Invoice detail route: `/admin/invoices/[invoiceId]`
 - `/admin` redirects to `/admin/leads`
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
@@ -134,6 +135,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Activity log table:
   - `public.lead_activity`
 - Invoice MVP currently supports:
+  - manual invoice creation for phone/offline/non-website leads via `/admin/invoices/new`
   - draft invoice creation from lead details
   - one starter line item using the lead estimate
   - editing invoice item descriptions, quantities, and unit prices
@@ -150,10 +152,12 @@ For local development, create `.env.local` with the same keys if you want the fo
   - new lead received
   - lead status/details updated
   - invoice created
+  - manual invoice created
   - invoice status updated
   - invoice line items added / updated / deleted
   - job marked completed
 - Activity writes are best-effort, so admin workflows should still work if the `lead_activity` table has not been created yet. To enable visible history, run the latest `supabase/schema.sql` in Supabase SQL Editor.
+- Manual invoices create a normal lead first with `lead_source: manual-admin`, then create a draft invoice from it. This keeps phone/offline work in the same lead/invoice/status workflow as website submissions.
 - Invoice MVP does not yet send invoice emails. That should be the next layer after the print/PDF workflow is confirmed stable.
 - If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.
 

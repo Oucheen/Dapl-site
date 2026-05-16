@@ -66,12 +66,20 @@ export default async function InvoicesAdminPage() {
               Website invoices
             </h1>
           </div>
-          <Link
-            href="/admin/leads"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
-          >
-            View leads
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/invoices/new"
+              className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Create manual invoice
+            </Link>
+            <Link
+              href="/admin/leads"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              View leads
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -95,7 +103,7 @@ export default async function InvoicesAdminPage() {
             <div className="px-5 py-12 text-center">
               <p className="text-lg font-bold text-primary">No invoices yet</p>
               <p className="mt-2 text-sm text-muted">
-                Create an invoice from a lead and it will appear here.
+                Create an invoice from a lead or add one manually and it will appear here.
               </p>
             </div>
           ) : (

@@ -149,6 +149,12 @@ export default async function LeadsAdminPage({
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/admin/invoices/new"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Create manual invoice
+            </Link>
+            <Link
               href="/admin/invoices"
               className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
