@@ -127,6 +127,9 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice MVP currently supports:
   - draft invoice creation from lead details
   - one starter line item using the lead estimate
+  - editing invoice item descriptions, quantities, and unit prices
+  - adding and deleting invoice line items
+  - automatic subtotal / total recalculation from invoice items
   - invoice status updates: `draft`, `sent`, `paid`, `void`
 - Invoice MVP does not yet generate PDF files or send invoice emails. That should be the next layer after invoice records and statuses are confirmed stable.
 - If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.

@@ -40,6 +40,13 @@ export type InvoiceWithItems = {
   items: InvoiceItemRecord[];
 };
 
+export type InvoiceItemInput = {
+  id?: string;
+  description: string;
+  quantity: number | string;
+  unitPrice: number | string;
+};
+
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
 const DEFAULT_INVOICE_ITEMS_TABLE = "invoice_items";
@@ -106,6 +113,16 @@ function toMoney(value: number | string | null | undefined) {
 
   if (!Number.isFinite(amount) || amount < 0) {
     return 0;
+  }
+
+  return Math.round(amount * 100) / 100;
+}
+
+function toQuantity(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 1;
   }
 
   return Math.round(amount * 100) / 100;
@@ -343,4 +360,155 @@ export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
     const details = await response.text();
     throw new Error(`Supabase invoice status update failed: ${response.status} ${details}`);
   }
+}
+
+async function updateInvoiceTotals(
+  config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
+  invoiceId: string,
+) {
+  const params = new URLSearchParams({
+    select: "line_total",
+    invoice_id: `eq.${invoiceId}`,
+  });
+
+  const response = await fetch(`${getTableUrl(config, config.invoiceItemsTable)}?${params}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice total fetch failed: ${response.status} ${details}`);
+  }
+
+  const items = (await response.json()) as Pick<InvoiceItemRecord, "line_total">[];
+  const subtotal = toMoney(items.reduce((sum, item) => sum + Number(item.line_total ?? 0), 0));
+  const tax = 0;
+  const total = toMoney(subtotal + tax);
+
+  const updateResponse = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${invoiceId}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ subtotal, tax, total }),
+  });
+
+  if (!updateResponse.ok) {
+    const details = await updateResponse.text();
+    throw new Error(`Supabase invoice total update failed: ${updateResponse.status} ${details}`);
+  }
+}
+
+export async function updateInvoiceItems(invoiceId: string, items: InvoiceItemInput[]) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  for (const item of items) {
+    if (!item.id) {
+      continue;
+    }
+
+    assertUuid(item.id);
+
+    const description = item.description.trim();
+    const quantity = toQuantity(item.quantity);
+    const unitPrice = toMoney(item.unitPrice);
+    const lineTotal = toMoney(quantity * unitPrice);
+
+    if (!description) {
+      throw new Error("Invoice item description is required.");
+    }
+
+    const response = await fetch(
+      `${getTableUrl(config, config.invoiceItemsTable)}?id=eq.${item.id}&invoice_id=eq.${invoiceId}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...headers(config),
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          description,
+          quantity,
+          unit_price: unitPrice,
+          line_total: lineTotal,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Supabase invoice item update failed: ${response.status} ${details}`);
+    }
+  }
+
+  await updateInvoiceTotals(config, invoiceId);
+}
+
+export async function addInvoiceItem(invoiceId: string) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(getTableUrl(config, config.invoiceItemsTable), {
+    method: "POST",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      invoice_id: invoiceId,
+      description: "Additional service",
+      quantity: 1,
+      unit_price: 0,
+      line_total: 0,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice item insert failed: ${response.status} ${details}`);
+  }
+
+  await updateInvoiceTotals(config, invoiceId);
+}
+
+export async function deleteInvoiceItem(invoiceId: string, itemId: string) {
+  assertUuid(invoiceId);
+  assertUuid(itemId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(
+    `${getTableUrl(config, config.invoiceItemsTable)}?id=eq.${itemId}&invoice_id=eq.${invoiceId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...headers(config),
+        Prefer: "return=minimal",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice item delete failed: ${response.status} ${details}`);
+  }
+
+  await updateInvoiceTotals(config, invoiceId);
 }

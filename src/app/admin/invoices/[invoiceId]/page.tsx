@@ -1,11 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { type InvoiceItemRecord, type InvoiceStatus, getInvoiceById } from "@/lib/supabase-invoices";
 import {
-  type InvoiceStatus,
-  getInvoiceById,
-} from "@/lib/supabase-invoices";
-import { updateInvoiceStatusAction } from "./actions";
+  addInvoiceItemAction,
+  deleteInvoiceItemAction,
+  updateInvoiceItemsAction,
+  updateInvoiceStatusAction,
+} from "./actions";
 
 const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -41,6 +44,30 @@ function formatMoney(value: number | string | null | undefined) {
     style: "currency",
     currency: "USD",
   }).format(Number.isFinite(amount) ? amount : 0);
+}
+
+function formatInputMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+
+  if (!Number.isFinite(amount)) {
+    return "0.00";
+  }
+
+  return amount.toFixed(2);
+}
+
+function formatQuantity(value: number | string | null | undefined) {
+  const amount = Number(value ?? 1);
+
+  if (!Number.isFinite(amount)) {
+    return "1";
+  }
+
+  return String(amount);
+}
+
+function getLineTotal(item: InvoiceItemRecord) {
+  return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
 
 export default async function InvoicePage({
@@ -85,109 +112,187 @@ export default async function InvoicePage({
       </header>
 
       <section className="container-shell py-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-            <div className="border-b border-border px-5 py-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                Customer
-              </p>
-              <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-xl font-black text-primary">{invoice.customer_name}</p>
-                  {invoice.customer_phone ? (
-                    <a
-                      href={`tel:${invoice.customer_phone}`}
-                      className="mt-2 block font-semibold text-foreground hover:text-primary"
-                    >
-                      {invoice.customer_phone}
-                    </a>
-                  ) : null}
-                  {invoice.customer_email ? (
-                    <a
-                      href={`mailto:${invoice.customer_email}`}
-                      className="mt-1 block break-words text-muted hover:text-primary"
-                    >
-                      {invoice.customer_email}
-                    </a>
-                  ) : null}
+            <div className="border-b border-border bg-slate-50/80 px-5 py-5 sm:px-7">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <Image
+                    src="/logo.jpg"
+                    alt="Dapl Appliance Repair logo"
+                    width={76}
+                    height={76}
+                    className="h-16 w-16 object-contain"
+                  />
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70">
+                      Dapl Appliance Repair
+                    </p>
+                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted">
+                      9401 Peckham Rye Rd, Charlotte, NC 28227
+                    </p>
+                  </div>
                 </div>
-                <div className="text-sm leading-6 text-muted">
+
+                <div className="text-left sm:text-right">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Invoice
+                  </p>
+                  <p className="mt-1 text-xl font-black text-primary">
+                    {invoice.invoice_number}
+                  </p>
+                  <p className="mt-2 text-sm text-muted">Created {formatDate(invoice.created_at)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-5 border-b border-border px-5 py-5 sm:grid-cols-2 sm:px-7">
+              <section>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  Bill to
+                </p>
+                <p className="mt-3 text-xl font-black text-primary">{invoice.customer_name}</p>
+                {invoice.customer_phone ? (
+                  <a
+                    href={`tel:${invoice.customer_phone}`}
+                    className="mt-2 block font-semibold text-foreground hover:text-primary"
+                  >
+                    {invoice.customer_phone}
+                  </a>
+                ) : null}
+                {invoice.customer_email ? (
+                  <a
+                    href={`mailto:${invoice.customer_email}`}
+                    className="mt-1 block break-words text-muted hover:text-primary"
+                  >
+                    {invoice.customer_email}
+                  </a>
+                ) : null}
+              </section>
+
+              <section className="grid gap-4 text-sm leading-6 text-muted sm:grid-cols-2">
+                <div>
                   <p className="font-bold text-foreground">Service address</p>
                   <p className="mt-1 break-words">{invoice.service_address || "Not set"}</p>
-                  <p className="mt-3 font-bold text-foreground">Service date</p>
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">Service date</p>
                   <p className="mt-1">{formatDate(invoice.service_date)}</p>
                 </div>
-              </div>
+                <div>
+                  <p className="font-bold text-foreground">Appliance</p>
+                  <p className="mt-1">{invoice.appliance || "Not selected"}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">Technician</p>
+                  <p className="mt-1">{invoice.assigned_technician || "Not assigned"}</p>
+                </div>
+              </section>
             </div>
 
-            <div className="px-5 py-5">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    Appliance
+            <form action={updateInvoiceItemsAction} className="px-5 py-5 sm:px-7">
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Line items
                   </p>
-                  <p className="mt-2 font-bold text-foreground">
-                    {invoice.appliance || "Not selected"}
-                  </p>
+                  <h2 className="mt-1 text-xl font-black text-primary">Services and charges</h2>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    Technician
-                  </p>
-                  <p className="mt-2 font-bold text-foreground">
-                    {invoice.assigned_technician || "Not assigned"}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    Created
-                  </p>
-                  <p className="mt-2 font-bold text-foreground">
-                    {formatDate(invoice.created_at)}
-                  </p>
-                </div>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-primary px-4 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Save invoice items
+                </button>
               </div>
 
-              <div className="mt-6 overflow-hidden rounded-xl border border-border">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead className="bg-slate-50 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    <tr>
-                      <th className="px-4 py-3">Description</th>
-                      <th className="px-4 py-3 text-right">Qty</th>
-                      <th className="px-4 py-3 text-right">Unit</th>
-                      <th className="px-4 py-3 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-4 font-semibold text-foreground">
-                          {item.description}
-                        </td>
-                        <td className="px-4 py-4 text-right text-muted">{item.quantity}</td>
-                        <td className="px-4 py-4 text-right text-muted">
-                          {formatMoney(item.unit_price)}
-                        </td>
-                        <td className="px-4 py-4 text-right font-bold text-foreground">
-                          {formatMoney(item.line_total)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {invoice.notes ? (
-                <div className="mt-6 rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    Notes
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted">
-                    {invoice.notes}
-                  </p>
+              <div className="mt-5 overflow-hidden rounded-xl border border-border">
+                <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:grid">
+                  <span>Description</span>
+                  <span className="text-right">Qty</span>
+                  <span className="text-right">Unit</span>
+                  <span className="text-right">Total</span>
+                  <span className="text-right">Action</span>
                 </div>
-              ) : null}
-            </div>
+
+                <div className="divide-y divide-border">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] lg:items-center"
+                    >
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                        <span className="lg:hidden">Description</span>
+                        <input
+                          type="text"
+                          name="description"
+                          defaultValue={item.description}
+                          required
+                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                        <span className="lg:hidden">Qty</span>
+                        <input
+                          type="number"
+                          name="quantity"
+                          defaultValue={formatQuantity(item.quantity)}
+                          min="0.01"
+                          step="0.01"
+                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                        <span className="lg:hidden">Unit</span>
+                        <input
+                          type="number"
+                          name="unitPrice"
+                          defaultValue={formatInputMoney(item.unit_price)}
+                          min="0"
+                          step="0.01"
+                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
+                        />
+                      </label>
+                      <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-primary lg:bg-transparent lg:px-0 lg:text-right">
+                        {getLineTotal(item)}
+                      </div>
+                      <button
+                        type="submit"
+                        name="deleteItemId"
+                        value={item.id}
+                        formAction={deleteInvoiceItemAction}
+                        className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </form>
+
+            <form action={addInvoiceItemAction} className="border-t border-border px-5 py-5 sm:px-7">
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-primary/20 bg-white px-4 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
+              >
+                Add line item
+              </button>
+            </form>
+
+            {invoice.notes ? (
+              <div className="border-t border-border px-5 py-5 sm:px-7">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Internal notes
+                </p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted">
+                  {invoice.notes}
+                </p>
+              </div>
+            ) : null}
           </article>
 
           <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm">
@@ -234,7 +339,7 @@ export default async function InvoicePage({
             </div>
 
             <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-muted">
-              PDF and email sending will be the next layer after invoice records are stable.
+              Next upgrade: PDF / print view and email sending through Resend.
             </div>
           </aside>
         </div>
