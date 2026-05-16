@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
-import { logoutAdmin, updateLeadStatus } from "./actions";
+import { logoutAdmin, updateLeadDetails } from "./actions";
 
 const STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -47,6 +47,20 @@ function countByStatus(leads: Awaited<ReturnType<typeof listSupabaseLeads>>) {
       cancelled: 0,
     } satisfies Record<LeadAdminStatus, number>,
   );
+}
+
+function formatPrice(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const price = Number(value);
+
+  if (!Number.isFinite(price)) {
+    return "";
+  }
+
+  return price.toFixed(2);
 }
 
 export default async function LeadsAdminPage() {
@@ -133,20 +147,23 @@ export default async function LeadsAdminPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-[1080px] w-full border-collapse text-left text-sm">
+              <table className="min-w-[1380px] w-full border-collapse text-left text-sm">
                 <thead className="bg-slate-50 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   <tr>
                     <th className="px-5 py-4">Received</th>
                     <th className="px-5 py-4">Customer</th>
-                    <th className="px-5 py-4">Appliance</th>
+                    <th className="px-5 py-4">Job</th>
                     <th className="px-5 py-4">Address</th>
-                    <th className="px-5 py-4">Message</th>
-                    <th className="px-5 py-4">Status</th>
+                    <th className="px-5 py-4">Admin notes</th>
+                    <th className="px-5 py-4">Manage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {leads.map((lead) => (
-                    <tr key={lead.id} className="align-top">
+                  {leads.map((lead) => {
+                    const formId = `lead-details-${lead.id}`;
+
+                    return (
+                      <tr key={lead.id} className="align-top">
                       <td className="px-5 py-5">
                         <p className="font-semibold text-foreground">{formatDate(lead.created_at)}</p>
                         <p className="mt-1 text-xs text-muted">ET</p>
@@ -183,6 +200,11 @@ export default async function LeadsAdminPage() {
                         {lead.lead_source ? (
                           <p className="mt-2 text-xs text-muted">Source: {lead.lead_source}</p>
                         ) : null}
+                        {lead.message ? (
+                          <p className="mt-3 max-w-[240px] whitespace-pre-wrap text-xs leading-5 text-muted">
+                            {lead.message}
+                          </p>
+                        ) : null}
                       </td>
                       <td className="px-5 py-5">
                         <p className="max-w-[220px] leading-6 text-foreground">
@@ -190,9 +212,14 @@ export default async function LeadsAdminPage() {
                         </p>
                       </td>
                       <td className="px-5 py-5">
-                        <p className="max-w-[260px] whitespace-pre-wrap leading-6 text-muted">
-                          {lead.message}
-                        </p>
+                        <textarea
+                          form={formId}
+                          name="adminNotes"
+                          defaultValue={lead.admin_notes ?? ""}
+                          rows={5}
+                          placeholder="Internal notes, call result, parts needed..."
+                          className="min-h-28 w-72 resize-y rounded-xl border border-border bg-white px-3 py-2 text-sm leading-6 text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
                       </td>
                       <td className="px-5 py-5">
                         <span
@@ -200,29 +227,68 @@ export default async function LeadsAdminPage() {
                         >
                           {lead.status}
                         </span>
-                        <form action={updateLeadStatus} className="mt-3 flex gap-2">
+                        <form id={formId} action={updateLeadDetails} className="mt-3 grid w-80 gap-3">
                           <input type="hidden" name="id" value={lead.id} />
-                          <select
-                            name="status"
-                            defaultValue={lead.status}
-                            className="min-w-32 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                          >
-                            {STATUSES.map((status) => (
-                              <option key={status.value} value={status.value}>
-                                {status.label}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                              Status
+                              <select
+                                name="status"
+                                defaultValue={lead.status}
+                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                              >
+                                {STATUSES.map((status) => (
+                                  <option key={status.value} value={status.value}>
+                                    {status.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                              Visit date
+                              <input
+                                type="date"
+                                name="scheduledDate"
+                                defaultValue={lead.scheduled_date ?? ""}
+                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                              />
+                            </label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                              Estimate
+                              <input
+                                type="number"
+                                name="estimatedPrice"
+                                defaultValue={formatPrice(lead.estimated_price)}
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                              />
+                            </label>
+                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                              Technician
+                              <input
+                                type="text"
+                                name="assignedTechnician"
+                                defaultValue={lead.assigned_technician ?? ""}
+                                placeholder="Name"
+                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                              />
+                            </label>
+                          </div>
                           <button
                             type="submit"
-                            className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                            className="rounded-lg bg-primary px-3 py-2.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
                           >
-                            Save
+                            Save lead details
                           </button>
                         </form>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -15,8 +15,18 @@ create table if not exists public.leads (
   promo_code text,
   lead_source text,
   preferred_date date,
-  message text not null
+  message text not null,
+  admin_notes text,
+  scheduled_date date,
+  estimated_price numeric(10,2),
+  assigned_technician text
 );
+
+alter table public.leads
+  add column if not exists admin_notes text,
+  add column if not exists scheduled_date date,
+  add column if not exists estimated_price numeric(10,2),
+  add column if not exists assigned_technician text;
 
 create index if not exists leads_created_at_idx on public.leads (created_at desc);
 create index if not exists leads_status_idx on public.leads (status);

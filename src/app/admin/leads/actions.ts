@@ -8,7 +8,11 @@ import {
   setAdminSession,
   verifyAdminPassword,
 } from "@/lib/admin-auth";
-import { type LeadAdminStatus, updateSupabaseLeadStatus } from "@/lib/supabase-leads";
+import {
+  type LeadAdminStatus,
+  updateSupabaseLead,
+  updateSupabaseLeadStatus,
+} from "@/lib/supabase-leads";
 
 const ALLOWED_STATUSES: LeadAdminStatus[] = [
   "new",
@@ -48,5 +52,28 @@ export async function updateLeadStatus(formData: FormData) {
   }
 
   await updateSupabaseLeadStatus(id, status);
+  revalidatePath("/admin/leads");
+}
+
+export async function updateLeadDetails(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  const status = String(formData.get("status") || "") as LeadAdminStatus;
+
+  if (!ALLOWED_STATUSES.includes(status)) {
+    throw new Error("Invalid lead status.");
+  }
+
+  await updateSupabaseLead(id, {
+    status,
+    adminNotes: String(formData.get("adminNotes") || ""),
+    scheduledDate: String(formData.get("scheduledDate") || ""),
+    estimatedPrice: String(formData.get("estimatedPrice") || ""),
+    assignedTechnician: String(formData.get("assignedTechnician") || ""),
+  });
+
   revalidatePath("/admin/leads");
 }

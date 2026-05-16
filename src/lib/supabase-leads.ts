@@ -37,6 +37,18 @@ export type LeadRecord = {
   lead_source: string | null;
   preferred_date: string | null;
   message: string;
+  admin_notes?: string | null;
+  scheduled_date?: string | null;
+  estimated_price?: number | string | null;
+  assigned_technician?: string | null;
+};
+
+export type LeadAdminUpdateInput = {
+  status: LeadAdminStatus;
+  adminNotes: string;
+  scheduledDate: string;
+  estimatedPrice: string;
+  assignedTechnician: string;
 };
 
 type SaveLeadResult =
@@ -174,5 +186,46 @@ export async function updateSupabaseLeadStatus(id: string, status: LeadAdminStat
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase lead status update failed: ${response.status} ${details}`);
+  }
+}
+
+export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("Invalid lead id.");
+  }
+
+  const priceText = input.estimatedPrice.trim();
+  const estimatedPrice = priceText ? Number(priceText) : null;
+
+  if (estimatedPrice !== null && !Number.isFinite(estimatedPrice)) {
+    throw new Error("Invalid estimated price.");
+  }
+
+  const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      status: input.status,
+      admin_notes: input.adminNotes.trim() || null,
+      scheduled_date: input.scheduledDate || null,
+      estimated_price: estimatedPrice,
+      assigned_technician: input.assignedTechnician.trim() || null,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase lead update failed: ${response.status} ${details}`);
   }
 }
