@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { saveLeadToSupabase } from "@/lib/supabase-leads";
 
 const MAX = {
   name: 120,
@@ -263,6 +264,22 @@ export async function POST(request: Request) {
   }
 
   const subject = `Dapl website: ${name}`;
+  const leadStorageResult = await saveLeadToSupabase({
+    name,
+    phone,
+    email,
+    address,
+    appliance,
+    promoCode,
+    leadSource,
+    preferredDate: preferred.iso,
+    message,
+  });
+
+  if (!leadStorageResult.saved && !leadStorageResult.skipped) {
+    console.error("Supabase lead storage error:", leadStorageResult.error);
+  }
+
   const html = buildInquiryHtml({
     name,
     phone,

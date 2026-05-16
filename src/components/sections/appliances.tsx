@@ -97,7 +97,7 @@ export function AppliancesSection() {
                     alt={`${item.name} appliance we repair`}
                     fill
                     className="object-contain object-center p-2 sm:p-3"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                    sizes="(max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 20vw"
                   />
                   <div
                     className="pointer-events-none absolute inset-0 shadow-[inset_0_0_32px_rgba(0,0,0,0.06)] ring-1 ring-inset ring-black/[0.04] transition duration-300 group-hover:shadow-[inset_0_0_40px_rgba(0,0,0,0.08)]"

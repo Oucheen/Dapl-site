@@ -43,6 +43,9 @@ CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
 CONTACT_FROM_EMAIL=Dapl Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_LEADS_TABLE=leads
 ```
 
 For local development, create `.env.local` with the same keys if you want the form to work on `localhost`.
@@ -74,6 +77,18 @@ For local development, create `.env.local` with the same keys if you want the fo
 - If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set, each new lead is also sent to Telegram
 - Email and Telegram now work as parallel notification channels
 - The request succeeds if at least one notification channel delivers successfully
+
+## Supabase lead storage
+- Supabase lead storage is supported as an optional first step toward a mini CRM / invoice workflow
+- SQL schema lives in `supabase/schema.sql`
+- Server helper lives in `src/lib/supabase-leads.ts`
+- `src/app/api/contact/route.ts` attempts to save every validated lead to Supabase before sending email / Telegram notifications
+- Required environment variables:
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `SUPABASE_LEADS_TABLE` (defaults to `leads`)
+- Supabase storage is optional for now. If it is not configured or insert fails, the form can still deliver through email / Telegram.
+- The service role key must remain server-only and must never be exposed with a `NEXT_PUBLIC_` prefix.
 
 ## Main implemented features
 
@@ -176,6 +191,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Shared page renderer lives in:
   - `src/components/service-pages/service-page-template.tsx`
 - Refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and commercial refrigerator cards on the homepage now link to their service pages
+- Homepage appliance card images use responsive `sizes` tuned to the actual grid widths, so mobile/tablet browsers do not request unnecessarily large image variants.
 - Each service page includes:
   - custom metadata
   - Service schema
