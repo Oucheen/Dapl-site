@@ -157,7 +157,7 @@ export default async function LeadsAdminPage() {
                 <form
                   key={lead.id}
                   action={updateLeadDetails}
-                  className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(320px,0.8fr)]"
+                  className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)_minmax(380px,0.9fr)]"
                 >
                   <input type="hidden" name="id" value={lead.id} />
 
@@ -260,17 +260,17 @@ export default async function LeadsAdminPage() {
                     </label>
                   </section>
 
-                  <section className="min-w-0 rounded-xl border border-border/80 bg-slate-50/70 p-4 lg:col-span-2 xl:col-span-1">
+                  <section className="min-w-0 self-start rounded-xl border border-border/80 bg-slate-50/70 p-4 lg:col-span-2 xl:col-span-1">
                     <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
                       Manage
                     </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 min-[1320px]:grid-cols-2">
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Status
                         <select
                           name="status"
                           defaultValue={lead.status}
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                         >
                           {STATUSES.map((status) => (
                             <option key={status.value} value={status.value}>
@@ -285,7 +285,7 @@ export default async function LeadsAdminPage() {
                           type="date"
                           name="scheduledDate"
                           defaultValue={lead.scheduled_date ?? ""}
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                         />
                       </label>
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
@@ -297,7 +297,7 @@ export default async function LeadsAdminPage() {
                           min="0"
                           step="0.01"
                           placeholder="0.00"
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
@@ -307,7 +307,7 @@ export default async function LeadsAdminPage() {
                           name="assignedTechnician"
                           defaultValue={lead.assigned_technician ?? ""}
                           placeholder="Name"
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
                     </div>
