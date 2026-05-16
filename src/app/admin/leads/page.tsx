@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
-import { logoutAdmin, updateLeadDetails } from "./actions";
+import { createInvoiceForLead, logoutAdmin, updateLeadDetails } from "./actions";
 
 const STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -316,6 +316,13 @@ export default async function LeadsAdminPage() {
                       className="mt-4 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
                     >
                       Save lead details
+                    </button>
+                    <button
+                      type="submit"
+                      formAction={createInvoiceForLead}
+                      className="mt-2 w-full rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Create invoice
                     </button>
                   </section>
                 </form>

@@ -8,6 +8,7 @@ import {
   setAdminSession,
   verifyAdminPassword,
 } from "@/lib/admin-auth";
+import { createInvoiceFromLead } from "@/lib/supabase-invoices";
 import {
   type LeadAdminStatus,
   updateSupabaseLead,
@@ -76,4 +77,16 @@ export async function updateLeadDetails(formData: FormData) {
   });
 
   revalidatePath("/admin/leads");
+}
+
+export async function createInvoiceForLead(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  const invoiceId = await createInvoiceFromLead(id);
+
+  revalidatePath("/admin/leads");
+  redirect(`/admin/invoices/${invoiceId}`);
 }

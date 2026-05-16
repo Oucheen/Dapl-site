@@ -46,6 +46,8 @@ TELEGRAM_CHAT_ID=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_LEADS_TABLE=leads
+SUPABASE_INVOICES_TABLE=invoices
+SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
 LEADS_ADMIN_PASSWORD=...
 LEADS_ADMIN_SESSION_SECRET=...
 ```
@@ -96,6 +98,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 ## Leads admin dashboard
 - Admin entry point: `/admin/leads`
 - Login page: `/admin/leads/login`
+- Invoice detail route: `/admin/invoices/[invoiceId]`
 - `/admin` redirects to `/admin/leads`
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
 - The floating contact widget is hidden on `/admin` routes
@@ -117,6 +120,16 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `assigned_technician`
 - If those fields are missing in Supabase, run the latest `supabase/schema.sql` or at least the `alter table public.leads add column if not exists ...` block from that file.
 - The lead list uses responsive cards instead of a wide table, so it should not require horizontal scrolling on normal desktop/tablet widths.
+- The lead card now has a `Create invoice` action. It creates one draft invoice from the lead, marks the lead as `invoiced`, and opens `/admin/invoices/[invoiceId]`.
+- Invoice MVP tables:
+  - `public.invoices`
+  - `public.invoice_items`
+- Invoice MVP currently supports:
+  - draft invoice creation from lead details
+  - one starter line item using the lead estimate
+  - invoice status updates: `draft`, `sent`, `paid`, `void`
+- Invoice MVP does not yet generate PDF files or send invoice emails. That should be the next layer after invoice records and statuses are confirmed stable.
+- If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.
 
 ## Main implemented features
 
