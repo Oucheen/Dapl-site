@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createLeadActivity } from "@/lib/supabase-activity";
 import { saveLeadToSupabase } from "@/lib/supabase-leads";
 
 const MAX = {
@@ -284,6 +285,15 @@ export async function POST(request: Request) {
     console.warn(
       "Supabase lead storage skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.",
     );
+  }
+
+  if (leadStorageResult.saved && leadStorageResult.id) {
+    await createLeadActivity({
+      leadId: leadStorageResult.id,
+      eventType: "lead_received",
+      title: "New lead received",
+      details: leadSource ? `Submitted from ${leadSource}.` : "Submitted from the website.",
+    });
   }
 
   const html = buildInquiryHtml({

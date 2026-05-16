@@ -278,6 +278,18 @@ async function getExistingInvoiceForLead(
   return invoices[0]?.id ?? null;
 }
 
+export async function getInvoiceIdForLead(leadId: string) {
+  assertUuid(leadId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  return getExistingInvoiceForLead(config, leadId);
+}
+
 export async function createInvoiceFromLead(leadId: string) {
   assertUuid(leadId);
 
@@ -364,6 +376,45 @@ export async function createInvoiceFromLead(leadId: string) {
   return invoice.id;
 }
 
+async function getInvoiceLeadId(
+  config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
+  invoiceId: string,
+) {
+  const params = new URLSearchParams({
+    select: "lead_id",
+    id: `eq.${invoiceId}`,
+    limit: "1",
+  });
+
+  const response = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${params.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice lead fetch failed: ${response.status} ${details}`);
+  }
+
+  const invoices = (await response.json()) as Pick<InvoiceRecord, "lead_id">[];
+  return invoices[0]?.lead_id ?? null;
+}
+
+export async function getLeadIdForInvoice(invoiceId: string) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  return getInvoiceLeadId(config, invoiceId);
+}
+
 export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
   assertUuid(id);
 
@@ -372,6 +423,8 @@ export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
   if (!config) {
     throw new Error("Supabase is not configured.");
   }
+
+  const leadId = await getInvoiceLeadId(config, id);
 
   const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${id}`, {
     method: "PATCH",
@@ -389,6 +442,13 @@ export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
     const details = await response.text();
     throw new Error(`Supabase invoice status update failed: ${response.status} ${details}`);
   }
+
+  if (leadId) {
+    const leadStatus = status === "paid" ? "completed" : status === "void" ? "cancelled" : "invoiced";
+    await updateSupabaseLeadStatus(leadId, leadStatus);
+  }
+
+  return { leadId };
 }
 
 async function updateInvoiceTotals(

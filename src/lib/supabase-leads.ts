@@ -51,6 +51,11 @@ export type LeadAdminUpdateInput = {
   assignedTechnician: string;
 };
 
+export type LeadPostInvoiceUpdateInput = {
+  status: Extract<LeadAdminStatus, "invoiced" | "completed" | "cancelled">;
+  adminNotes: string;
+};
+
 type SaveLeadResult =
   | { saved: true; id?: string }
   | { saved: false; skipped: true }
@@ -227,5 +232,39 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase lead update failed: ${response.status} ${details}`);
+  }
+}
+
+export async function updateSupabaseLeadAfterInvoice(
+  id: string,
+  input: LeadPostInvoiceUpdateInput,
+) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("Invalid lead id.");
+  }
+
+  const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      status: input.status,
+      admin_notes: input.adminNotes.trim() || null,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase post-invoice lead update failed: ${response.status} ${details}`);
   }
 }

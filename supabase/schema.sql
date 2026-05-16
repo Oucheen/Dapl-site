@@ -56,6 +56,17 @@ create table if not exists public.invoice_items (
   line_total numeric(10,2) not null default 0
 );
 
+create table if not exists public.lead_activity (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  lead_id uuid references public.leads(id) on delete cascade,
+  invoice_id uuid references public.invoices(id) on delete set null,
+  event_type text not null,
+  title text not null,
+  details text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
 alter table public.leads
   add column if not exists admin_notes text,
   add column if not exists scheduled_date date,
@@ -72,6 +83,10 @@ create unique index if not exists invoices_lead_id_unique_idx
   where lead_id is not null;
 create index if not exists invoices_status_idx on public.invoices (status);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items (invoice_id);
+create index if not exists lead_activity_lead_id_created_at_idx
+  on public.lead_activity (lead_id, created_at desc);
+create index if not exists lead_activity_invoice_id_created_at_idx
+  on public.lead_activity (invoice_id, created_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger as $$
@@ -98,8 +113,10 @@ execute function public.set_updated_at();
 alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
+alter table public.lead_activity enable row level security;
 
 grant usage on schema public to service_role;
 grant select, insert, update on public.leads to service_role;
 grant select, insert, update on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
+grant select, insert on public.lead_activity to service_role;

@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   addInvoiceItem,
   deleteInvoiceItem,
+  getLeadIdForInvoice,
   type InvoiceItemInput,
   type InvoiceStatus,
   updateInvoiceItems,
@@ -26,7 +28,37 @@ export async function updateInvoiceStatusAction(formData: FormData) {
     throw new Error("Invalid invoice status.");
   }
 
-  await updateInvoiceStatus(id, status);
+  const { leadId } = await updateInvoiceStatus(id, status);
+  await createLeadActivity({
+    leadId,
+    invoiceId: id,
+    eventType: "invoice_status_updated",
+    title: "Invoice status updated",
+    details: `Invoice marked ${status}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}`);
+}
+
+export async function markInvoiceCompletedAction(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+
+  const { leadId } = await updateInvoiceStatus(id, "paid");
+  await createLeadActivity({
+    leadId,
+    invoiceId: id,
+    eventType: "job_completed",
+    title: "Job marked completed",
+    details: "Invoice marked paid and related lead moved to completed.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}`);
 }
@@ -50,6 +82,14 @@ export async function updateInvoiceItemsAction(formData: FormData) {
   }));
 
   await updateInvoiceItems(invoiceId, items);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_items_updated",
+    title: "Invoice line items updated",
+    details: `${items.length} line item${items.length === 1 ? "" : "s"} saved.`,
+  });
+  revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}`);
 }
@@ -62,6 +102,14 @@ export async function addInvoiceItemAction(formData: FormData) {
   const invoiceId = String(formData.get("invoiceId") || "");
 
   await addInvoiceItem(invoiceId);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_item_added",
+    title: "Invoice line item added",
+    details: "A new invoice line item was added.",
+  });
+  revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}`);
 }
@@ -75,6 +123,14 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   const itemId = String(formData.get("itemId") || formData.get("deleteItemId") || "");
 
   await deleteInvoiceItem(invoiceId, itemId);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_item_deleted",
+    title: "Invoice line item deleted",
+    details: "An invoice line item was removed.",
+  });
+  revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}`);
 }

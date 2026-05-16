@@ -8,10 +8,12 @@ import {
   setAdminSession,
   verifyAdminPassword,
 } from "@/lib/admin-auth";
-import { createInvoiceFromLead } from "@/lib/supabase-invoices";
+import { createLeadActivity } from "@/lib/supabase-activity";
+import { createInvoiceFromLead, getInvoiceIdForLead } from "@/lib/supabase-invoices";
 import {
   type LeadAdminStatus,
   updateSupabaseLead,
+  updateSupabaseLeadAfterInvoice,
   updateSupabaseLeadStatus,
 } from "@/lib/supabase-leads";
 
@@ -23,6 +25,11 @@ const ALLOWED_STATUSES: LeadAdminStatus[] = [
   "completed",
   "cancelled",
 ];
+
+const POST_INVOICE_STATUSES: Extract<
+  LeadAdminStatus,
+  "invoiced" | "completed" | "cancelled"
+>[] = ["invoiced", "completed", "cancelled"];
 
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
@@ -53,6 +60,12 @@ export async function updateLeadStatus(formData: FormData) {
   }
 
   await updateSupabaseLeadStatus(id, status);
+  await createLeadActivity({
+    leadId: id,
+    eventType: "lead_status_updated",
+    title: "Lead status updated",
+    details: `Status changed to ${status}.`,
+  });
   revalidatePath("/admin/leads");
 }
 
@@ -68,12 +81,41 @@ export async function updateLeadDetails(formData: FormData) {
     throw new Error("Invalid lead status.");
   }
 
+  const existingInvoiceId = await getInvoiceIdForLead(id);
+
+  if (existingInvoiceId) {
+    if (!POST_INVOICE_STATUSES.includes(status as (typeof POST_INVOICE_STATUSES)[number])) {
+      throw new Error("Lead with an invoice can only be invoiced, completed, or cancelled.");
+    }
+
+    await updateSupabaseLeadAfterInvoice(id, {
+      status: status as (typeof POST_INVOICE_STATUSES)[number],
+      adminNotes: String(formData.get("adminNotes") || ""),
+    });
+    await createLeadActivity({
+      leadId: id,
+      invoiceId: existingInvoiceId,
+      eventType: "lead_updated",
+      title: "Lead status / notes updated",
+      details: `Status set to ${status}.`,
+    });
+
+    revalidatePath("/admin/leads");
+    return;
+  }
+
   await updateSupabaseLead(id, {
     status,
     adminNotes: String(formData.get("adminNotes") || ""),
     scheduledDate: String(formData.get("scheduledDate") || ""),
     estimatedPrice: String(formData.get("estimatedPrice") || ""),
     assignedTechnician: String(formData.get("assignedTechnician") || ""),
+  });
+  await createLeadActivity({
+    leadId: id,
+    eventType: "lead_updated",
+    title: "Lead details updated",
+    details: `Status set to ${status}.`,
   });
 
   revalidatePath("/admin/leads");
@@ -98,7 +140,18 @@ export async function createInvoiceForLead(formData: FormData) {
     });
   }
 
+  const existingInvoiceId = await getInvoiceIdForLead(id);
   const invoiceId = await createInvoiceFromLead(id);
+
+  if (!existingInvoiceId) {
+    await createLeadActivity({
+      leadId: id,
+      invoiceId,
+      eventType: "invoice_created",
+      title: "Invoice created",
+      details: "Draft invoice created from this lead.",
+    });
+  }
 
   revalidatePath("/admin/leads");
   redirect(`/admin/invoices/${invoiceId}`);

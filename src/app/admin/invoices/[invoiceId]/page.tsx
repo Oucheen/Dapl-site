@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { listActivitiesForInvoice } from "@/lib/supabase-activity";
 import { type InvoiceItemRecord, type InvoiceStatus, getInvoiceById } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
   deleteInvoiceItemAction,
+  markInvoiceCompletedAction,
   updateInvoiceItemsAction,
   updateInvoiceStatusAction,
 } from "./actions";
@@ -34,6 +36,14 @@ function formatDate(value: string | null) {
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
+    timeZone: "America/New_York",
+  }).format(new Date(value));
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
     timeZone: "America/New_York",
   }).format(new Date(value));
 }
@@ -88,6 +98,7 @@ export default async function InvoicePage({
   }
 
   const { invoice, items } = invoiceData;
+  const activity = await listActivitiesForInvoice(invoice.id, 8);
 
   return (
     <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
@@ -370,6 +381,17 @@ export default async function InvoicePage({
             <div className="mt-4">
               <PrintButton />
             </div>
+            {invoice.status !== "paid" && invoice.status !== "void" ? (
+              <form action={markInvoiceCompletedAction} className="mt-3">
+                <input type="hidden" name="id" value={invoice.id} />
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-emerald-600 px-3 py-3 text-xs font-bold text-white transition hover:bg-emerald-700"
+                >
+                  Mark job completed
+                </button>
+              </form>
+            ) : null}
             <form action={updateInvoiceStatusAction} className="mt-4 grid gap-3">
               <input type="hidden" name="id" value={invoice.id} />
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
@@ -410,7 +432,35 @@ export default async function InvoicePage({
             </div>
 
             <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-muted">
-              Next upgrade: PDF / print view and email sending through Resend.
+              Next upgrade: send invoice by email through Resend.
+            </div>
+
+            <div className="mt-6 border-t border-border pt-5">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Activity
+              </p>
+              {activity.length > 0 ? (
+                <ul className="mt-4 space-y-4">
+                  {activity.map((item) => (
+                    <li key={item.id} className="flex gap-3 text-sm leading-5">
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                      <span>
+                        <span className="block font-bold text-foreground">{item.title}</span>
+                        {item.details ? (
+                          <span className="block text-muted">{item.details}</span>
+                        ) : null}
+                        <span className="mt-1 block text-xs font-semibold text-muted">
+                          {formatDateTime(item.created_at)} ET
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  No invoice activity recorded yet.
+                </p>
+              )}
             </div>
           </aside>
         </div>

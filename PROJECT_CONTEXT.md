@@ -48,6 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_LEADS_TABLE=leads
 SUPABASE_INVOICES_TABLE=invoices
 SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
+SUPABASE_ACTIVITY_TABLE=lead_activity
 LEADS_ADMIN_PASSWORD=...
 LEADS_ADMIN_SESSION_SECRET=...
 ```
@@ -114,6 +115,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `invoiced`
   - `completed`
   - `cancelled`
+- The top status cards on `/admin/leads` are also filters. Clicking a status limits the visible lead cards to that workflow stage.
 - The dashboard also supports first-pass CRM fields on each lead:
   - `admin_notes`
   - `scheduled_date`
@@ -123,10 +125,14 @@ For local development, create `.env.local` with the same keys if you want the fo
 - The lead list uses responsive cards instead of a wide table, so it should not require horizontal scrolling on normal desktop/tablet widths.
 - The lead card now has a `Create invoice` action. It creates one draft invoice from the lead, marks the lead as `invoiced`, and opens `/admin/invoices/[invoiceId]`.
 - If a lead already has an invoice, the lead card shows `Open / edit invoice` instead of offering to create another one.
+- Once an invoice exists for a lead, the lead card locks visit date, estimate, and technician fields. Only lead status and admin notes stay editable, and the status dropdown is limited to `invoiced`, `completed`, and `cancelled`.
+- Lead cards with an invoice show the invoice number as a quick link into `/admin/invoices/[invoiceId]`.
 - `/admin/invoices` lists recent invoices with status, customer, total, and links back into each invoice detail page.
 - Invoice MVP tables:
   - `public.invoices`
   - `public.invoice_items`
+- Activity log table:
+  - `public.lead_activity`
 - Invoice MVP currently supports:
   - draft invoice creation from lead details
   - one starter line item using the lead estimate
@@ -135,6 +141,19 @@ For local development, create `.env.local` with the same keys if you want the fo
   - automatic subtotal / total recalculation from invoice items
   - invoice status updates: `draft`, `sent`, `paid`, `void`
 - Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.
+- Invoice status updates now sync the related lead status:
+  - invoice `draft` / `sent` -> lead `invoiced`
+  - invoice `paid` -> lead `completed`
+  - invoice `void` -> lead `cancelled`
+- Invoice detail pages include a `Mark job completed` shortcut. It marks the invoice as `paid` and the related lead as `completed`.
+- Lead and invoice admin screens now support an activity log:
+  - new lead received
+  - lead status/details updated
+  - invoice created
+  - invoice status updated
+  - invoice line items added / updated / deleted
+  - job marked completed
+- Activity writes are best-effort, so admin workflows should still work if the `lead_activity` table has not been created yet. To enable visible history, run the latest `supabase/schema.sql` in Supabase SQL Editor.
 - Invoice MVP does not yet send invoice emails. That should be the next layer after the print/PDF workflow is confirmed stable.
 - If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.
 

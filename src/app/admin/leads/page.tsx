@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
 import { createInvoiceForLead, logoutAdmin, updateLeadDetails } from "./actions";
@@ -9,6 +10,12 @@ const STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "new", label: "New" },
   { value: "contacted", label: "Contacted" },
   { value: "confirmed", label: "Confirmed" },
+  { value: "invoiced", label: "Invoiced" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const POST_INVOICE_STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "invoiced", label: "Invoiced" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
@@ -24,6 +31,9 @@ const statusClasses: Record<LeadAdminStatus, string> = {
 };
 
 export const dynamic = "force-dynamic";
+
+type LeadStatusFilter = LeadAdminStatus | "all";
+type LeadActivitiesById = Awaited<ReturnType<typeof listActivitiesForLeads>>;
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -68,17 +78,41 @@ function leadCountLabel(count: number) {
   return count === 1 ? "lead" : "leads";
 }
 
-export default async function LeadsAdminPage() {
+function getLeadStatusFilter(value: string | string[] | undefined): LeadStatusFilter {
+  const status = Array.isArray(value) ? value[0] : value;
+
+  if (!status || status === "all") {
+    return "all";
+  }
+
+  const allowedStatus = STATUSES.find((item) => item.value === status);
+  return allowedStatus?.value ?? "all";
+}
+
+function getFilterHref(status: LeadStatusFilter) {
+  return status === "all" ? "/admin/leads" : `/admin/leads?status=${status}`;
+}
+
+export default async function LeadsAdminPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string | string[] }>;
+}) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
   }
 
   let leads: Awaited<ReturnType<typeof listSupabaseLeads>> = [];
   let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
+  let activityByLeadId: LeadActivitiesById = new Map();
   let error = "";
 
   try {
     [leads, invoices] = await Promise.all([listSupabaseLeads(), listInvoices()]);
+    activityByLeadId = await listActivitiesForLeads(
+      leads.map((lead) => lead.id),
+      4,
+    );
   } catch (caught) {
     error = caught instanceof Error ? caught.message : "Could not load leads.";
   }
@@ -89,6 +123,17 @@ export default async function LeadsAdminPage() {
       .filter((invoice) => invoice.lead_id)
       .map((invoice) => [invoice.lead_id as string, invoice]),
   );
+  const selectedStatus = getLeadStatusFilter((await searchParams)?.status);
+  const visibleLeads =
+    selectedStatus === "all" ? leads : leads.filter((lead) => lead.status === selectedStatus);
+  const filterItems: { value: LeadStatusFilter; label: string; count: number }[] = [
+    { value: "all", label: "All", count: leads.length },
+    ...STATUSES.map((status) => ({
+      value: status.value as LeadStatusFilter,
+      label: status.label,
+      count: counts[status.value],
+    })),
+  ];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -122,18 +167,31 @@ export default async function LeadsAdminPage() {
       </header>
 
       <section className="container-shell py-8">
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {STATUSES.map((status) => (
-            <div
+        <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          {filterItems.map((status) => {
+            const isActive = selectedStatus === status.value;
+
+            return (
+            <Link
               key={status.value}
-              className="rounded-2xl border border-border bg-white px-4 py-4 shadow-sm"
+              href={getFilterHref(status.value)}
+              className={`rounded-2xl border px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
+                isActive
+                  ? "border-primary/30 bg-primary text-primary-foreground"
+                  : "border-border bg-white text-primary"
+              }`}
             >
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+              <p
+                className={`text-xs font-bold uppercase tracking-[0.16em] ${
+                  isActive ? "text-primary-foreground/75" : "text-muted"
+                }`}
+              >
                 {status.label}
               </p>
-              <p className="mt-2 text-3xl font-black text-primary">{counts[status.value]}</p>
-            </div>
-          ))}
+              <p className="mt-2 text-3xl font-black">{status.count}</p>
+            </Link>
+            );
+          })}
         </div>
 
         {error ? (
@@ -148,7 +206,8 @@ export default async function LeadsAdminPage() {
             <div>
               <h2 className="text-lg font-black text-primary">Latest requests</h2>
               <p className="mt-1 text-sm text-muted">
-                Showing the newest {leads.length} {leadCountLabel(leads.length)}.
+                Showing {visibleLeads.length} {leadCountLabel(visibleLeads.length)}
+                {selectedStatus === "all" ? "" : ` with ${selectedStatus} status`}.
               </p>
             </div>
             <Link
@@ -159,24 +218,34 @@ export default async function LeadsAdminPage() {
             </Link>
           </div>
 
-          {leads.length === 0 && !error ? (
+          {visibleLeads.length === 0 && !error ? (
             <div className="px-5 py-12 text-center">
               <p className="text-lg font-bold text-primary">No leads yet</p>
               <p className="mt-2 text-sm text-muted">
-                New website requests will appear here after form submission.
+                {selectedStatus === "all"
+                  ? "New website requests will appear here after form submission."
+                  : "No requests match this status filter yet."}
               </p>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {leads.map((lead) => (
-                <form
-                  key={lead.id}
-                  action={updateLeadDetails}
-                  className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)_minmax(380px,0.9fr)]"
-                >
-                  <input type="hidden" name="id" value={lead.id} />
+              {visibleLeads.map((lead) => {
+                const invoice = invoiceByLeadId.get(lead.id);
+                const hasInvoice = Boolean(invoice);
+                const activities = activityByLeadId.get(lead.id) ?? [];
+                const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
+                const lockedFieldClass =
+                  "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-xs font-semibold normal-case tracking-normal text-muted outline-none";
 
-                  <section className="min-w-0 rounded-xl border border-border/80 bg-slate-50/70 p-4">
+                return (
+                  <form
+                    key={lead.id}
+                    action={updateLeadDetails}
+                    className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)_minmax(380px,0.9fr)]"
+                  >
+                    <input type="hidden" name="id" value={lead.id} />
+
+                    <section className="min-w-0 rounded-xl border border-border/80 bg-slate-50/70 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
@@ -185,6 +254,14 @@ export default async function LeadsAdminPage() {
                         <p className="mt-2 break-words text-base font-black text-primary">
                           {lead.name}
                         </p>
+                        {invoice ? (
+                          <Link
+                            href={`/admin/invoices/${invoice.id}`}
+                            className="mt-2 inline-flex rounded-full border border-amber-500/20 bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-700 transition hover:bg-amber-100"
+                          >
+                            Invoice {invoice.invoice_number}
+                          </Link>
+                        ) : null}
                       </div>
                       <span
                         className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses[lead.status]}`}
@@ -224,9 +301,9 @@ export default async function LeadsAdminPage() {
                         <p className="mt-1 break-words">{lead.service_address}</p>
                       </div>
                     </div>
-                  </section>
+                    </section>
 
-                  <section className="min-w-0 rounded-xl border border-border/80 bg-white p-4">
+                    <section className="min-w-0 rounded-xl border border-border/80 bg-white p-4">
                     <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
                       Job
                     </p>
@@ -263,6 +340,36 @@ export default async function LeadsAdminPage() {
                       </div>
                     ) : null}
 
+                    <div className="mt-4 border-t border-border pt-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Activity
+                      </p>
+                      {activities.length > 0 ? (
+                        <ul className="mt-3 space-y-3">
+                          {activities.map((activity) => (
+                            <li key={activity.id} className="flex gap-3 text-sm leading-5">
+                              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                              <span>
+                                <span className="block font-bold text-foreground">
+                                  {activity.title}
+                                </span>
+                                {activity.details ? (
+                                  <span className="block text-muted">{activity.details}</span>
+                                ) : null}
+                                <span className="mt-1 block text-xs font-semibold text-muted">
+                                  {formatDate(activity.created_at)} ET
+                                </span>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-3 text-sm leading-6 text-muted">
+                          No activity recorded yet.
+                        </p>
+                      )}
+                    </div>
+
                     <label className="mt-4 block text-xs font-bold uppercase tracking-[0.12em] text-muted">
                       Admin notes
                       <textarea
@@ -273,12 +380,21 @@ export default async function LeadsAdminPage() {
                         className="mt-2 min-h-28 w-full resize-y rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal normal-case leading-6 tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                       />
                     </label>
-                  </section>
+                    </section>
 
-                  <section className="min-w-0 self-start rounded-xl border border-border/80 bg-slate-50/70 p-4 lg:col-span-2 xl:col-span-1">
+                    <section className="min-w-0 self-start rounded-xl border border-border/80 bg-slate-50/70 p-4 lg:col-span-2 xl:col-span-1">
                     <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
                       Manage
                     </p>
+                    {hasInvoice ? (
+                      <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-800">
+                        <p className="font-black">Invoice created</p>
+                        <p className="mt-1">
+                          Visit date, estimate, and technician now live inside the invoice. This
+                          lead can stay invoiced or move to completed / cancelled from here.
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 min-[1320px]:grid-cols-2">
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Status
@@ -287,7 +403,7 @@ export default async function LeadsAdminPage() {
                           defaultValue={lead.status}
                           className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                         >
-                          {STATUSES.map((status) => (
+                          {statusOptions.map((status) => (
                             <option key={status.value} value={status.value}>
                               {status.label}
                             </option>
@@ -300,7 +416,12 @@ export default async function LeadsAdminPage() {
                           type="date"
                           name="scheduledDate"
                           defaultValue={lead.scheduled_date ?? ""}
-                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          disabled={hasInvoice}
+                          className={
+                            hasInvoice
+                              ? lockedFieldClass
+                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          }
                         />
                       </label>
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
@@ -312,7 +433,12 @@ export default async function LeadsAdminPage() {
                           min="0"
                           step="0.01"
                           placeholder="0.00"
-                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          disabled={hasInvoice}
+                          className={
+                            hasInvoice
+                              ? lockedFieldClass
+                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          }
                         />
                       </label>
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
@@ -322,7 +448,12 @@ export default async function LeadsAdminPage() {
                           name="assignedTechnician"
                           defaultValue={lead.assigned_technician ?? ""}
                           placeholder="Name"
-                          className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          disabled={hasInvoice}
+                          className={
+                            hasInvoice
+                              ? lockedFieldClass
+                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          }
                         />
                       </label>
                     </div>
@@ -330,11 +461,11 @@ export default async function LeadsAdminPage() {
                       type="submit"
                       className="mt-4 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
                     >
-                      Save lead details
+                      {hasInvoice ? "Save lead status / notes" : "Save lead details"}
                     </button>
-                    {invoiceByLeadId.has(lead.id) ? (
+                    {invoice ? (
                       <Link
-                        href={`/admin/invoices/${invoiceByLeadId.get(lead.id)?.id}`}
+                        href={`/admin/invoices/${invoice.id}`}
                         className="mt-2 flex w-full items-center justify-center rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
                       >
                         Open / edit invoice
@@ -348,9 +479,10 @@ export default async function LeadsAdminPage() {
                         Create invoice
                       </button>
                     )}
-                  </section>
-                </form>
-              ))}
+                    </section>
+                  </form>
+                );
+              })}
             </div>
           )}
         </div>
