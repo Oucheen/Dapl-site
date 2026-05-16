@@ -89,6 +89,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `SUPABASE_LEADS_TABLE` (defaults to `leads`)
 - Supabase storage is optional for now. If it is not configured or insert fails, the form can still deliver through email / Telegram.
 - The service role key must remain server-only and must never be exposed with a `NEXT_PUBLIC_` prefix.
+- Because automatic table exposure was disabled in Supabase, `public.leads` must explicitly grant `usage` on `public` plus `select, insert, update` on the table to `service_role`.
 
 ## Main implemented features
 

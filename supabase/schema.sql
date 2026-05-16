@@ -38,3 +38,6 @@ for each row
 execute function public.set_updated_at();
 
 alter table public.leads enable row level security;
+
+grant usage on schema public to service_role;
+grant select, insert, update on public.leads to service_role;
