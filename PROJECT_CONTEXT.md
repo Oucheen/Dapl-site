@@ -46,6 +46,8 @@ TELEGRAM_CHAT_ID=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_LEADS_TABLE=leads
+LEADS_ADMIN_PASSWORD=...
+LEADS_ADMIN_SESSION_SECRET=...
 ```
 
 For local development, create `.env.local` with the same keys if you want the form to work on `localhost`.
@@ -90,6 +92,24 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Supabase storage is optional for now. If it is not configured or insert fails, the form can still deliver through email / Telegram.
 - The service role key must remain server-only and must never be exposed with a `NEXT_PUBLIC_` prefix.
 - Because automatic table exposure was disabled in Supabase, `public.leads` must explicitly grant `usage` on `public` plus `select, insert, update` on the table to `service_role`.
+
+## Leads admin dashboard
+- Admin entry point: `/admin/leads`
+- Login page: `/admin/leads/login`
+- `/admin` redirects to `/admin/leads`
+- Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
+- The floating contact widget is hidden on `/admin` routes
+- Auth is intentionally simple for the first CRM step:
+  - `LEADS_ADMIN_PASSWORD` is required in Vercel
+  - `LEADS_ADMIN_SESSION_SECRET` is optional but recommended
+  - the session cookie is httpOnly, scoped to `/admin`, and lasts 8 hours
+- The dashboard reads the newest leads from Supabase and can update lead statuses:
+  - `new`
+  - `contacted`
+  - `confirmed`
+  - `invoiced`
+  - `completed`
+  - `cancelled`
 
 ## Main implemented features
 

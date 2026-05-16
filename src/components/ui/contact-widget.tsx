@@ -63,11 +63,16 @@ function ArrowUpIcon(props: SVGProps<SVGSVGElement>) {
 
 export function ContactWidget() {
   const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin");
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const widgetRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     const handleScroll = () => {
       const visible = window.scrollY > 180;
       setIsVisible(visible);
@@ -83,9 +88,13 @@ export function ContactWidget() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [isAdminRoute]);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     const handlePointerDown = (event: PointerEvent) => {
       if (!widgetRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
@@ -97,7 +106,7 @@ export function ContactWidget() {
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, []);
+  }, [isAdminRoute]);
 
   const scheduleHref = useMemo(() => {
     const isServicePage = pathname?.includes("-repair-charlotte-nc");
@@ -110,6 +119,10 @@ export function ContactWidget() {
       isBrandPage;
     return hasInlineContact ? "#contact" : "/booking";
   }, [pathname]);
+
+  if (isAdminRoute) {
+    return null;
+  }
 
   const scrollToTop = () => {
     setIsOpen(false);

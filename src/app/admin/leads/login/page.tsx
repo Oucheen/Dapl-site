@@ -1,0 +1,80 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
+import { loginAdmin } from "../actions";
+
+type LoginPageProps = {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
+  if (await isAdminAuthenticated()) {
+    redirect("/admin/leads");
+  }
+
+  const params = await searchParams;
+  const hasError = params?.error === "1";
+  const configured = isAdminConfigured();
+
+  return (
+    <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc,#eef4fb)] px-4 py-10 text-foreground">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
+        <section className="w-full rounded-2xl border border-border bg-white p-6 shadow-xl shadow-primary/10 sm:p-8">
+          <Link href="/" className="text-sm font-semibold text-primary hover:underline">
+            Back to site
+          </Link>
+          <p className="mt-8 text-xs font-bold uppercase tracking-[0.22em] text-accent">
+            Leads Admin
+          </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-primary">
+            Sign in to view requests
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted">
+            Use the private admin password to view incoming website leads and update
+            their status.
+          </p>
+
+          {!configured ? (
+            <div className="mt-6 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm leading-6 text-foreground">
+              Add <span className="font-mono font-semibold">LEADS_ADMIN_PASSWORD</span> in
+              Vercel Environment Variables before using this page.
+            </div>
+          ) : (
+            <form action={loginAdmin} className="mt-7 space-y-5">
+              <div>
+                <label htmlFor="password" className="text-sm font-semibold text-foreground">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="mt-2 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                />
+              </div>
+
+              {hasError ? (
+                <p className="rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm font-medium text-accent">
+                  Password is incorrect.
+                </p>
+              ) : null}
+
+              <button
+                type="submit"
+                className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/15 transition hover:bg-primary/90"
+              >
+                Open leads
+              </button>
+            </form>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}

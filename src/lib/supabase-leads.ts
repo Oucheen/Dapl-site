@@ -1,4 +1,11 @@
 type LeadStatus = "new";
+export type LeadAdminStatus =
+  | "new"
+  | "contacted"
+  | "confirmed"
+  | "invoiced"
+  | "completed"
+  | "cancelled";
 
 export type LeadInsertInput = {
   name: string;
@@ -14,6 +21,22 @@ export type LeadInsertInput = {
 
 type SupabaseLeadRow = {
   id?: string;
+};
+
+export type LeadRecord = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: LeadAdminStatus;
+  name: string;
+  phone: string;
+  email: string;
+  service_address: string;
+  appliance: string | null;
+  promo_code: string | null;
+  lead_source: string | null;
+  preferred_date: string | null;
+  message: string;
 };
 
 type SaveLeadResult =
@@ -51,6 +74,10 @@ function getSupabaseConfig() {
   return { url, serviceRoleKey, table };
 }
 
+function getSupabaseUrl(config: NonNullable<ReturnType<typeof getSupabaseConfig>>) {
+  return `${config.url}/rest/v1/${config.table}`;
+}
+
 export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLeadResult> {
   const config = getSupabaseConfig();
 
@@ -59,7 +86,7 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
   }
 
   try {
-    const response = await fetch(`${config.url}/rest/v1/${config.table}`, {
+    const response = await fetch(getSupabaseUrl(config), {
       method: "POST",
       headers: {
         apikey: config.serviceRoleKey,
@@ -90,5 +117,62 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
     return { saved: true, id: rows[0]?.id };
   } catch (error) {
     return { saved: false, skipped: false, error };
+  }
+}
+
+export async function listSupabaseLeads(limit = 100): Promise<LeadRecord[]> {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    order: "created_at.desc",
+    limit: String(limit),
+  });
+
+  const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase leads fetch failed: ${response.status} ${details}`);
+  }
+
+  return (await response.json()) as LeadRecord[];
+}
+
+export async function updateSupabaseLeadStatus(id: string, status: LeadAdminStatus) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("Invalid lead id.");
+  }
+
+  const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase lead status update failed: ${response.status} ${details}`);
   }
 }
