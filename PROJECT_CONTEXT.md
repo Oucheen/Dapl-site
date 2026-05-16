@@ -116,6 +116,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `estimated_price`
   - `assigned_technician`
 - If those fields are missing in Supabase, run the latest `supabase/schema.sql` or at least the `alter table public.leads add column if not exists ...` block from that file.
+- The lead list uses responsive cards instead of a wide table, so it should not require horizontal scrolling on normal desktop/tablet widths.
 
 ## Main implemented features
 

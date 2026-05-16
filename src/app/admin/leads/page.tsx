@@ -63,6 +63,10 @@ function formatPrice(value: number | string | null | undefined) {
   return price.toFixed(2);
 }
 
+function leadCountLabel(count: number) {
+  return count === 1 ? "lead" : "leads";
+}
+
 export default async function LeadsAdminPage() {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -128,7 +132,9 @@ export default async function LeadsAdminPage() {
           <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-black text-primary">Latest requests</h2>
-              <p className="mt-1 text-sm text-muted">Showing the newest {leads.length} leads.</p>
+              <p className="mt-1 text-sm text-muted">
+                Showing the newest {leads.length} {leadCountLabel(leads.length)}.
+              </p>
             </div>
             <Link
               href="/booking"
@@ -146,151 +152,174 @@ export default async function LeadsAdminPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[1380px] w-full border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                  <tr>
-                    <th className="px-5 py-4">Received</th>
-                    <th className="px-5 py-4">Customer</th>
-                    <th className="px-5 py-4">Job</th>
-                    <th className="px-5 py-4">Address</th>
-                    <th className="px-5 py-4">Admin notes</th>
-                    <th className="px-5 py-4">Manage</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {leads.map((lead) => {
-                    const formId = `lead-details-${lead.id}`;
+            <div className="divide-y divide-border">
+              {leads.map((lead) => (
+                <form
+                  key={lead.id}
+                  action={updateLeadDetails}
+                  className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(320px,0.8fr)]"
+                >
+                  <input type="hidden" name="id" value={lead.id} />
 
-                    return (
-                      <tr key={lead.id} className="align-top">
-                      <td className="px-5 py-5">
-                        <p className="font-semibold text-foreground">{formatDate(lead.created_at)}</p>
-                        <p className="mt-1 text-xs text-muted">ET</p>
-                      </td>
-                      <td className="px-5 py-5">
-                        <p className="font-bold text-primary">{lead.name}</p>
+                  <section className="min-w-0 rounded-xl border border-border/80 bg-slate-50/70 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
+                          Customer
+                        </p>
+                        <p className="mt-2 break-words text-base font-black text-primary">
+                          {lead.name}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses[lead.status]}`}
+                      >
+                        {lead.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 text-sm leading-6 text-foreground">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Received
+                        </p>
+                        <p className="mt-1 font-semibold">{formatDate(lead.created_at)} ET</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Contact
+                        </p>
                         <a
                           href={`tel:${lead.phone}`}
-                          className="mt-1 block font-semibold text-foreground hover:text-primary"
+                          className="mt-1 block font-semibold hover:text-primary"
                         >
                           {lead.phone}
                         </a>
                         <a
                           href={`mailto:${lead.email}`}
-                          className="mt-1 block break-all text-muted hover:text-primary"
+                          className="block break-words text-muted hover:text-primary"
                         >
                           {lead.email}
                         </a>
-                      </td>
-                      <td className="px-5 py-5">
-                        <p className="font-semibold text-foreground">
-                          {lead.appliance || "Not selected"}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Address
                         </p>
-                        {lead.preferred_date ? (
-                          <p className="mt-2 text-xs text-muted">
-                            Preferred: {lead.preferred_date}
-                          </p>
-                        ) : null}
-                        {lead.promo_code ? (
-                          <p className="mt-2 inline-flex rounded-full bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary">
-                            {lead.promo_code}
-                          </p>
-                        ) : null}
-                        {lead.lead_source ? (
-                          <p className="mt-2 text-xs text-muted">Source: {lead.lead_source}</p>
-                        ) : null}
-                        {lead.message ? (
-                          <p className="mt-3 max-w-[240px] whitespace-pre-wrap text-xs leading-5 text-muted">
-                            {lead.message}
-                          </p>
-                        ) : null}
-                      </td>
-                      <td className="px-5 py-5">
-                        <p className="max-w-[220px] leading-6 text-foreground">
-                          {lead.service_address}
-                        </p>
-                      </td>
-                      <td className="px-5 py-5">
-                        <textarea
-                          form={formId}
-                          name="adminNotes"
-                          defaultValue={lead.admin_notes ?? ""}
-                          rows={5}
-                          placeholder="Internal notes, call result, parts needed..."
-                          className="min-h-28 w-72 resize-y rounded-xl border border-border bg-white px-3 py-2 text-sm leading-6 text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
-                        />
-                      </td>
-                      <td className="px-5 py-5">
-                        <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses[lead.status]}`}
-                        >
-                          {lead.status}
+                        <p className="mt-1 break-words">{lead.service_address}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="min-w-0 rounded-xl border border-border/80 bg-white p-4">
+                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
+                      Job
+                    </p>
+                    <p className="mt-2 text-base font-bold text-foreground">
+                      {lead.appliance || "Not selected"}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {lead.preferred_date ? (
+                        <span className="rounded-full bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary">
+                          Preferred: {lead.preferred_date}
                         </span>
-                        <form id={formId} action={updateLeadDetails} className="mt-3 grid w-80 gap-3">
-                          <input type="hidden" name="id" value={lead.id} />
-                          <div className="grid grid-cols-2 gap-2">
-                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                              Status
-                              <select
-                                name="status"
-                                defaultValue={lead.status}
-                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                              >
-                                {STATUSES.map((status) => (
-                                  <option key={status.value} value={status.value}>
-                                    {status.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                              Visit date
-                              <input
-                                type="date"
-                                name="scheduledDate"
-                                defaultValue={lead.scheduled_date ?? ""}
-                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                              />
-                            </label>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                              Estimate
-                              <input
-                                type="number"
-                                name="estimatedPrice"
-                                defaultValue={formatPrice(lead.estimated_price)}
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                              />
-                            </label>
-                            <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                              Technician
-                              <input
-                                type="text"
-                                name="assignedTechnician"
-                                defaultValue={lead.assigned_technician ?? ""}
-                                placeholder="Name"
-                                className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                              />
-                            </label>
-                          </div>
-                          <button
-                            type="submit"
-                            className="rounded-lg bg-primary px-3 py-2.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-                          >
-                            Save lead details
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      ) : null}
+                      {lead.promo_code ? (
+                        <span className="rounded-full bg-accent/5 px-2.5 py-1 text-xs font-bold text-accent">
+                          {lead.promo_code}
+                        </span>
+                      ) : null}
+                      {lead.lead_source ? (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-muted">
+                          Source: {lead.lead_source}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {lead.message ? (
+                      <div className="mt-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Customer message
+                        </p>
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted">
+                          {lead.message}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <label className="mt-4 block text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      Admin notes
+                      <textarea
+                        name="adminNotes"
+                        defaultValue={lead.admin_notes ?? ""}
+                        rows={5}
+                        placeholder="Internal notes, call result, parts needed..."
+                        className="mt-2 min-h-28 w-full resize-y rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal normal-case leading-6 tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                    </label>
+                  </section>
+
+                  <section className="min-w-0 rounded-xl border border-border/80 bg-slate-50/70 p-4 lg:col-span-2 xl:col-span-1">
+                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">
+                      Manage
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                        Status
+                        <select
+                          name="status"
+                          defaultValue={lead.status}
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        >
+                          {STATUSES.map((status) => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                        Visit date
+                        <input
+                          type="date"
+                          name="scheduledDate"
+                          defaultValue={lead.scheduled_date ?? ""}
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                        Estimate
+                        <input
+                          type="number"
+                          name="estimatedPrice"
+                          defaultValue={formatPrice(lead.estimated_price)}
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                        Technician
+                        <input
+                          type="text"
+                          name="assignedTechnician"
+                          defaultValue={lead.assigned_technician ?? ""}
+                          placeholder="Name"
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="submit"
+                      className="mt-4 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Save lead details
+                    </button>
+                  </section>
+                </form>
+              ))}
             </div>
           )}
         </div>
