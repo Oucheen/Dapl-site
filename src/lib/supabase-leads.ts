@@ -23,14 +23,30 @@ type SaveLeadResult =
 
 const DEFAULT_LEADS_TABLE = "leads";
 
-function getSupabaseConfig() {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const table = process.env.SUPABASE_LEADS_TABLE || DEFAULT_LEADS_TABLE;
+function normalizeSupabaseUrl(url: string) {
+  return url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+}
 
-  if (!url || !serviceRoleKey) {
+function normalizeTableName(table: string) {
+  const cleaned = table.trim().replace(/^\/+|\/+$/g, "");
+
+  if (cleaned.startsWith("public.")) {
+    return cleaned.slice("public.".length);
+  }
+
+  return cleaned || DEFAULT_LEADS_TABLE;
+}
+
+function getSupabaseConfig() {
+  const rawUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!rawUrl || !serviceRoleKey) {
     return null;
   }
+
+  const url = normalizeSupabaseUrl(rawUrl);
+  const table = normalizeTableName(process.env.SUPABASE_LEADS_TABLE || DEFAULT_LEADS_TABLE);
 
   return { url, serviceRoleKey, table };
 }
