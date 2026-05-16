@@ -67,6 +67,9 @@ create index if not exists leads_status_idx on public.leads (status);
 create index if not exists leads_email_idx on public.leads (email);
 create index if not exists invoices_created_at_idx on public.invoices (created_at desc);
 create index if not exists invoices_lead_id_idx on public.invoices (lead_id);
+create unique index if not exists invoices_lead_id_unique_idx
+  on public.invoices (lead_id)
+  where lead_id is not null;
 create index if not exists invoices_status_idx on public.invoices (status);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items (invoice_id);
 

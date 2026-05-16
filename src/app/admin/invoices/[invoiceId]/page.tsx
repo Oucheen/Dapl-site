@@ -267,9 +267,7 @@ export default async function InvoicePage({
                       </div>
                       <button
                         type="submit"
-                        name="deleteItemId"
-                        value={item.id}
-                        formAction={deleteInvoiceItemAction}
+                        form={`delete-invoice-item-${item.id}`}
                         className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
                       >
                         Delete
@@ -279,6 +277,18 @@ export default async function InvoicePage({
                 </div>
               </div>
             </form>
+
+            {items.map((item) => (
+              <form
+                key={`delete-${item.id}`}
+                id={`delete-invoice-item-${item.id}`}
+                action={deleteInvoiceItemAction}
+                className="hidden"
+              >
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <input type="hidden" name="itemId" value={item.id} />
+              </form>
+            ))}
 
             <div className="hidden px-5 py-6 print:block print:px-0">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">

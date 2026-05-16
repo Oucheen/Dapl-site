@@ -98,6 +98,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 ## Leads admin dashboard
 - Admin entry point: `/admin/leads`
 - Login page: `/admin/leads/login`
+- Invoice list route: `/admin/invoices`
 - Invoice detail route: `/admin/invoices/[invoiceId]`
 - `/admin` redirects to `/admin/leads`
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
@@ -121,6 +122,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - If those fields are missing in Supabase, run the latest `supabase/schema.sql` or at least the `alter table public.leads add column if not exists ...` block from that file.
 - The lead list uses responsive cards instead of a wide table, so it should not require horizontal scrolling on normal desktop/tablet widths.
 - The lead card now has a `Create invoice` action. It creates one draft invoice from the lead, marks the lead as `invoiced`, and opens `/admin/invoices/[invoiceId]`.
+- If a lead already has an invoice, the lead card shows `Open / edit invoice` instead of offering to create another one.
+- `/admin/invoices` lists recent invoices with status, customer, total, and links back into each invoice detail page.
 - Invoice MVP tables:
   - `public.invoices`
   - `public.invoice_items`

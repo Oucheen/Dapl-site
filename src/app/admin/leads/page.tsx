@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
 import { createInvoiceForLead, logoutAdmin, updateLeadDetails } from "./actions";
 
@@ -73,15 +74,21 @@ export default async function LeadsAdminPage() {
   }
 
   let leads: Awaited<ReturnType<typeof listSupabaseLeads>> = [];
+  let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
   let error = "";
 
   try {
-    leads = await listSupabaseLeads();
+    [leads, invoices] = await Promise.all([listSupabaseLeads(), listInvoices()]);
   } catch (caught) {
     error = caught instanceof Error ? caught.message : "Could not load leads.";
   }
 
   const counts = countByStatus(leads);
+  const invoiceByLeadId = new Map(
+    invoices
+      .filter((invoice) => invoice.lead_id)
+      .map((invoice) => [invoice.lead_id as string, invoice]),
+  );
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -95,14 +102,22 @@ export default async function LeadsAdminPage() {
               Website leads
             </h1>
           </div>
-          <form action={logoutAdmin}>
-            <button
-              type="submit"
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/invoices"
               className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
-              Sign out
-            </button>
-          </form>
+              View invoices
+            </Link>
+            <form action={logoutAdmin}>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
@@ -317,13 +332,22 @@ export default async function LeadsAdminPage() {
                     >
                       Save lead details
                     </button>
-                    <button
-                      type="submit"
-                      formAction={createInvoiceForLead}
-                      className="mt-2 w-full rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
-                    >
-                      Create invoice
-                    </button>
+                    {invoiceByLeadId.has(lead.id) ? (
+                      <Link
+                        href={`/admin/invoices/${invoiceByLeadId.get(lead.id)?.id}`}
+                        className="mt-2 flex w-full items-center justify-center rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
+                      >
+                        Open / edit invoice
+                      </Link>
+                    ) : (
+                      <button
+                        type="submit"
+                        formAction={createInvoiceForLead}
+                        className="mt-2 w-full rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
+                      >
+                        Create invoice
+                      </button>
+                    )}
                   </section>
                 </form>
               ))}

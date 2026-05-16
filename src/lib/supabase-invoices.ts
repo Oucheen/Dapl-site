@@ -204,6 +204,35 @@ export async function getInvoiceById(id: string): Promise<InvoiceWithItems | nul
   };
 }
 
+export async function listInvoices(limit = 100): Promise<InvoiceRecord[]> {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    order: "created_at.desc",
+    limit: String(limit),
+  });
+
+  const response = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${params.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoices fetch failed: ${response.status} ${details}`);
+  }
+
+  return (await response.json()) as InvoiceRecord[];
+}
+
 async function getLeadById(config: NonNullable<ReturnType<typeof getSupabaseConfig>>, id: string) {
   const params = new URLSearchParams({
     select: "*",

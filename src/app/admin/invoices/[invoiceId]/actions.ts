@@ -28,6 +28,7 @@ export async function updateInvoiceStatusAction(formData: FormData) {
 
   await updateInvoiceStatus(id, status);
   revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}`);
 }
 
 export async function updateInvoiceItemsAction(formData: FormData) {
@@ -50,6 +51,7 @@ export async function updateInvoiceItemsAction(formData: FormData) {
 
   await updateInvoiceItems(invoiceId, items);
   revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}`);
 }
 
 export async function addInvoiceItemAction(formData: FormData) {
@@ -61,6 +63,7 @@ export async function addInvoiceItemAction(formData: FormData) {
 
   await addInvoiceItem(invoiceId);
   revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}`);
 }
 
 export async function deleteInvoiceItemAction(formData: FormData) {
@@ -69,8 +72,9 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   }
 
   const invoiceId = String(formData.get("invoiceId") || "");
-  const itemId = String(formData.get("deleteItemId") || "");
+  const itemId = String(formData.get("itemId") || formData.get("deleteItemId") || "");
 
   await deleteInvoiceItem(invoiceId, itemId);
   revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}`);
 }

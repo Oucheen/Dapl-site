@@ -85,6 +85,19 @@ export async function createInvoiceForLead(formData: FormData) {
   }
 
   const id = String(formData.get("id") || "");
+
+  const status = String(formData.get("status") || "") as LeadAdminStatus;
+
+  if (ALLOWED_STATUSES.includes(status)) {
+    await updateSupabaseLead(id, {
+      status,
+      adminNotes: String(formData.get("adminNotes") || ""),
+      scheduledDate: String(formData.get("scheduledDate") || ""),
+      estimatedPrice: String(formData.get("estimatedPrice") || ""),
+      assignedTechnician: String(formData.get("assignedTechnician") || ""),
+    });
+  }
+
   const invoiceId = await createInvoiceFromLead(id);
 
   revalidatePath("/admin/leads");
