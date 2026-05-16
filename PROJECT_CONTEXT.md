@@ -131,7 +131,8 @@ For local development, create `.env.local` with the same keys if you want the fo
   - adding and deleting invoice line items
   - automatic subtotal / total recalculation from invoice items
   - invoice status updates: `draft`, `sent`, `paid`, `void`
-- Invoice MVP does not yet generate PDF files or send invoice emails. That should be the next layer after invoice records and statuses are confirmed stable.
+- Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.
+- Invoice MVP does not yet send invoice emails. That should be the next layer after the print/PDF workflow is confirmed stable.
 - If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.
 
 ## Main implemented features

@@ -69,3 +69,14 @@ html {
     animation: none;
   }
 }
+
+@media print {
+  @page {
+    margin: 0.5in;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+}

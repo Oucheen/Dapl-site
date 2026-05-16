@@ -9,6 +9,7 @@ import {
   updateInvoiceItemsAction,
   updateInvoiceStatusAction,
 } from "./actions";
+import { PrintButton } from "./print-button";
 
 const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -89,8 +90,8 @@ export default async function InvoicePage({
   const { invoice, items } = invoiceData;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-white">
+    <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
+      <header className="border-b border-border bg-white print:hidden">
         <div className="container-shell flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
@@ -111,10 +112,10 @@ export default async function InvoicePage({
         </div>
       </header>
 
-      <section className="container-shell py-8">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-            <div className="border-b border-border bg-slate-50/80 px-5 py-5 sm:px-7">
+      <section className="container-shell py-8 print:max-w-none print:px-0 print:py-0">
+        <div className="grid gap-6 print:block xl:grid-cols-[minmax(0,1fr)_360px]">
+          <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
+            <div className="border-b border-border bg-slate-50/80 px-5 py-5 print:bg-white print:px-0 sm:px-7">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-4">
                   <Image
@@ -145,11 +146,14 @@ export default async function InvoicePage({
                     {invoice.invoice_number}
                   </p>
                   <p className="mt-2 text-sm text-muted">Created {formatDate(invoice.created_at)}</p>
+                  <p className="mt-1 text-sm font-semibold capitalize text-muted">
+                    Status: {invoice.status}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-5 border-b border-border px-5 py-5 sm:grid-cols-2 sm:px-7">
+            <div className="grid gap-5 border-b border-border px-5 py-5 print:px-0 sm:grid-cols-2 sm:px-7">
               <section>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                   Bill to
@@ -193,7 +197,7 @@ export default async function InvoicePage({
               </section>
             </div>
 
-            <form action={updateInvoiceItemsAction} className="px-5 py-5 sm:px-7">
+            <form action={updateInvoiceItemsAction} className="px-5 py-5 print:hidden sm:px-7">
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -276,7 +280,58 @@ export default async function InvoicePage({
               </div>
             </form>
 
-            <form action={addInvoiceItemAction} className="border-t border-border px-5 py-5 sm:px-7">
+            <div className="hidden px-5 py-6 print:block print:px-0">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Line items
+              </p>
+              <h2 className="mt-1 text-xl font-black text-primary">Services and charges</h2>
+
+              <table className="mt-5 w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    <th className="py-3 pr-4">Description</th>
+                    <th className="py-3 pr-4 text-right">Qty</th>
+                    <th className="py-3 pr-4 text-right">Unit</th>
+                    <th className="py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.id} className="border-b border-border">
+                      <td className="py-3 pr-4 font-semibold text-foreground">
+                        {item.description}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-muted">
+                        {formatQuantity(item.quantity)}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-muted">
+                        {formatMoney(item.unit_price)}
+                      </td>
+                      <td className="py-3 text-right font-bold text-foreground">
+                        {getLineTotal(item)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted">Subtotal</span>
+                  <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted">Tax</span>
+                  <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                  <span className="font-black text-primary">Total</span>
+                  <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            <form action={addInvoiceItemAction} className="border-t border-border px-5 py-5 print:hidden sm:px-7">
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <button
                 type="submit"
@@ -287,7 +342,7 @@ export default async function InvoicePage({
             </form>
 
             {invoice.notes ? (
-              <div className="border-t border-border px-5 py-5 sm:px-7">
+              <div className="border-t border-border px-5 py-5 print:hidden sm:px-7">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Internal notes
                 </p>
@@ -298,10 +353,13 @@ export default async function InvoicePage({
             ) : null}
           </article>
 
-          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Invoice controls
             </p>
+            <div className="mt-4">
+              <PrintButton />
+            </div>
             <form action={updateInvoiceStatusAction} className="mt-4 grid gap-3">
               <input type="hidden" name="id" value={invoice.id} />
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
