@@ -280,6 +280,12 @@ export async function POST(request: Request) {
     console.error("Supabase lead storage error:", leadStorageResult.error);
   }
 
+  if (!leadStorageResult.saved && leadStorageResult.skipped) {
+    console.warn(
+      "Supabase lead storage skipped: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.",
+    );
+  }
+
   const html = buildInquiryHtml({
     name,
     phone,
