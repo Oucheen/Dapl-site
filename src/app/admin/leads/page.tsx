@@ -89,14 +89,58 @@ function getLeadStatusFilter(value: string | string[] | undefined): LeadStatusFi
   return allowedStatus?.value ?? "all";
 }
 
-function getFilterHref(status: LeadStatusFilter) {
-  return status === "all" ? "/admin/leads" : `/admin/leads?status=${status}`;
+function getSearchQuery(value: string | string[] | undefined) {
+  const query = Array.isArray(value) ? value[0] : value;
+  return query?.trim() ?? "";
+}
+
+function getFilterHref(status: LeadStatusFilter, query: string) {
+  const params = new URLSearchParams();
+
+  if (status !== "all") {
+    params.set("status", status);
+  }
+
+  if (query) {
+    params.set("q", query);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `/admin/leads?${queryString}` : "/admin/leads";
+}
+
+function normalizeSearchText(value: string | null | undefined) {
+  return value?.toLowerCase().trim() ?? "";
+}
+
+function leadMatchesQuery(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number], query: string) {
+  if (!query) {
+    return true;
+  }
+
+  const haystack = [
+    lead.name,
+    lead.phone,
+    lead.email,
+    lead.service_address,
+    lead.appliance,
+    lead.lead_source,
+    lead.preferred_date,
+    lead.message,
+    lead.admin_notes,
+    lead.scheduled_date,
+    lead.assigned_technician,
+  ]
+    .map(normalizeSearchText)
+    .join(" ");
+
+  return haystack.includes(query.toLowerCase());
 }
 
 export default async function LeadsAdminPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ status?: string | string[] }>;
+  searchParams?: Promise<{ status?: string | string[]; q?: string | string[] }>;
 }) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -117,17 +161,22 @@ export default async function LeadsAdminPage({
     error = caught instanceof Error ? caught.message : "Could not load leads.";
   }
 
-  const counts = countByStatus(leads);
+  const params = await searchParams;
+  const selectedStatus = getLeadStatusFilter(params?.status);
+  const searchQuery = getSearchQuery(params?.q);
+  const searchedLeads = leads.filter((lead) => leadMatchesQuery(lead, searchQuery));
+  const counts = countByStatus(searchedLeads);
   const invoiceByLeadId = new Map(
     invoices
       .filter((invoice) => invoice.lead_id)
       .map((invoice) => [invoice.lead_id as string, invoice]),
   );
-  const selectedStatus = getLeadStatusFilter((await searchParams)?.status);
   const visibleLeads =
-    selectedStatus === "all" ? leads : leads.filter((lead) => lead.status === selectedStatus);
+    selectedStatus === "all"
+      ? searchedLeads
+      : searchedLeads.filter((lead) => lead.status === selectedStatus);
   const filterItems: { value: LeadStatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: leads.length },
+    { value: "all", label: "All", count: searchedLeads.length },
     ...STATUSES.map((status) => ({
       value: status.value as LeadStatusFilter,
       label: status.label,
@@ -180,7 +229,7 @@ export default async function LeadsAdminPage({
             return (
             <Link
               key={status.value}
-              href={getFilterHref(status.value)}
+              href={getFilterHref(status.value, searchQuery)}
               className={`rounded-2xl border px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
                 isActive
                   ? "border-primary/30 bg-primary text-primary-foreground"
@@ -208,20 +257,49 @@ export default async function LeadsAdminPage({
         ) : null}
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-          <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 border-b border-border px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <h2 className="text-lg font-black text-primary">Latest requests</h2>
               <p className="mt-1 text-sm text-muted">
                 Showing {visibleLeads.length} {leadCountLabel(visibleLeads.length)}
-                {selectedStatus === "all" ? "" : ` with ${selectedStatus} status`}.
+                {selectedStatus === "all" ? "" : ` with ${selectedStatus} status`}
+                {searchQuery ? ` matching "${searchQuery}"` : ""}.
               </p>
             </div>
-            <Link
-              href="/booking"
-              className="text-sm font-bold text-primary underline-offset-4 hover:underline"
-            >
-              Open booking page
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <form action="/admin/leads" className="flex min-w-0 gap-2">
+                {selectedStatus !== "all" ? (
+                  <input type="hidden" name="status" value={selectedStatus} />
+                ) : null}
+                <input
+                  type="search"
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Search name, phone, address..."
+                  className="min-w-0 flex-1 rounded-full border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2 sm:w-72"
+                />
+                <button
+                  type="submit"
+                  className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Search
+                </button>
+              </form>
+              {searchQuery || selectedStatus !== "all" ? (
+                <Link
+                  href="/admin/leads"
+                  className="text-sm font-bold text-muted underline-offset-4 hover:text-primary hover:underline"
+                >
+                  Clear
+                </Link>
+              ) : null}
+              <Link
+                href="/booking"
+                className="text-sm font-bold text-primary underline-offset-4 hover:underline"
+              >
+                Open booking page
+              </Link>
+            </div>
           </div>
 
           {visibleLeads.length === 0 && !error ? (

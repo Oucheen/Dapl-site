@@ -122,6 +122,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `completed`
   - `cancelled`
 - The top status cards on `/admin/leads` are also filters. Clicking a status limits the visible lead cards to that workflow stage.
+- `/admin/leads` also has a GET search box for name, phone, email, address, appliance, message, source, notes, visit date, and technician. Status filters preserve the active search query.
 - The dashboard also supports first-pass CRM fields on each lead:
   - `admin_notes`
   - `scheduled_date`
@@ -134,6 +135,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Once an invoice exists for a lead, the lead card locks visit date, estimate, and technician fields. Only lead status and admin notes stay editable, and the status dropdown is limited to `invoiced`, `completed`, and `cancelled`.
 - Lead cards with an invoice show the invoice number as a quick link into `/admin/invoices/[invoiceId]`.
 - `/admin/invoices` lists recent invoices with status, customer, total, and links back into each invoice detail page.
+- `/admin/invoices` has status filters for all / draft / sent / paid / void plus search by invoice number, customer, phone, email, address, appliance, service date, technician, and notes.
 - Invoice MVP tables:
   - `public.invoices`
   - `public.invoice_items`
