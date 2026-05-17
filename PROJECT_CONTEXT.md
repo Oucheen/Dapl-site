@@ -100,6 +100,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 ## Leads admin dashboard
 - Admin entry point: `/admin/leads`
 - Login page: `/admin/leads/login`
+- Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`
 - Manual invoice route: `/admin/invoices/new`
 - Invoice detail route: `/admin/invoices/[invoiceId]`
@@ -123,6 +124,8 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `cancelled`
 - The top status cards on `/admin/leads` are also filters. Clicking a status limits the visible lead cards to that workflow stage.
 - `/admin/leads` also has a GET search box for name, phone, email, address, appliance, message, source, notes, visit date, and technician. Status filters preserve the active search query.
+- `/admin/leads/[leadId]` is the focused lead workspace: customer/request details, invoice shortcut, editable lead status/notes, locked post-invoice fields, needs-attention guidance, and a longer timeline.
+- Lead list cards include an `Open lead details` shortcut and show small needs-attention badges for new/contacted/confirmed leads that need the next action.
 - The dashboard also supports first-pass CRM fields on each lead:
   - `admin_notes`
   - `scheduled_date`

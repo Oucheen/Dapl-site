@@ -68,6 +68,7 @@ export async function updateLeadStatus(formData: FormData) {
     details: `Status changed to ${status}.`,
   });
   revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${id}`);
 }
 
 export async function updateLeadDetails(formData: FormData) {
@@ -102,6 +103,7 @@ export async function updateLeadDetails(formData: FormData) {
     });
 
     revalidatePath("/admin/leads");
+    revalidatePath(`/admin/leads/${id}`);
     return;
   }
 
@@ -120,6 +122,7 @@ export async function updateLeadDetails(formData: FormData) {
   });
 
   revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${id}`);
 }
 
 export async function createInvoiceForLead(formData: FormData) {
@@ -155,5 +158,6 @@ export async function createInvoiceForLead(formData: FormData) {
   }
 
   revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${id}`);
   redirect(`/admin/invoices/${invoiceId}`);
 }

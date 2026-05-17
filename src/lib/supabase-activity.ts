@@ -187,6 +187,39 @@ export async function listActivitiesForLeads(leadIds: string[], perLead = 4) {
   return grouped;
 }
 
+export async function listActivitiesForLead(leadId: string, limit = 25) {
+  const config = getSupabaseConfig();
+
+  if (!config || !isUuid(leadId)) {
+    return [];
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    lead_id: `eq.${leadId}`,
+    order: "created_at.desc",
+    limit: String(limit),
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase lead activity fetch failed: ${response.status} ${details}`);
+      return [];
+    }
+
+    return (await response.json()) as LeadActivityRecord[];
+  } catch (error) {
+    console.error("Supabase lead activity fetch error:", error);
+    return [];
+  }
+}
+
 export async function listActivitiesForInvoice(invoiceId: string, limit = 8) {
   const config = getSupabaseConfig();
 

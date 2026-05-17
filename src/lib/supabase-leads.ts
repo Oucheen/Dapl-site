@@ -269,6 +269,35 @@ export async function listSupabaseLeads(limit = 100): Promise<LeadRecord[]> {
   return (await response.json()) as LeadRecord[];
 }
 
+export async function getSupabaseLeadById(id: string): Promise<LeadRecord | null> {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  assertUuid(id);
+
+  const params = new URLSearchParams({
+    select: "*",
+    id: `eq.${id}`,
+    limit: "1",
+  });
+
+  const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase lead fetch failed: ${response.status} ${details}`);
+  }
+
+  const rows = (await response.json()) as LeadRecord[];
+  return rows[0] ?? null;
+}
+
 export async function updateSupabaseLeadStatus(id: string, status: LeadAdminStatus) {
   const config = getSupabaseConfig();
 

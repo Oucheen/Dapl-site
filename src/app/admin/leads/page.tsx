@@ -137,6 +137,25 @@ function leadMatchesQuery(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[nu
   return haystack.includes(query.toLowerCase());
 }
 
+function getNeedsAttention(
+  lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number],
+  hasInvoice: boolean,
+) {
+  if (lead.status === "new") {
+    return "Needs first contact";
+  }
+
+  if (lead.status === "contacted" && !lead.scheduled_date && !hasInvoice) {
+    return "Needs visit date";
+  }
+
+  if (lead.status === "confirmed" && !hasInvoice) {
+    return "Ready for invoice";
+  }
+
+  return null;
+}
+
 export default async function LeadsAdminPage({
   searchParams,
 }: {
@@ -316,6 +335,7 @@ export default async function LeadsAdminPage({
               {visibleLeads.map((lead) => {
                 const invoice = invoiceByLeadId.get(lead.id);
                 const hasInvoice = Boolean(invoice);
+                const attention = getNeedsAttention(lead, hasInvoice);
                 const activities = activityByLeadId.get(lead.id) ?? [];
                 const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
                 const lockedFieldClass =
@@ -338,6 +358,12 @@ export default async function LeadsAdminPage({
                         <p className="mt-2 break-words text-base font-black text-primary">
                           {lead.name}
                         </p>
+                        <Link
+                          href={`/admin/leads/${lead.id}`}
+                          className="mt-2 inline-flex rounded-full border border-primary/20 bg-white px-2.5 py-1 text-xs font-black text-primary transition hover:bg-primary/5"
+                        >
+                          Open lead details
+                        </Link>
                         {invoice ? (
                           <Link
                             href={`/admin/invoices/${invoice.id}`}
@@ -347,11 +373,18 @@ export default async function LeadsAdminPage({
                           </Link>
                         ) : null}
                       </div>
-                      <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses[lead.status]}`}
-                      >
-                        {lead.status}
-                      </span>
+                      <div className="flex flex-col items-start gap-2 sm:items-end">
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses[lead.status]}`}
+                        >
+                          {lead.status}
+                        </span>
+                        {attention ? (
+                          <span className="inline-flex rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-black text-accent">
+                            {attention}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="mt-4 grid gap-3 text-sm leading-6 text-foreground">
