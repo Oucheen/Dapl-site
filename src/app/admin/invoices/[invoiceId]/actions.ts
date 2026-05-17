@@ -8,7 +8,9 @@ import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   addInvoiceItem,
   addInvoiceItemFromTemplate,
+  addInvoicePayment,
   deleteInvoiceItem,
+  deleteInvoicePayment,
   getInvoiceItemTemplate,
   getInvoiceById,
   getLeadIdForInvoice,
@@ -201,4 +203,58 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}?notice=item_deleted`);
+}
+
+export async function addInvoicePaymentAction(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const amount = String(formData.get("amount") || "");
+  const method = String(formData.get("method") || "");
+  const paymentDate = String(formData.get("paymentDate") || "");
+  const note = String(formData.get("note") || "");
+
+  const { leadId } = await addInvoicePayment(invoiceId, {
+    amount,
+    method,
+    paymentDate,
+    note,
+  });
+
+  await createLeadActivity({
+    leadId,
+    invoiceId,
+    eventType: "invoice_payment_added",
+    title: "Payment recorded",
+    details: `${method || "Payment"} payment of $${Number(amount || 0).toFixed(2)} was added.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=payment_added`);
+}
+
+export async function deleteInvoicePaymentAction(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const paymentId = String(formData.get("paymentId") || "");
+
+  const { leadId } = await deleteInvoicePayment(invoiceId, paymentId);
+
+  await createLeadActivity({
+    leadId,
+    invoiceId,
+    eventType: "invoice_payment_deleted",
+    title: "Payment removed",
+    details: "An invoice payment was removed.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=payment_deleted`);
 }

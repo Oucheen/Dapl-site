@@ -1,5 +1,11 @@
 import { Resend } from "resend";
-import type { InvoiceItemRecord, InvoiceWithItems } from "@/lib/supabase-invoices";
+import {
+  calculateInvoiceAmountDue,
+  calculateInvoicePaidAmount,
+  type InvoiceItemRecord,
+  type InvoicePaymentRecord,
+  type InvoiceWithItems,
+} from "@/lib/supabase-invoices";
 
 type SendInvoiceEmailResult =
   | { ok: true; to: string }
@@ -33,6 +39,16 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatShortDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  }).format(new Date(value));
+}
+
 function formatQuantity(value: number | string | null | undefined) {
   const amount = Number(value ?? 1);
 
@@ -41,6 +57,14 @@ function formatQuantity(value: number | string | null | undefined) {
   }
 
   return String(amount);
+}
+
+function formatPaymentMethod(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function getLineTotal(item: InvoiceItemRecord) {
@@ -70,11 +94,38 @@ function buildItemsRows(items: InvoiceItemRecord[]) {
     .join("");
 }
 
+function buildPaymentRows(payments: InvoicePaymentRecord[]) {
+  return payments
+    .map(
+      (payment) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #475569;">
+            ${escapeHtml(formatShortDateTime(payment.payment_date))} ET
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 700;">
+            ${escapeHtml(formatPaymentMethod(payment.method))}
+            ${
+              payment.note
+                ? `<span style="display: block; margin-top: 4px; color: #64748b; font-size: 12px; font-weight: 400;">${escapeHtml(payment.note)}</span>`
+                : ""
+            }
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 800; text-align: right; white-space: nowrap;">
+            ${escapeHtml(formatMoney(payment.amount))}
+          </td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
 function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: string) {
-  const { invoice, items } = invoiceData;
+  const { invoice, items, payments } = invoiceData;
   const discountAmount = Number(invoice.discount_amount ?? 0);
   const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
   const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
+  const paidAmount = calculateInvoicePaidAmount(payments);
+  const amountDue = calculateInvoiceAmountDue(invoice, payments);
 
   return `
     <div style="margin: 0; padding: 0; background: #f4f7fb; font-family: Arial, sans-serif; color: #0b1d3a;">
@@ -174,7 +225,45 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
                 <td style="padding: 17px 0 0; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900;">Total</td>
                 <td style="padding: 17px 0 0 18px; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(invoice.total))}</td>
               </tr>
+              ${
+                paidAmount > 0
+                  ? `
+                    <tr>
+                      <td style="width: 45%;"></td>
+                      <td style="padding: 8px 0; color: #475569; font-size: 15px;">Paid</td>
+                      <td style="padding: 8px 0 8px 18px; color: #047857; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">-${escapeHtml(formatMoney(paidAmount))}</td>
+                    </tr>
+                  `
+                  : ""
+              }
+              <tr>
+                <td style="width: 45%; border-top: 1px solid #dbe3ec;"></td>
+                <td style="padding: 17px 0 0; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900;">Amount Due</td>
+                <td style="padding: 17px 0 0 18px; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(amountDue))}</td>
+              </tr>
             </table>
+
+            ${
+              payments.length > 0
+                ? `
+                  <div style="margin-top: 32px;">
+                    <p style="margin: 0 0 12px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;">Payment History</p>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                      <thead>
+                        <tr style="background: #f8fafc;">
+                          <th align="left" style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #64748b; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Date</th>
+                          <th align="left" style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #64748b; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Method</th>
+                          <th align="right" style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #64748b; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${buildPaymentRows(payments)}
+                      </tbody>
+                    </table>
+                  </div>
+                `
+                : ""
+            }
 
             <div style="margin-top: 28px; padding: 18px; border-radius: 14px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.7;">
               <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email. Replies go to ${escapeHtml(replyToEmail)}.</p>

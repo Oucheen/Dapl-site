@@ -48,6 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_LEADS_TABLE=leads
 SUPABASE_INVOICES_TABLE=invoices
 SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
+SUPABASE_INVOICE_PAYMENTS_TABLE=invoice_payments
 SUPABASE_ACTIVITY_TABLE=lead_activity
 LEADS_ADMIN_PASSWORD=...
 LEADS_ADMIN_USERS=Owner|owner-password|owner;Dmytro|employee-password|staff
@@ -142,6 +143,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice MVP tables:
   - `public.invoices`
   - `public.invoice_items`
+  - `public.invoice_payments`
 - Activity log table:
   - `public.lead_activity`
 - Invoice MVP currently supports:
@@ -152,9 +154,13 @@ For local development, create `.env.local` with the same keys if you want the fo
   - adding and deleting invoice line items
   - quick invoice line templates on invoice detail pages: Diagnostic, Labor, Parts, Repair service, Maintenance, Installation
   - automatic subtotal / total recalculation from invoice items
+  - manual payment history for cash, Zelle, card, check, or other payments
+  - automatic amount-due calculation from invoice total minus recorded payments
   - invoice status updates: `draft`, `sent`, `paid`, `void`
 - Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.
 - Invoice detail pages can send the current invoice to the customer by email through Resend. A successful send marks a draft invoice as `sent` and records invoice activity.
+- Invoice detail pages show `Paid`, `Amount due`, and `Payment History` in the admin view, print view, and customer invoice email.
+- Recording payments automatically marks the invoice as `paid` when the amount due reaches $0. Deleting a payment can reopen a paid invoice back to `sent` if a balance remains.
 - Invoice status updates now sync the related lead status:
   - invoice `draft` / `sent` -> lead `invoiced`
   - invoice `paid` -> lead `completed`
@@ -171,7 +177,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - job marked completed
 - Activity writes are best-effort, so admin workflows should still work if the `lead_activity` table has not been created yet. To enable visible history, run the latest `supabase/schema.sql` in Supabase SQL Editor.
 - Manual invoices create a normal lead first with `lead_source: manual-admin`, then create a draft invoice from it. This keeps phone/offline work in the same lead/invoice/status workflow as website submissions.
-- If invoice creation fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table block and grants for `service_role`.
+- If invoice creation or payment history fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table/payment-table block and grants for `service_role`.
 
 ## Main implemented features
 

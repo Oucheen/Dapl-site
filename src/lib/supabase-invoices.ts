@@ -42,9 +42,20 @@ export type InvoiceItemRecord = {
   line_total: number | string;
 };
 
+export type InvoicePaymentRecord = {
+  id: string;
+  invoice_id: string;
+  created_at: string;
+  payment_date: string;
+  amount: number | string;
+  method: string;
+  note: string | null;
+};
+
 export type InvoiceWithItems = {
   invoice: InvoiceRecord;
   items: InvoiceItemRecord[];
+  payments: InvoicePaymentRecord[];
 };
 
 export type InvoiceItemInput = {
@@ -52,6 +63,13 @@ export type InvoiceItemInput = {
   description: string;
   quantity: number | string;
   unitPrice: number | string;
+};
+
+export type InvoicePaymentInput = {
+  amount: number | string;
+  method: string;
+  paymentDate?: string | null;
+  note?: string | null;
 };
 
 export const INVOICE_ITEM_TEMPLATES = [
@@ -109,6 +127,7 @@ export const INVOICE_PROMO_DISCOUNTS = {
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
 const DEFAULT_INVOICE_ITEMS_TABLE = "invoice_items";
+const DEFAULT_INVOICE_PAYMENTS_TABLE = "invoice_payments";
 
 function normalizeSupabaseUrl(url: string) {
   return url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
@@ -145,8 +164,12 @@ function getSupabaseConfig() {
     process.env.SUPABASE_INVOICE_ITEMS_TABLE || DEFAULT_INVOICE_ITEMS_TABLE,
     DEFAULT_INVOICE_ITEMS_TABLE,
   );
+  const invoicePaymentsTable = normalizeTableName(
+    process.env.SUPABASE_INVOICE_PAYMENTS_TABLE || DEFAULT_INVOICE_PAYMENTS_TABLE,
+    DEFAULT_INVOICE_PAYMENTS_TABLE,
+  );
 
-  return { url, serviceRoleKey, leadsTable, invoicesTable, invoiceItemsTable };
+  return { url, serviceRoleKey, leadsTable, invoicesTable, invoiceItemsTable, invoicePaymentsTable };
 }
 
 function getTableUrl(config: NonNullable<ReturnType<typeof getSupabaseConfig>>, table: string) {
@@ -227,6 +250,17 @@ function calculateInvoiceTotal(subtotal: number, discountAmount: number, tax: nu
   return toMoney(Math.max(0, subtotal - discountAmount) + tax);
 }
 
+export function calculateInvoicePaidAmount(payments: InvoicePaymentRecord[]) {
+  return toMoney(payments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0));
+}
+
+export function calculateInvoiceAmountDue(
+  invoice: Pick<InvoiceRecord, "total">,
+  payments: InvoicePaymentRecord[],
+) {
+  return toMoney(Math.max(0, Number(invoice.total ?? 0) - calculateInvoicePaidAmount(payments)));
+}
+
 export async function getInvoiceById(id: string): Promise<InvoiceWithItems | null> {
   assertUuid(id);
 
@@ -281,9 +315,29 @@ export async function getInvoiceById(id: string): Promise<InvoiceWithItems | nul
     throw new Error(`Supabase invoice items fetch failed: ${itemResponse.status} ${details}`);
   }
 
+  const paymentParams = new URLSearchParams({
+    select: "*",
+    invoice_id: `eq.${id}`,
+    order: "payment_date.asc,created_at.asc",
+  });
+
+  const paymentResponse = await fetch(
+    `${getTableUrl(config, config.invoicePaymentsTable)}?${paymentParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!paymentResponse.ok) {
+    const details = await paymentResponse.text();
+    throw new Error(`Supabase invoice payments fetch failed: ${paymentResponse.status} ${details}`);
+  }
+
   return {
     invoice,
     items: (await itemResponse.json()) as InvoiceItemRecord[],
+    payments: (await paymentResponse.json()) as InvoicePaymentRecord[],
   };
 }
 
@@ -545,6 +599,161 @@ export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
   return { leadId };
 }
 
+async function getInvoicePaymentState(
+  config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
+  invoiceId: string,
+) {
+  const invoiceParams = new URLSearchParams({
+    select: "id,lead_id,status,total",
+    id: `eq.${invoiceId}`,
+    limit: "1",
+  });
+
+  const invoiceResponse = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${invoiceParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!invoiceResponse.ok) {
+    const details = await invoiceResponse.text();
+    throw new Error(`Supabase invoice payment state fetch failed: ${invoiceResponse.status} ${details}`);
+  }
+
+  const invoices = (await invoiceResponse.json()) as Pick<
+    InvoiceRecord,
+    "id" | "lead_id" | "status" | "total"
+  >[];
+  const invoice = invoices[0];
+
+  if (!invoice) {
+    throw new Error("Invoice not found.");
+  }
+
+  const paymentParams = new URLSearchParams({
+    select: "amount",
+    invoice_id: `eq.${invoiceId}`,
+  });
+
+  const paymentResponse = await fetch(
+    `${getTableUrl(config, config.invoicePaymentsTable)}?${paymentParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!paymentResponse.ok) {
+    const details = await paymentResponse.text();
+    throw new Error(`Supabase invoice payment total fetch failed: ${paymentResponse.status} ${details}`);
+  }
+
+  const payments = (await paymentResponse.json()) as Pick<InvoicePaymentRecord, "amount">[];
+  const paidAmount = toMoney(payments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0));
+  const amountDue = toMoney(Math.max(0, Number(invoice.total ?? 0) - paidAmount));
+
+  return { invoice, paidAmount, amountDue };
+}
+
+async function reconcileInvoicePaymentStatus(
+  config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
+  invoiceId: string,
+) {
+  const { invoice, amountDue } = await getInvoicePaymentState(config, invoiceId);
+
+  if (invoice.status === "void") {
+    return { leadId: invoice.lead_id, paidAmount: Number(invoice.total ?? 0) - amountDue, amountDue };
+  }
+
+  if (amountDue <= 0 && invoice.status !== "paid") {
+    return updateInvoiceStatus(invoiceId, "paid");
+  }
+
+  if (amountDue > 0 && invoice.status === "paid") {
+    return updateInvoiceStatus(invoiceId, "sent");
+  }
+
+  return { leadId: invoice.lead_id, paidAmount: Number(invoice.total ?? 0) - amountDue, amountDue };
+}
+
+export async function addInvoicePayment(invoiceId: string, input: InvoicePaymentInput) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const amount = toMoney(input.amount);
+  const method = input.method.trim().toLowerCase();
+  const note = input.note?.trim() || null;
+  const paymentDate = input.paymentDate?.trim()
+    ? new Date(`${input.paymentDate.trim()}T12:00:00.000Z`).toISOString()
+    : new Date().toISOString();
+
+  if (amount <= 0) {
+    throw new Error("Payment amount must be greater than 0.");
+  }
+
+  if (!method) {
+    throw new Error("Payment method is required.");
+  }
+
+  const response = await fetch(getTableUrl(config, config.invoicePaymentsTable), {
+    method: "POST",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      invoice_id: invoiceId,
+      payment_date: paymentDate,
+      amount,
+      method,
+      note,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice payment insert failed: ${response.status} ${details}`);
+  }
+
+  return reconcileInvoicePaymentStatus(config, invoiceId);
+}
+
+export async function deleteInvoicePayment(invoiceId: string, paymentId: string) {
+  assertUuid(invoiceId);
+  assertUuid(paymentId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(
+    `${getTableUrl(config, config.invoicePaymentsTable)}?id=eq.${paymentId}&invoice_id=eq.${invoiceId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...headers(config),
+        Prefer: "return=minimal",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice payment delete failed: ${response.status} ${details}`);
+  }
+
+  return reconcileInvoicePaymentStatus(config, invoiceId);
+}
+
 async function updateInvoiceTotals(
   config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
   invoiceId: string,
@@ -603,6 +812,8 @@ async function updateInvoiceTotals(
     const details = await updateResponse.text();
     throw new Error(`Supabase invoice total update failed: ${updateResponse.status} ${details}`);
   }
+
+  await reconcileInvoicePaymentStatus(config, invoiceId);
 }
 
 export async function updateInvoiceItems(invoiceId: string, items: InvoiceItemInput[]) {

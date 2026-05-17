@@ -58,6 +58,16 @@ create table if not exists public.invoice_items (
   line_total numeric(10,2) not null default 0
 );
 
+create table if not exists public.invoice_payments (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  payment_date timestamptz not null default now(),
+  amount numeric(10,2) not null check (amount > 0),
+  method text not null default 'cash',
+  note text
+);
+
 create table if not exists public.lead_activity (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -89,6 +99,8 @@ create unique index if not exists invoices_lead_id_unique_idx
   where lead_id is not null;
 create index if not exists invoices_status_idx on public.invoices (status);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items (invoice_id);
+create index if not exists invoice_payments_invoice_id_payment_date_idx
+  on public.invoice_payments (invoice_id, payment_date asc);
 create index if not exists lead_activity_lead_id_created_at_idx
   on public.lead_activity (lead_id, created_at desc);
 create index if not exists lead_activity_invoice_id_created_at_idx
@@ -119,10 +131,12 @@ execute function public.set_updated_at();
 alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
+alter table public.invoice_payments enable row level security;
 alter table public.lead_activity enable row level security;
 
 grant usage on schema public to service_role;
 grant select, insert, update on public.leads to service_role;
 grant select, insert, update on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
+grant select, insert, delete on public.invoice_payments to service_role;
 grant select, insert on public.lead_activity to service_role;

@@ -7,12 +7,16 @@ import {
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
   type InvoiceStatus,
+  calculateInvoiceAmountDue,
+  calculateInvoicePaidAmount,
   getInvoiceById,
 } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
+  addInvoicePaymentAction,
   addInvoiceTemplateItemAction,
   deleteInvoiceItemAction,
+  deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
   sendInvoiceEmailAction,
   updateInvoiceItemsAction,
@@ -61,6 +65,16 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatShortDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  }).format(new Date(value));
+}
+
 function formatMoney(value: number | string | null | undefined) {
   const amount = Number(value ?? 0);
 
@@ -92,6 +106,18 @@ function formatQuantity(value: number | string | null | undefined) {
 
 function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
+}
+
+function formatPaymentMethod(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getTodayDateInputValue() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function getQueryValue(value: string | string[] | undefined) {
@@ -189,6 +215,22 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "payment_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Payment recorded",
+      body: "Payment history and amount due were updated.",
+    };
+  }
+
+  if (status === "payment_deleted") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Payment removed",
+      body: "Payment history and amount due were recalculated.",
+    };
+  }
+
   return null;
 }
 
@@ -214,7 +256,7 @@ export default async function InvoicePage({
     notFound();
   }
 
-  const { invoice, items } = invoiceData;
+  const { invoice, items, payments } = invoiceData;
   const activity = await listActivitiesForInvoice(invoice.id, 8);
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), invoice.customer_email),
@@ -223,6 +265,12 @@ export default async function InvoicePage({
   const discountAmount = Number(invoice.discount_amount ?? 0);
   const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
   const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
+  const paidAmount = calculateInvoicePaidAmount(payments);
+  const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const hasPayments = payments.length > 0;
+  const availableInvoiceStatuses = INVOICE_STATUSES.filter(
+    (status) => status.value !== "paid" || invoice.status === "paid" || amountDue <= 0,
+  );
 
   return (
     <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
@@ -495,7 +543,52 @@ export default async function InvoicePage({
                   <span className="font-black text-primary">Total</span>
                   <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
                 </div>
+                {paidAmount > 0 ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted">Paid</span>
+                    <span className="font-bold text-emerald-700">-{formatMoney(paidAmount)}</span>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                  <span className="font-black text-primary">Amount due</span>
+                  <span className="font-black text-primary">{formatMoney(amountDue)}</span>
+                </div>
               </div>
+
+              {hasPayments ? (
+                <div className="mt-8">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Payment History
+                  </p>
+                  <table className="mt-3 w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        <th className="py-3 pr-4">Date</th>
+                        <th className="py-3 pr-4">Method</th>
+                        <th className="py-3 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((payment) => (
+                        <tr key={payment.id} className="border-b border-border">
+                          <td className="py-3 pr-4 text-muted">
+                            {formatShortDateTime(payment.payment_date)}
+                          </td>
+                          <td className="py-3 pr-4 text-foreground">
+                            {formatPaymentMethod(payment.method)}
+                            {payment.note ? (
+                              <span className="mt-1 block text-xs text-muted">{payment.note}</span>
+                            ) : null}
+                          </td>
+                          <td className="py-3 text-right font-bold text-foreground">
+                            {formatMoney(payment.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
             </div>
 
             <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
@@ -579,7 +672,7 @@ export default async function InvoicePage({
                 </p>
               ) : null}
             </form>
-            {invoice.status !== "paid" && invoice.status !== "void" ? (
+            {amountDue <= 0 && invoice.status !== "paid" && invoice.status !== "void" ? (
               <form action={markInvoiceCompletedAction} className="mt-3">
                 <input type="hidden" name="id" value={invoice.id} />
                 <button
@@ -599,12 +692,17 @@ export default async function InvoicePage({
                   defaultValue={invoice.status}
                   className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                 >
-                  {INVOICE_STATUSES.map((status) => (
+                  {availableInvoiceStatuses.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
                 </select>
+                {amountDue > 0 ? (
+                  <span className="text-[0.7rem] font-semibold normal-case tracking-normal text-muted">
+                    Record enough payments to make the invoice paid automatically.
+                  </span>
+                ) : null}
               </label>
               <button
                 type="submit"
@@ -633,11 +731,135 @@ export default async function InvoicePage({
                 <span className="font-black text-primary">Total</span>
                 <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
               </div>
+              {paidAmount > 0 ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted">Paid</span>
+                  <span className="font-bold text-emerald-700">-{formatMoney(paidAmount)}</span>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                <span className="font-black text-primary">Amount due</span>
+                <span className="font-black text-primary">{formatMoney(amountDue)}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-border pt-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Payment History
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Record manual cash, card, check, or transfer payments.
+                  </p>
+                </div>
+                {amountDue <= 0 && paidAmount > 0 ? (
+                  <span className="rounded-full border border-emerald-500/25 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                    Paid
+                  </span>
+                ) : null}
+              </div>
+
+              <form action={addInvoicePaymentAction} className="mt-4 grid gap-3">
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Amount
+                    <input
+                      type="number"
+                      name="amount"
+                      min="0.01"
+                      step="0.01"
+                      defaultValue={amountDue > 0 ? formatInputMoney(amountDue) : ""}
+                      placeholder="0.00"
+                      required
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Method
+                    <select
+                      name="method"
+                      defaultValue="cash"
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="zelle">Zelle</option>
+                      <option value="card">Card</option>
+                      <option value="check">Check</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Payment date
+                  <input
+                    type="date"
+                    name="paymentDate"
+                    defaultValue={getTodayDateInputValue()}
+                    className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                  />
+                </label>
+                <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Note
+                  <input
+                    type="text"
+                    name="note"
+                    placeholder="Optional note"
+                    className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Add payment
+                </button>
+              </form>
+
+              {hasPayments ? (
+                <ul className="mt-5 space-y-3">
+                  {payments.map((payment) => (
+                    <li
+                      key={payment.id}
+                      className="rounded-xl border border-border bg-slate-50 p-3 text-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-black text-primary">{formatMoney(payment.amount)}</p>
+                          <p className="mt-1 text-xs font-semibold text-muted">
+                            {formatPaymentMethod(payment.method)} ·{" "}
+                            {formatShortDateTime(payment.payment_date)} ET
+                          </p>
+                          {payment.note ? (
+                            <p className="mt-2 text-xs leading-5 text-muted">{payment.note}</p>
+                          ) : null}
+                        </div>
+                        <form action={deleteInvoicePaymentAction}>
+                          <input type="hidden" name="invoiceId" value={invoice.id} />
+                          <input type="hidden" name="paymentId" value={payment.id} />
+                          <button
+                            type="submit"
+                            className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  No payments recorded yet.
+                </p>
+              )}
             </div>
 
             <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-muted">
               Email sends the current invoice details to the customer through Resend.
-              Draft invoices are automatically marked as sent after successful delivery.
+              Draft invoices are automatically marked as sent after successful delivery. Paid status is
+              handled by the payment history once the amount due reaches zero.
             </div>
 
             <div className="mt-6 border-t border-border pt-5">
