@@ -33,7 +33,29 @@ const statusClasses: Record<LeadAdminStatus, string> = {
 export const dynamic = "force-dynamic";
 
 type LeadStatusFilter = LeadAdminStatus | "all";
+type LeadViewFilter = "active" | "archive" | "all";
 type LeadActivitiesById = Awaited<ReturnType<typeof listActivitiesForLeads>>;
+
+const ACTIVE_STATUSES = new Set<LeadAdminStatus>(["new", "contacted", "confirmed", "invoiced"]);
+const ARCHIVE_STATUSES = new Set<LeadAdminStatus>(["completed", "cancelled"]);
+
+const LEAD_VIEWS: { value: LeadViewFilter; label: string; description: string }[] = [
+  {
+    value: "active",
+    label: "Active",
+    description: "Open jobs and requests that still need action",
+  },
+  {
+    value: "archive",
+    label: "Archive",
+    description: "Completed and cancelled work",
+  },
+  {
+    value: "all",
+    label: "All",
+    description: "Everything in one list",
+  },
+];
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -89,16 +111,49 @@ function getLeadStatusFilter(value: string | string[] | undefined): LeadStatusFi
   return allowedStatus?.value ?? "all";
 }
 
+function getLeadViewFilter(value: string | string[] | undefined): LeadViewFilter {
+  const view = Array.isArray(value) ? value[0] : value;
+
+  if (view === "archive" || view === "all") {
+    return view;
+  }
+
+  return "active";
+}
+
 function getSearchQuery(value: string | string[] | undefined) {
   const query = Array.isArray(value) ? value[0] : value;
   return query?.trim() ?? "";
 }
 
-function getFilterHref(status: LeadStatusFilter, query: string) {
+function getViewHref(view: LeadViewFilter, query: string) {
+  const params = new URLSearchParams();
+
+  if (view !== "active") {
+    params.set("view", view);
+  }
+
+  if (query) {
+    params.set("q", query);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `/admin/leads?${queryString}` : "/admin/leads";
+}
+
+function getFilterHref(status: LeadStatusFilter, query: string, selectedView: LeadViewFilter) {
   const params = new URLSearchParams();
 
   if (status !== "all") {
     params.set("status", status);
+
+    if (ARCHIVE_STATUSES.has(status)) {
+      params.set("view", "archive");
+    } else if (!ACTIVE_STATUSES.has(status)) {
+      params.set("view", "all");
+    }
+  } else if (selectedView !== "active") {
+    params.set("view", selectedView);
   }
 
   if (query) {
@@ -159,7 +214,11 @@ function getNeedsAttention(
 export default async function LeadsAdminPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ status?: string | string[]; q?: string | string[] }>;
+  searchParams?: Promise<{
+    status?: string | string[];
+    view?: string | string[];
+    q?: string | string[];
+  }>;
 }) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -182,9 +241,14 @@ export default async function LeadsAdminPage({
 
   const params = await searchParams;
   const selectedStatus = getLeadStatusFilter(params?.status);
+  const selectedView = getLeadViewFilter(params?.view);
   const searchQuery = getSearchQuery(params?.q);
   const searchedLeads = leads.filter((lead) => leadMatchesQuery(lead, searchQuery));
   const counts = countByStatus(searchedLeads);
+  const activeLeads = searchedLeads.filter((lead) => ACTIVE_STATUSES.has(lead.status));
+  const archiveLeads = searchedLeads.filter((lead) => ARCHIVE_STATUSES.has(lead.status));
+  const viewLeads =
+    selectedView === "all" ? searchedLeads : selectedView === "archive" ? archiveLeads : activeLeads;
   const invoiceByLeadId = new Map(
     invoices
       .filter((invoice) => invoice.lead_id)
@@ -192,10 +256,10 @@ export default async function LeadsAdminPage({
   );
   const visibleLeads =
     selectedStatus === "all"
-      ? searchedLeads
+      ? viewLeads
       : searchedLeads.filter((lead) => lead.status === selectedStatus);
   const filterItems: { value: LeadStatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: searchedLeads.length },
+    { value: "all", label: "All", count: viewLeads.length },
     ...STATUSES.map((status) => ({
       value: status.value as LeadStatusFilter,
       label: status.label,
@@ -241,6 +305,50 @@ export default async function LeadsAdminPage({
       </header>
 
       <section className="container-shell py-8">
+        <div className="mb-5 grid gap-3 lg:grid-cols-3">
+          {LEAD_VIEWS.map((view) => {
+            const isActive = selectedView === view.value;
+            const viewCount =
+              view.value === "all"
+                ? searchedLeads.length
+                : view.value === "archive"
+                  ? archiveLeads.length
+                  : activeLeads.length;
+
+            return (
+              <Link
+                key={view.value}
+                href={getViewHref(view.value, searchQuery)}
+                className={`rounded-2xl border px-5 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
+                  isActive
+                    ? "border-primary/30 bg-primary text-primary-foreground"
+                    : "border-border bg-white text-primary"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p
+                      className={`text-xs font-bold uppercase tracking-[0.16em] ${
+                        isActive ? "text-primary-foreground/75" : "text-muted"
+                      }`}
+                    >
+                      {view.label}
+                    </p>
+                    <p
+                      className={`mt-2 text-sm leading-6 ${
+                        isActive ? "text-primary-foreground/80" : "text-muted"
+                      }`}
+                    >
+                      {view.description}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-3xl font-black">{viewCount}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {filterItems.map((status) => {
             const isActive = selectedStatus === status.value;
@@ -248,7 +356,7 @@ export default async function LeadsAdminPage({
             return (
             <Link
               key={status.value}
-              href={getFilterHref(status.value, searchQuery)}
+              href={getFilterHref(status.value, searchQuery, selectedView)}
               className={`rounded-2xl border px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
                 isActive
                   ? "border-primary/30 bg-primary text-primary-foreground"
@@ -281,7 +389,9 @@ export default async function LeadsAdminPage({
               <h2 className="text-lg font-black text-primary">Latest requests</h2>
               <p className="mt-1 text-sm text-muted">
                 Showing {visibleLeads.length} {leadCountLabel(visibleLeads.length)}
-                {selectedStatus === "all" ? "" : ` with ${selectedStatus} status`}
+                {selectedStatus === "all"
+                  ? ` in ${selectedView === "all" ? "all leads" : selectedView}`
+                  : ` with ${selectedStatus} status`}
                 {searchQuery ? ` matching "${searchQuery}"` : ""}.
               </p>
             </div>
@@ -289,6 +399,9 @@ export default async function LeadsAdminPage({
               <form action="/admin/leads" className="flex min-w-0 gap-2">
                 {selectedStatus !== "all" ? (
                   <input type="hidden" name="status" value={selectedStatus} />
+                ) : null}
+                {selectedView !== "active" ? (
+                  <input type="hidden" name="view" value={selectedView} />
                 ) : null}
                 <input
                   type="search"
@@ -304,7 +417,7 @@ export default async function LeadsAdminPage({
                   Search
                 </button>
               </form>
-              {searchQuery || selectedStatus !== "all" ? (
+              {searchQuery || selectedStatus !== "all" || selectedView !== "active" ? (
                 <Link
                   href="/admin/leads"
                   className="text-sm font-bold text-muted underline-offset-4 hover:text-primary hover:underline"
@@ -326,7 +439,9 @@ export default async function LeadsAdminPage({
               <p className="text-lg font-bold text-primary">No leads yet</p>
               <p className="mt-2 text-sm text-muted">
                 {selectedStatus === "all"
-                  ? "New website requests will appear here after form submission."
+                  ? selectedView === "archive"
+                    ? "Completed and cancelled leads will move here automatically."
+                    : "New website requests will appear here after form submission."
                   : "No requests match this status filter yet."}
               </p>
             </div>

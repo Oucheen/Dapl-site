@@ -124,6 +124,11 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `completed`
   - `cancelled`
 - The top status cards on `/admin/leads` are also filters. Clicking a status limits the visible lead cards to that workflow stage.
+- `/admin/leads` now has a higher-level view filter:
+  - `Active` is the default and shows `new`, `contacted`, `confirmed`, and `invoiced`
+  - `Archive` shows closed work: `completed` and `cancelled`
+  - `All` shows every lead
+- No extra archive table/column is used yet; archive behavior is status-based so paid/completed jobs automatically leave the default working view.
 - `/admin/leads` also has a GET search box for name, phone, email, address, appliance, message, source, notes, visit date, and technician. Status filters preserve the active search query.
 - `/admin/leads/[leadId]` is the focused lead workspace: customer/request details, invoice shortcut, editable lead status/notes, locked post-invoice fields, needs-attention guidance, and a longer timeline.
 - Lead list cards include an `Open lead details` shortcut and show small needs-attention badges for new/contacted/confirmed leads that need the next action.
