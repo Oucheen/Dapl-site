@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PasswordField } from "@/components/admin/password-field";
 import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
 import { loginAdmin } from "../actions";
 
@@ -51,14 +52,7 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
                 <label htmlFor="password" className="text-sm font-semibold text-foreground">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  className="mt-2 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                />
+                <PasswordField />
               </div>
 
               {hasError ? (

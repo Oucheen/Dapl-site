@@ -30,6 +30,10 @@ function normalizeUserId(name: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function normalizeRole(role: string) {
+  return role.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "staff";
+}
+
 function getAdminUsers() {
   const configuredUsers = process.env.LEADS_ADMIN_USERS;
 
@@ -47,7 +51,7 @@ function getAdminUsers() {
           id: normalizeUserId(name),
           name,
           password,
-          role: role || "staff",
+          role: normalizeRole(role),
         };
       })
       .filter(Boolean) as Array<AdminSessionUser & { password: string }>;

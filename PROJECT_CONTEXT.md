@@ -107,6 +107,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
 - Admin login supports either the legacy single `LEADS_ADMIN_PASSWORD` or multiple staff users through `LEADS_ADMIN_USERS`.
 - `LEADS_ADMIN_USERS` format is semicolon-separated: `Name|password|role;Second Name|password2|staff`.
+  Roles are normalized to lowercase automatically, so `BOSS` becomes `boss`.
 - When multiple staff users are configured, the signed-in user name is stored in the admin session and new activity-log rows show who made each change.
 - The floating contact widget is hidden on `/admin` routes
 - Auth is intentionally simple for the first CRM step:
