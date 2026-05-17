@@ -39,6 +39,8 @@ create table if not exists public.invoices (
   service_date date,
   assigned_technician text,
   notes text,
+  promo_code text,
+  discount_amount numeric(10,2) not null default 0,
   subtotal numeric(10,2) not null default 0,
   tax numeric(10,2) not null default 0,
   total numeric(10,2) not null default 0,
@@ -72,6 +74,10 @@ alter table public.leads
   add column if not exists scheduled_date date,
   add column if not exists estimated_price numeric(10,2),
   add column if not exists assigned_technician text;
+
+alter table public.invoices
+  add column if not exists promo_code text,
+  add column if not exists discount_amount numeric(10,2) not null default 0;
 
 create index if not exists leads_created_at_idx on public.leads (created_at desc);
 create index if not exists leads_status_idx on public.leads (status);

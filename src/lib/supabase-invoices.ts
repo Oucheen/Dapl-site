@@ -23,6 +23,8 @@ export type InvoiceRecord = {
   service_date: string | null;
   assigned_technician: string | null;
   notes: string | null;
+  promo_code: string | null;
+  discount_amount: number | string;
   subtotal: number | string;
   tax: number | string;
   total: number | string;
@@ -99,6 +101,11 @@ export const INVOICE_ITEM_TEMPLATES = [
 
 export type InvoiceItemTemplateKey = (typeof INVOICE_ITEM_TEMPLATES)[number]["key"];
 
+export const INVOICE_PROMO_DISCOUNTS = {
+  WEB25: 25,
+  RETURN15: 15,
+} as const;
+
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
 const DEFAULT_INVOICE_ITEMS_TABLE = "invoice_items";
@@ -170,6 +177,22 @@ function toMoney(value: number | string | null | undefined) {
   return Math.round(amount * 100) / 100;
 }
 
+function normalizePromoCode(value: string | null | undefined) {
+  const code = value?.trim().toUpperCase();
+
+  return code || null;
+}
+
+export function getPromoDiscountAmount(value: string | null | undefined) {
+  const code = normalizePromoCode(value);
+
+  if (!code) {
+    return 0;
+  }
+
+  return INVOICE_PROMO_DISCOUNTS[code as keyof typeof INVOICE_PROMO_DISCOUNTS] ?? 0;
+}
+
 function toQuantity(value: number | string | null | undefined) {
   const amount = Number(value ?? 0);
 
@@ -198,6 +221,10 @@ function getServiceDescription(lead: LeadRecord) {
 
 export function getInvoiceItemTemplate(templateKey: string) {
   return INVOICE_ITEM_TEMPLATES.find((template) => template.key === templateKey) ?? null;
+}
+
+function calculateInvoiceTotal(subtotal: number, discountAmount: number, tax: number) {
+  return toMoney(Math.max(0, subtotal - discountAmount) + tax);
 }
 
 export async function getInvoiceById(id: string): Promise<InvoiceWithItems | null> {
@@ -367,9 +394,11 @@ export async function createInvoiceFromLead(leadId: string) {
     throw new Error("Lead not found.");
   }
 
+  const promoCode = normalizePromoCode(lead.promo_code);
+  const discountAmount = getPromoDiscountAmount(promoCode);
   const subtotal = toMoney(lead.estimated_price);
   const tax = 0;
-  const total = subtotal + tax;
+  const total = calculateInvoiceTotal(subtotal, discountAmount, tax);
 
   const invoiceResponse = await fetch(getTableUrl(config, config.invoicesTable), {
     method: "POST",
@@ -389,6 +418,8 @@ export async function createInvoiceFromLead(leadId: string) {
       service_date: lead.scheduled_date ?? lead.preferred_date,
       assigned_technician: lead.assigned_technician ?? null,
       notes: lead.admin_notes ?? null,
+      promo_code: promoCode,
+      discount_amount: discountAmount,
       subtotal,
       tax,
       total,
@@ -536,7 +567,28 @@ async function updateInvoiceTotals(
   const items = (await response.json()) as Pick<InvoiceItemRecord, "line_total">[];
   const subtotal = toMoney(items.reduce((sum, item) => sum + Number(item.line_total ?? 0), 0));
   const tax = 0;
-  const total = toMoney(subtotal + tax);
+  const invoiceParams = new URLSearchParams({
+    select: "discount_amount",
+    id: `eq.${invoiceId}`,
+    limit: "1",
+  });
+
+  const invoiceResponse = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${invoiceParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!invoiceResponse.ok) {
+    const details = await invoiceResponse.text();
+    throw new Error(`Supabase invoice discount fetch failed: ${invoiceResponse.status} ${details}`);
+  }
+
+  const invoices = (await invoiceResponse.json()) as Pick<InvoiceRecord, "discount_amount">[];
+  const discountAmount = toMoney(invoices[0]?.discount_amount);
+  const total = calculateInvoiceTotal(subtotal, discountAmount, tax);
 
   const updateResponse = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${invoiceId}`, {
     method: "PATCH",

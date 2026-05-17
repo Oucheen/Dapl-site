@@ -484,6 +484,15 @@ Still worth doing or verifying:
 - Resend is wired up and the domain is verified
 - Be careful not to break homepage anchor navigation from secondary pages
 
+## Invoice / promo code notes
+- Invoice discounts are tied to the two active promo codes:
+  - `WEB25` - $25 off from the homepage first-repair offer
+  - `RETURN15` - $15 off from the returning customer offer page
+- When an invoice is created from a lead, the lead `promo_code` is copied into the invoice as `promo_code`, and the matching amount is stored as `discount_amount`.
+- Invoice totals are calculated as `subtotal - discount_amount + tax`, never below $0 before tax.
+- The discount is shown in the invoice admin page, print view, and customer invoice email.
+- Supabase needs the latest `supabase/schema.sql` applied so `public.invoices` has `promo_code` and `discount_amount`.
+
 ## Maintenance note
 - Keep this file updated when adding new routes, SEO changes, form behavior, domain/email settings, or important UI flows
 -

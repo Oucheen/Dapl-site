@@ -72,6 +72,9 @@ function buildItemsRows(items: InvoiceItemRecord[]) {
 
 function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: string) {
   const { invoice, items } = invoiceData;
+  const discountAmount = Number(invoice.discount_amount ?? 0);
+  const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
+  const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
 
   return `
     <div style="margin: 0; padding: 0; background: #f4f7fb; font-family: Arial, sans-serif; color: #0b1d3a;">
@@ -150,6 +153,17 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
                 <td style="padding: 8px 0; color: #475569; font-size: 15px;">Subtotal</td>
                 <td style="padding: 8px 0 8px 18px; color: #0b1d3a; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(invoice.subtotal))}</td>
               </tr>
+              ${
+                hasDiscount
+                  ? `
+                    <tr>
+                      <td style="width: 45%;"></td>
+                      <td style="padding: 8px 0; color: #475569; font-size: 15px;">${escapeHtml(discountLabel)}</td>
+                      <td style="padding: 8px 0 8px 18px; color: #d91f32; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">-${escapeHtml(formatMoney(discountAmount))}</td>
+                    </tr>
+                  `
+                  : ""
+              }
               <tr>
                 <td style="width: 45%;"></td>
                 <td style="padding: 8px 0; color: #475569; font-size: 15px;">Tax</td>

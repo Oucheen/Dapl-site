@@ -156,6 +156,9 @@ export default async function InvoicePage({
   const { invoice, items } = invoiceData;
   const activity = await listActivitiesForInvoice(invoice.id, 8);
   const emailNotice = getEmailNotice(getEmailStatus(query.email), invoice.customer_email);
+  const discountAmount = Number(invoice.discount_amount ?? 0);
+  const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
+  const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
 
   return (
     <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
@@ -271,6 +274,12 @@ export default async function InvoicePage({
                   <p className="font-bold text-foreground">Technician</p>
                   <p className="mt-1">{invoice.assigned_technician || "Not assigned"}</p>
                 </div>
+                {invoice.promo_code ? (
+                  <div>
+                    <p className="font-bold text-foreground">Promo code</p>
+                    <p className="mt-1">{invoice.promo_code}</p>
+                  </div>
+                ) : null}
               </section>
             </div>
 
@@ -407,6 +416,12 @@ export default async function InvoicePage({
                   <span className="text-muted">Subtotal</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
                 </div>
+                {hasDiscount ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted">{discountLabel}</span>
+                    <span className="font-bold text-accent">-{formatMoney(discountAmount)}</span>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Tax</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
@@ -539,6 +554,12 @@ export default async function InvoicePage({
                 <span className="text-muted">Subtotal</span>
                 <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
               </div>
+              {hasDiscount ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted">{discountLabel}</span>
+                  <span className="font-bold text-accent">-{formatMoney(discountAmount)}</span>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between">
                 <span className="text-muted">Tax</span>
                 <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
