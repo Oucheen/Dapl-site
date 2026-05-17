@@ -52,6 +52,53 @@ export type InvoiceItemInput = {
   unitPrice: number | string;
 };
 
+export const INVOICE_ITEM_TEMPLATES = [
+  {
+    key: "diagnostic",
+    label: "Diagnostic",
+    description: "Diagnostic / service call",
+    quantity: 1,
+    unitPrice: 89,
+  },
+  {
+    key: "labor",
+    label: "Labor",
+    description: "Labor",
+    quantity: 1,
+    unitPrice: 125,
+  },
+  {
+    key: "parts",
+    label: "Parts",
+    description: "Parts",
+    quantity: 1,
+    unitPrice: 0,
+  },
+  {
+    key: "repair-service",
+    label: "Repair service",
+    description: "Appliance repair service",
+    quantity: 1,
+    unitPrice: 150,
+  },
+  {
+    key: "maintenance",
+    label: "Maintenance",
+    description: "Preventive maintenance service",
+    quantity: 1,
+    unitPrice: 120,
+  },
+  {
+    key: "installation",
+    label: "Installation",
+    description: "Installation / setup service",
+    quantity: 1,
+    unitPrice: 150,
+  },
+] as const;
+
+export type InvoiceItemTemplateKey = (typeof INVOICE_ITEM_TEMPLATES)[number]["key"];
+
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
 const DEFAULT_INVOICE_ITEMS_TABLE = "invoice_items";
@@ -147,6 +194,10 @@ function createInvoiceNumber() {
 function getServiceDescription(lead: LeadRecord) {
   const appliance = lead.appliance || "Appliance";
   return `${appliance} repair service`;
+}
+
+export function getInvoiceItemTemplate(templateKey: string) {
+  return INVOICE_ITEM_TEMPLATES.find((template) => template.key === templateKey) ?? null;
 }
 
 export async function getInvoiceById(id: string): Promise<InvoiceWithItems | null> {
@@ -580,6 +631,51 @@ export async function addInvoiceItem(invoiceId: string) {
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase invoice item insert failed: ${response.status} ${details}`);
+  }
+
+  await updateInvoiceTotals(config, invoiceId);
+}
+
+export async function addInvoiceItemFromTemplate(
+  invoiceId: string,
+  templateKey: InvoiceItemTemplateKey | string,
+) {
+  assertUuid(invoiceId);
+
+  const template = getInvoiceItemTemplate(templateKey);
+
+  if (!template) {
+    throw new Error("Invalid invoice item template.");
+  }
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const quantity = toQuantity(template.quantity);
+  const unitPrice = toMoney(template.unitPrice);
+  const lineTotal = toMoney(quantity * unitPrice);
+
+  const response = await fetch(getTableUrl(config, config.invoiceItemsTable), {
+    method: "POST",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      invoice_id: invoiceId,
+      description: template.description,
+      quantity,
+      unit_price: unitPrice,
+      line_total: lineTotal,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice template item insert failed: ${response.status} ${details}`);
   }
 
   await updateInvoiceTotals(config, invoiceId);

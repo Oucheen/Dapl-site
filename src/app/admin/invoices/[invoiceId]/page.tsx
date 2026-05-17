@@ -3,9 +3,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
-import { type InvoiceItemRecord, type InvoiceStatus, getInvoiceById } from "@/lib/supabase-invoices";
+import {
+  INVOICE_ITEM_TEMPLATES,
+  type InvoiceItemRecord,
+  type InvoiceStatus,
+  getInvoiceById,
+} from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
+  addInvoiceTemplateItemAction,
   deleteInvoiceItemAction,
   markInvoiceCompletedAction,
   sendInvoiceEmailAction,
@@ -412,15 +418,52 @@ export default async function InvoicePage({
               </div>
             </div>
 
-            <form action={addInvoiceItemAction} className="border-t border-border px-5 py-5 print:hidden sm:px-7">
-              <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-primary/20 bg-white px-4 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
-              >
-                Add line item
-              </button>
-            </form>
+            <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Quick templates
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Add a common charge, then edit the description or price above if needed.
+                  </p>
+                </div>
+                <form action={addInvoiceItemAction}>
+                  <input type="hidden" name="invoiceId" value={invoice.id} />
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg border border-primary/20 bg-white px-4 py-3 text-xs font-bold text-primary transition hover:bg-primary/5 sm:w-auto"
+                  >
+                    Add blank line
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {INVOICE_ITEM_TEMPLATES.map((template) => (
+                  <form key={template.key} action={addInvoiceTemplateItemAction}>
+                    <input type="hidden" name="invoiceId" value={invoice.id} />
+                    <input type="hidden" name="templateKey" value={template.key} />
+                    <button
+                      type="submit"
+                      className="flex h-full w-full items-center justify-between gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/5"
+                    >
+                      <span>
+                        <span className="block text-sm font-black text-primary">
+                          {template.label}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-muted">
+                          {template.description}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-black text-foreground">
+                        {formatMoney(template.unitPrice)}
+                      </span>
+                    </button>
+                  </form>
+                ))}
+              </div>
+            </section>
 
             {invoice.notes ? (
               <div className="border-t border-border px-5 py-5 print:hidden sm:px-7">

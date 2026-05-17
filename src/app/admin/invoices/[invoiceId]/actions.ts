@@ -7,7 +7,9 @@ import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   addInvoiceItem,
+  addInvoiceItemFromTemplate,
   deleteInvoiceItem,
+  getInvoiceItemTemplate,
   getInvoiceById,
   getLeadIdForInvoice,
   type InvoiceItemInput,
@@ -148,6 +150,32 @@ export async function addInvoiceItemAction(formData: FormData) {
     eventType: "invoice_item_added",
     title: "Invoice line item added",
     details: "A new invoice line item was added.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}`);
+}
+
+export async function addInvoiceTemplateItemAction(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const templateKey = String(formData.get("templateKey") || "");
+  const template = getInvoiceItemTemplate(templateKey);
+
+  if (!template) {
+    throw new Error("Invalid invoice item template.");
+  }
+
+  await addInvoiceItemFromTemplate(invoiceId, templateKey);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_item_added",
+    title: "Invoice template item added",
+    details: `${template.label} was added to the invoice.`,
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);

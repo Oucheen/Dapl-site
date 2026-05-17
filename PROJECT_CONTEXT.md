@@ -150,6 +150,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - one starter line item using the lead estimate
   - editing invoice item descriptions, quantities, and unit prices
   - adding and deleting invoice line items
+  - quick invoice line templates on invoice detail pages: Diagnostic, Labor, Parts, Repair service, Maintenance, Installation
   - automatic subtotal / total recalculation from invoice items
   - invoice status updates: `draft`, `sent`, `paid`, `void`
 - Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.
