@@ -137,6 +137,17 @@ export default async function NewInvoicePage() {
                   />
                 </label>
                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Promo code optional
+                  <select
+                    name="promoCode"
+                    className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  >
+                    <option value="">No promo code</option>
+                    <option value="WEB25">WEB25 - $25 off first repair</option>
+                    <option value="RETURN15">RETURN15 - $15 off returning customer</option>
+                  </select>
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Technician
                   <input
                     name="assignedTechnician"

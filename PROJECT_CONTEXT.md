@@ -489,6 +489,7 @@ Still worth doing or verifying:
   - `WEB25` - $25 off from the homepage first-repair offer
   - `RETURN15` - $15 off from the returning customer offer page
 - When an invoice is created from a lead, the lead `promo_code` is copied into the invoice as `promo_code`, and the matching amount is stored as `discount_amount`.
+- Manual invoices created from `/admin/invoices/new` can also optionally choose `WEB25` or `RETURN15`; this stores the code on the manual lead first, then applies the same invoice discount logic.
 - Invoice totals are calculated as `subtotal - discount_amount + tax`, never below $0 before tax.
 - The discount is shown in the invoice admin page, print view, and customer invoice email.
 - Supabase needs the latest `supabase/schema.sql` applied so `public.invoices` has `promo_code` and `discount_amount`.

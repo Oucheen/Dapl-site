@@ -62,6 +62,7 @@ export type ManualLeadInput = {
   email: string;
   address: string;
   appliance: string;
+  promoCode: string;
   serviceDate: string;
   estimatedPrice: string;
   assignedTechnician: string;
@@ -217,7 +218,7 @@ export async function createManualSupabaseLead(input: ManualLeadInput) {
       email: input.email.trim(),
       service_address: address,
       appliance: toOptionalText(input.appliance),
-      promo_code: null,
+      promo_code: toOptionalText(input.promoCode),
       lead_source: "manual-admin",
       preferred_date: null,
       message: input.notes.trim() || "Manual invoice created from the admin dashboard.",

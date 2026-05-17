@@ -17,6 +17,7 @@ export async function createManualInvoiceAction(formData: FormData) {
     email: String(formData.get("email") || ""),
     address: String(formData.get("address") || ""),
     appliance: String(formData.get("appliance") || ""),
+    promoCode: String(formData.get("promoCode") || ""),
     serviceDate: String(formData.get("serviceDate") || ""),
     estimatedPrice: String(formData.get("estimatedPrice") || ""),
     assignedTechnician: String(formData.get("assignedTechnician") || ""),
