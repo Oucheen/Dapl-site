@@ -1,7 +1,7 @@
 # DAPL Project Context
 
 ## What this project is
-- Marketing site for **Dapl Appliance Repair**
+- Marketing site for **DAPL Appliance Repair**
 - Stack: **Next.js 16.2.4**, React 19, TypeScript, Tailwind 4, Framer Motion
 - Production domain: **https://www.daplappliance.com**
 
@@ -40,7 +40,7 @@ For production / Vercel:
 ```env
 RESEND_API_KEY=...
 CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
-CONTACT_FROM_EMAIL=Dapl Website <noreply@daplappliance.com>
+CONTACT_FROM_EMAIL=DAPL Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 SUPABASE_URL=...
@@ -375,14 +375,14 @@ leadSource: booking-page
 ### Privacy / legal page
 - A dedicated privacy policy page now exists at `src/app/privacy-policy/page.tsx`
 - It covers:
-  - business identity linking the public brand name **Dapl Appliance Repair** to the legal operator **DAPL Honcharos Appliance Service Corp**
+  - business identity linking the public brand name **DAPL Appliance Repair** to the legal operator **DAPL Honcharos Appliance Service Corp**
   - contact form submissions
   - analytics and cookies
   - lead notifications
   - basic service-provider sharing language
   - user contact/update requests
 - The footer now links to `/privacy-policy`
-- The footer also includes the short legal identity line: `Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.`
+- The footer also includes the short legal identity line: `DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.`
 
 ### Shared scroll controls
 - Service pages have a standalone down-arrow cue in the hero that scrolls to the next section
@@ -493,7 +493,12 @@ Still worth doing or verifying:
 - Invoice totals are calculated as `subtotal - discount_amount + tax`, never below $0 before tax.
 - The discount is shown in the invoice admin page, print view, and customer invoice email.
 - Supabase needs the latest `supabase/schema.sql` applied so `public.invoices` has `promo_code` and `discount_amount`.
+- Invoice edit actions redirect back with a small success notice (`notice=...`) so admins can see when invoice status, items, templates, or completion changes were saved.
+
+## Brand consistency note
+- Public-facing brand casing should stay consistent as `DAPL Appliance Repair` for Google Business Profile / Search Console consistency.
+- The legal operator line should stay separate: `DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.`
+- Domain names and email addresses stay lowercase.
 
 ## Maintenance note
 - Keep this file updated when adding new routes, SEO changes, form behavior, domain/email settings, or important UI flows
--

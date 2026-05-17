@@ -8,7 +8,7 @@ import { FadeUp } from "@/components/ui/fade-up";
 export const metadata: Metadata = {
   title: "Returning Customer Offer | $15 Off Your Next Repair",
   description:
-    "Exclusive returning customer offer from Dapl Appliance Repair. Save $15 on your next service appointment in Charlotte, NC and surrounding areas.",
+    "Exclusive returning customer offer from DAPL Appliance Repair. Save $15 on your next service appointment in Charlotte, NC and surrounding areas.",
   robots: {
     index: false,
     follow: false,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Returning Customer Offer | $15 Off Your Next Repair",
     description:
-      "Exclusive returning customer offer from Dapl Appliance Repair for repeat service calls.",
+      "Exclusive returning customer offer from DAPL Appliance Repair for repeat service calls.",
     url: "/returning-customer-offer",
   },
 };
@@ -40,7 +40,7 @@ export default function ReturningCustomerOfferPage() {
                 Save $15 on your next repair
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
-                Thank you for choosing Dapl Appliance Repair. Returning residential customers can
+                Thank you for choosing DAPL Appliance Repair. Returning residential customers can
                 receive $15 off their next service appointment in Charlotte, NC and surrounding
                 areas.
               </p>
@@ -88,7 +88,7 @@ export default function ReturningCustomerOfferPage() {
                       </h2>
                       <Image
                         src="/logo.jpg"
-                        alt="Dapl Appliance Repair company logo"
+                        alt="DAPL Appliance Repair company logo"
                         width={88}
                         height={88}
                         className="mx-auto mt-4 rounded-2xl border border-border bg-white object-cover shadow-sm sm:hidden"
@@ -99,7 +99,7 @@ export default function ReturningCustomerOfferPage() {
                     </div>
                     <Image
                       src="/logo.jpg"
-                      alt="Dapl Appliance Repair company logo"
+                      alt="DAPL Appliance Repair company logo"
                       width={88}
                       height={88}
                       className="hidden rounded-2xl border border-border bg-white object-cover shadow-sm sm:block"

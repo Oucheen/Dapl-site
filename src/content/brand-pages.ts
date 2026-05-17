@@ -37,9 +37,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "whirlpool-appliance-repair-charlotte-nc",
     name: "Whirlpool",
     logo: "/brands/whirlpool.svg",
-    metaTitle: "Whirlpool Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "Whirlpool Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need Whirlpool appliance repair in Charlotte, NC? Dapl Appliance Repair helps with Whirlpool refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
+      "Need Whirlpool appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Whirlpool refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
     keywords: [
       "Whirlpool appliance repair Charlotte NC",
       "Whirlpool refrigerator repair Charlotte",
@@ -48,7 +48,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "Whirlpool Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners troubleshoot and repair common Whirlpool refrigerator, laundry, kitchen, and cooling appliance problems with practical local scheduling.",
+      "DAPL Appliance Repair helps Charlotte homeowners troubleshoot and repair common Whirlpool refrigerator, laundry, kitchen, and cooling appliance problems with practical local scheduling.",
     introTitle: "Local help for common Whirlpool appliance problems",
     introText:
       "Whirlpool appliances are found in many Charlotte homes, from laundry rooms to kitchens. Tell us the model if you have it, what changed, and whether the issue is constant or intermittent so we can prepare for the visit.",
@@ -105,9 +105,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "ge-appliance-repair-charlotte-nc",
     name: "GE",
     logo: "/brands/general-electric.svg",
-    metaTitle: "GE Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "GE Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need GE appliance repair in Charlotte, NC? Dapl Appliance Repair helps with GE refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
+      "Need GE appliance repair in Charlotte, NC? DAPL Appliance Repair helps with GE refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
     keywords: [
       "GE appliance repair Charlotte NC",
       "GE refrigerator repair Charlotte",
@@ -116,7 +116,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "GE Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners with common GE kitchen, laundry, refrigeration, and cooking appliance issues, from cooling loss to startup trouble.",
+      "DAPL Appliance Repair helps Charlotte homeowners with common GE kitchen, laundry, refrigeration, and cooking appliance issues, from cooling loss to startup trouble.",
     introTitle: "Practical GE appliance repair guidance",
     introText:
       "GE appliances can show very different symptoms depending on the model and category. We focus on the behavior you are seeing, the appliance type, and the best practical next step.",
@@ -173,9 +173,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "samsung-appliance-repair-charlotte-nc",
     name: "Samsung",
     logo: "/brands/samsung.svg",
-    metaTitle: "Samsung Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "Samsung Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need Samsung appliance repair in Charlotte, NC? Dapl Appliance Repair helps with Samsung refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
+      "Need Samsung appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Samsung refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
     keywords: [
       "Samsung appliance repair Charlotte NC",
       "Samsung refrigerator repair Charlotte",
@@ -184,7 +184,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "Samsung Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps with common Samsung appliance issues, including cooling problems, laundry cycle trouble, drainage issues, heating failures, and control symptoms.",
+      "DAPL Appliance Repair helps with common Samsung appliance issues, including cooling problems, laundry cycle trouble, drainage issues, heating failures, and control symptoms.",
     introTitle: "Samsung appliance help without guesswork",
     introText:
       "Samsung appliances often include digital controls and model-specific behavior. We look at the full symptom pattern and explain the practical repair path before major decisions.",
@@ -241,9 +241,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "lg-appliance-repair-charlotte-nc",
     name: "LG",
     logo: "/brands/lg-electronics.svg",
-    metaTitle: "LG Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "LG Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need LG appliance repair in Charlotte, NC? Dapl Appliance Repair helps with LG refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
+      "Need LG appliance repair in Charlotte, NC? DAPL Appliance Repair helps with LG refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
     keywords: [
       "LG appliance repair Charlotte NC",
       "LG refrigerator repair Charlotte",
@@ -252,7 +252,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "LG Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners with common LG appliance symptoms, including cooling loss, laundry performance issues, leak concerns, heating problems, and startup failures.",
+      "DAPL Appliance Repair helps Charlotte homeowners with common LG appliance symptoms, including cooling loss, laundry performance issues, leak concerns, heating problems, and startup failures.",
     introTitle: "Local LG appliance repair support",
     introText:
       "From LG laundry appliances to refrigerators and kitchen units, we focus on the symptom, model details, and practical repair choices that make sense for the appliance.",
@@ -309,9 +309,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "kitchenaid-appliance-repair-charlotte-nc",
     name: "KitchenAid",
     logo: "/brands/kitchen-aid.svg",
-    metaTitle: "KitchenAid Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "KitchenAid Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need KitchenAid appliance repair in Charlotte, NC? Dapl Appliance Repair helps with KitchenAid refrigerators, dishwashers, ovens, cooktops, freezers, ice machines, and more.",
+      "Need KitchenAid appliance repair in Charlotte, NC? DAPL Appliance Repair helps with KitchenAid refrigerators, dishwashers, ovens, cooktops, freezers, ice machines, and more.",
     keywords: [
       "KitchenAid appliance repair Charlotte NC",
       "KitchenAid dishwasher repair Charlotte",
@@ -320,7 +320,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "KitchenAid Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps with common KitchenAid kitchen and cooling appliance issues, including refrigerator cooling loss, dishwasher performance problems, oven heating trouble, and more.",
+      "DAPL Appliance Repair helps with common KitchenAid kitchen and cooling appliance issues, including refrigerator cooling loss, dishwasher performance problems, oven heating trouble, and more.",
     introTitle: "KitchenAid repair help for busy Charlotte kitchens",
     introText:
       "KitchenAid appliances are often central to the kitchen. We focus on practical diagnosis, clear communication, and getting the appliance back to dependable use when repair makes sense.",
@@ -377,9 +377,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "bosch-appliance-repair-charlotte-nc",
     name: "Bosch",
     logo: "/brands/bosch-1.svg",
-    metaTitle: "Bosch Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "Bosch Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need Bosch appliance repair in Charlotte, NC? Dapl Appliance Repair helps with Bosch dishwashers, refrigerators, ovens, cooktops, washers, dryers, freezers, and more.",
+      "Need Bosch appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Bosch dishwashers, refrigerators, ovens, cooktops, washers, dryers, freezers, and more.",
     keywords: [
       "Bosch appliance repair Charlotte NC",
       "Bosch dishwasher repair Charlotte",
@@ -388,7 +388,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "Bosch Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners with common Bosch appliance issues, including dishwasher drainage, refrigerator cooling, oven heating, cooktop performance, and more.",
+      "DAPL Appliance Repair helps Charlotte homeowners with common Bosch appliance issues, including dishwasher drainage, refrigerator cooling, oven heating, cooktop performance, and more.",
     introTitle: "Bosch appliance service with careful diagnostics",
     introText:
       "Bosch appliances can be compact, efficient, and model-specific. We review the symptom pattern and appliance category before explaining the best practical repair option.",
@@ -445,9 +445,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "frigidaire-appliance-repair-charlotte-nc",
     name: "Frigidaire",
     logo: "/brands/frigidaire.svg",
-    metaTitle: "Frigidaire Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "Frigidaire Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need Frigidaire appliance repair in Charlotte, NC? Dapl Appliance Repair helps with Frigidaire refrigerators, freezers, dishwashers, ovens, cooktops, washers, dryers, and more.",
+      "Need Frigidaire appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Frigidaire refrigerators, freezers, dishwashers, ovens, cooktops, washers, dryers, and more.",
     keywords: [
       "Frigidaire appliance repair Charlotte NC",
       "Frigidaire refrigerator repair Charlotte",
@@ -456,7 +456,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "Frigidaire Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps with common Frigidaire appliance problems, including cooling loss, freezer frost, dishwasher leaks, oven heating trouble, and laundry performance issues.",
+      "DAPL Appliance Repair helps with common Frigidaire appliance problems, including cooling loss, freezer frost, dishwasher leaks, oven heating trouble, and laundry performance issues.",
     introTitle: "Responsive Frigidaire repair help",
     introText:
       "Frigidaire appliances are common across Charlotte kitchens, laundry rooms, and garages. We focus on what the appliance is doing now and the most practical way to handle it.",
@@ -513,9 +513,9 @@ export const brandPages: BrandPageContent[] = [
     slug: "maytag-appliance-repair-charlotte-nc",
     name: "Maytag",
     logo: "/brands/maytag-3.svg",
-    metaTitle: "Maytag Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+    metaTitle: "Maytag Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need Maytag appliance repair in Charlotte, NC? Dapl Appliance Repair helps with Maytag washers, dryers, refrigerators, dishwashers, ovens, cooktops, freezers, and more.",
+      "Need Maytag appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Maytag washers, dryers, refrigerators, dishwashers, ovens, cooktops, freezers, and more.",
     keywords: [
       "Maytag appliance repair Charlotte NC",
       "Maytag washer repair Charlotte",
@@ -524,7 +524,7 @@ export const brandPages: BrandPageContent[] = [
     ],
     heroTitle: "Maytag Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners with common Maytag laundry, kitchen, refrigeration, and cooking appliance problems, from spin trouble to cooling loss.",
+      "DAPL Appliance Repair helps Charlotte homeowners with common Maytag laundry, kitchen, refrigeration, and cooking appliance problems, from spin trouble to cooling loss.",
     introTitle: "Maytag repair support for kitchen and laundry appliances",
     introText:
       "Maytag appliances are often chosen for daily-use spaces. When something stops working right, we help narrow down the likely issue and explain practical next steps.",

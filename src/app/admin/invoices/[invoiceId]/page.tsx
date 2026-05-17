@@ -36,6 +36,12 @@ const statusClasses: Record<InvoiceStatus, string> = {
 
 export const dynamic = "force-dynamic";
 
+type PageNotice = {
+  className: string;
+  title: string;
+  body: string;
+};
+
 function formatDate(value: string | null) {
   if (!value) {
     return "Not set";
@@ -88,7 +94,7 @@ function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
 
-function getEmailStatus(value: string | string[] | undefined) {
+function getQueryValue(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
     return value[0];
   }
@@ -96,7 +102,7 @@ function getEmailStatus(value: string | string[] | undefined) {
   return value;
 }
 
-function getEmailNotice(status: string | undefined, customerEmail: string | null) {
+function getEmailNotice(status: string | undefined, customerEmail: string | null): PageNotice | null {
   if (status === "sent") {
     return {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
@@ -134,12 +140,67 @@ function getEmailNotice(status: string | undefined, customerEmail: string | null
   return null;
 }
 
+function getActionNotice(status: string | undefined): PageNotice | null {
+  if (status === "status_updated") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice status saved",
+      body: "The invoice and related job status were updated.",
+    };
+  }
+
+  if (status === "job_completed") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Job marked completed",
+      body: "The invoice is paid and the related lead was moved to completed.",
+    };
+  }
+
+  if (status === "items_saved") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice line items saved",
+      body: "Services, quantities, prices, discount, and totals were recalculated.",
+    };
+  }
+
+  if (status === "item_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Blank line added",
+      body: "A new editable invoice line was added.",
+    };
+  }
+
+  if (status === "template_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Template item added",
+      body: "The selected invoice template was added to the line items.",
+    };
+  }
+
+  if (status === "item_deleted") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice line removed",
+      body: "The line item was deleted and invoice totals were recalculated.",
+    };
+  }
+
+  return null;
+}
+
 export default async function InvoicePage({
   params,
   searchParams,
 }: {
   params: Promise<{ invoiceId: string }>;
-  searchParams: Promise<{ email?: string | string[] | undefined }>;
+  searchParams: Promise<{
+    email?: string | string[] | undefined;
+    notice?: string | string[] | undefined;
+  }>;
 }) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -155,7 +216,10 @@ export default async function InvoicePage({
 
   const { invoice, items } = invoiceData;
   const activity = await listActivitiesForInvoice(invoice.id, 8);
-  const emailNotice = getEmailNotice(getEmailStatus(query.email), invoice.customer_email);
+  const notices: PageNotice[] = [
+    getEmailNotice(getQueryValue(query.email), invoice.customer_email),
+    getActionNotice(getQueryValue(query.notice)),
+  ].filter((notice): notice is PageNotice => notice !== null);
   const discountAmount = Number(invoice.discount_amount ?? 0);
   const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
   const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
@@ -184,14 +248,15 @@ export default async function InvoicePage({
       </header>
 
       <section className="container-shell py-8 print:max-w-none print:px-0 print:py-0">
-        {emailNotice ? (
+        {notices.map((notice) => (
           <div
-            className={`mb-5 rounded-2xl border px-5 py-4 text-sm shadow-sm print:hidden ${emailNotice.className}`}
+            key={notice.title}
+            className={`mb-5 rounded-2xl border px-5 py-4 text-sm shadow-sm print:hidden ${notice.className}`}
           >
-            <p className="font-black">{emailNotice.title}</p>
-            <p className="mt-1 leading-6">{emailNotice.body}</p>
+            <p className="font-black">{notice.title}</p>
+            <p className="mt-1 leading-6">{notice.body}</p>
           </div>
-        ) : null}
+        ))}
 
         <div className="grid gap-6 print:block xl:grid-cols-[minmax(0,1fr)_360px]">
           <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
@@ -200,20 +265,20 @@ export default async function InvoicePage({
                 <div className="flex items-center gap-4">
                   <Image
                     src="/logo.jpg"
-                    alt="Dapl Appliance Repair logo"
+                    alt="DAPL Appliance Repair logo"
                     width={76}
                     height={76}
                     className="h-16 w-16 object-contain"
                   />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70">
-                      Dapl Appliance Repair
+                      DAPL Appliance Repair
                     </p>
                     <p className="mt-1 max-w-sm text-sm leading-6 text-muted">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
                     <p className="mt-2 max-w-sm text-xs leading-5 text-muted">
-                      Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
+                      DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
                     </p>
                   </div>
                 </div>

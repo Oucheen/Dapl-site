@@ -3,16 +3,16 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Dapl Appliance Repair",
+  title: "Privacy Policy | DAPL Appliance Repair",
   description:
-    "Privacy policy for Dapl Appliance Repair, including how we handle contact form submissions, analytics, cookies, and communication data.",
+    "Privacy policy for DAPL Appliance Repair, including how we handle contact form submissions, analytics, cookies, and communication data.",
   alternates: {
     canonical: "/privacy-policy",
   },
   openGraph: {
-    title: "Privacy Policy | Dapl Appliance Repair",
+    title: "Privacy Policy | DAPL Appliance Repair",
     description:
-      "Learn how Dapl Appliance Repair uses contact information, analytics, cookies, and communication data on this website.",
+      "Learn how DAPL Appliance Repair uses contact information, analytics, cookies, and communication data on this website.",
     url: "/privacy-policy",
   },
 };
@@ -21,7 +21,7 @@ const sections = [
   {
     title: "Business identity",
     body: [
-      "Dapl Appliance Repair is the public-facing service name used on this website and in customer communications. Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.",
+      "DAPL Appliance Repair is the public-facing service name used on this website and in customer communications. DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.",
     ],
   },
   {
@@ -75,7 +75,7 @@ const sections = [
   {
     title: "Contact us",
     body: [
-      "If you have privacy questions about this website or your submitted information, contact Dapl Appliance Repair at dapl.appliance.repair@gmail.com or call +1 (704) 266-0508.",
+      "If you have privacy questions about this website or your submitted information, contact DAPL Appliance Repair at dapl.appliance.repair@gmail.com or call +1 (704) 266-0508.",
     ],
   },
 ];
@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
                 How we handle website and contact information
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-8 text-muted sm:text-lg">
-                This policy explains what information Dapl Appliance Repair collects through this
+                This policy explains what information DAPL Appliance Repair collects through this
                 website, how we use it, and how website analytics and communication tools support
                 our repair-request workflow.
               </p>

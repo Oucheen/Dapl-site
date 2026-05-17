@@ -154,7 +154,7 @@ export function ServicePageTemplate({
     serviceType: serviceLabel,
     provider: {
       "@type": "LocalBusiness",
-      name: "Dapl Appliance Repair",
+      name: "DAPL Appliance Repair",
       telephone: "+1-704-266-0508",
       url: "https://www.daplappliance.com",
       areaServed: "Charlotte, NC and surrounding areas",

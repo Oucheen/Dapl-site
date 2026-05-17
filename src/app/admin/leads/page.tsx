@@ -209,7 +209,7 @@ export default async function LeadsAdminPage({
         <div className="container-shell flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link href="/" className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">
-              Dapl Appliance Repair
+              DAPL Appliance Repair
             </Link>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-primary">
               Website leads

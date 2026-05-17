@@ -50,7 +50,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
     serviceType: "Appliance Repair Service",
     provider: {
       "@type": "LocalBusiness",
-      name: "Dapl Appliance Repair",
+      name: "DAPL Appliance Repair",
       telephone: "+1-704-266-0508",
       url: "https://www.daplappliance.com",
       address: {

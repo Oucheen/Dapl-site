@@ -1,4 +1,4 @@
-## Dapl Appliance Repair Homepage
+## DAPL Appliance Repair Homepage
 
 Production-ready homepage built with Next.js, React, TypeScript, Tailwind CSS, and Framer Motion.
 

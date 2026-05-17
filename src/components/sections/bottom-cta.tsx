@@ -10,7 +10,7 @@ export function BottomCtaSection() {
               Need fast appliance repair in Charlotte?
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90 sm:text-lg">
-              Call now to schedule your service appointment with Dapl Appliance Repair.
+              Call now to schedule your service appointment with DAPL Appliance Repair.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a

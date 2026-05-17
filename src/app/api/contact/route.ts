@@ -246,7 +246,7 @@ export async function POST(request: Request) {
 
   const to = process.env.CONTACT_TO_EMAIL ?? "dapl.appliance.repair@gmail.com";
   const from =
-    process.env.CONTACT_FROM_EMAIL ?? "Dapl Website <onboarding@resend.dev>";
+    process.env.CONTACT_FROM_EMAIL ?? "DAPL Website <onboarding@resend.dev>";
   const apiKey = process.env.RESEND_API_KEY;
   const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
   const telegramChatId = process.env.TELEGRAM_CHAT_ID;
@@ -264,7 +264,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const subject = `Dapl website: ${name}`;
+  const subject = `DAPL Website: ${name}`;
   const leadStorageResult = await saveLeadToSupabase({
     name,
     phone,

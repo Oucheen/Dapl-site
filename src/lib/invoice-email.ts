@@ -82,13 +82,13 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
         <div style="background: #ffffff; border: 1px solid #dbe3ec; border-radius: 18px; overflow: hidden;">
           <div style="padding: 28px; background: #f8fafc; border-bottom: 1px solid #dbe3ec;">
             <p style="margin: 0; color: #d91f32; font-size: 12px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;">
-              Dapl Appliance Repair
+              DAPL Appliance Repair
             </p>
             <h1 style="margin: 8px 0 0; color: #0b1d3a; font-size: 30px; line-height: 1.15;">
               Invoice ${escapeHtml(invoice.invoice_number)}
             </h1>
             <p style="margin: 12px 0 0; color: #475569; font-size: 14px; line-height: 1.7;">
-              Thank you for choosing Dapl Appliance Repair. Your invoice details are below.
+              Thank you for choosing DAPL Appliance Repair. Your invoice details are below.
             </p>
           </div>
 
@@ -178,7 +178,7 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
 
             <div style="margin-top: 28px; padding: 18px; border-radius: 14px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.7;">
               <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email. Replies go to ${escapeHtml(replyToEmail)}.</p>
-              <p style="margin: 8px 0 0;">Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.</p>
+              <p style="margin: 8px 0 0;">DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.</p>
             </div>
           </div>
         </div>
@@ -204,10 +204,10 @@ export async function sendInvoiceEmail(
   const resend = new Resend(apiKey);
   const replyToEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
   const { error } = await resend.emails.send({
-    from: process.env.CONTACT_FROM_EMAIL || "Dapl Website <onboarding@resend.dev>",
+    from: process.env.CONTACT_FROM_EMAIL || "DAPL Website <onboarding@resend.dev>",
     to: [to],
     replyTo: replyToEmail,
-    subject: `Dapl Appliance Repair invoice ${invoiceData.invoice.invoice_number}`,
+    subject: `DAPL Appliance Repair invoice ${invoiceData.invoice.invoice_number}`,
     html: buildInvoiceEmailHtml(invoiceData, replyToEmail),
   });
 

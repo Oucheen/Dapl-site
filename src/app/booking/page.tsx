@@ -7,16 +7,16 @@ import { FadeUp } from "@/components/ui/fade-up";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
 export const metadata: Metadata = {
-  title: "Book Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+  title: "Book Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
   description:
-    "Book appliance repair service with Dapl Appliance Repair in Charlotte, NC. Request help for refrigerators, washers, dryers, dishwashers, ovens, and more.",
+    "Book appliance repair service with DAPL Appliance Repair in Charlotte, NC. Request help for refrigerators, washers, dryers, dishwashers, ovens, and more.",
   alternates: {
     canonical: "/booking",
   },
   openGraph: {
-    title: "Book Appliance Repair | Dapl Appliance Repair",
+    title: "Book Appliance Repair | DAPL Appliance Repair",
     description:
-      "Book appliance repair service with Dapl Appliance Repair in Charlotte, NC and surrounding areas.",
+      "Book appliance repair service with DAPL Appliance Repair in Charlotte, NC and surrounding areas.",
     url: "/booking",
     type: "website",
   },
@@ -28,10 +28,10 @@ const bookingPageSchema = {
   name: "Book Appliance Repair",
   url: "https://www.daplappliance.com/booking",
   description:
-    "Book appliance repair service with Dapl Appliance Repair in Charlotte, NC and surrounding areas.",
+    "Book appliance repair service with DAPL Appliance Repair in Charlotte, NC and surrounding areas.",
   mainEntity: {
     "@type": "LocalBusiness",
-    name: "Dapl Appliance Repair",
+    name: "DAPL Appliance Repair",
     telephone: "+1-704-266-0508",
     email: "dapl.appliance.repair@gmail.com",
     url: "https://www.daplappliance.com",

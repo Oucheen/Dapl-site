@@ -43,7 +43,7 @@ export async function updateInvoiceStatusAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
-  redirect(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?notice=status_updated`);
 }
 
 export async function markInvoiceCompletedAction(formData: FormData) {
@@ -64,7 +64,7 @@ export async function markInvoiceCompletedAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
-  redirect(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?notice=job_completed`);
 }
 
 export async function sendInvoiceEmailAction(formData: FormData) {
@@ -133,7 +133,7 @@ export async function updateInvoiceItemsAction(formData: FormData) {
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=items_saved`);
 }
 
 export async function addInvoiceItemAction(formData: FormData) {
@@ -153,7 +153,7 @@ export async function addInvoiceItemAction(formData: FormData) {
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=item_added`);
 }
 
 export async function addInvoiceTemplateItemAction(formData: FormData) {
@@ -179,7 +179,7 @@ export async function addInvoiceTemplateItemAction(formData: FormData) {
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=template_added`);
 }
 
 export async function deleteInvoiceItemAction(formData: FormData) {
@@ -200,5 +200,5 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=item_deleted`);
 }

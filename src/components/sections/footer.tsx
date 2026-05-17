@@ -10,10 +10,10 @@ export function Footer() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr] lg:items-start">
           <div>
             <div className="flex items-center gap-3">
-              <Image src="/logo.jpg" alt="Dapl Appliance Repair logo" width={64} height={64} />
+              <Image src="/logo.jpg" alt="DAPL Appliance Repair logo" width={64} height={64} />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-                  Dapl
+                  DAPL
                 </p>
                 <p className="text-base font-bold text-primary">Appliance Repair</p>
               </div>
@@ -101,13 +101,13 @@ export function Footer() {
 
         <div className="mt-6 border-t border-border pt-5 text-xs leading-6 text-muted">
           <p>
-            &copy; {new Date().getFullYear()} Dapl Appliance Repair. All rights reserved.{" "}
+            &copy; {new Date().getFullYear()} DAPL Appliance Repair. All rights reserved.{" "}
             <Link href="/privacy-policy" className="font-semibold text-primary hover:underline">
               Privacy Policy
             </Link>
           </p>
           <p className="mt-1">
-            Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
+            DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
           </p>
         </div>
       </div>

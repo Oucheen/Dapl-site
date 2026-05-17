@@ -49,7 +49,7 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
     serviceType: `${page.name} Appliance Repair`,
     provider: {
       "@type": "LocalBusiness",
-      name: "Dapl Appliance Repair",
+      name: "DAPL Appliance Repair",
       telephone: "+1-704-266-0508",
       url: "https://www.daplappliance.com",
       address: {

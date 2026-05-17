@@ -36,16 +36,16 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Charlotte neighborhoods and nearby suburbs",
     heroTitle: "Appliance Repair in Charlotte, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Charlotte homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration problems.",
-    metaTitle: "Appliance Repair in Charlotte, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Charlotte homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration problems.",
+    metaTitle: "Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Charlotte, NC? Dapl Appliance Repair serves Charlotte homes and nearby areas with responsive scheduling and practical repair guidance.",
+      "Need appliance repair in Charlotte, NC? DAPL Appliance Repair serves Charlotte homes and nearby areas with responsive scheduling and practical repair guidance.",
     keywords: [
       "appliance repair Charlotte NC",
       "Charlotte appliance repair",
       "refrigerator repair Charlotte",
       "washer dryer repair Charlotte",
-      "Dapl Appliance Repair Charlotte",
+      "DAPL Appliance Repair Charlotte",
     ],
     introTitle: "Local appliance repair help across Charlotte",
     introText:
@@ -91,10 +91,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Matthews, Stallings, and southeast Charlotte",
     heroTitle: "Appliance Repair in Matthews, NC",
     heroDescription:
-      "Need appliance repair in Matthews? Dapl Appliance Repair helps with common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance problems near the southeast Charlotte area.",
-    metaTitle: "Appliance Repair in Matthews, NC | Dapl Appliance Repair",
+      "Need appliance repair in Matthews? DAPL Appliance Repair helps with common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance problems near the southeast Charlotte area.",
+    metaTitle: "Appliance Repair in Matthews, NC | DAPL Appliance Repair",
     metaDescription:
-      "Dapl Appliance Repair serves Matthews, NC with appliance repair for refrigerators, washers, dryers, dishwashers, ovens, cooktops, and more.",
+      "DAPL Appliance Repair serves Matthews, NC with appliance repair for refrigerators, washers, dryers, dishwashers, ovens, cooktops, and more.",
     keywords: [
       "appliance repair Matthews NC",
       "Matthews NC appliance repair",
@@ -146,10 +146,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Huntersville, Lake Norman, and north Charlotte",
     heroTitle: "Appliance Repair in Huntersville, NC",
     heroDescription:
-      "Dapl Appliance Repair serves Huntersville-area homes with practical appliance repair help for kitchen, laundry, cooling, and select commercial refrigeration issues.",
-    metaTitle: "Appliance Repair in Huntersville, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair serves Huntersville-area homes with practical appliance repair help for kitchen, laundry, cooling, and select commercial refrigeration issues.",
+    metaTitle: "Appliance Repair in Huntersville, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Huntersville, NC? Dapl Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance issues.",
+      "Need appliance repair in Huntersville, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance issues.",
     keywords: [
       "appliance repair Huntersville NC",
       "Huntersville appliance repair",
@@ -201,10 +201,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Fort Mill, Tega Cay, and south Charlotte",
     heroTitle: "Appliance Repair in Fort Mill, SC",
     heroDescription:
-      "Dapl Appliance Repair helps Fort Mill homeowners with common appliance problems, including refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling equipment.",
-    metaTitle: "Appliance Repair in Fort Mill, SC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Fort Mill homeowners with common appliance problems, including refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling equipment.",
+    metaTitle: "Appliance Repair in Fort Mill, SC | DAPL Appliance Repair",
     metaDescription:
-      "Looking for appliance repair in Fort Mill, SC? Dapl Appliance Repair helps with kitchen, laundry, and cooling appliance issues near York County and south Charlotte.",
+      "Looking for appliance repair in Fort Mill, SC? DAPL Appliance Repair helps with kitchen, laundry, and cooling appliance issues near York County and south Charlotte.",
     keywords: [
       "appliance repair Fort Mill SC",
       "Fort Mill appliance repair",
@@ -256,10 +256,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Waxhaw, Marvin, and south Charlotte suburbs",
     heroTitle: "Appliance Repair in Waxhaw, NC",
     heroDescription:
-      "Dapl Appliance Repair supports Waxhaw-area homeowners with practical help for kitchen, laundry, cooling, and select light commercial appliance repair needs.",
-    metaTitle: "Appliance Repair in Waxhaw, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair supports Waxhaw-area homeowners with practical help for kitchen, laundry, cooling, and select light commercial appliance repair needs.",
+    metaTitle: "Appliance Repair in Waxhaw, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Waxhaw, NC? Dapl Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance issues.",
+      "Need appliance repair in Waxhaw, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance issues.",
     keywords: [
       "appliance repair Waxhaw NC",
       "Waxhaw appliance repair",
@@ -311,10 +311,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Concord, Harrisburg, and northeast Charlotte",
     heroTitle: "Appliance Repair in Concord, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Concord-area homes with common appliance problems, from refrigerators and laundry equipment to dishwashers, ovens, cooktops, and cooling units.",
-    metaTitle: "Appliance Repair in Concord, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Concord-area homes with common appliance problems, from refrigerators and laundry equipment to dishwashers, ovens, cooktops, and cooling units.",
+    metaTitle: "Appliance Repair in Concord, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Concord, NC? Dapl Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance issues.",
+      "Need appliance repair in Concord, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance issues.",
     keywords: [
       "appliance repair Concord NC",
       "Concord appliance repair",
@@ -366,10 +366,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Cornelius, Lake Norman, and Huntersville",
     heroTitle: "Appliance Repair in Cornelius, NC",
     heroDescription:
-      "Dapl Appliance Repair serves Cornelius-area homes with repair help for refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, wine coolers, and related appliances.",
-    metaTitle: "Appliance Repair in Cornelius, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair serves Cornelius-area homes with repair help for refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, wine coolers, and related appliances.",
+    metaTitle: "Appliance Repair in Cornelius, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Cornelius, NC? Dapl Appliance Repair helps with kitchen, laundry, cooling, freezer, and wine cooler issues near Lake Norman.",
+      "Need appliance repair in Cornelius, NC? DAPL Appliance Repair helps with kitchen, laundry, cooling, freezer, and wine cooler issues near Lake Norman.",
     keywords: [
       "appliance repair Cornelius NC",
       "Cornelius appliance repair",
@@ -421,10 +421,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Davidson, Cornelius, and north Charlotte",
     heroTitle: "Appliance Repair in Davidson, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Davidson-area homeowners with common kitchen, laundry, freezer, wine cooler, and cooling appliance repair needs.",
-    metaTitle: "Appliance Repair in Davidson, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Davidson-area homeowners with common kitchen, laundry, freezer, wine cooler, and cooling appliance repair needs.",
+    metaTitle: "Appliance Repair in Davidson, NC | DAPL Appliance Repair",
     metaDescription:
-      "Looking for appliance repair in Davidson, NC? Dapl Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and wine cooler issues.",
+      "Looking for appliance repair in Davidson, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and wine cooler issues.",
     keywords: [
       "appliance repair Davidson NC",
       "Davidson appliance repair",
@@ -476,10 +476,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Weddington, Waxhaw, and southeast Charlotte suburbs",
     heroTitle: "Appliance Repair in Weddington, NC",
     heroDescription:
-      "Dapl Appliance Repair helps Weddington-area homeowners with common appliance repair needs for kitchens, laundry rooms, refrigerators, freezers, wine coolers, and more.",
-    metaTitle: "Appliance Repair in Weddington, NC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Weddington-area homeowners with common appliance repair needs for kitchens, laundry rooms, refrigerators, freezers, wine coolers, and more.",
+    metaTitle: "Appliance Repair in Weddington, NC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Weddington, NC? Dapl Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and wine cooler issues.",
+      "Need appliance repair in Weddington, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and wine cooler issues.",
     keywords: [
       "appliance repair Weddington NC",
       "Weddington appliance repair",
@@ -531,10 +531,10 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     nearbyLabel: "Rock Hill, Fort Mill, and York County",
     heroTitle: "Appliance Repair in Rock Hill, SC",
     heroDescription:
-      "Dapl Appliance Repair helps Rock Hill-area homeowners with common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance repair needs.",
-    metaTitle: "Appliance Repair in Rock Hill, SC | Dapl Appliance Repair",
+      "DAPL Appliance Repair helps Rock Hill-area homeowners with common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance repair needs.",
+    metaTitle: "Appliance Repair in Rock Hill, SC | DAPL Appliance Repair",
     metaDescription:
-      "Need appliance repair in Rock Hill, SC? Dapl Appliance Repair helps with kitchen, laundry, and cooling appliance issues across Rock Hill and nearby York County areas.",
+      "Need appliance repair in Rock Hill, SC? DAPL Appliance Repair helps with kitchen, laundry, and cooling appliance issues across Rock Hill and nearby York County areas.",
     keywords: [
       "appliance repair Rock Hill SC",
       "Rock Hill appliance repair",

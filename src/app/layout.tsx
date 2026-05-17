@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.daplappliance.com"),
-  title: "Dapl Appliance Repair | Appliance Repair in Charlotte, NC",
+  title: "DAPL Appliance Repair | Appliance Repair in Charlotte, NC",
   description:
     "Expert appliance repair in Charlotte, NC and surrounding areas. Same-day service, certified technicians, and affordable pricing.",
   keywords: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "refrigerator repair Charlotte",
     "washer and dryer repair Charlotte",
     "same day appliance repair",
-    "Dapl Appliance Repair",
+    "DAPL Appliance Repair",
   ],
   alternates: {
     canonical: "/",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     apple: "/icon.png",
   },
   openGraph: {
-    title: "Dapl Appliance Repair | We Fix It Right. The First Time.",
+    title: "DAPL Appliance Repair | We Fix It Right. The First Time.",
     description:
       "Expert appliance repair services in Charlotte, NC and surrounding areas.",
     type: "website",
