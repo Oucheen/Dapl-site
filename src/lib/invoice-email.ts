@@ -52,16 +52,16 @@ function buildItemsRows(items: InvoiceItemRecord[]) {
     .map(
       (item) => `
         <tr>
-          <td style="padding: 14px 12px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 700;">
+          <td style="padding: 16px 12px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 700; line-height: 1.45; word-break: break-word;">
             ${escapeHtml(item.description)}
           </td>
-          <td style="padding: 14px 12px; border-bottom: 1px solid #dbe3ec; color: #334155; text-align: right;">
+          <td style="padding: 16px 10px; border-bottom: 1px solid #dbe3ec; color: #334155; text-align: right; white-space: nowrap;">
             ${escapeHtml(formatQuantity(item.quantity))}
           </td>
-          <td style="padding: 14px 12px; border-bottom: 1px solid #dbe3ec; color: #334155; text-align: right;">
+          <td style="padding: 16px 10px; border-bottom: 1px solid #dbe3ec; color: #334155; text-align: right; white-space: nowrap;">
             ${escapeHtml(formatMoney(item.unit_price))}
           </td>
-          <td style="padding: 14px 12px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 800; text-align: right;">
+          <td style="padding: 16px 12px 16px 10px; border-bottom: 1px solid #dbe3ec; color: #0b1d3a; font-weight: 800; text-align: right; white-space: nowrap;">
             ${escapeHtml(getLineTotal(item))}
           </td>
         </tr>
@@ -70,7 +70,7 @@ function buildItemsRows(items: InvoiceItemRecord[]) {
     .join("");
 }
 
-function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems) {
+function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: string) {
   const { invoice, items } = invoiceData;
 
   return `
@@ -90,9 +90,9 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems) {
           </div>
 
           <div style="padding: 28px;">
-            <div style="display: grid; gap: 18px;">
-              <div>
-                <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;">Bill to</p>
+            <div>
+              <div style="margin-bottom: 22px;">
+                <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;">Bill to</p>
                 <p style="margin: 8px 0 0; font-size: 18px; font-weight: 800;">${escapeHtml(invoice.customer_name)}</p>
                 ${
                   invoice.customer_phone
@@ -106,27 +106,31 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems) {
                 }
               </div>
 
-              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
-                <div>
-                  <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Service address</p>
-                  <p style="margin: 6px 0 0; color: #334155; line-height: 1.6;">${escapeHtml(invoice.service_address || "Not set")}</p>
-                </div>
-                <div>
-                  <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Service date</p>
-                  <p style="margin: 6px 0 0; color: #334155;">${escapeHtml(formatDate(invoice.service_date))}</p>
-                </div>
-                <div>
-                  <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Appliance</p>
-                  <p style="margin: 6px 0 0; color: #334155;">${escapeHtml(invoice.appliance || "Not selected")}</p>
-                </div>
-                <div>
-                  <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Technician</p>
-                  <p style="margin: 6px 0 0; color: #334155;">${escapeHtml(invoice.assigned_technician || "Not assigned")}</p>
-                </div>
-              </div>
+              <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                <tr>
+                  <td style="padding: 0 18px 18px 0; vertical-align: top; width: 50%;">
+                    <p style="margin: 0 0 7px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Service address</p>
+                    <p style="margin: 0; color: #334155; line-height: 1.6;">${escapeHtml(invoice.service_address || "Not set")}</p>
+                  </td>
+                  <td style="padding: 0 0 18px 18px; vertical-align: top; width: 50%;">
+                    <p style="margin: 0 0 7px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Service date</p>
+                    <p style="margin: 0; color: #334155; line-height: 1.6;">${escapeHtml(formatDate(invoice.service_date))}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 0 18px 0 0; vertical-align: top; width: 50%;">
+                    <p style="margin: 0 0 7px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Appliance</p>
+                    <p style="margin: 0; color: #334155; line-height: 1.6;">${escapeHtml(invoice.appliance || "Not selected")}</p>
+                  </td>
+                  <td style="padding: 0 0 0 18px; vertical-align: top; width: 50%;">
+                    <p style="margin: 0 0 7px; color: #64748b; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;">Technician</p>
+                    <p style="margin: 0; color: #334155; line-height: 1.6;">${escapeHtml(invoice.assigned_technician || "Not assigned")}</p>
+                  </td>
+                </tr>
+              </table>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 14px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 34px; font-size: 14px;">
               <thead>
                 <tr style="background: #f8fafc;">
                   <th align="left" style="padding: 12px; border-bottom: 1px solid #dbe3ec; color: #64748b; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Description</th>
@@ -140,20 +144,26 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems) {
               </tbody>
             </table>
 
-            <div style="margin-left: auto; margin-top: 24px; max-width: 300px;">
-              <p style="display: flex; justify-content: space-between; margin: 0 0 10px; color: #475569;">
-                <span>Subtotal</span><strong>${escapeHtml(formatMoney(invoice.subtotal))}</strong>
-              </p>
-              <p style="display: flex; justify-content: space-between; margin: 0 0 10px; color: #475569;">
-                <span>Tax</span><strong>${escapeHtml(formatMoney(invoice.tax))}</strong>
-              </p>
-              <p style="display: flex; justify-content: space-between; margin: 14px 0 0; padding-top: 14px; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 20px;">
-                <span style="font-weight: 900;">Total</span><strong>${escapeHtml(formatMoney(invoice.total))}</strong>
-              </p>
-            </div>
+            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 28px;">
+              <tr>
+                <td style="width: 45%;"></td>
+                <td style="padding: 8px 0; color: #475569; font-size: 15px;">Subtotal</td>
+                <td style="padding: 8px 0 8px 18px; color: #0b1d3a; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(invoice.subtotal))}</td>
+              </tr>
+              <tr>
+                <td style="width: 45%;"></td>
+                <td style="padding: 8px 0; color: #475569; font-size: 15px;">Tax</td>
+                <td style="padding: 8px 0 8px 18px; color: #0b1d3a; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(invoice.tax))}</td>
+              </tr>
+              <tr>
+                <td style="width: 45%; border-top: 1px solid #dbe3ec;"></td>
+                <td style="padding: 17px 0 0; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900;">Total</td>
+                <td style="padding: 17px 0 0 18px; border-top: 1px solid #dbe3ec; color: #0b1d3a; font-size: 22px; font-weight: 900; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(invoice.total))}</td>
+              </tr>
+            </table>
 
             <div style="margin-top: 28px; padding: 18px; border-radius: 14px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.7;">
-              <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email.</p>
+              <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email. Replies go to ${escapeHtml(replyToEmail)}.</p>
               <p style="margin: 8px 0 0;">Dapl Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.</p>
             </div>
           </div>
@@ -178,12 +188,13 @@ export async function sendInvoiceEmail(
   }
 
   const resend = new Resend(apiKey);
+  const replyToEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
   const { error } = await resend.emails.send({
     from: process.env.CONTACT_FROM_EMAIL || "Dapl Website <onboarding@resend.dev>",
     to: [to],
-    replyTo: process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com",
+    replyTo: replyToEmail,
     subject: `Dapl Appliance Repair invoice ${invoiceData.invoice.invoice_number}`,
-    html: buildInvoiceEmailHtml(invoiceData),
+    html: buildInvoiceEmailHtml(invoiceData, replyToEmail),
   });
 
   if (error) {
