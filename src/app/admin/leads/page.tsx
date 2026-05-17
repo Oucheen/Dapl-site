@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { listActivitiesForLeads } from "@/lib/supabase-activity";
+import { getActivityActorName, listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
 import { createInvoiceForLead, logoutAdmin, updateLeadDetails } from "./actions";
@@ -352,22 +352,27 @@ export default async function LeadsAdminPage({
                       </p>
                       {activities.length > 0 ? (
                         <ul className="mt-3 space-y-3">
-                          {activities.map((activity) => (
-                            <li key={activity.id} className="flex gap-3 text-sm leading-5">
-                              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
-                              <span>
-                                <span className="block font-bold text-foreground">
-                                  {activity.title}
+                          {activities.map((activity) => {
+                            const actorName = getActivityActorName(activity);
+
+                            return (
+                              <li key={activity.id} className="flex gap-3 text-sm leading-5">
+                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                                <span>
+                                  <span className="block font-bold text-foreground">
+                                    {activity.title}
+                                  </span>
+                                  {activity.details ? (
+                                    <span className="block text-muted">{activity.details}</span>
+                                  ) : null}
+                                  <span className="mt-1 block text-xs font-semibold text-muted">
+                                    {formatDate(activity.created_at)} ET
+                                    {actorName ? ` by ${actorName}` : ""}
+                                  </span>
                                 </span>
-                                {activity.details ? (
-                                  <span className="block text-muted">{activity.details}</span>
-                                ) : null}
-                                <span className="mt-1 block text-xs font-semibold text-muted">
-                                  {formatDate(activity.created_at)} ET
-                                </span>
-                              </span>
-                            </li>
-                          ))}
+                              </li>
+                            );
+                          })}
                         </ul>
                       ) : (
                         <p className="mt-3 text-sm leading-6 text-muted">

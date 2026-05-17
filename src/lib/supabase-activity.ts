@@ -1,3 +1,5 @@
+import { getCurrentAdminUser } from "@/lib/admin-auth";
+
 export type LeadActivityRecord = {
   id: string;
   created_at: string;
@@ -80,6 +82,20 @@ export async function createLeadActivity(input: LeadActivityInput) {
   }
 
   try {
+    const currentUser = await getCurrentAdminUser();
+    const metadata = {
+      ...(input.metadata ?? {}),
+      ...(currentUser
+        ? {
+            actor: {
+              id: currentUser.id,
+              name: currentUser.name,
+              role: currentUser.role,
+            },
+          }
+        : {}),
+    };
+
     const response = await fetch(getSupabaseUrl(config), {
       method: "POST",
       headers: {
@@ -92,7 +108,7 @@ export async function createLeadActivity(input: LeadActivityInput) {
         event_type: input.eventType,
         title: input.title,
         details: input.details?.trim() || null,
-        metadata: input.metadata ?? {},
+        metadata,
       }),
     });
 
@@ -105,6 +121,18 @@ export async function createLeadActivity(input: LeadActivityInput) {
   } catch (error) {
     console.error("Supabase activity insert error:", error);
   }
+}
+
+export function getActivityActorName(activity: LeadActivityRecord) {
+  const actor = activity.metadata?.actor;
+
+  if (!actor || typeof actor !== "object") {
+    return null;
+  }
+
+  const name = (actor as { name?: unknown }).name;
+
+  return typeof name === "string" && name.trim() ? name.trim() : null;
 }
 
 export async function listActivitiesForLeads(leadIds: string[], perLead = 4) {

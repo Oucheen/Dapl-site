@@ -6,7 +6,7 @@ import {
   clearAdminSession,
   isAdminAuthenticated,
   setAdminSession,
-  verifyAdminPassword,
+  verifyAdminLogin,
 } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { createInvoiceFromLead, getInvoiceIdForLead } from "@/lib/supabase-invoices";
@@ -33,12 +33,13 @@ const POST_INVOICE_STATUSES: Extract<
 
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
+  const user = verifyAdminLogin(password);
 
-  if (!verifyAdminPassword(password)) {
+  if (!user) {
     redirect("/admin/leads/login?error=1");
   }
 
-  await setAdminSession();
+  await setAdminSession(user);
   redirect("/admin/leads");
 }
 

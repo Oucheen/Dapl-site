@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { listActivitiesForInvoice } from "@/lib/supabase-activity";
+import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import { type InvoiceItemRecord, type InvoiceStatus, getInvoiceById } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
@@ -517,20 +517,25 @@ export default async function InvoicePage({
               </p>
               {activity.length > 0 ? (
                 <ul className="mt-4 space-y-4">
-                  {activity.map((item) => (
-                    <li key={item.id} className="flex gap-3 text-sm leading-5">
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
-                      <span>
-                        <span className="block font-bold text-foreground">{item.title}</span>
-                        {item.details ? (
-                          <span className="block text-muted">{item.details}</span>
-                        ) : null}
-                        <span className="mt-1 block text-xs font-semibold text-muted">
-                          {formatDateTime(item.created_at)} ET
+                  {activity.map((item) => {
+                    const actorName = getActivityActorName(item);
+
+                    return (
+                      <li key={item.id} className="flex gap-3 text-sm leading-5">
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                        <span>
+                          <span className="block font-bold text-foreground">{item.title}</span>
+                          {item.details ? (
+                            <span className="block text-muted">{item.details}</span>
+                          ) : null}
+                          <span className="mt-1 block text-xs font-semibold text-muted">
+                            {formatDateTime(item.created_at)} ET
+                            {actorName ? ` by ${actorName}` : ""}
+                          </span>
                         </span>
-                      </span>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="mt-3 text-sm leading-6 text-muted">

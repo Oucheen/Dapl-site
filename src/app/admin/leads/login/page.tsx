@@ -34,14 +34,16 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
             Sign in to view requests
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted">
-            Use the private admin password to view incoming website leads and update
-            their status.
+            Use your private admin password to view incoming website leads and update
+            their status. Staff passwords can be tied to names for activity history.
           </p>
 
           {!configured ? (
             <div className="mt-6 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm leading-6 text-foreground">
               Add <span className="font-mono font-semibold">LEADS_ADMIN_PASSWORD</span> in
-              Vercel Environment Variables before using this page.
+              Vercel Environment Variables before using this page, or configure
+              <span className="font-mono font-semibold"> LEADS_ADMIN_USERS</span> for
+              multiple staff passwords.
             </div>
           ) : (
             <form action={loginAdmin} className="mt-7 space-y-5">
