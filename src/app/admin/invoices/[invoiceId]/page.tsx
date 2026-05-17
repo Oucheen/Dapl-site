@@ -8,6 +8,7 @@ import {
   addInvoiceItemAction,
   deleteInvoiceItemAction,
   markInvoiceCompletedAction,
+  sendInvoiceEmailAction,
   updateInvoiceItemsAction,
   updateInvoiceStatusAction,
 } from "./actions";
@@ -81,16 +82,65 @@ function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
 
+function getEmailStatus(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
+function getEmailNotice(status: string | undefined, customerEmail: string | null) {
+  if (status === "sent") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice email sent",
+      body: customerEmail
+        ? `The invoice was sent to ${customerEmail}.`
+        : "The invoice email was sent.",
+    };
+  }
+
+  if (status === "missing_email") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Customer email is missing",
+      body: "Add a customer email before sending this invoice.",
+    };
+  }
+
+  if (status === "config") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Resend is not configured",
+      body: "Add RESEND_API_KEY and CONTACT_FROM_EMAIL in Vercel before sending invoice emails.",
+    };
+  }
+
+  if (status === "send_error") {
+    return {
+      className: "border-accent/20 bg-accent/5 text-accent",
+      title: "Invoice email was not sent",
+      body: "Resend returned an error. Check Vercel logs for the exact delivery issue.",
+    };
+  }
+
+  return null;
+}
+
 export default async function InvoicePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ invoiceId: string }>;
+  searchParams: Promise<{ email?: string | string[] | undefined }>;
 }) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
   }
 
   const { invoiceId } = await params;
+  const query = await searchParams;
   const invoiceData = await getInvoiceById(invoiceId);
 
   if (!invoiceData) {
@@ -99,6 +149,7 @@ export default async function InvoicePage({
 
   const { invoice, items } = invoiceData;
   const activity = await listActivitiesForInvoice(invoice.id, 8);
+  const emailNotice = getEmailNotice(getEmailStatus(query.email), invoice.customer_email);
 
   return (
     <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
@@ -124,6 +175,15 @@ export default async function InvoicePage({
       </header>
 
       <section className="container-shell py-8 print:max-w-none print:px-0 print:py-0">
+        {emailNotice ? (
+          <div
+            className={`mb-5 rounded-2xl border px-5 py-4 text-sm shadow-sm print:hidden ${emailNotice.className}`}
+          >
+            <p className="font-black">{emailNotice.title}</p>
+            <p className="mt-1 leading-6">{emailNotice.body}</p>
+          </div>
+        ) : null}
+
         <div className="grid gap-6 print:block xl:grid-cols-[minmax(0,1fr)_360px]">
           <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
             <div className="border-b border-border bg-slate-50/80 px-5 py-5 print:bg-white print:px-0 sm:px-7">
@@ -381,6 +441,21 @@ export default async function InvoicePage({
             <div className="mt-4">
               <PrintButton />
             </div>
+            <form action={sendInvoiceEmailAction} className="mt-3">
+              <input type="hidden" name="id" value={invoice.id} />
+              <button
+                type="submit"
+                disabled={!invoice.customer_email}
+                className="w-full rounded-lg bg-accent px-3 py-3 text-xs font-bold text-accent-foreground transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+              >
+                {invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
+              </button>
+              {!invoice.customer_email ? (
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  Customer email is missing, so this invoice cannot be sent yet.
+                </p>
+              ) : null}
+            </form>
             {invoice.status !== "paid" && invoice.status !== "void" ? (
               <form action={markInvoiceCompletedAction} className="mt-3">
                 <input type="hidden" name="id" value={invoice.id} />
@@ -432,7 +507,8 @@ export default async function InvoicePage({
             </div>
 
             <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-muted">
-              Next upgrade: send invoice by email through Resend.
+              Email sends the current invoice details to the customer through Resend.
+              Draft invoices are automatically marked as sent after successful delivery.
             </div>
 
             <div className="mt-6 border-t border-border pt-5">

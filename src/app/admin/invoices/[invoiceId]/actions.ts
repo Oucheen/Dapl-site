@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   addInvoiceItem,
   deleteInvoiceItem,
+  getInvoiceById,
   getLeadIdForInvoice,
   type InvoiceItemInput,
   type InvoiceStatus,
@@ -61,6 +63,44 @@ export async function markInvoiceCompletedAction(formData: FormData) {
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}`);
+}
+
+export async function sendInvoiceEmailAction(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  const invoiceData = await getInvoiceById(id);
+
+  if (!invoiceData) {
+    redirect("/admin/invoices?email=missing");
+  }
+
+  const result = await sendInvoiceEmail(invoiceData);
+
+  if (!result.ok) {
+    redirect(`/admin/invoices/${id}?email=${result.reason}`);
+  }
+
+  let leadId = invoiceData.invoice.lead_id;
+
+  if (invoiceData.invoice.status === "draft") {
+    const updated = await updateInvoiceStatus(id, "sent");
+    leadId = updated.leadId;
+  }
+
+  await createLeadActivity({
+    leadId,
+    invoiceId: id,
+    eventType: "invoice_email_sent",
+    title: "Invoice email sent",
+    details: `Sent to ${result.to}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?email=sent`);
 }
 
 export async function updateInvoiceItemsAction(formData: FormData) {
