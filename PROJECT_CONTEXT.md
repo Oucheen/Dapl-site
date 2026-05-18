@@ -144,7 +144,11 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Once an invoice exists for a lead, the lead card locks visit date, estimate, and technician fields. Only lead status and admin notes stay editable, and the status dropdown is limited to `invoiced`, `completed`, and `cancelled`.
 - Lead cards with an invoice show the invoice number as a quick link into `/admin/invoices/[invoiceId]`.
 - `/admin/invoices` lists recent invoices with status, customer, total, and links back into each invoice detail page.
-- `/admin/invoices` has status filters for all / draft / sent / paid / void plus search by invoice number, customer, phone, email, address, appliance, service date, technician, and notes.
+- `/admin/invoices` has a higher-level view filter:
+  - `Open` is the default and shows `draft` and `sent` invoices
+  - `Archive` shows closed invoices: `paid` and `void`
+  - `All` shows every invoice
+- `/admin/invoices` also has status filters for all / draft / sent / paid / void plus search by invoice number, customer, phone, email, address, appliance, service date, technician, and notes.
 - Invoice MVP tables:
   - `public.invoices`
   - `public.invoice_items`
@@ -166,6 +170,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice detail pages can send the current invoice to the customer by email through Resend. A successful send marks a draft invoice as `sent` and records invoice activity.
 - Invoice detail pages show `Paid`, `Amount due`, and `Payment History` in the admin view, print view, and customer invoice email.
 - Recording payments automatically marks the invoice as `paid` when the amount due reaches $0. Deleting a payment can reopen a paid invoice back to `sent` if a balance remains.
+- Paid and void invoices lock line-item editing in the UI and on the server, so closed invoices keep a stable payment/history record. Reopen the invoice before changing charges.
 - Invoice status updates now sync the related lead status:
   - invoice `draft` / `sent` -> lead `invoiced`
   - invoice `paid` -> lead `completed`

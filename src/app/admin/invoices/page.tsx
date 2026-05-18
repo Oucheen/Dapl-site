@@ -17,9 +17,31 @@ const STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "void", label: "Void" },
 ];
 
+const OPEN_STATUSES = new Set<InvoiceStatus>(["draft", "sent"]);
+const ARCHIVE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
+
+const INVOICE_VIEWS = [
+  {
+    value: "open",
+    label: "Open",
+    description: "Draft and sent invoices that still need attention.",
+  },
+  {
+    value: "archive",
+    label: "Archive",
+    description: "Paid and void invoices kept out of the daily queue.",
+  },
+  {
+    value: "all",
+    label: "All",
+    description: "Every invoice, including active and closed work.",
+  },
+] as const;
+
 export const dynamic = "force-dynamic";
 
 type InvoiceStatusFilter = InvoiceStatus | "all";
+type InvoiceViewFilter = (typeof INVOICE_VIEWS)[number]["value"];
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -56,13 +78,46 @@ function getInvoiceStatusFilter(value: string | string[] | undefined): InvoiceSt
   return STATUSES.find((item) => item.value === status)?.value ?? "all";
 }
 
+function getInvoiceViewFilter(value: string | string[] | undefined): InvoiceViewFilter {
+  const view = Array.isArray(value) ? value[0] : value;
+
+  return INVOICE_VIEWS.find((item) => item.value === view)?.value ?? "open";
+}
+
 function getSearchQuery(value: string | string[] | undefined) {
   const query = Array.isArray(value) ? value[0] : value;
   return query?.trim() ?? "";
 }
 
-function getFilterHref(status: InvoiceStatusFilter, query: string) {
+function getViewHref(view: InvoiceViewFilter, query: string) {
   const params = new URLSearchParams();
+
+  if (view !== "open") {
+    params.set("view", view);
+  }
+
+  if (query) {
+    params.set("q", query);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `/admin/invoices?${queryString}` : "/admin/invoices";
+}
+
+function getFilterHref(status: InvoiceStatusFilter, query: string, view: InvoiceViewFilter) {
+  const params = new URLSearchParams();
+  const statusView =
+    status === "all"
+      ? view
+      : ARCHIVE_STATUSES.has(status)
+        ? "archive"
+        : OPEN_STATUSES.has(status)
+          ? "open"
+          : view;
+
+  if (statusView !== "open") {
+    params.set("view", statusView);
+  }
 
   if (status !== "all") {
     params.set("status", status);
@@ -117,10 +172,44 @@ function countByStatus(invoices: InvoiceRecord[]) {
   );
 }
 
+function invoiceMatchesView(invoice: InvoiceRecord, view: InvoiceViewFilter) {
+  if (view === "all") {
+    return true;
+  }
+
+  return view === "archive"
+    ? ARCHIVE_STATUSES.has(invoice.status)
+    : OPEN_STATUSES.has(invoice.status);
+}
+
+function getEmptyStateCopy({
+  selectedStatus,
+  selectedView,
+  searchQuery,
+}: {
+  selectedStatus: InvoiceStatusFilter;
+  selectedView: InvoiceViewFilter;
+  searchQuery: string;
+}) {
+  if (searchQuery || selectedStatus !== "all") {
+    return "No invoices match this filter yet.";
+  }
+
+  if (selectedView === "archive") {
+    return "Paid and void invoices will move here automatically.";
+  }
+
+  return "Create an invoice from a lead or add one manually and it will appear here.";
+}
+
 export default async function InvoicesAdminPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ status?: string | string[]; q?: string | string[] }>;
+  searchParams?: Promise<{
+    status?: string | string[];
+    q?: string | string[];
+    view?: string | string[];
+  }>;
 }) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -137,15 +226,22 @@ export default async function InvoicesAdminPage({
 
   const params = await searchParams;
   const selectedStatus = getInvoiceStatusFilter(params?.status);
+  const selectedView = getInvoiceViewFilter(params?.view);
   const searchQuery = getSearchQuery(params?.q);
   const searchedInvoices = invoices.filter((invoice) => invoiceMatchesQuery(invoice, searchQuery));
-  const counts = countByStatus(searchedInvoices);
+  const viewInvoices = searchedInvoices.filter((invoice) => invoiceMatchesView(invoice, selectedView));
+  const counts = countByStatus(viewInvoices);
   const visibleInvoices =
     selectedStatus === "all"
-      ? searchedInvoices
+      ? viewInvoices
       : searchedInvoices.filter((invoice) => invoice.status === selectedStatus);
+  const viewCounts = {
+    open: searchedInvoices.filter((invoice) => OPEN_STATUSES.has(invoice.status)).length,
+    archive: searchedInvoices.filter((invoice) => ARCHIVE_STATUSES.has(invoice.status)).length,
+    all: searchedInvoices.length,
+  } satisfies Record<InvoiceViewFilter, number>;
   const filterItems: { value: InvoiceStatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: searchedInvoices.length },
+    { value: "all", label: "All", count: viewInvoices.length },
     ...STATUSES.map((status) => ({
       value: status.value as InvoiceStatusFilter,
       label: status.label,
@@ -186,14 +282,52 @@ export default async function InvoicesAdminPage({
       </header>
 
       <section className="container-shell py-8">
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-3">
+          {INVOICE_VIEWS.map((view) => {
+            const isActive = selectedView === view.value;
+
+            return (
+              <Link
+                key={view.value}
+                href={getViewHref(view.value, searchQuery)}
+                className={`rounded-2xl border px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
+                  isActive
+                    ? "border-primary/30 bg-primary text-primary-foreground"
+                    : "border-border bg-white text-primary"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p
+                      className={`text-xs font-bold uppercase tracking-[0.18em] ${
+                        isActive ? "text-primary-foreground/75" : "text-muted"
+                      }`}
+                    >
+                      {view.label}
+                    </p>
+                    <p
+                      className={`mt-2 text-sm leading-6 ${
+                        isActive ? "text-primary-foreground/80" : "text-muted"
+                      }`}
+                    >
+                      {view.description}
+                    </p>
+                  </div>
+                  <p className="text-3xl font-black">{viewCounts[view.value]}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {filterItems.map((status) => {
             const isActive = selectedStatus === status.value;
 
             return (
               <Link
                 key={status.value}
-                href={getFilterHref(status.value, searchQuery)}
+                href={getFilterHref(status.value, searchQuery, selectedView)}
                 className={`rounded-2xl border px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${
                   isActive
                     ? "border-primary/30 bg-primary text-primary-foreground"
@@ -226,12 +360,16 @@ export default async function InvoicesAdminPage({
               <h2 className="text-lg font-black text-primary">Latest invoices</h2>
               <p className="mt-1 text-sm text-muted">
                 Showing {visibleInvoices.length} {invoiceCountLabel(visibleInvoices.length)}
+                {` in ${selectedView} invoices`}
                 {selectedStatus === "all" ? "" : ` with ${selectedStatus} status`}
                 {searchQuery ? ` matching "${searchQuery}"` : ""}.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <form action="/admin/invoices" className="flex min-w-0 gap-2">
+                {selectedView !== "open" ? (
+                  <input type="hidden" name="view" value={selectedView} />
+                ) : null}
                 {selectedStatus !== "all" ? (
                   <input type="hidden" name="status" value={selectedStatus} />
                 ) : null}
@@ -249,7 +387,7 @@ export default async function InvoicesAdminPage({
                   Search
                 </button>
               </form>
-              {searchQuery || selectedStatus !== "all" ? (
+              {searchQuery || selectedStatus !== "all" || selectedView !== "open" ? (
                 <Link
                   href="/admin/invoices"
                   className="text-sm font-bold text-muted underline-offset-4 hover:text-primary hover:underline"
@@ -264,9 +402,7 @@ export default async function InvoicesAdminPage({
             <div className="px-5 py-12 text-center">
               <p className="text-lg font-bold text-primary">No invoices yet</p>
               <p className="mt-2 text-sm text-muted">
-                {searchQuery || selectedStatus !== "all"
-                  ? "No invoices match this filter yet."
-                  : "Create an invoice from a lead or add one manually and it will appear here."}
+                {getEmptyStateCopy({ selectedStatus, selectedView, searchQuery })}
               </p>
             </div>
           ) : (

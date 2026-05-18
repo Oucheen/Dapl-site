@@ -551,6 +551,41 @@ async function getInvoiceLeadId(
   return invoices[0]?.lead_id ?? null;
 }
 
+async function assertInvoiceLineItemsEditable(
+  config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
+  invoiceId: string,
+) {
+  const params = new URLSearchParams({
+    select: "status",
+    id: `eq.${invoiceId}`,
+    limit: "1",
+  });
+
+  const response = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${params.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice status fetch failed: ${response.status} ${details}`);
+  }
+
+  const invoices = (await response.json()) as Pick<InvoiceRecord, "status">[];
+  const status = invoices[0]?.status;
+
+  if (!status) {
+    throw new Error("Invoice not found.");
+  }
+
+  if (status === "paid" || status === "void") {
+    throw new Error("Closed invoices cannot have line items changed.");
+  }
+}
+
 export async function getLeadIdForInvoice(invoiceId: string) {
   assertUuid(invoiceId);
 
@@ -825,6 +860,8 @@ export async function updateInvoiceItems(invoiceId: string, items: InvoiceItemIn
     throw new Error("Supabase is not configured.");
   }
 
+  await assertInvoiceLineItemsEditable(config, invoiceId);
+
   for (const item of items) {
     if (!item.id) {
       continue;
@@ -876,6 +913,8 @@ export async function addInvoiceItem(invoiceId: string) {
     throw new Error("Supabase is not configured.");
   }
 
+  await assertInvoiceLineItemsEditable(config, invoiceId);
+
   const response = await fetch(getTableUrl(config, config.invoiceItemsTable), {
     method: "POST",
     headers: {
@@ -917,6 +956,8 @@ export async function addInvoiceItemFromTemplate(
     throw new Error("Supabase is not configured.");
   }
 
+  await assertInvoiceLineItemsEditable(config, invoiceId);
+
   const quantity = toQuantity(template.quantity);
   const unitPrice = toMoney(template.unitPrice);
   const lineTotal = toMoney(quantity * unitPrice);
@@ -953,6 +994,8 @@ export async function deleteInvoiceItem(invoiceId: string, itemId: string) {
   if (!config) {
     throw new Error("Supabase is not configured.");
   }
+
+  await assertInvoiceLineItemsEditable(config, invoiceId);
 
   const response = await fetch(
     `${getTableUrl(config, config.invoiceItemsTable)}?id=eq.${itemId}&invoice_id=eq.${invoiceId}`,

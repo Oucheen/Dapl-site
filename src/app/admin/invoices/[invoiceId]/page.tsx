@@ -31,6 +31,8 @@ const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "void", label: "Void" },
 ];
 
+const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
+
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
   sent: "border-amber-500/25 bg-amber-50 text-amber-700",
@@ -268,6 +270,7 @@ export default async function InvoicePage({
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
   const hasPayments = payments.length > 0;
+  const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) => status.value !== "paid" || invoice.status === "paid" || amountDue <= 0,
   );
@@ -396,98 +399,164 @@ export default async function InvoicePage({
               </section>
             </div>
 
-            <form action={updateInvoiceItemsAction} className="px-5 py-5 print:hidden sm:px-7">
-              <input type="hidden" name="invoiceId" value={invoice.id} />
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                    Line items
-                  </p>
-                  <h2 className="mt-1 text-xl font-black text-primary">Services and charges</h2>
+            {isInvoiceClosed ? (
+              <section className="px-5 py-5 print:hidden sm:px-7">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                      Line items
+                    </p>
+                    <h2 className="mt-1 text-xl font-black text-primary">
+                      Services and charges
+                    </h2>
+                  </div>
+                  <span className="w-fit rounded-full border border-emerald-500/25 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                    Locked
+                  </span>
                 </div>
-                <button
-                  type="submit"
-                  className="rounded-lg bg-primary px-4 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-                >
-                  Save invoice items
-                </button>
-              </div>
+                <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  This invoice is closed, so service lines are locked to protect payment history.
+                  Reopen the invoice before changing charges.
+                </p>
 
-              <div className="mt-5 overflow-hidden rounded-xl border border-border">
-                <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:grid">
-                  <span>Description</span>
-                  <span className="text-right">Qty</span>
-                  <span className="text-right">Unit</span>
-                  <span className="text-right">Total</span>
-                  <span className="text-right">Action</span>
-                </div>
+                <div className="mt-5 overflow-hidden rounded-xl border border-border">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px_130px] gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:grid">
+                    <span>Description</span>
+                    <span className="text-right">Qty</span>
+                    <span className="text-right">Unit</span>
+                    <span className="text-right">Total</span>
+                  </div>
 
-                <div className="divide-y divide-border">
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] lg:items-center"
-                    >
-                      <input type="hidden" name="itemId" value={item.id} />
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
-                        <span className="lg:hidden">Description</span>
-                        <input
-                          type="text"
-                          name="description"
-                          defaultValue={item.description}
-                          required
-                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
-                        <span className="lg:hidden">Qty</span>
-                        <input
-                          type="number"
-                          name="quantity"
-                          defaultValue={formatQuantity(item.quantity)}
-                          min="0.01"
-                          step="0.01"
-                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
-                        <span className="lg:hidden">Unit</span>
-                        <input
-                          type="number"
-                          name="unitPrice"
-                          defaultValue={formatInputMoney(item.unit_price)}
-                          min="0"
-                          step="0.01"
-                          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
-                        />
-                      </label>
-                      <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-primary lg:bg-transparent lg:px-0 lg:text-right">
-                        {getLineTotal(item)}
-                      </div>
-                      <button
-                        type="submit"
-                        form={`delete-invoice-item-${item.id}`}
-                        className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
+                  <div className="divide-y divide-border">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="grid gap-3 px-4 py-4 text-sm lg:grid-cols-[minmax(0,1fr)_90px_130px_130px] lg:items-center"
                       >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
+                        <div>
+                          <span className="block text-xs font-bold uppercase tracking-[0.12em] text-muted lg:hidden">
+                            Description
+                          </span>
+                          <span className="font-semibold text-foreground">{item.description}</span>
+                        </div>
+                        <div className="text-muted lg:text-right">
+                          <span className="mr-2 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:hidden">
+                            Qty
+                          </span>
+                          {formatQuantity(item.quantity)}
+                        </div>
+                        <div className="text-muted lg:text-right">
+                          <span className="mr-2 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:hidden">
+                            Unit
+                          </span>
+                          {formatMoney(item.unit_price)}
+                        </div>
+                        <div className="rounded-lg bg-slate-50 px-3 py-2 font-black text-primary lg:bg-transparent lg:px-0 lg:text-right">
+                          {getLineTotal(item)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </form>
-
-            {items.map((item) => (
-              <form
-                key={`delete-${item.id}`}
-                id={`delete-invoice-item-${item.id}`}
-                action={deleteInvoiceItemAction}
-                className="hidden"
-              >
+              </section>
+            ) : (
+              <form action={updateInvoiceItemsAction} className="px-5 py-5 print:hidden sm:px-7">
                 <input type="hidden" name="invoiceId" value={invoice.id} />
-                <input type="hidden" name="itemId" value={item.id} />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                      Line items
+                    </p>
+                    <h2 className="mt-1 text-xl font-black text-primary">
+                      Services and charges
+                    </h2>
+                  </div>
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-primary px-4 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                  >
+                    Save invoice items
+                  </button>
+                </div>
+
+                <div className="mt-5 overflow-hidden rounded-xl border border-border">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:grid">
+                    <span>Description</span>
+                    <span className="text-right">Qty</span>
+                    <span className="text-right">Unit</span>
+                    <span className="text-right">Total</span>
+                    <span className="text-right">Action</span>
+                  </div>
+
+                  <div className="divide-y divide-border">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_90px_130px_130px_90px] lg:items-center"
+                      >
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                          <span className="lg:hidden">Description</span>
+                          <input
+                            type="text"
+                            name="description"
+                            defaultValue={item.description}
+                            required
+                            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                          <span className="lg:hidden">Qty</span>
+                          <input
+                            type="number"
+                            name="quantity"
+                            defaultValue={formatQuantity(item.quantity)}
+                            min="0.01"
+                            step="0.01"
+                            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted lg:block">
+                          <span className="lg:hidden">Unit</span>
+                          <input
+                            type="number"
+                            name="unitPrice"
+                            defaultValue={formatInputMoney(item.unit_price)}
+                            min="0"
+                            step="0.01"
+                            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2 lg:text-right"
+                          />
+                        </label>
+                        <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-primary lg:bg-transparent lg:px-0 lg:text-right">
+                          {getLineTotal(item)}
+                        </div>
+                        <button
+                          type="submit"
+                          form={`delete-invoice-item-${item.id}`}
+                          className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </form>
-            ))}
+            )}
+
+            {!isInvoiceClosed
+              ? items.map((item) => (
+                  <form
+                    key={`delete-${item.id}`}
+                    id={`delete-invoice-item-${item.id}`}
+                    action={deleteInvoiceItemAction}
+                    className="hidden"
+                  >
+                    <input type="hidden" name="invoiceId" value={invoice.id} />
+                    <input type="hidden" name="itemId" value={item.id} />
+                  </form>
+                ))
+              : null}
 
             <div className="hidden px-5 py-6 print:block print:px-0">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
@@ -591,52 +660,54 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                    Quick templates
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted">
-                    Add a common charge, then edit the description or price above if needed.
-                  </p>
-                </div>
-                <form action={addInvoiceItemAction}>
-                  <input type="hidden" name="invoiceId" value={invoice.id} />
-                  <button
-                    type="submit"
-                    className="w-full rounded-lg border border-primary/20 bg-white px-4 py-3 text-xs font-bold text-primary transition hover:bg-primary/5 sm:w-auto"
-                  >
-                    Add blank line
-                  </button>
-                </form>
-              </div>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {INVOICE_ITEM_TEMPLATES.map((template) => (
-                  <form key={template.key} action={addInvoiceTemplateItemAction}>
+            {!isInvoiceClosed ? (
+              <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                      Quick templates
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      Add a common charge, then edit the description or price above if needed.
+                    </p>
+                  </div>
+                  <form action={addInvoiceItemAction}>
                     <input type="hidden" name="invoiceId" value={invoice.id} />
-                    <input type="hidden" name="templateKey" value={template.key} />
                     <button
                       type="submit"
-                      className="flex h-full w-full items-center justify-between gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/5"
+                      className="w-full rounded-lg border border-primary/20 bg-white px-4 py-3 text-xs font-bold text-primary transition hover:bg-primary/5 sm:w-auto"
                     >
-                      <span>
-                        <span className="block text-sm font-black text-primary">
-                          {template.label}
-                        </span>
-                        <span className="mt-1 block text-xs leading-5 text-muted">
-                          {template.description}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-sm font-black text-foreground">
-                        {formatMoney(template.unitPrice)}
-                      </span>
+                      Add blank line
                     </button>
                   </form>
-                ))}
-              </div>
-            </section>
+                </div>
+
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {INVOICE_ITEM_TEMPLATES.map((template) => (
+                    <form key={template.key} action={addInvoiceTemplateItemAction}>
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="templateKey" value={template.key} />
+                      <button
+                        type="submit"
+                        className="flex h-full w-full items-center justify-between gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/5"
+                      >
+                        <span>
+                          <span className="block text-sm font-black text-primary">
+                            {template.label}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-muted">
+                            {template.description}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-sm font-black text-foreground">
+                          {formatMoney(template.unitPrice)}
+                        </span>
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             {invoice.notes ? (
               <div className="border-t border-border px-5 py-5 print:hidden sm:px-7">
