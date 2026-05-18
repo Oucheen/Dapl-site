@@ -667,7 +667,7 @@ export default async function InvoicePage({
                       {payments.map((payment) => (
                         <tr key={payment.id} className="border-b border-border">
                           <td className="py-3 pr-4 text-muted">
-                            {formatShortDateTime(payment.payment_date)}
+                            {formatShortDateTime(payment.payment_date)} ET
                           </td>
                           <td className="py-3 pr-4 text-foreground">
                             {formatPaymentMethod(payment.method)}

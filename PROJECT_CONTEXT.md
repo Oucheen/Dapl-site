@@ -516,6 +516,7 @@ Still worth doing or verifying:
   - elevated roles can edit invoice line items/prices, delete payments, and void invoices
   - elevated roles can set historical lead/invoice creation dates when creating a manual invoice, useful for importing old customers
   - new manual invoices use the selected invoice creation date in the stored invoice number prefix, e.g. `DAPL-20260425-XXXXXXXX`; the final segment is a random UUID suffix for uniqueness
+  - invoice detail pages format invoice/payment dates with `en-US` and `America/New_York`; browser print headers/footers are outside app control and should be disabled for clean PDFs
   - regular employee-style roles can keep operational work moving without changing protected invoice charges
 - Homepage now includes a compact `Service Areas` section linking to all city pages from the main page body, not only the footer. This was added to strengthen internal linking for Search Console URLs stuck in `Discovered - currently not indexed`.
 - City/service-area pages now use structured `commonNeeds` entries with unique `title` + `text` per card. Avoid reverting this to repeated boilerplate copy; it was changed because the old cards looked too templated across city pages.
