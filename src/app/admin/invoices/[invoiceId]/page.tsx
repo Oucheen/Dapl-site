@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
+import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { listCustomerHistory } from "@/lib/customer-history";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import {
   INVOICE_ITEM_TEMPLATES,
@@ -233,6 +235,14 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "permission_denied") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Action limited by role",
+      body: "Only an owner, boss, admin, or manager can edit charges, delete payments, or void invoices.",
+    };
+  }
+
   return null;
 }
 
@@ -246,7 +256,9 @@ export default async function InvoicePage({
     notice?: string | string[] | undefined;
   }>;
 }) {
-  if (!(await isAdminAuthenticated())) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
     redirect("/admin/leads/login");
   }
 
@@ -259,7 +271,14 @@ export default async function InvoicePage({
   }
 
   const { invoice, items, payments } = invoiceData;
-  const activity = await listActivitiesForInvoice(invoice.id, 8);
+  const [activity, customerHistory] = await Promise.all([
+    listActivitiesForInvoice(invoice.id, 8),
+    listCustomerHistory({
+      phone: invoice.customer_phone,
+      email: invoice.customer_email,
+      excludeInvoiceId: invoice.id,
+    }),
+  ]);
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), invoice.customer_email),
     getActionNotice(getQueryValue(query.notice)),
@@ -271,8 +290,12 @@ export default async function InvoicePage({
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
   const hasPayments = payments.length > 0;
   const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
+  const canManageInvoiceCharges = permissions.canManageInvoiceCharges && !isInvoiceClosed;
+  const lineItemsLockedByRole = !permissions.canManageInvoiceCharges && !isInvoiceClosed;
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
-    (status) => status.value !== "paid" || invoice.status === "paid" || amountDue <= 0,
+    (status) =>
+      (status.value !== "paid" || invoice.status === "paid" || amountDue <= 0) &&
+      (permissions.canVoidInvoices || status.value !== "void" || invoice.status === "void"),
   );
 
   return (
@@ -399,7 +422,7 @@ export default async function InvoicePage({
               </section>
             </div>
 
-            {isInvoiceClosed ? (
+            {!canManageInvoiceCharges ? (
               <section className="px-5 py-5 print:hidden sm:px-7">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -411,12 +434,13 @@ export default async function InvoicePage({
                     </h2>
                   </div>
                   <span className="w-fit rounded-full border border-emerald-500/25 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                    Locked
+                    {lineItemsLockedByRole ? "Owner only" : "Locked"}
                   </span>
                 </div>
                 <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
-                  This invoice is closed, so service lines are locked to protect payment history.
-                  Reopen the invoice before changing charges.
+                  {lineItemsLockedByRole
+                    ? "This role can record payments and update job progress, but only an owner, boss, admin, or manager can edit service lines and prices."
+                    : "This invoice is closed, so service lines are locked to protect payment history. Reopen the invoice before changing charges."}
                 </p>
 
                 <div className="mt-5 overflow-hidden rounded-xl border border-border">
@@ -544,7 +568,7 @@ export default async function InvoicePage({
               </form>
             )}
 
-            {!isInvoiceClosed
+            {canManageInvoiceCharges
               ? items.map((item) => (
                   <form
                     key={`delete-${item.id}`}
@@ -660,7 +684,7 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            {!isInvoiceClosed ? (
+            {canManageInvoiceCharges ? (
               <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -906,16 +930,18 @@ export default async function InvoicePage({
                             <p className="mt-2 text-xs leading-5 text-muted">{payment.note}</p>
                           ) : null}
                         </div>
-                        <form action={deleteInvoicePaymentAction}>
-                          <input type="hidden" name="invoiceId" value={invoice.id} />
-                          <input type="hidden" name="paymentId" value={payment.id} />
-                          <button
-                            type="submit"
-                            className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
-                          >
-                            Delete
-                          </button>
-                        </form>
+                        {permissions.canDeleteInvoicePayments ? (
+                          <form action={deleteInvoicePaymentAction}>
+                            <input type="hidden" name="invoiceId" value={invoice.id} />
+                            <input type="hidden" name="paymentId" value={payment.id} />
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-accent/20 bg-white px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/5"
+                            >
+                              Delete
+                            </button>
+                          </form>
+                        ) : null}
                       </div>
                     </li>
                   ))}
@@ -966,6 +992,10 @@ export default async function InvoicePage({
               )}
             </div>
           </aside>
+        </div>
+
+        <div className="mt-6 print:hidden">
+          <CustomerHistoryCard items={customerHistory} />
         </div>
       </section>
     </main>

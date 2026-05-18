@@ -510,6 +510,11 @@ Still worth doing or verifying:
 - The discount is shown in the invoice admin page, print view, and customer invoice email.
 - Supabase needs the latest `supabase/schema.sql` applied so `public.invoices` has `promo_code` and `discount_amount`.
 - Invoice edit actions redirect back with a small success notice (`notice=...`) so admins can see when invoice status, items, templates, or completion changes were saved.
+- Admin lead and invoice detail pages now show `Customer history` matched by customer phone/email, so repeat customers and previous jobs are easier to spot.
+- Admin roles are permission-aware:
+  - elevated roles are `owner`, `boss`, `admin`, and `manager`
+  - elevated roles can edit invoice line items/prices, delete payments, and void invoices
+  - regular employee-style roles can keep operational work moving without changing protected invoice charges
 
 ## Brand consistency note
 - Public-facing brand casing should stay consistent as `DAPL Appliance Repair` for Google Business Profile / Search Console consistency.

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
@@ -22,16 +22,32 @@ import {
 
 const ALLOWED_INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid", "void"];
 
-export async function updateInvoiceStatusAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
+async function requireInvoiceAdmin() {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
     redirect("/admin/leads/login");
   }
+
+  return permissions;
+}
+
+function redirectPermissionDenied(invoiceId: string) {
+  redirect(`/admin/invoices/${invoiceId}?notice=permission_denied`);
+}
+
+export async function updateInvoiceStatusAction(formData: FormData) {
+  const permissions = await requireInvoiceAdmin();
 
   const id = String(formData.get("id") || "");
   const status = String(formData.get("status") || "") as InvoiceStatus;
 
   if (!ALLOWED_INVOICE_STATUSES.includes(status)) {
     throw new Error("Invalid invoice status.");
+  }
+
+  if (status === "void" && !permissions.canVoidInvoices) {
+    redirectPermissionDenied(id);
   }
 
   const { leadId } = await updateInvoiceStatus(id, status);
@@ -49,9 +65,7 @@ export async function updateInvoiceStatusAction(formData: FormData) {
 }
 
 export async function markInvoiceCompletedAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  await requireInvoiceAdmin();
 
   const id = String(formData.get("id") || "");
 
@@ -70,9 +84,7 @@ export async function markInvoiceCompletedAction(formData: FormData) {
 }
 
 export async function sendInvoiceEmailAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  await requireInvoiceAdmin();
 
   const id = String(formData.get("id") || "");
   const invoiceData = await getInvoiceById(id);
@@ -108,11 +120,14 @@ export async function sendInvoiceEmailAction(formData: FormData) {
 }
 
 export async function updateInvoiceItemsAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
+
+  if (!permissions.canManageInvoiceCharges) {
+    redirectPermissionDenied(invoiceId);
+  }
+
   const ids = formData.getAll("itemId").map(String);
   const descriptions = formData.getAll("description").map(String);
   const quantities = formData.getAll("quantity").map(String);
@@ -139,11 +154,13 @@ export async function updateInvoiceItemsAction(formData: FormData) {
 }
 
 export async function addInvoiceItemAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
+
+  if (!permissions.canManageInvoiceCharges) {
+    redirectPermissionDenied(invoiceId);
+  }
 
   await addInvoiceItem(invoiceId);
   await createLeadActivity({
@@ -159,13 +176,15 @@ export async function addInvoiceItemAction(formData: FormData) {
 }
 
 export async function addInvoiceTemplateItemAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const templateKey = String(formData.get("templateKey") || "");
   const template = getInvoiceItemTemplate(templateKey);
+
+  if (!permissions.canManageInvoiceCharges) {
+    redirectPermissionDenied(invoiceId);
+  }
 
   if (!template) {
     throw new Error("Invalid invoice item template.");
@@ -185,12 +204,14 @@ export async function addInvoiceTemplateItemAction(formData: FormData) {
 }
 
 export async function deleteInvoiceItemAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const itemId = String(formData.get("itemId") || formData.get("deleteItemId") || "");
+
+  if (!permissions.canManageInvoiceCharges) {
+    redirectPermissionDenied(invoiceId);
+  }
 
   await deleteInvoiceItem(invoiceId, itemId);
   await createLeadActivity({
@@ -206,9 +227,7 @@ export async function deleteInvoiceItemAction(formData: FormData) {
 }
 
 export async function addInvoicePaymentAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const amount = String(formData.get("amount") || "");
@@ -237,12 +256,14 @@ export async function addInvoicePaymentAction(formData: FormData) {
 }
 
 export async function deleteInvoicePaymentAction(formData: FormData) {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/leads/login");
-  }
+  const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const paymentId = String(formData.get("paymentId") || "");
+
+  if (!permissions.canDeleteInvoicePayments) {
+    redirectPermissionDenied(invoiceId);
+  }
 
   const { leadId } = await deleteInvoicePayment(invoiceId, paymentId);
 

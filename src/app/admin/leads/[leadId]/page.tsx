@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { listCustomerHistory } from "@/lib/customer-history";
 import { getActivityActorName, listActivitiesForLead } from "@/lib/supabase-activity";
 import { getInvoiceById, getInvoiceIdForLead } from "@/lib/supabase-invoices";
 import {
@@ -111,6 +113,12 @@ export default async function LeadDetailPage({
 
   const invoiceData = invoiceId ? await getInvoiceById(invoiceId) : null;
   const invoice = invoiceData?.invoice ?? null;
+  const customerHistory = await listCustomerHistory({
+    phone: lead.phone,
+    email: lead.email,
+    excludeLeadId: lead.id,
+    excludeInvoiceId: invoice?.id,
+  });
   const hasInvoice = Boolean(invoice);
   const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
   const attention = getNeedsAttention(lead, hasInvoice);
@@ -213,6 +221,8 @@ export default async function LeadDetailPage({
                 </div>
               </div>
             </section>
+
+            <CustomerHistoryCard items={customerHistory} />
 
             <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">

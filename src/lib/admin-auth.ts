@@ -10,6 +10,8 @@ export type AdminSessionUser = {
   role: string;
 };
 
+const ELEVATED_ADMIN_ROLES = new Set(["admin", "boss", "manager", "owner"]);
+
 function getAdminPassword() {
   return process.env.LEADS_ADMIN_PASSWORD;
 }
@@ -171,6 +173,23 @@ export function verifyAdminPassword(password: string) {
 export async function getCurrentAdminUser() {
   const cookieStore = await cookies();
   return readSessionValue(cookieStore.get(ADMIN_COOKIE)?.value);
+}
+
+export function isElevatedAdminRole(role: string | null | undefined) {
+  return Boolean(role && ELEVATED_ADMIN_ROLES.has(normalizeRole(role)));
+}
+
+export async function getCurrentAdminPermissions() {
+  const user = await getCurrentAdminUser();
+  const hasElevatedAccess = isElevatedAdminRole(user?.role);
+
+  return {
+    user,
+    hasElevatedAccess,
+    canManageInvoiceCharges: hasElevatedAccess,
+    canDeleteInvoicePayments: hasElevatedAccess,
+    canVoidInvoices: hasElevatedAccess,
+  };
 }
 
 export async function isAdminAuthenticated() {
