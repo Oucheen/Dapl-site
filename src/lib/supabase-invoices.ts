@@ -227,8 +227,8 @@ function toQuantity(value: number | string | null | undefined) {
   return Math.round(amount * 100) / 100;
 }
 
-function createInvoiceNumber() {
-  const date = new Date();
+function createInvoiceNumber(dateValue?: string | null) {
+  const date = dateValue ? new Date(dateValue) : new Date();
   const stamp = [
     date.getUTCFullYear(),
     String(date.getUTCMonth() + 1).padStart(2, "0"),
@@ -472,7 +472,7 @@ export async function createInvoiceFromLead(
     body: JSON.stringify({
       ...(manualInvoiceCreatedAt ? { created_at: manualInvoiceCreatedAt } : {}),
       lead_id: lead.id,
-      invoice_number: createInvoiceNumber(),
+      invoice_number: createInvoiceNumber(manualInvoiceCreatedAt),
       status: "draft" satisfies InvoiceStatus,
       customer_name: lead.name,
       customer_phone: lead.phone,

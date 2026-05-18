@@ -364,7 +364,9 @@ export default async function InvoicePage({
                   <p className="mt-1 text-xl font-black text-primary">
                     {invoice.invoice_number}
                   </p>
-                  <p className="mt-2 text-sm text-muted">Created {formatDate(invoice.created_at)}</p>
+                  <p className="mt-2 text-sm text-muted">
+                    Created {formatDateTime(invoice.created_at)} ET
+                  </p>
                   <p className="mt-1 text-sm font-semibold capitalize text-muted">
                     Status: {invoice.status}
                   </p>
@@ -751,6 +753,11 @@ export default async function InvoicePage({
             </p>
             <div className="mt-4">
               <PrintButton />
+              <p className="mt-2 text-xs leading-5 text-muted">
+                For a clean invoice PDF, turn off browser headers and footers in the print
+                dialog. Browser headers use your computer date format and cannot be changed by
+                the site.
+              </p>
             </div>
             <form action={sendInvoiceEmailAction} className="mt-3">
               <input type="hidden" name="id" value={invoice.id} />
