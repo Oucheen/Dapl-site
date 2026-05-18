@@ -515,6 +515,7 @@ Still worth doing or verifying:
   - elevated roles are `owner`, `boss`, `admin`, and `manager`
   - elevated roles can edit invoice line items/prices, delete payments, and void invoices
   - regular employee-style roles can keep operational work moving without changing protected invoice charges
+- Homepage now includes a compact `Service Areas` section linking to all city pages from the main page body, not only the footer. This was added to strengthen internal linking for Search Console URLs stuck in `Discovered - currently not indexed`.
 
 ## Brand consistency note
 - Public-facing brand casing should stay consistent as `DAPL Appliance Repair` for Google Business Profile / Search Console consistency.

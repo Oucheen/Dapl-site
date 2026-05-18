@@ -9,6 +9,7 @@ import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
 import { OfferSection } from "@/components/sections/offer";
 import { ReviewsSection } from "@/components/sections/reviews-section";
+import { ServiceAreasSection } from "@/components/sections/service-areas-section";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
@@ -79,6 +80,7 @@ export default function Home() {
         <AppliancesSection />
         <BrandsSection />
         <WhyChooseUsSection />
+        <ServiceAreasSection />
         {REVIEWS_SECTION_ENABLED ? <ReviewsSection /> : null}
         <FAQSection />
         <ContactSection />
