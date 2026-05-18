@@ -35,6 +35,27 @@ export type ServicePageDirectoryItem = {
   summary: string;
 };
 
+export const serviceCategoryCardDescriptions: Record<string, string> = {
+  Refrigerator: "Cooling loss, leaks, ice maker trouble, and temperature swings.",
+  Washer: "Drain, spin, vibration, fill, door lock, and cycle problems.",
+  Dryer: "No heat, weak airflow, long dry times, noise, and startup issues.",
+  Dishwasher: "Leaks, standing water, poor cleaning, odors, and latch trouble.",
+  Oven: "Preheat, temperature control, uneven baking, ignition, and sensor issues.",
+  Cooktop: "Burner, ignition, heat level, control, and startup problems.",
+  Freezer: "Frost buildup, warming food, seal trouble, noise, and cooling loss.",
+  "Ice Machine": "Low ice production, leaks, water flow, freezing, and cleaning issues.",
+  "Wine Cooler": "Temperature swings, noise, controls, airflow, and storage problems.",
+  "Commercial Refrigerator":
+    "Reach-in cooling loss, leaks, airflow, compressor noise, and control issues.",
+};
+
+export function getServiceCategoryCardDescription(applianceName: string) {
+  return (
+    serviceCategoryCardDescriptions[applianceName] ||
+    "Symptoms, service details, and practical repair guidance."
+  );
+}
+
 export const refrigeratorServicePage: ServicePageContent = {
   slug: "refrigerator-repair-charlotte-nc",
   applianceName: "Refrigerator",

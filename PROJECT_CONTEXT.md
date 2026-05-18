@@ -516,6 +516,8 @@ Still worth doing or verifying:
   - elevated roles can edit invoice line items/prices, delete payments, and void invoices
   - regular employee-style roles can keep operational work moving without changing protected invoice charges
 - Homepage now includes a compact `Service Areas` section linking to all city pages from the main page body, not only the footer. This was added to strengthen internal linking for Search Console URLs stuck in `Discovered - currently not indexed`.
+- City/service-area pages now use structured `commonNeeds` entries with unique `title` + `text` per card. Avoid reverting this to repeated boilerplate copy; it was changed because the old cards looked too templated across city pages.
+- Appliance category cards on city and brand pages use shared appliance-specific descriptions from `src/content/service-pages.ts` instead of repeated `See symptoms...` boilerplate.
 
 ## Brand consistency note
 - Public-facing brand casing should stay consistent as `DAPL Appliance Repair` for Google Business Profile / Search Console consistency.

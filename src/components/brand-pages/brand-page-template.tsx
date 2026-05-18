@@ -12,6 +12,7 @@ import {
   brandServiceCategories,
   type BrandPageContent,
 } from "@/content/brand-pages";
+import { getServiceCategoryCardDescription } from "@/content/service-pages";
 
 type BrandPageTemplateProps = {
   page: BrandPageContent;
@@ -237,7 +238,7 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
                       {service.applianceName} Repair
                     </span>
                     <span className="mt-3 text-sm leading-6 text-muted">
-                      See symptoms, FAQs, brands, and scheduling details.
+                      {getServiceCategoryCardDescription(service.applianceName)}
                     </span>
                   </Link>
                 </FadeUp>

@@ -12,7 +12,10 @@ export type ServiceAreaPageContent = {
   introTitle: string;
   introText: string;
   localNotes: string[];
-  commonNeeds: string[];
+  commonNeeds: {
+    title: string;
+    text: string;
+  }[];
   serviceHighlights: string[];
   nearbyCities: string[];
   faqs: {
@@ -56,12 +59,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Scheduling depends on the address, technician route, and appointment availability",
     ],
     commonNeeds: [
-      "Refrigerators not cooling during hot weather",
-      "Washers that will not drain, spin, or finish cycles",
-      "Dryers taking too long to dry clothes",
-      "Dishwashers leaking or leaving dishes dirty",
-      "Ovens and cooktops with heating or control issues",
-      "Freezers, ice machines, and wine coolers with temperature trouble",
+      {
+        title: "Refrigerators not cooling during hot weather",
+        text:
+          "Charlotte kitchens can get warm fast in summer, so we check cooling loss, airflow, door seals, and ice maker symptoms before recommending the next step.",
+      },
+      {
+        title: "Washers that will not drain, spin, or finish cycles",
+        text:
+          "Tell us if water is left in the tub, the washer shakes during spin, or an error code appears so we can prepare for common drain and balance checks.",
+      },
+      {
+        title: "Dryers taking too long to dry clothes",
+        text:
+          "Long dry times often point to heat, airflow, venting, or sensor issues. We ask what the dryer is doing so the visit starts with the right checks.",
+      },
+      {
+        title: "Dishwashers leaking or leaving dishes dirty",
+        text:
+          "Leaks, standing water, and poor cleaning can come from different areas, so we narrow down door, drain, spray arm, and cycle symptoms first.",
+      },
+      {
+        title: "Ovens and cooktops with heating or control issues",
+        text:
+          "Whether the problem is weak heat, uneven baking, ignition trouble, or a control panel issue, we help confirm what is practical to inspect.",
+      },
+      {
+        title: "Freezers, ice machines, and wine coolers with temperature trouble",
+        text:
+          "For cooling equipment, we look at temperature swings, frost, noise, leaks, and control behavior before suggesting a repair path.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Matthews", "Concord", "Huntersville", "Waxhaw"],
@@ -111,12 +138,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Appointment timing depends on technician route and same-day availability",
     ],
     commonNeeds: [
-      "Refrigerators not holding a steady temperature",
-      "Dishwashers leaking near cabinets or flooring",
-      "Washers making noise or failing to drain",
-      "Dryers heating weakly or running too long",
-      "Ovens baking unevenly",
-      "Cooktops with ignition or burner problems",
+      {
+        title: "Refrigerators not holding a steady temperature",
+        text:
+          "For Matthews homes, we ask when the temperature started changing, whether the freezer is affected, and if there is frost, water, or fan noise.",
+      },
+      {
+        title: "Dishwashers leaking near cabinets or flooring",
+        text:
+          "A leak near cabinets needs a careful look at the door seal, drain area, supply line, and cycle timing so the damage does not spread.",
+      },
+      {
+        title: "Washers making noise or failing to drain",
+        text:
+          "Noise and drainage problems can come from load balance, pump, hose, or internal wear. A few symptom details help us plan the visit.",
+      },
+      {
+        title: "Dryers heating weakly or running too long",
+        text:
+          "We check whether the dryer is heating at all, cycling off too soon, or struggling with airflow before explaining the likely repair options.",
+      },
+      {
+        title: "Ovens baking unevenly",
+        text:
+          "Uneven baking can involve temperature sensors, elements, igniters, or controls, so we start with how the oven behaves during normal cooking.",
+      },
+      {
+        title: "Cooktops with ignition or burner problems",
+        text:
+          "For gas or electric cooktop issues, we ask which burner is affected and whether the problem is ignition, heat level, or startup failure.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Charlotte", "Waxhaw", "Weddington", "Fort Mill"],
@@ -166,12 +217,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Route availability can vary by day, especially around Lake Norman-area calls",
     ],
     commonNeeds: [
-      "French door refrigerators not cooling properly",
-      "Washers stopping before the cycle completes",
-      "Dryers running but not drying clothes well",
-      "Dishwashers not draining after the wash",
-      "Wine coolers with unstable temperatures",
-      "Freezers building frost or losing cold air",
+      {
+        title: "French door refrigerators not cooling properly",
+        text:
+          "Huntersville refrigerator calls often involve cooling loss, ice maker trouble, or water leaks, so brand and model details help us prepare.",
+      },
+      {
+        title: "Washers stopping before the cycle completes",
+        text:
+          "If the washer pauses, locks, drains repeatedly, or shows a code, those details help us separate control, drain, and balance problems.",
+      },
+      {
+        title: "Dryers running but not drying clothes well",
+        text:
+          "When the drum turns but clothes stay damp, we look at heat, airflow, sensors, and vent-related symptoms before recommending work.",
+      },
+      {
+        title: "Dishwashers not draining after the wash",
+        text:
+          "Standing water after a cycle can point to the drain path, pump, filter area, or installation conditions, so we ask what happens at the end of the wash.",
+      },
+      {
+        title: "Wine coolers with unstable temperatures",
+        text:
+          "For wine storage, small temperature swings matter. We ask about setpoint, actual temperature, noise, and how often the unit runs.",
+      },
+      {
+        title: "Freezers building frost or losing cold air",
+        text:
+          "Frost, soft food, or a constantly running freezer can involve seals, airflow, defrost behavior, or controls that need a focused check.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Cornelius", "Davidson", "Charlotte", "Concord"],
@@ -221,12 +296,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Coverage and timing depend on route availability for South Carolina calls",
     ],
     commonNeeds: [
-      "Refrigerators warming up or leaking water",
-      "Washers not draining or shaking heavily",
-      "Dryers taking multiple cycles to dry",
-      "Dishwashers leaking around the door",
-      "Ovens not reaching the right temperature",
-      "Freezers and wine coolers with cooling loss",
+      {
+        title: "Refrigerators warming up or leaking water",
+        text:
+          "For Fort Mill homes, we ask whether the fresh food section, freezer, or ice maker is affected so the cooling problem is easier to narrow down.",
+      },
+      {
+        title: "Washers not draining or shaking heavily",
+        text:
+          "Heavy shaking, leftover water, or spin failure can have different causes. Load behavior and cycle timing help us start in the right place.",
+      },
+      {
+        title: "Dryers taking multiple cycles to dry",
+        text:
+          "If towels or heavy loads need repeated cycles, we look at heating performance, airflow, lint path, and sensor behavior during the visit.",
+      },
+      {
+        title: "Dishwashers leaking around the door",
+        text:
+          "Door leaks can involve gasket wear, leveling, spray pattern, or loading conditions, so we ask when during the cycle the water appears.",
+      },
+      {
+        title: "Ovens not reaching the right temperature",
+        text:
+          "Temperature complaints need more than a quick guess. We ask whether the oven preheats slowly, overshoots, or bakes unevenly.",
+      },
+      {
+        title: "Freezers and wine coolers with cooling loss",
+        text:
+          "Cooling loss in storage units can affect food or bottles quickly, so we focus on temperature, fan noise, frost, and control symptoms.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Rock Hill", "Charlotte", "Waxhaw", "Matthews"],
@@ -276,12 +375,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Scheduling depends on the address and route availability",
     ],
     commonNeeds: [
-      "Built-in refrigerators or wine coolers with cooling trouble",
-      "Dishwashers leaking near cabinetry",
-      "Washers creating vibration or drainage issues",
-      "Dryers with weak heat or airflow concerns",
-      "Ovens and cooktops with uneven heating",
-      "Freezers not holding temperature consistently",
+      {
+        title: "Built-in refrigerators or wine coolers with cooling trouble",
+        text:
+          "Waxhaw homes often have built-in cooling appliances, so we ask about airflow, cabinet fit, temperature swings, and any recent changes.",
+      },
+      {
+        title: "Dishwashers leaking near cabinetry",
+        text:
+          "A dishwasher leak near custom cabinets needs quick attention. We look at door, drain, supply, and cycle symptoms before giving guidance.",
+      },
+      {
+        title: "Washers creating vibration or drainage issues",
+        text:
+          "Vibration and drainage problems can be related or separate. We ask about load size, floor movement, water left inside, and error codes.",
+      },
+      {
+        title: "Dryers with weak heat or airflow concerns",
+        text:
+          "Weak heat can come from the dryer itself or restricted airflow. We use your symptoms to decide what should be checked first.",
+      },
+      {
+        title: "Ovens and cooktops with uneven heating",
+        text:
+          "Uneven cooking, burner problems, or slow preheat can involve several parts, so we ask which cooking mode or burner is affected.",
+      },
+      {
+        title: "Freezers not holding temperature consistently",
+        text:
+          "Freezer temperature swings can show up as frost, soft food, or constant running. Those details help us assess the likely failure point.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Weddington", "Matthews", "Fort Mill", "Charlotte"],
@@ -331,12 +454,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Availability depends on the route and the service address",
     ],
     commonNeeds: [
-      "Refrigerators leaking or running warm",
-      "Washers stuck on drain or spin cycles",
-      "Dryers overheating or taking too long",
-      "Dishwashers not cleaning or not draining",
-      "Ovens and cooktops with startup problems",
-      "Ice machines or freezers with cooling issues",
+      {
+        title: "Refrigerators leaking or running warm",
+        text:
+          "In Concord-area homes, refrigerator leaks and warm sections often need checks around cooling, drain paths, ice makers, and door seals.",
+      },
+      {
+        title: "Washers stuck on drain or spin cycles",
+        text:
+          "If the washer repeats a cycle, refuses to spin, or leaves water inside, we ask about codes and timing to prepare for drain and control checks.",
+      },
+      {
+        title: "Dryers overheating or taking too long",
+        text:
+          "Overheating and long dry times both deserve attention because airflow, sensors, and heating parts can affect performance and safety.",
+      },
+      {
+        title: "Dishwashers not cleaning or not draining",
+        text:
+          "Poor cleaning and drain trouble can overlap. We look at water level, spray action, filters, and drain behavior before recommending work.",
+      },
+      {
+        title: "Ovens and cooktops with startup problems",
+        text:
+          "Startup failures can involve ignition, controls, elements, or power, so we ask what lights up, clicks, heats, or stays completely off.",
+      },
+      {
+        title: "Ice machines or freezers with cooling issues",
+        text:
+          "For ice and freezer problems, we ask about production, temperature, frost, water supply, and unusual sounds to narrow the visit.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Charlotte", "Huntersville", "Cornelius", "Davidson"],
@@ -386,12 +533,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Route timing can vary based on north Charlotte and Lake Norman scheduling",
     ],
     commonNeeds: [
-      "Wine coolers not holding the correct temperature",
-      "Refrigerators with ice maker or cooling problems",
-      "Freezers frosting up or warming",
-      "Dryers taking too long to dry",
-      "Washers leaking or failing to drain",
-      "Dishwashers and ovens with performance issues",
+      {
+        title: "Wine coolers not holding the correct temperature",
+        text:
+          "Cornelius and Lake Norman homes often rely on wine storage, so we ask about set temperature, actual readings, airflow, and noise.",
+      },
+      {
+        title: "Refrigerators with ice maker or cooling problems",
+        text:
+          "Ice maker trouble, water leaks, and weak cooling can be connected, so we collect brand and symptom details before the appointment.",
+      },
+      {
+        title: "Freezers frosting up or warming",
+        text:
+          "Frost buildup or soft food can point to seal, airflow, defrost, or temperature control issues that need a targeted inspection.",
+      },
+      {
+        title: "Dryers taking too long to dry",
+        text:
+          "We ask whether the dryer heats, how long loads take, and whether the vent path has changed so airflow and heat checks are focused.",
+      },
+      {
+        title: "Washers leaking or failing to drain",
+        text:
+          "Leaks and drain failure can come from hoses, pumps, seals, or cycle behavior. A few details help us avoid guessing on arrival.",
+      },
+      {
+        title: "Dishwashers and ovens with performance issues",
+        text:
+          "For kitchen performance problems, we ask what changed first: cleaning, draining, heating, control response, or cooking results.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Huntersville", "Davidson", "Charlotte", "Concord"],
@@ -441,12 +612,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Appointment availability depends on the route and service address",
     ],
     commonNeeds: [
-      "Refrigerators making noise or cooling unevenly",
-      "Dishwashers leaving residue or not draining",
-      "Washers stopping mid-cycle",
-      "Dryers with weak heat or airflow trouble",
-      "Wine coolers with control or temperature problems",
-      "Ovens and cooktops not heating consistently",
+      {
+        title: "Refrigerators making noise or cooling unevenly",
+        text:
+          "Davidson calls often start with a new noise, warm shelves, or ice maker trouble. We ask where the issue shows up first.",
+      },
+      {
+        title: "Dishwashers leaving residue or not draining",
+        text:
+          "Residue, standing water, or odor can point to wash action, filters, drain flow, or cycle settings that need a practical check.",
+      },
+      {
+        title: "Washers stopping mid-cycle",
+        text:
+          "A washer that stops mid-cycle may be reacting to balance, drain, lid lock, control, or motor symptoms, so timing matters.",
+      },
+      {
+        title: "Dryers with weak heat or airflow trouble",
+        text:
+          "Weak heat and poor airflow can make laundry pile up fast. We ask how long drying takes and whether heat is present at all.",
+      },
+      {
+        title: "Wine coolers with control or temperature problems",
+        text:
+          "For wine coolers, we ask about display behavior, fan noise, actual temperature, and whether the unit is built in or freestanding.",
+      },
+      {
+        title: "Ovens and cooktops not heating consistently",
+        text:
+          "If heat changes during cooking or only one burner fails, those details help us focus on the right control, element, or ignition checks.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Cornelius", "Huntersville", "Concord", "Charlotte"],
@@ -496,12 +691,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Scheduling depends on service address and route availability",
     ],
     commonNeeds: [
-      "Refrigerators and freezers losing temperature",
-      "Built-in dishwashers leaking or not cleaning",
-      "Washers vibrating or failing to drain",
-      "Dryers taking too long to finish loads",
-      "Ovens and cooktops with heating problems",
-      "Wine coolers with unstable storage temperatures",
+      {
+        title: "Refrigerators and freezers losing temperature",
+        text:
+          "For Weddington homes, we ask which section is warming, whether frost is present, and if the compressor or fans sound different.",
+      },
+      {
+        title: "Built-in dishwashers leaking or not cleaning",
+        text:
+          "Built-in dishwasher issues can affect surrounding cabinetry, so we look at leak location, wash quality, drain behavior, and door fit.",
+      },
+      {
+        title: "Washers vibrating or failing to drain",
+        text:
+          "Vibration, drain failure, and spin problems can have different causes. Cycle timing and floor movement help guide the inspection.",
+      },
+      {
+        title: "Dryers taking too long to finish loads",
+        text:
+          "Long dry times usually mean something is limiting heat, airflow, or sensing. We ask what loads are affected and whether heat is weak.",
+      },
+      {
+        title: "Ovens and cooktops with heating problems",
+        text:
+          "For heating complaints, we ask whether the issue affects preheat, baking results, one burner, or the whole cooking surface.",
+      },
+      {
+        title: "Wine coolers with unstable storage temperatures",
+        text:
+          "Wine cooler temperature swings are easier to diagnose when we know the setpoint, actual reading, installation type, and noise pattern.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Waxhaw", "Matthews", "Charlotte", "Fort Mill"],
@@ -551,12 +770,36 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       "Coverage and same-day timing depend on schedule and service address",
     ],
     commonNeeds: [
-      "Refrigerators warming up or leaking",
-      "Washers not draining or spinning",
-      "Dryers running without enough heat",
-      "Dishwashers failing to drain or clean",
-      "Ovens and cooktops with heating trouble",
-      "Freezers and ice machines with cooling issues",
+      {
+        title: "Refrigerators warming up or leaking",
+        text:
+          "For Rock Hill routes, we ask whether the issue is cooling, water, frost, or ice maker related so the appointment is worth the trip.",
+      },
+      {
+        title: "Washers not draining or spinning",
+        text:
+          "If the washer leaves water behind or will not spin, tell us about sounds, error codes, and where the cycle stops.",
+      },
+      {
+        title: "Dryers running without enough heat",
+        text:
+          "A dryer can run normally but still fail to dry. We ask whether there is heat, airflow, or a burning smell before confirming next steps.",
+      },
+      {
+        title: "Dishwashers failing to drain or clean",
+        text:
+          "Drain and cleaning issues can involve water level, spray arms, filters, pumps, or installation details that need a focused look.",
+      },
+      {
+        title: "Ovens and cooktops with heating trouble",
+        text:
+          "Heating trouble can show up as slow preheat, uneven cooking, failed ignition, or dead burners. We ask which symptom is most obvious.",
+      },
+      {
+        title: "Freezers and ice machines with cooling issues",
+        text:
+          "Cooling equipment problems can affect stored food quickly, so we collect temperature, frost, water, and noise details before scheduling.",
+      },
     ],
     serviceHighlights: sharedHighlights,
     nearbyCities: ["Fort Mill", "Charlotte", "Waxhaw", "Matthews"],

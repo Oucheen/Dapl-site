@@ -6,7 +6,10 @@ import { Header } from "@/components/sections/header";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
-import { servicePagesDirectory } from "@/content/service-pages";
+import {
+  getServiceCategoryCardDescription,
+  servicePagesDirectory,
+} from "@/content/service-pages";
 import {
   serviceAreaPagesDirectory,
   type ServiceAreaPageContent,
@@ -210,13 +213,10 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
 
             <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {page.commonNeeds.map((need, index) => (
-                <FadeUp key={need} delay={index * 0.04}>
+                <FadeUp key={need.title} delay={index * 0.04}>
                   <article className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-primary">{need}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted">
-                      Tell us what you are seeing, the appliance brand if you know it, and your
-                      service address. We will help confirm the practical next step.
-                    </p>
+                    <h3 className="text-lg font-bold text-primary">{need.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted">{need.text}</p>
                   </article>
                 </FadeUp>
               ))}
@@ -248,7 +248,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                       {service.applianceName} Repair
                     </span>
                     <span className="mt-3 text-sm leading-6 text-muted">
-                      See symptoms, brands, FAQs, and scheduling details.
+                      {getServiceCategoryCardDescription(service.applianceName)}
                     </span>
                   </Link>
                 </FadeUp>
