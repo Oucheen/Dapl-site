@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { listCustomerHistory } from "@/lib/customer-history";
+import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForLead } from "@/lib/supabase-activity";
 import { getInvoiceById, getInvoiceIdForLead } from "@/lib/supabase-invoices";
 import {
@@ -42,7 +43,7 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
-    timeZone: "America/New_York",
+    timeZone: CHARLOTTE_TIME_ZONE,
   }).format(new Date(value));
 }
 
@@ -53,8 +54,8 @@ function formatDate(value: string | null | undefined) {
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-    timeZone: "America/New_York",
-  }).format(new Date(value));
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function formatMoney(value: number | string | null | undefined) {

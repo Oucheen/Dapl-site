@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listCustomerHistory } from "@/lib/customer-history";
+import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import {
   INVOICE_ITEM_TEMPLATES,
@@ -57,15 +58,15 @@ function formatDate(value: string | null) {
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-    timeZone: "America/New_York",
-  }).format(new Date(value));
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
-    timeZone: "America/New_York",
+    timeZone: CHARLOTTE_TIME_ZONE,
   }).format(new Date(value));
 }
 
@@ -75,7 +76,7 @@ function formatShortDateTime(value: string) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "America/New_York",
+    timeZone: CHARLOTTE_TIME_ZONE,
   }).format(new Date(value));
 }
 
@@ -122,7 +123,7 @@ function formatPaymentMethod(value: string) {
 
 function getCharlotteDateTimeInputValues() {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
+    timeZone: CHARLOTTE_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

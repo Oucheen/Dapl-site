@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CustomerHistoryItem } from "@/lib/customer-history";
+import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 
 type CustomerHistoryCardProps = {
   items: CustomerHistoryItem[];
@@ -8,8 +9,8 @@ type CustomerHistoryCardProps = {
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-    timeZone: "America/New_York",
-  }).format(new Date(value));
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function formatMoney(value: number | string | null | undefined) {

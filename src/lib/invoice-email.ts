@@ -6,6 +6,7 @@ import {
   type InvoicePaymentRecord,
   type InvoiceWithItems,
 } from "@/lib/supabase-invoices";
+import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 
 type SendInvoiceEmailResult =
   | { ok: true; to: string }
@@ -35,8 +36,8 @@ function formatDate(value: string | null) {
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-    timeZone: "America/New_York",
-  }).format(new Date(value));
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function formatShortDateTime(value: string) {
@@ -45,7 +46,7 @@ function formatShortDateTime(value: string) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "America/New_York",
+    timeZone: CHARLOTTE_TIME_ZONE,
   }).format(new Date(value));
 }
 
