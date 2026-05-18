@@ -3,6 +3,7 @@ import {
   createManualSupabaseLead,
   type LeadRecord,
   type ManualLeadInput,
+  toManualRecordTimestamp,
   updateSupabaseLeadStatus,
 } from "@/lib/supabase-leads";
 
@@ -427,7 +428,14 @@ export async function getInvoiceIdForLead(leadId: string) {
   return getExistingInvoiceForLead(config, leadId);
 }
 
-export async function createInvoiceFromLead(leadId: string) {
+type CreateInvoiceFromLeadOptions = {
+  invoiceCreatedAt?: string;
+};
+
+export async function createInvoiceFromLead(
+  leadId: string,
+  options: CreateInvoiceFromLeadOptions = {},
+) {
   assertUuid(leadId);
 
   const config = getSupabaseConfig();
@@ -449,6 +457,7 @@ export async function createInvoiceFromLead(leadId: string) {
   }
 
   const promoCode = normalizePromoCode(lead.promo_code);
+  const manualInvoiceCreatedAt = toManualRecordTimestamp(options.invoiceCreatedAt);
   const discountAmount = getPromoDiscountAmount(promoCode);
   const subtotal = toMoney(lead.estimated_price);
   const tax = 0;
@@ -461,6 +470,7 @@ export async function createInvoiceFromLead(leadId: string) {
       Prefer: "return=representation",
     },
     body: JSON.stringify({
+      ...(manualInvoiceCreatedAt ? { created_at: manualInvoiceCreatedAt } : {}),
       lead_id: lead.id,
       invoice_number: createInvoiceNumber(),
       status: "draft" satisfies InvoiceStatus,
@@ -519,7 +529,9 @@ export async function createInvoiceFromLead(leadId: string) {
 
 export async function createManualInvoice(input: ManualLeadInput) {
   const leadId = await createManualSupabaseLead(input);
-  const invoiceId = await createInvoiceFromLead(leadId);
+  const invoiceId = await createInvoiceFromLead(leadId, {
+    invoiceCreatedAt: input.invoiceCreatedAt,
+  });
 
   return { leadId, invoiceId };
 }

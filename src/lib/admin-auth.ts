@@ -189,6 +189,7 @@ export async function getCurrentAdminPermissions() {
     canManageInvoiceCharges: hasElevatedAccess,
     canDeleteInvoicePayments: hasElevatedAccess,
     canVoidInvoices: hasElevatedAccess,
+    canBackdateManualInvoices: hasElevatedAccess,
   };
 }
 

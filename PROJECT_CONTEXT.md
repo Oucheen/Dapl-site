@@ -514,6 +514,7 @@ Still worth doing or verifying:
 - Admin roles are permission-aware:
   - elevated roles are `owner`, `boss`, `admin`, and `manager`
   - elevated roles can edit invoice line items/prices, delete payments, and void invoices
+  - elevated roles can set historical lead/invoice creation dates when creating a manual invoice, useful for importing old customers
   - regular employee-style roles can keep operational work moving without changing protected invoice charges
 - Homepage now includes a compact `Service Areas` section linking to all city pages from the main page body, not only the footer. This was added to strengthen internal linking for Search Console URLs stuck in `Discovered - currently not indexed`.
 - City/service-area pages now use structured `commonNeeds` entries with unique `title` + `text` per card. Avoid reverting this to repeated boilerplate copy; it was changed because the old cards looked too templated across city pages.

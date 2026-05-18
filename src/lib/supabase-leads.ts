@@ -67,6 +67,8 @@ export type ManualLeadInput = {
   estimatedPrice: string;
   assignedTechnician: string;
   notes: string;
+  leadCreatedAt?: string;
+  invoiceCreatedAt?: string;
 };
 
 type SaveLeadResult =
@@ -142,6 +144,20 @@ function toEstimatedPrice(value: string) {
   return estimatedPrice;
 }
 
+export function toManualRecordTimestamp(value: string | undefined) {
+  const date = value?.trim();
+
+  if (!date) {
+    return null;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error("Manual record date must use YYYY-MM-DD format.");
+  }
+
+  return `${date}T12:00:00.000Z`;
+}
+
 export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLeadResult> {
   const config = getSupabaseConfig();
 
@@ -192,6 +208,7 @@ export async function createManualSupabaseLead(input: ManualLeadInput) {
   const name = input.name.trim();
   const phone = input.phone.trim();
   const address = input.address.trim();
+  const manualCreatedAt = toManualRecordTimestamp(input.leadCreatedAt);
 
   if (!name) {
     throw new Error("Customer name is required.");
@@ -212,6 +229,7 @@ export async function createManualSupabaseLead(input: ManualLeadInput) {
       Prefer: "return=representation",
     },
     body: JSON.stringify({
+      ...(manualCreatedAt ? { created_at: manualCreatedAt } : {}),
       status: "confirmed" satisfies LeadAdminStatus,
       name,
       phone,

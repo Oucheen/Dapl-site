@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { createManualInvoiceAction } from "./actions";
 
 const APPLIANCE_OPTIONS = [
@@ -21,9 +21,13 @@ const APPLIANCE_OPTIONS = [
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
-  if (!(await isAdminAuthenticated())) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
     redirect("/admin/leads/login");
   }
+
+  const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -158,6 +162,38 @@ export default async function NewInvoicePage() {
               </div>
             </section>
 
+            {canBackdateManualInvoices ? (
+              <section className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                    Historical import
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    Optional leadership-only dates for adding older customers and matching old
+                    invoice records.
+                  </p>
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Lead created date optional
+                    <input
+                      type="date"
+                      name="leadCreatedAt"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Invoice created date optional
+                    <input
+                      type="date"
+                      name="invoiceCreatedAt"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                </div>
+              </section>
+            ) : null}
+
             <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
               Notes
               <textarea
@@ -178,6 +214,9 @@ export default async function NewInvoicePage() {
               <li>A draft invoice is created from these details.</li>
               <li>The lead is moved to `invoiced` automatically.</li>
               <li>You can edit line items on the next screen.</li>
+              {canBackdateManualInvoices ? (
+                <li>Leadership can set historical lead and invoice dates for old records.</li>
+              ) : null}
             </ul>
             <button
               type="submit"
