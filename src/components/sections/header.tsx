@@ -84,7 +84,15 @@ export function Header({ logoHref }: HeaderProps = {}) {
         <div className="flex h-20 items-center justify-between">
           {logoHref ? (
             <Link href={logoHref} onClick={closeMenu} className="flex items-center gap-3 text-left" aria-label="Go to homepage">
-              <Image src="/logo.jpg" alt="DAPL Appliance Repair logo" width={80} height={80} />
+              <Image
+                src="/logo.jpg"
+                alt="DAPL Appliance Repair logo"
+                width={80}
+                height={80}
+                sizes="80px"
+                loading="eager"
+                fetchPriority="high"
+              />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
                   DAPL
@@ -99,7 +107,15 @@ export function Header({ logoHref }: HeaderProps = {}) {
               className="flex items-center gap-3 text-left"
               aria-label="Scroll to top"
             >
-              <Image src="/logo.jpg" alt="DAPL Appliance Repair logo" width={80} height={80} />
+              <Image
+                src="/logo.jpg"
+                alt="DAPL Appliance Repair logo"
+                width={80}
+                height={80}
+                sizes="80px"
+                loading="eager"
+                fetchPriority="high"
+              />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
                   DAPL
