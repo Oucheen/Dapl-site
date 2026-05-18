@@ -657,8 +657,8 @@ export default async function InvoicePage({
                 </div>
                 {paidAmount > 0 ? (
                   <div className="flex items-center justify-between">
-                    <span className="text-muted">Paid</span>
-                    <span className="font-bold text-emerald-700">-{formatMoney(paidAmount)}</span>
+                    <span className="text-muted">Payments received</span>
+                    <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
@@ -852,8 +852,8 @@ export default async function InvoicePage({
               </div>
               {paidAmount > 0 ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Paid</span>
-                  <span className="font-bold text-emerald-700">-{formatMoney(paidAmount)}</span>
+                  <span className="text-muted">Payments received</span>
+                  <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
                 </div>
               ) : null}
               <div className="flex items-center justify-between border-t border-border pt-3 text-lg">

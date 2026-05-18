@@ -231,8 +231,8 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
                   ? `
                     <tr>
                       <td style="width: 45%;"></td>
-                      <td style="padding: 8px 0; color: #475569; font-size: 15px;">Paid</td>
-                      <td style="padding: 8px 0 8px 18px; color: #047857; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">-${escapeHtml(formatMoney(paidAmount))}</td>
+                      <td style="padding: 8px 0; color: #475569; font-size: 15px;">Payments received</td>
+                      <td style="padding: 8px 0 8px 18px; color: #047857; font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap;">${escapeHtml(formatMoney(paidAmount))}</td>
                     </tr>
                   `
                   : ""
