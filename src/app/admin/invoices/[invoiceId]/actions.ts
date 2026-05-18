@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { createLeadActivity } from "@/lib/supabase-activity";
+import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   addInvoiceItem,
   addInvoiceItemFromTemplate,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/supabase-invoices";
 
 const ALLOWED_INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid", "void"];
+const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
 
 async function requireInvoiceAdmin() {
   const permissions = await getCurrentAdminPermissions();
@@ -34,6 +36,28 @@ async function requireInvoiceAdmin() {
 
 function redirectPermissionDenied(invoiceId: string) {
   redirect(`/admin/invoices/${invoiceId}?notice=permission_denied`);
+}
+
+async function canEditInvoiceLineItems(
+  invoiceId: string,
+  permissions: Awaited<ReturnType<typeof getCurrentAdminPermissions>>,
+) {
+  if (permissions.canManageInvoiceCharges) {
+    return true;
+  }
+
+  const invoiceData = await getInvoiceById(invoiceId);
+
+  if (!invoiceData || CLOSED_INVOICE_STATUSES.has(invoiceData.invoice.status)) {
+    return false;
+  }
+
+  if (!invoiceData.invoice.lead_id) {
+    return false;
+  }
+
+  const lead = await getSupabaseLeadById(invoiceData.invoice.lead_id);
+  return lead?.lead_source === "manual-admin";
 }
 
 export async function updateInvoiceStatusAction(formData: FormData) {
@@ -124,7 +148,7 @@ export async function updateInvoiceItemsAction(formData: FormData) {
 
   const invoiceId = String(formData.get("invoiceId") || "");
 
-  if (!permissions.canManageInvoiceCharges) {
+  if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
     redirectPermissionDenied(invoiceId);
   }
 
@@ -158,7 +182,7 @@ export async function addInvoiceItemAction(formData: FormData) {
 
   const invoiceId = String(formData.get("invoiceId") || "");
 
-  if (!permissions.canManageInvoiceCharges) {
+  if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
     redirectPermissionDenied(invoiceId);
   }
 
@@ -182,7 +206,7 @@ export async function addInvoiceTemplateItemAction(formData: FormData) {
   const templateKey = String(formData.get("templateKey") || "");
   const template = getInvoiceItemTemplate(templateKey);
 
-  if (!permissions.canManageInvoiceCharges) {
+  if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
     redirectPermissionDenied(invoiceId);
   }
 
@@ -209,7 +233,7 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   const invoiceId = String(formData.get("invoiceId") || "");
   const itemId = String(formData.get("itemId") || formData.get("deleteItemId") || "");
 
-  if (!permissions.canManageInvoiceCharges) {
+  if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
     redirectPermissionDenied(invoiceId);
   }
 

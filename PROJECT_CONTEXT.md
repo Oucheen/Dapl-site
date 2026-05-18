@@ -515,6 +515,7 @@ Still worth doing or verifying:
 - Admin roles are permission-aware:
   - elevated roles are `owner`, `boss`, `admin`, and `manager`
   - elevated roles can edit invoice line items/prices, delete payments, and void invoices
+  - non-elevated staff can edit line items on open manual invoices (`lead_source: manual-admin`) so phone/offline invoices can be corrected after creation; website-lead invoice charges still require an elevated role
   - elevated roles can set historical lead/invoice creation dates when creating a manual invoice, useful for importing old customers
   - new manual invoices use the selected invoice creation date in the stored invoice number prefix, e.g. `DAPL-20260425-XXXXXXXX`; the final segment is a random UUID suffix for uniqueness
   - invoice detail pages format invoice/payment dates with `en-US` and `America/New_York`; browser print headers/footers are outside app control and should be disabled for clean PDFs

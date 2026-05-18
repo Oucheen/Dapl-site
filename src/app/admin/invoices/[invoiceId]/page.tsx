@@ -6,6 +6,7 @@ import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
+import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
@@ -287,13 +288,14 @@ export default async function InvoicePage({
   }
 
   const { invoice, items, payments } = invoiceData;
-  const [activity, customerHistory] = await Promise.all([
+  const [activity, customerHistory, invoiceLead] = await Promise.all([
     listActivitiesForInvoice(invoice.id, 8),
     listCustomerHistory({
       phone: invoice.customer_phone,
       email: invoice.customer_email,
       excludeInvoiceId: invoice.id,
     }),
+    invoice.lead_id ? getSupabaseLeadById(invoice.lead_id) : Promise.resolve(null),
   ]);
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), invoice.customer_email),
@@ -306,8 +308,11 @@ export default async function InvoicePage({
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
   const hasPayments = payments.length > 0;
   const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
-  const canManageInvoiceCharges = permissions.canManageInvoiceCharges && !isInvoiceClosed;
-  const lineItemsLockedByRole = !permissions.canManageInvoiceCharges && !isInvoiceClosed;
+  const isManualInvoice = invoiceLead?.lead_source === "manual-admin";
+  const canEditOpenManualInvoice = isManualInvoice && !isInvoiceClosed;
+  const canManageInvoiceCharges =
+    (permissions.canManageInvoiceCharges || canEditOpenManualInvoice) && !isInvoiceClosed;
+  const lineItemsLockedByRole = !canManageInvoiceCharges && !isInvoiceClosed;
   const paymentInputDefaults = getCharlotteDateTimeInputValues();
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
@@ -458,7 +463,7 @@ export default async function InvoicePage({
                 </div>
                 <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
                   {lineItemsLockedByRole
-                    ? "This role can record payments and update job progress, but only an owner, boss, admin, or manager can edit service lines and prices."
+                    ? "This role can record payments and update job progress. Website-lead invoice charges are editable only by an owner, boss, admin, or manager; manual open invoices stay editable for staff."
                     : "This invoice is closed, so service lines are locked to protect payment history. Reopen the invoice before changing charges."}
                 </p>
 
