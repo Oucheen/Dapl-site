@@ -169,6 +169,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.
 - Invoice detail pages can send the current invoice to the customer by email through Resend. A successful send marks a draft invoice as `sent` and records invoice activity.
 - Invoice detail pages show `Paid`, `Amount due`, and `Payment History` in the admin view, print view, and customer invoice email.
+- Admins can set both payment date and payment time when recording manual payments; stored payment timestamps are interpreted as Charlotte / Eastern time.
 - Recording payments automatically marks the invoice as `paid` when the amount due reaches $0. Deleting a payment can reopen a paid invoice back to `sent` if a balance remains.
 - Paid and void invoices lock line-item editing in the UI and on the server, so closed invoices keep a stable payment/history record. Reopen the invoice before changing charges.
 - Invoice status updates now sync the related lead status:

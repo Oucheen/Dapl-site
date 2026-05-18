@@ -170,7 +170,9 @@ export default async function NewInvoicePage() {
                   </p>
                   <p className="mt-2 text-sm leading-6 text-muted">
                     Optional leadership-only dates for adding older customers and matching old
-                    invoice records.
+                    invoice records. Service date controls the job date shown on the invoice;
+                    invoice created date controls the invoice number prefix and Created timestamp.
+                    Use the same date in both fields if the job and invoice were created the same day.
                   </p>
                 </div>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -120,8 +120,23 @@ function formatPaymentMethod(value: string) {
     .join(" ");
 }
 
-function getTodayDateInputValue() {
-  return new Date().toISOString().slice(0, 10);
+function getCharlotteDateTimeInputValues() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    date: `${value("year")}-${value("month")}-${value("day")}`,
+    time: `${value("hour")}:${value("minute")}`,
+  };
 }
 
 function getQueryValue(value: string | string[] | undefined) {
@@ -292,6 +307,7 @@ export default async function InvoicePage({
   const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
   const canManageInvoiceCharges = permissions.canManageInvoiceCharges && !isInvoiceClosed;
   const lineItemsLockedByRole = !permissions.canManageInvoiceCharges && !isInvoiceClosed;
+  const paymentInputDefaults = getCharlotteDateTimeInputValues();
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
       (status.value !== "paid" || invoice.status === "paid" || amountDue <= 0) &&
@@ -893,15 +909,26 @@ export default async function InvoicePage({
                     </select>
                   </label>
                 </div>
-                <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                  Payment date
-                  <input
-                    type="date"
-                    name="paymentDate"
-                    defaultValue={getTodayDateInputValue()}
-                    className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                  />
-                </label>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Payment date
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      defaultValue={paymentInputDefaults.date}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Payment time
+                    <input
+                      type="time"
+                      name="paymentTime"
+                      defaultValue={paymentInputDefaults.time}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                </div>
                 <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Note
                   <input

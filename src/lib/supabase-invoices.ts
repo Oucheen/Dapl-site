@@ -70,6 +70,7 @@ export type InvoicePaymentInput = {
   amount: number | string;
   method: string;
   paymentDate?: string | null;
+  paymentTime?: string | null;
   note?: string | null;
 };
 
@@ -225,6 +226,68 @@ function toQuantity(value: number | string | null | undefined) {
   }
 
   return Math.round(amount * 100) / 100;
+}
+
+const CHARLOTTE_TIME_ZONE = "America/New_York";
+
+function getTimeZoneOffsetMinutes(timeZone: string, date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+  }).formatToParts(date);
+  const timeZoneName = parts.find((part) => part.type === "timeZoneName")?.value ?? "GMT";
+
+  if (timeZoneName === "GMT") {
+    return 0;
+  }
+
+  const match = timeZoneName.match(/^GMT([+-])(\d{1,2})(?::?(\d{2}))?$/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const sign = match[1] === "+" ? 1 : -1;
+  const hours = Number(match[2]);
+  const minutes = Number(match[3] ?? 0);
+
+  return sign * (hours * 60 + minutes);
+}
+
+function toCharlottePaymentTimestamp(dateValue?: string | null, timeValue?: string | null) {
+  const date = dateValue?.trim();
+
+  if (!date) {
+    return new Date().toISOString();
+  }
+
+  const time = timeValue?.trim() || "12:00";
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error("Payment date must use YYYY-MM-DD format.");
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(time)) {
+    throw new Error("Payment time must use HH:mm format.");
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+
+  if (hour > 23 || minute > 59) {
+    throw new Error("Payment time is invalid.");
+  }
+
+  const localAsUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
+  const offset = getTimeZoneOffsetMinutes(CHARLOTTE_TIME_ZONE, localAsUtc);
+  let utcTime = localAsUtc.getTime() - offset * 60 * 1000;
+  const adjustedOffset = getTimeZoneOffsetMinutes(CHARLOTTE_TIME_ZONE, new Date(utcTime));
+
+  if (adjustedOffset !== offset) {
+    utcTime = localAsUtc.getTime() - adjustedOffset * 60 * 1000;
+  }
+
+  return new Date(utcTime).toISOString();
 }
 
 function createInvoiceNumber(dateValue?: string | null) {
@@ -737,9 +800,7 @@ export async function addInvoicePayment(invoiceId: string, input: InvoicePayment
   const amount = toMoney(input.amount);
   const method = input.method.trim().toLowerCase();
   const note = input.note?.trim() || null;
-  const paymentDate = input.paymentDate?.trim()
-    ? new Date(`${input.paymentDate.trim()}T12:00:00.000Z`).toISOString()
-    : new Date().toISOString();
+  const paymentDate = toCharlottePaymentTimestamp(input.paymentDate, input.paymentTime);
 
   if (amount <= 0) {
     throw new Error("Payment amount must be greater than 0.");

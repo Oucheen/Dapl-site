@@ -233,12 +233,14 @@ export async function addInvoicePaymentAction(formData: FormData) {
   const amount = String(formData.get("amount") || "");
   const method = String(formData.get("method") || "");
   const paymentDate = String(formData.get("paymentDate") || "");
+  const paymentTime = String(formData.get("paymentTime") || "");
   const note = String(formData.get("note") || "");
 
   const { leadId } = await addInvoicePayment(invoiceId, {
     amount,
     method,
     paymentDate,
+    paymentTime,
     note,
   });
 
