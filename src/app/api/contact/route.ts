@@ -112,6 +112,8 @@ function buildTelegramMessage(input: {
   preferredIso: string;
   preferredLabel: string;
   message: string;
+  adminLeadUrl: string;
+  adminInvoicesUrl: string;
 }) {
   const lines = [
     "New website inquiry",
@@ -125,12 +127,44 @@ function buildTelegramMessage(input: {
     input.preferredIso
       ? `Preferred date: ${input.preferredLabel} (${input.preferredIso})`
       : "",
+    input.adminLeadUrl ? `Admin lead: ${input.adminLeadUrl}` : "",
+    input.adminInvoicesUrl ? `Invoices search: ${input.adminInvoicesUrl}` : "",
     "",
     "Message:",
     input.message,
   ];
 
   return lines.filter(Boolean).join("\n");
+}
+
+function getRequestOrigin(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+
+  if (forwardedHost) {
+    return `${forwardedProto || "https"}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
+function getAdminLeadUrl(request: Request, leadId: string | undefined) {
+  if (!leadId) {
+    return "";
+  }
+
+  return `${getRequestOrigin(request)}/admin/leads/${leadId}`;
+}
+
+function getAdminInvoicesSearchUrl(request: Request, query: string) {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return "";
+  }
+
+  const params = new URLSearchParams({ q: trimmedQuery, view: "all" });
+  return `${getRequestOrigin(request)}/admin/invoices?${params.toString()}`;
 }
 
 async function sendEmailNotification(input: {
@@ -319,6 +353,11 @@ export async function POST(request: Request) {
     preferredIso: preferred.iso,
     preferredLabel: preferred.label,
     message,
+    adminLeadUrl: getAdminLeadUrl(
+      request,
+      leadStorageResult.saved ? leadStorageResult.id : undefined,
+    ),
+    adminInvoicesUrl: getAdminInvoicesSearchUrl(request, phone),
   });
 
   let delivered = false;
