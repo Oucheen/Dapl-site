@@ -433,6 +433,9 @@ export default async function LeadDetailPage({
                     type="text"
                     name="deleteConfirmation"
                     placeholder="DELETE INVOICE"
+                    required
+                    pattern="DELETE INVOICE"
+                    title='Type "DELETE INVOICE" to delete this lead and invoice.'
                     className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-accent/20 placeholder:text-muted focus:border-accent focus:ring-2"
                   />
                   <button
