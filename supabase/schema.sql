@@ -135,8 +135,8 @@ alter table public.invoice_payments enable row level security;
 alter table public.lead_activity enable row level security;
 
 grant usage on schema public to service_role;
-grant select, insert, update on public.leads to service_role;
-grant select, insert, update on public.invoices to service_role;
+grant select, insert, update, delete on public.leads to service_role;
+grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
 grant select, insert on public.lead_activity to service_role;

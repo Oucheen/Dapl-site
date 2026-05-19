@@ -4,14 +4,20 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   clearAdminSession,
+  getCurrentAdminPermissions,
   isAdminAuthenticated,
   setAdminSession,
   verifyAdminLogin,
 } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
-import { createInvoiceFromLead, getInvoiceIdForLead } from "@/lib/supabase-invoices";
+import {
+  createInvoiceFromLead,
+  deleteInvoiceById,
+  getInvoiceIdForLead,
+} from "@/lib/supabase-invoices";
 import {
   type LeadAdminStatus,
+  deleteSupabaseLead,
   updateSupabaseLead,
   updateSupabaseLeadAfterInvoice,
   updateSupabaseLeadStatus,
@@ -160,4 +166,34 @@ export async function createInvoiceForLead(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${id}`);
   redirect(`/admin/invoices/${invoiceId}`);
+}
+
+export async function deleteLead(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    redirect("/admin/leads/login");
+  }
+
+  if (!permissions.canDeleteLeads) {
+    throw new Error("Only the owner can delete leads.");
+  }
+
+  const id = String(formData.get("id") || "");
+  const existingInvoiceId = await getInvoiceIdForLead(id);
+
+  if (existingInvoiceId) {
+    const confirmation = String(formData.get("deleteConfirmation") || "").trim();
+
+    if (confirmation !== "DELETE INVOICE") {
+      throw new Error('Type "DELETE INVOICE" to delete a lead with its invoice.');
+    }
+
+    await deleteInvoiceById(existingInvoiceId);
+  }
+
+  await deleteSupabaseLead(id);
+
+  revalidatePath("/admin/leads");
+  redirect("/admin/leads?notice=lead_deleted");
 }

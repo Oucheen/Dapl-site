@@ -181,7 +181,9 @@ export function isElevatedAdminRole(role: string | null | undefined) {
 
 export async function getCurrentAdminPermissions() {
   const user = await getCurrentAdminUser();
-  const hasElevatedAccess = isElevatedAdminRole(user?.role);
+  const normalizedRole = user ? normalizeRole(user.role) : null;
+  const hasElevatedAccess = isElevatedAdminRole(normalizedRole);
+  const hasOwnerAccess = normalizedRole === "owner";
 
   return {
     user,
@@ -190,6 +192,7 @@ export async function getCurrentAdminPermissions() {
     canDeleteInvoicePayments: hasElevatedAccess,
     canVoidInvoices: hasElevatedAccess,
     canBackdateManualInvoices: hasElevatedAccess,
+    canDeleteLeads: hasOwnerAccess,
   };
 }
 

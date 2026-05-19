@@ -1088,3 +1088,26 @@ export async function deleteInvoiceItem(invoiceId: string, itemId: string) {
 
   await updateInvoiceTotals(config, invoiceId);
 }
+
+export async function deleteInvoiceById(invoiceId: string) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${invoiceId}`, {
+    method: "DELETE",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice delete failed: ${response.status} ${details}`);
+  }
+}

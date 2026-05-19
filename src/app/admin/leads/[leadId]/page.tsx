@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForLead } from "@/lib/supabase-activity";
@@ -11,7 +11,7 @@ import {
   type LeadRecord,
   getSupabaseLeadById,
 } from "@/lib/supabase-leads";
-import { createInvoiceForLead, updateLeadDetails } from "../actions";
+import { createInvoiceForLead, deleteLead, updateLeadDetails } from "../actions";
 
 const STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -97,7 +97,9 @@ export default async function LeadDetailPage({
 }: {
   params: Promise<{ leadId: string }>;
 }) {
-  if (!(await isAdminAuthenticated())) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
     redirect("/admin/leads/login");
   }
 
@@ -394,6 +396,43 @@ export default async function LeadDetailPage({
                 </button>
               )}
             </form>
+
+            {permissions.canDeleteLeads ? (
+              hasInvoice ? (
+                <form
+                  action={deleteLead}
+                  className="mt-4 rounded-xl border border-accent/20 bg-white p-4"
+                >
+                  <input type="hidden" name="id" value={lead.id} />
+                  <p className="text-sm font-black text-accent">Delete lead and invoice</p>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    Type DELETE INVOICE to remove this lead, invoice, line items, and payments.
+                  </p>
+                  <input
+                    type="text"
+                    name="deleteConfirmation"
+                    placeholder="DELETE INVOICE"
+                    className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-accent/20 placeholder:text-muted focus:border-accent focus:ring-2"
+                  />
+                  <button
+                    type="submit"
+                    className="mt-3 w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
+                  >
+                    Delete lead + invoice
+                  </button>
+                </form>
+              ) : (
+                <form action={deleteLead} className="mt-4">
+                  <input type="hidden" name="id" value={lead.id} />
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
+                  >
+                    Delete lead
+                  </button>
+                </form>
+              )
+            ) : null}
 
             {invoice ? (
               <div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm leading-6">

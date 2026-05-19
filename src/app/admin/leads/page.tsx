@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getActivityActorName, listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
-import { createInvoiceForLead, logoutAdmin, updateLeadDetails } from "./actions";
+import { createInvoiceForLead, deleteLead, logoutAdmin, updateLeadDetails } from "./actions";
 
 const STATUSES: { value: LeadAdminStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -220,7 +220,9 @@ export default async function LeadsAdminPage({
     q?: string | string[];
   }>;
 }) {
-  if (!(await isAdminAuthenticated())) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
     redirect("/admin/leads/login");
   }
 
@@ -716,6 +718,40 @@ export default async function LeadsAdminPage({
                         Create invoice
                       </button>
                     )}
+                    {permissions.canDeleteLeads ? (
+                      invoice ? (
+                        <div className="mt-3 rounded-lg border border-accent/20 bg-white px-3 py-3">
+                          <p className="text-xs font-bold text-accent">
+                            Delete lead and invoice
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-muted">
+                            Type DELETE INVOICE to remove this lead, invoice, line items, and
+                            payments.
+                          </p>
+                          <input
+                            type="text"
+                            name="deleteConfirmation"
+                            placeholder="DELETE INVOICE"
+                            className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground outline-none ring-accent/20 placeholder:text-muted focus:border-accent focus:ring-2"
+                          />
+                          <button
+                            type="submit"
+                            formAction={deleteLead}
+                            className="mt-2 w-full rounded-lg border border-accent/20 bg-white px-3 py-3 text-xs font-bold text-accent transition hover:bg-accent/5"
+                          >
+                            Delete lead + invoice
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="submit"
+                          formAction={deleteLead}
+                          className="mt-3 w-full rounded-lg border border-accent/20 bg-white px-3 py-3 text-xs font-bold text-accent transition hover:bg-accent/5"
+                        >
+                          Delete lead
+                        </button>
+                      )
+                    ) : null}
                     </section>
                   </form>
                 );

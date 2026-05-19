@@ -402,3 +402,26 @@ export async function updateSupabaseLeadAfterInvoice(
     throw new Error(`Supabase post-invoice lead update failed: ${response.status} ${details}`);
   }
 }
+
+export async function deleteSupabaseLead(id: string) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  assertUuid(id);
+
+  const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
+    method: "DELETE",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase lead delete failed: ${response.status} ${details}`);
+  }
+}
