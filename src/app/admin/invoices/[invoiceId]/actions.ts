@@ -10,6 +10,7 @@ import {
   addInvoiceItem,
   addInvoiceItemFromTemplate,
   addInvoicePayment,
+  applyServiceCallDiscount,
   deleteInvoiceItem,
   deleteInvoicePayment,
   getInvoiceItemTemplate,
@@ -225,6 +226,28 @@ export async function addInvoiceTemplateItemAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}?notice=template_added`);
+}
+
+export async function applyServiceCallDiscountAction(formData: FormData) {
+  const permissions = await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+
+  if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
+    redirectPermissionDenied(invoiceId);
+  }
+
+  await applyServiceCallDiscount(invoiceId);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_discount_added",
+    title: "Service call discount applied",
+    details: "The service call was waived because the customer approved the repair.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=service_call_discount_added`);
 }
 
 export async function deleteInvoiceItemAction(formData: FormData) {

@@ -19,6 +19,7 @@ import {
   addInvoiceItemAction,
   addInvoicePaymentAction,
   addInvoiceTemplateItemAction,
+  applyServiceCallDiscountAction,
   deleteInvoiceItemAction,
   deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
@@ -225,6 +226,14 @@ function getActionNotice(status: string | undefined): PageNotice | null {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
       title: "Template item added",
       body: "The selected invoice template was added to the line items.",
+    };
+  }
+
+  if (status === "service_call_discount_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Service call discount applied",
+      body: "The service call amount was added as an invoice discount.",
     };
   }
 
@@ -729,6 +738,21 @@ export default async function InvoicePage({
                     </button>
                   </form>
                 </div>
+
+                <form action={applyServiceCallDiscountAction} className="mt-4">
+                  <input type="hidden" name="invoiceId" value={invoice.id} />
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-left text-sm transition hover:bg-accent/10"
+                  >
+                    <span className="block font-black text-accent">
+                      Apply service call discount
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-muted">
+                      Waives the $89 service call when the repair is approved.
+                    </span>
+                  </button>
+                </form>
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {INVOICE_ITEM_TEMPLATES.map((template) => (

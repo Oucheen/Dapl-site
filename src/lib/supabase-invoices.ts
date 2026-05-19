@@ -126,6 +126,9 @@ export const INVOICE_PROMO_DISCOUNTS = {
   RETURN15: 15,
 } as const;
 
+export const SERVICE_CALL_DISCOUNT_CODE = "SERVICECALL";
+export const SERVICE_CALL_DISCOUNT_AMOUNT = 89;
+
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
 const DEFAULT_INVOICE_ITEMS_TABLE = "invoice_items";
@@ -216,6 +219,20 @@ export function getPromoDiscountAmount(value: string | null | undefined) {
   }
 
   return INVOICE_PROMO_DISCOUNTS[code as keyof typeof INVOICE_PROMO_DISCOUNTS] ?? 0;
+}
+
+function addDiscountCode(value: string | null | undefined, code: string) {
+  const normalizedCode = normalizePromoCode(code);
+  const existingCodes = (value ?? "")
+    .split("+")
+    .map((item) => normalizePromoCode(item))
+    .filter((item): item is string => Boolean(item));
+
+  if (!normalizedCode || existingCodes.includes(normalizedCode)) {
+    return existingCodes.join("+") || null;
+  }
+
+  return [...existingCodes, normalizedCode].join("+");
 }
 
 function toQuantity(value: number | string | null | undefined) {
@@ -1053,6 +1070,83 @@ export async function addInvoiceItemFromTemplate(
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase invoice template item insert failed: ${response.status} ${details}`);
+  }
+
+  await updateInvoiceTotals(config, invoiceId);
+}
+
+export async function applyServiceCallDiscount(invoiceId: string) {
+  assertUuid(invoiceId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  await assertInvoiceLineItemsEditable(config, invoiceId);
+
+  const invoiceParams = new URLSearchParams({
+    select: "discount_amount,promo_code",
+    id: `eq.${invoiceId}`,
+    limit: "1",
+  });
+
+  const invoiceResponse = await fetch(
+    `${getTableUrl(config, config.invoicesTable)}?${invoiceParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!invoiceResponse.ok) {
+    const details = await invoiceResponse.text();
+    throw new Error(`Supabase invoice discount fetch failed: ${invoiceResponse.status} ${details}`);
+  }
+
+  const invoices = (await invoiceResponse.json()) as Pick<
+    InvoiceRecord,
+    "discount_amount" | "promo_code"
+  >[];
+  const invoice = invoices[0];
+
+  if (!invoice) {
+    throw new Error("Invoice not found.");
+  }
+
+  const promoCode = addDiscountCode(invoice.promo_code, SERVICE_CALL_DISCOUNT_CODE);
+  const hasServiceCallDiscount = promoCode
+    ?.split("+")
+    .map((item) => normalizePromoCode(item))
+    .includes(SERVICE_CALL_DISCOUNT_CODE);
+  const previousHadServiceCallDiscount = (invoice.promo_code ?? "")
+    .split("+")
+    .map((item) => normalizePromoCode(item))
+    .includes(SERVICE_CALL_DISCOUNT_CODE);
+  const discountAmount = previousHadServiceCallDiscount
+    ? toMoney(invoice.discount_amount)
+    : toMoney(Number(invoice.discount_amount ?? 0) + SERVICE_CALL_DISCOUNT_AMOUNT);
+
+  if (!hasServiceCallDiscount) {
+    throw new Error("Could not apply service call discount.");
+  }
+
+  const updateResponse = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${invoiceId}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      promo_code: promoCode,
+      discount_amount: discountAmount,
+    }),
+  });
+
+  if (!updateResponse.ok) {
+    const details = await updateResponse.text();
+    throw new Error(`Supabase invoice discount update failed: ${updateResponse.status} ${details}`);
   }
 
   await updateInvoiceTotals(config, invoiceId);
