@@ -142,6 +142,10 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
             <p style="margin: 12px 0 0; color: #475569; font-size: 14px; line-height: 1.7;">
               Thank you for choosing DAPL Appliance Repair. Your invoice details are below.
             </p>
+            <p style="margin: 8px 0 0; color: #475569; font-size: 13px; line-height: 1.6;">
+              9401 Peckham Rye Rd, Charlotte, NC 28227<br/>
+              ${escapeHtml(replyToEmail)}
+            </p>
           </div>
 
           <div style="padding: 28px;">

@@ -94,8 +94,10 @@ function getNeedsAttention(lead: LeadRecord, hasInvoice: boolean) {
 
 export default async function LeadDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ leadId: string }>;
+  searchParams?: Promise<{ notice?: string | string[] }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
 
@@ -104,6 +106,8 @@ export default async function LeadDetailPage({
   }
 
   const { leadId } = await params;
+  const query = await searchParams;
+  const notice = Array.isArray(query?.notice) ? query?.notice[0] : query?.notice;
   const [lead, invoiceId, activity] = await Promise.all([
     getSupabaseLeadById(leadId),
     getInvoiceIdForLead(leadId),
@@ -173,6 +177,22 @@ export default async function LeadDetailPage({
       </header>
 
       <section className="container-shell py-8">
+        {notice === "delete_confirm_required" ? (
+          <div className="mb-6 rounded-2xl border border-amber-500/20 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-800">
+            <p className="font-black">Confirmation required</p>
+            <p className="mt-1">
+              Type DELETE INVOICE before deleting a lead that already has an invoice.
+            </p>
+          </div>
+        ) : null}
+
+        {notice === "delete_permission_denied" ? (
+          <div className="mb-6 rounded-2xl border border-accent/25 bg-accent/5 px-5 py-4 text-sm leading-6 text-accent">
+            <p className="font-black">Owner only</p>
+            <p className="mt-1 text-foreground">Only the owner can delete leads.</p>
+          </div>
+        ) : null}
+
         {attention ? (
           <div className="mb-6 rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4 text-sm leading-6 text-accent">
             <p className="font-black">Needs attention</p>
@@ -404,6 +424,7 @@ export default async function LeadDetailPage({
                   className="mt-4 rounded-xl border border-accent/20 bg-white p-4"
                 >
                   <input type="hidden" name="id" value={lead.id} />
+                  <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
                   <p className="text-sm font-black text-accent">Delete lead and invoice</p>
                   <p className="mt-2 text-sm leading-6 text-muted">
                     Type DELETE INVOICE to remove this lead, invoice, line items, and payments.
@@ -424,6 +445,7 @@ export default async function LeadDetailPage({
               ) : (
                 <form action={deleteLead} className="mt-4">
                   <input type="hidden" name="id" value={lead.id} />
+                  <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
                   <button
                     type="submit"
                     className="w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"

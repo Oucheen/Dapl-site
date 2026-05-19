@@ -126,6 +126,10 @@ function getSearchQuery(value: string | string[] | undefined) {
   return query?.trim() ?? "";
 }
 
+function getNotice(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 function getViewHref(view: LeadViewFilter, query: string) {
   const params = new URLSearchParams();
 
@@ -218,6 +222,7 @@ export default async function LeadsAdminPage({
     status?: string | string[];
     view?: string | string[];
     q?: string | string[];
+    notice?: string | string[];
   }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
@@ -245,6 +250,7 @@ export default async function LeadsAdminPage({
   const selectedStatus = getLeadStatusFilter(params?.status);
   const selectedView = getLeadViewFilter(params?.view);
   const searchQuery = getSearchQuery(params?.q);
+  const notice = getNotice(params?.notice);
   const searchedLeads = leads.filter((lead) => leadMatchesQuery(lead, searchQuery));
   const counts = countByStatus(searchedLeads);
   const activeLeads = searchedLeads.filter((lead) => ACTIVE_STATUSES.has(lead.status));
@@ -382,6 +388,22 @@ export default async function LeadsAdminPage({
           <div className="mt-6 rounded-2xl border border-accent/25 bg-accent/5 p-5 text-sm leading-6 text-foreground">
             <p className="font-bold text-accent">Could not load Supabase leads.</p>
             <p className="mt-2 font-mono text-xs">{error}</p>
+          </div>
+        ) : null}
+
+        {notice === "delete_confirm_required" ? (
+          <div className="mt-6 rounded-2xl border border-amber-500/20 bg-amber-50 p-5 text-sm leading-6 text-amber-800">
+            <p className="font-black">Confirmation required</p>
+            <p className="mt-1">
+              Type DELETE INVOICE before deleting a lead that already has an invoice.
+            </p>
+          </div>
+        ) : null}
+
+        {notice === "delete_permission_denied" ? (
+          <div className="mt-6 rounded-2xl border border-accent/25 bg-accent/5 p-5 text-sm leading-6 text-accent">
+            <p className="font-black">Owner only</p>
+            <p className="mt-1 text-foreground">Only the owner can delete leads.</p>
           </div>
         ) : null}
 
@@ -721,6 +743,7 @@ export default async function LeadsAdminPage({
                     {permissions.canDeleteLeads ? (
                       invoice ? (
                         <div className="mt-3 rounded-lg border border-accent/20 bg-white px-3 py-3">
+                          <input type="hidden" name="returnTo" value="/admin/leads" />
                           <p className="text-xs font-bold text-accent">
                             Delete lead and invoice
                           </p>

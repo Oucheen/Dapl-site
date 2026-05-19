@@ -37,6 +37,7 @@ const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
 ];
 
 const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
+const BUSINESS_EMAIL = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -382,6 +383,12 @@ export default async function InvoicePage({
                     <p className="mt-1 max-w-sm text-sm leading-6 text-muted">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
+                    <a
+                      href={`mailto:${BUSINESS_EMAIL}`}
+                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-slate-700"
+                    >
+                      {BUSINESS_EMAIL}
+                    </a>
                     <p className="mt-2 max-w-sm text-xs leading-5 text-muted">
                       DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
                     </p>

@@ -37,6 +37,21 @@ const POST_INVOICE_STATUSES: Extract<
   "invoiced" | "completed" | "cancelled"
 >[] = ["invoiced", "completed", "cancelled"];
 
+function getLeadRedirectTarget(value: FormDataEntryValue | null, fallback = "/admin/leads") {
+  const target = typeof value === "string" ? value : "";
+
+  if (target.startsWith("/admin/leads")) {
+    return target;
+  }
+
+  return fallback;
+}
+
+function withNotice(path: string, notice: string) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}notice=${encodeURIComponent(notice)}`;
+}
+
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
   const user = verifyAdminLogin(password);
@@ -170,13 +185,14 @@ export async function createInvoiceForLead(formData: FormData) {
 
 export async function deleteLead(formData: FormData) {
   const permissions = await getCurrentAdminPermissions();
+  const returnTo = getLeadRedirectTarget(formData.get("returnTo"));
 
   if (!permissions.user) {
     redirect("/admin/leads/login");
   }
 
   if (!permissions.canDeleteLeads) {
-    throw new Error("Only the owner can delete leads.");
+    redirect(withNotice(returnTo, "delete_permission_denied"));
   }
 
   const id = String(formData.get("id") || "");
@@ -186,7 +202,7 @@ export async function deleteLead(formData: FormData) {
     const confirmation = String(formData.get("deleteConfirmation") || "").trim();
 
     if (confirmation !== "DELETE INVOICE") {
-      throw new Error('Type "DELETE INVOICE" to delete a lead with its invoice.');
+      redirect(withNotice(returnTo, "delete_confirm_required"));
     }
 
     await deleteInvoiceById(existingInvoiceId);
