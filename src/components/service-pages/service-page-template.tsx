@@ -117,6 +117,10 @@ export function ServicePageTemplate({
   bookingSuccessMessage,
 }: ServicePageTemplateProps) {
   const serviceLabel = `${page.applianceName} Repair`;
+  const serviceBreadcrumbItems = servicePagesDirectory.map((service) => ({
+    label: `${service.applianceName} Repair`,
+    href: `/${service.slug}`,
+  }));
   const applianceLower = page.applianceName.toLowerCase();
   const serviceAudience =
     page.applianceName === "Commercial Refrigerator"
@@ -213,7 +217,11 @@ export function ServicePageTemplate({
         <Breadcrumbs
           items={[
             { label: "Home", href: "/" },
-            { label: "Appliance Repair Charlotte, NC", href: "/appliance-repair-charlotte-nc" },
+            {
+              label: "Services",
+              href: "/#appliances",
+              dropdownItems: serviceBreadcrumbItems,
+            },
             { label: serviceLabel },
           ]}
         />

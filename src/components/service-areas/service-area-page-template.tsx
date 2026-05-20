@@ -43,6 +43,10 @@ export function buildServiceAreaMetadata(page: ServiceAreaPageContent): Metadata
 
 export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) {
   const cityLabel = `${page.city}, ${page.state}`;
+  const serviceAreaBreadcrumbItems = serviceAreaPagesDirectory.map((area) => ({
+    label: `${area.city}, ${area.state}`,
+    href: `/${area.slug}`,
+  }));
   const relatedAreas = page.nearbyCities
     .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
     .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area));
@@ -121,7 +125,11 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
         <Breadcrumbs
           items={[
             { label: "Home", href: "/" },
-            { label: "Service Areas" },
+            {
+              label: "Service Areas",
+              href: "/#service-areas",
+              dropdownItems: serviceAreaBreadcrumbItems,
+            },
             { label: `Appliance Repair in ${cityLabel}` },
           ]}
         />

@@ -43,6 +43,10 @@ export function buildBrandMetadata(page: BrandPageContent): Metadata {
 export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
   const brandUrl = `https://www.daplappliance.com/brands/${page.slug}`;
   const relatedBrands = brandPagesDirectory.filter((brand) => brand.slug !== page.slug);
+  const brandBreadcrumbItems = brandPagesDirectory.map((brand) => ({
+    label: `${brand.name} Appliance Repair`,
+    href: `/brands/${brand.slug}`,
+  }));
 
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -116,7 +120,11 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
         <Breadcrumbs
           items={[
             { label: "Home", href: "/" },
-            { label: "Brands" },
+            {
+              label: "Brands",
+              href: "/#brands",
+              dropdownItems: brandBreadcrumbItems,
+            },
             { label: `${page.name} Appliance Repair` },
           ]}
         />
