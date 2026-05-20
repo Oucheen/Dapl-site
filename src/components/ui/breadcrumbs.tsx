@@ -11,7 +11,10 @@ type BreadcrumbsProps = {
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
-    <nav aria-label="Breadcrumb" className="border-b border-border/70 bg-white/90">
+    <nav
+      aria-label="Breadcrumb"
+      className="border-b border-border/70 bg-white/90 backdrop-blur lg:sticky lg:top-20 lg:z-40"
+    >
       <ol className="container-shell flex min-w-0 items-center gap-2 overflow-x-auto py-3 text-xs font-semibold text-muted sm:text-sm">
         {items.map((item, index) => {
           const isCurrent = index === items.length - 1;
