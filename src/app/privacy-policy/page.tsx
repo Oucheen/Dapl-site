@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | DAPL Appliance Repair",
@@ -15,6 +16,25 @@ export const metadata: Metadata = {
       "Learn how DAPL Appliance Repair uses contact information, analytics, cookies, and communication data on this website.",
     url: "/privacy-policy",
   },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://www.daplappliance.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Privacy Policy",
+      item: "https://www.daplappliance.com/privacy-policy",
+    },
+  ],
 };
 
 const sections = [
@@ -85,6 +105,8 @@ export default function PrivacyPolicyPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header logoHref="/" />
       <main>
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Privacy Policy" }]} />
+
         <section className="relative overflow-hidden bg-surface pb-16 pt-16 sm:pb-20 sm:pt-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
           <div className="container-shell relative">
@@ -128,6 +150,10 @@ export default function PrivacyPolicyPage() {
         </section>
       </main>
       <Footer />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
     </div>
   );
 }

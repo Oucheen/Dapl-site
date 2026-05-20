@@ -5,6 +5,7 @@ import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { RelatedServicesCarousel } from "@/components/service-pages/related-services-carousel";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
@@ -180,6 +181,12 @@ export function ServicePageTemplate({
       {
         "@type": "ListItem",
         position: 2,
+        name: "Appliance Repair Charlotte, NC",
+        item: "https://www.daplappliance.com/appliance-repair-charlotte-nc",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
         name: serviceLabel,
         item: `https://www.daplappliance.com/${page.slug}`,
       },
@@ -203,6 +210,14 @@ export function ServicePageTemplate({
     <div className="min-h-screen bg-background text-foreground">
       <Header logoHref="/" />
       <main>
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Appliance Repair Charlotte, NC", href: "/appliance-repair-charlotte-nc" },
+            { label: serviceLabel },
+          ]}
+        />
+
         <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
           <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FadeUp } from "@/components/ui/fade-up";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
@@ -76,6 +77,8 @@ export default function BookingPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header logoHref="/" />
       <main>
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Booking" }]} />
+
         <section className="bg-gradient-to-br from-white via-surface to-white py-16 sm:py-20">
           <div className="container-shell">
             <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">

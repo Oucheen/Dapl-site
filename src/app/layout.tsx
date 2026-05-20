@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import { ContactWidget } from "@/components/ui/contact-widget";
+import { CookieConsent } from "@/components/ui/cookie-consent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,6 +60,31 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <Script
+        id="google-consent-default"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+            (function(){
+              var choice = null;
+              try {
+                choice = window.localStorage.getItem('dapl_cookie_consent');
+              } catch (error) {}
+              var granted = choice === 'accepted';
+              var value = granted ? 'granted' : 'denied';
+              window.gtag('consent', 'default', {
+                ad_storage: value,
+                ad_user_data: value,
+                ad_personalization: value,
+                analytics_storage: value,
+                wait_for_update: 500
+              });
+            })();
+          `,
+        }}
+      />
       <GoogleTagManager gtmId="GTM-M2RWZXK9" />
       <Script
         id="ga-event-src"
@@ -80,6 +106,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <ContactWidget />
+        <CookieConsent />
       </body>
     </html>
   );

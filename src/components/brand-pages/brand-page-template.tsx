@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
@@ -112,6 +113,14 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
     <div className="min-h-screen bg-background text-foreground">
       <Header logoHref="/" />
       <main>
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Brands" },
+            { label: `${page.name} Appliance Repair` },
+          ]}
+        />
+
         <section className="relative overflow-hidden bg-surface py-16 sm:py-20 lg:py-24">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
           <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
