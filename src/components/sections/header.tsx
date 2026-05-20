@@ -4,11 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { brandPages } from "@/content/brand-pages";
 
 const navItems = [
   { href: "/#offer", label: "Offer" },
-  { href: "/#appliances", label: "Appliances", hasDropdown: true },
-  { href: "/#brands", label: "Brands" },
+  { href: "/#appliances", label: "Appliances", dropdown: "appliances" },
+  { href: "/#brands", label: "Brands", dropdown: "brands" },
   { href: "/#why-us", label: "Why Choose Us" },
   { href: "/#faq", label: "FAQ" },
   { href: "/booking", label: "Booking" },
@@ -27,6 +28,11 @@ const applianceLinks = [
   { href: "/commercial-refrigerator-repair-charlotte-nc", label: "Commercial Refrigerator Repair" },
 ];
 
+const brandLinks = brandPages.map((brand) => ({
+  href: `/brands/${brand.slug}`,
+  label: `${brand.name} Appliance Repair`,
+}));
+
 type HeaderProps = {
   logoHref?: string;
 };
@@ -34,12 +40,14 @@ type HeaderProps = {
 export function Header({ logoHref }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAppliancesOpen, setIsAppliancesOpen] = useState(false);
+  const [isBrandsOpen, setIsBrandsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
 
   const closeMenu = () => {
     setIsMenuOpen(false);
     setIsAppliancesOpen(false);
+    setIsBrandsOpen(false);
   };
 
   const scrollToTop = () => {
@@ -127,7 +135,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
 
           <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
             {navItems.map((item) =>
-              item.hasDropdown ? (
+              item.dropdown ? (
                 <div key={item.href} className="group relative">
                   <a
                     href={item.href}
@@ -140,7 +148,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
                   </a>
                   <div className="invisible absolute left-0 top-full w-[520px] translate-y-2 rounded-2xl border border-border bg-white p-3 opacity-0 shadow-xl shadow-primary/10 transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
                     <div className="grid grid-cols-2 gap-1">
-                      {applianceLinks.map((link) => (
+                      {(item.dropdown === "appliances" ? applianceLinks : brandLinks).map((link) => (
                         <Link
                           key={link.href}
                           href={link.href}
@@ -176,6 +184,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             onClick={() => {
               setIsMenuOpen((open) => !open);
               setIsAppliancesOpen(false);
+              setIsBrandsOpen(false);
             }}
             className="rounded-lg border border-border p-2 lg:hidden"
           >
@@ -197,12 +206,21 @@ export function Header({ logoHref }: HeaderProps = {}) {
           >
             <nav className="container-shell flex flex-col gap-4 py-5">
               {navItems.map((item) =>
-                item.hasDropdown ? (
+                item.dropdown ? (
                   <div key={item.href}>
                     <button
                       type="button"
-                      aria-expanded={isAppliancesOpen}
-                      onClick={() => setIsAppliancesOpen((open) => !open)}
+                      aria-expanded={item.dropdown === "appliances" ? isAppliancesOpen : isBrandsOpen}
+                      onClick={() => {
+                        if (item.dropdown === "appliances") {
+                          setIsAppliancesOpen((open) => !open);
+                          setIsBrandsOpen(false);
+                          return;
+                        }
+
+                        setIsBrandsOpen((open) => !open);
+                        setIsAppliancesOpen(false);
+                      }}
                       className="flex w-full items-center justify-between text-left text-sm font-medium text-foreground/90 transition hover:text-primary"
                     >
                       {item.label}
@@ -210,13 +228,15 @@ export function Header({ logoHref }: HeaderProps = {}) {
                         <span className="absolute left-1/2 top-1/2 h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
                         <span
                           className={`absolute left-1/2 top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition ${
-                            isAppliancesOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
+                            (item.dropdown === "appliances" ? isAppliancesOpen : isBrandsOpen)
+                              ? "rotate-90 opacity-0"
+                              : "rotate-0 opacity-100"
                           }`}
                         />
                       </span>
                     </button>
                     <AnimatePresence initial={false}>
-                      {isAppliancesOpen ? (
+                      {(item.dropdown === "appliances" ? isAppliancesOpen : isBrandsOpen) ? (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
@@ -225,7 +245,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
                           className="overflow-hidden"
                         >
                           <div className="mt-3 grid gap-2 border-l border-border pl-4">
-                            {applianceLinks.map((link) => (
+                            {(item.dropdown === "appliances" ? applianceLinks : brandLinks).map((link) => (
                               <Link
                                 key={link.href}
                                 href={link.href}
