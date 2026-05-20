@@ -193,7 +193,9 @@ async function sendTelegramNotification(input: {
   botToken: string;
   chatId: string;
   text: string;
+  buttons?: { text: string; url: string }[];
 }) {
+  const buttons = input.buttons?.filter((button) => button.url.trim()) ?? [];
   const response = await fetch(
     `https://api.telegram.org/bot${input.botToken}/sendMessage`,
     {
@@ -204,6 +206,13 @@ async function sendTelegramNotification(input: {
       body: JSON.stringify({
         chat_id: input.chatId,
         text: input.text,
+        ...(buttons.length
+          ? {
+              reply_markup: {
+                inline_keyboard: [buttons],
+              },
+            }
+          : {}),
       }),
     },
   );
@@ -342,6 +351,11 @@ export async function POST(request: Request) {
     preferredLabel: preferred.label,
     message,
   });
+  const adminLeadUrl = getAdminLeadUrl(
+    request,
+    leadStorageResult.saved ? leadStorageResult.id : undefined,
+  );
+  const adminInvoicesUrl = getAdminInvoicesSearchUrl(request, phone);
   const telegramText = buildTelegramMessage({
     name,
     phone,
@@ -353,11 +367,8 @@ export async function POST(request: Request) {
     preferredIso: preferred.iso,
     preferredLabel: preferred.label,
     message,
-    adminLeadUrl: getAdminLeadUrl(
-      request,
-      leadStorageResult.saved ? leadStorageResult.id : undefined,
-    ),
-    adminInvoicesUrl: getAdminInvoicesSearchUrl(request, phone),
+    adminLeadUrl,
+    adminInvoicesUrl,
   });
 
   let delivered = false;
@@ -384,6 +395,10 @@ export async function POST(request: Request) {
         botToken: telegramBotToken,
         chatId: telegramChatId,
         text: telegramText,
+        buttons: [
+          { text: "Open Lead", url: adminLeadUrl },
+          { text: "Invoices", url: adminInvoicesUrl },
+        ],
       });
       delivered = true;
     } catch (error) {
