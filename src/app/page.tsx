@@ -11,6 +11,7 @@ import { OfferSection } from "@/components/sections/offer";
 import { ReviewsSection } from "@/components/sections/reviews-section";
 import { ServiceAreasSection } from "@/components/sections/service-areas-section";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
+import { SectionProgress } from "@/components/ui/section-progress";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
 const REVIEWS_SECTION_ENABLED = false;
@@ -74,6 +75,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
+      <SectionProgress />
       <main>
         <Hero />
         <OfferSection />

@@ -112,8 +112,6 @@ function buildTelegramMessage(input: {
   preferredIso: string;
   preferredLabel: string;
   message: string;
-  adminLeadUrl: string;
-  adminInvoicesUrl: string;
 }) {
   const lines = [
     "New website inquiry",
@@ -127,8 +125,6 @@ function buildTelegramMessage(input: {
     input.preferredIso
       ? `Preferred date: ${input.preferredLabel} (${input.preferredIso})`
       : "",
-    input.adminLeadUrl ? `Admin lead: ${input.adminLeadUrl}` : "",
-    input.adminInvoicesUrl ? `Invoices search: ${input.adminInvoicesUrl}` : "",
     "",
     "Message:",
     input.message,
@@ -367,8 +363,6 @@ export async function POST(request: Request) {
     preferredIso: preferred.iso,
     preferredLabel: preferred.label,
     message,
-    adminLeadUrl,
-    adminInvoicesUrl,
   });
 
   let delivered = false;

@@ -11,7 +11,7 @@ const highlights = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface py-16 sm:py-20 xl:flex xl:min-h-[calc(100svh-5rem)] xl:items-center">
+    <section id="top" className="relative overflow-hidden bg-surface py-16 sm:py-20 xl:flex xl:min-h-[calc(100svh-5rem)] xl:items-center">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
       <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <FadeUp>
