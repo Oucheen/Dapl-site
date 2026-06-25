@@ -274,7 +274,7 @@ export function ContactSection({
 
             {status === "success" ? (
               <p
-                className="mt-5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
+                className="mt-5 rounded-xl border border-green-500/35 bg-green-50 px-4 py-3 text-sm font-semibold text-foreground shadow-sm"
                 role="status"
               >
                 {successMessage}

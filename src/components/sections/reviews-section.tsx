@@ -4,41 +4,32 @@ import { useRef } from "react";
 
 const googleRating = {
   rating: "5.0",
-  reviewCount: "Add review count",
-  url: "#",
+  reviewCount: "7",
+  url: "https://g.page/r/CSnsCnW2pNrEEAE/review",
 };
 
 const reviews = [
   {
-    name: "Sarah M.",
-    service: "Washer repair",
-    text: "Sample review layout: quick response, clear explanation, and the washer was working again the same day.",
+    name: "Linda Nardelli",
+    service: "Appliance repair",
+    text: "I have used DAPL appliance repair and I Will not hesitate to use them in the future. They are knowledgeable in most all appliances, Reasonably priced and very honest in their work ethic.They are my appliance repair of choice.I will never hire anybody else to fix my appliances but them and I want to put this review in here to tell everyone If they are in need of Any appliance repair to give them a call.",
   },
   {
-    name: "James R.",
+    name: "Amy Glenn",
+    service: "Appliance repair",
+    text: "Very nice people and good prices on their appliances.",
+  },
+  {
+    name: "Yuliia Mikhachova",
+    service: "Appliance repair",
+    text: "I had an excellent experience with DAPL Appliance Repair! The technician was professional, knowledgeable, and arrived on time. He quickly diagnosed the issue, explained the repair process clearly, and completed the work efficiently at a fair price. My appliance is now working perfectly again.What I appreciated most was the honest communication and attention to detail. It’s not always easy to find a reliable repair company, but DAPL exceeded my expectations. I highly recommend them to anyone looking for fast, dependable, and professional appliance repair services in the Charlotte area!",
+  },
+  {
+    name: "Velvelle",
     service: "Refrigerator repair",
-    text: "Sample review layout: professional visit, honest diagnosis, and practical options before moving forward.",
+    text: "Thanks to your employee Dmitry for repairing the refrigerator; the work was done to a high standard. Thank you.",
   },
-  {
-    name: "Linda K.",
-    service: "Dryer repair",
-    text: "Sample review layout: easy scheduling, friendly communication, and the dryer issue was handled cleanly.",
-  },
-  {
-    name: "Michael T.",
-    service: "Dishwasher repair",
-    text: "Sample review layout: the technician explained the issue clearly and helped avoid replacing the appliance too soon.",
-  },
-  {
-    name: "Amanda P.",
-    service: "Oven repair",
-    text: "Sample review layout: appointment was simple to set up, arrival was on time, and the repair felt straightforward.",
-  },
-  {
-    name: "Robert C.",
-    service: "Freezer repair",
-    text: "Sample review layout: responsive communication, practical advice, and a clean service visit from start to finish.",
-  },
+  
 ];
 
 function Stars() {
