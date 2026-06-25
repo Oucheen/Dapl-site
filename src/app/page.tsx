@@ -14,7 +14,7 @@ import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 import { SectionProgress } from "@/components/ui/section-progress";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
-const REVIEWS_SECTION_ENABLED = true;
+const REVIEWS_SECTION_ENABLED = false;
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
