@@ -5,6 +5,7 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FadeUp } from "@/components/ui/fade-up";
+import { HousecallProActions } from "@/components/ui/housecall-pro-actions";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 
 export const metadata: Metadata = {
@@ -93,19 +94,14 @@ export default function BookingPage() {
                   Tell us what is going on with your appliance and we will follow up with the
                   most practical next step. Same-day visits are available when scheduling allows.
                 </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <HousecallProActions />
                   <a
                     href="tel:+17042660508"
-                    className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95 sm:w-auto"
                   >
                     Call +1 (704) 266-0508
                   </a>
-                  <Link
-                    href="/#appliances"
-                    className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:border-primary/40 hover:bg-primary/5"
-                  >
-                    View appliance services
-                  </Link>
                 </div>
               </FadeUp>
 
