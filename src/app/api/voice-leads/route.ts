@@ -1,0 +1,218 @@
+import { NextResponse } from "next/server";
+import { createLeadActivity } from "@/lib/supabase-activity";
+import { saveLeadToSupabase } from "@/lib/supabase-leads";
+
+const MAX = {
+  name: 120,
+  phone: 40,
+  email: 254,
+  address: 300,
+  message: 4000,
+  appliance: 80,
+  promoCode: 40,
+  leadSource: 120,
+  preferredDate: 10,
+  provider: 80,
+  callId: 160,
+  transcript: 8000,
+};
+
+type VoiceLeadPayload = Record<string, unknown>;
+
+function text(data: VoiceLeadPayload, key: string, max = 1000) {
+  const value = data[key];
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim().slice(0, max);
+}
+
+function getBearerToken(request: Request) {
+  const authorization = request.headers.get("authorization") || "";
+  const [scheme, token] = authorization.split(/\s+/, 2);
+
+  if (scheme?.toLowerCase() === "bearer" && token) {
+    return token.trim();
+  }
+
+  return "";
+}
+
+function isAuthorized(request: Request) {
+  const secret = process.env.VOICE_AGENT_API_KEY;
+
+  if (!secret) {
+    return false;
+  }
+
+  const token = getBearerToken(request) || request.headers.get("x-api-key")?.trim();
+  return token === secret;
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePreferredDate(value: string) {
+  if (!value) {
+    return true;
+  }
+
+  if (value.length > MAX.preferredDate || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return false;
+  }
+
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Date.UTC(year, month - 1, day) >= todayUtc;
+}
+
+function fallbackEmail(phone: string) {
+  const normalizedPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
+  return `voice-${normalizedPhone || "caller"}@daplappliance.local`;
+}
+
+function buildVoiceMessage(input: {
+  issue: string;
+  callSummary: string;
+  transcript: string;
+  provider: string;
+  callId: string;
+}) {
+  const sections = [
+    input.issue,
+    input.callSummary ? `Call summary:\n${input.callSummary}` : "",
+    input.provider ? `Voice provider: ${input.provider}` : "",
+    input.callId ? `Call ID: ${input.callId}` : "",
+    input.transcript ? `Transcript:\n${input.transcript}` : "",
+  ];
+
+  return sections.filter(Boolean).join("\n\n").slice(0, MAX.message);
+}
+
+export async function POST(request: Request) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const data = body as VoiceLeadPayload;
+  const name = text(data, "name", MAX.name);
+  const phone = text(data, "phone", MAX.phone);
+  const emailRaw = text(data, "email", MAX.email);
+  const address = text(data, "address", MAX.address);
+  const appliance = text(data, "appliance", MAX.appliance);
+  const promoCode = text(data, "promoCode", MAX.promoCode);
+  const preferredDate = text(data, "preferredDate", MAX.preferredDate);
+  const issue = text(data, "issue", MAX.message);
+  const callSummary = text(data, "callSummary", MAX.message);
+  const transcript = text(data, "transcript", MAX.transcript);
+  const provider = text(data, "provider", MAX.provider);
+  const callId = text(data, "callId", MAX.callId);
+
+  if (!name) {
+    return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
+  }
+
+  if (!phone) {
+    return NextResponse.json({ error: "Customer phone is required." }, { status: 400 });
+  }
+
+  if (!address) {
+    return NextResponse.json({ error: "Service address is required." }, { status: 400 });
+  }
+
+  if (!issue && !callSummary) {
+    return NextResponse.json(
+      { error: "Issue or callSummary is required." },
+      { status: 400 },
+    );
+  }
+
+  if (emailRaw && !isValidEmail(emailRaw)) {
+    return NextResponse.json({ error: "Email is invalid." }, { status: 400 });
+  }
+
+  if (!validatePreferredDate(preferredDate)) {
+    return NextResponse.json(
+      { error: "preferredDate must use YYYY-MM-DD and cannot be in the past." },
+      { status: 400 },
+    );
+  }
+
+  const message = buildVoiceMessage({
+    issue,
+    callSummary,
+    transcript,
+    provider,
+    callId,
+  });
+
+  const leadStorageResult = await saveLeadToSupabase({
+    name,
+    phone,
+    email: emailRaw || fallbackEmail(phone),
+    address,
+    appliance,
+    promoCode,
+    leadSource: "voice-agent",
+    preferredDate,
+    message,
+  });
+
+  if (!leadStorageResult.saved) {
+    const error = leadStorageResult.skipped
+      ? "Supabase is not configured."
+      : "Could not save voice lead.";
+
+    if (!leadStorageResult.skipped) {
+      console.error("Voice lead storage error:", leadStorageResult.error);
+    }
+
+    return NextResponse.json({ error }, { status: 503 });
+  }
+
+  if (leadStorageResult.id) {
+    await createLeadActivity({
+      leadId: leadStorageResult.id,
+      eventType: "voice_lead_received",
+      title: "Voice agent lead received",
+      details: provider
+        ? `Created from a ${provider} phone call.`
+        : "Created from a phone call handled by the voice agent.",
+      metadata: {
+        provider: provider || null,
+        callId: callId || null,
+        hasTranscript: Boolean(transcript),
+      },
+    });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    leadId: leadStorageResult.id,
+  });
+}

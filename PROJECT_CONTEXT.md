@@ -43,6 +43,7 @@ CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
 CONTACT_FROM_EMAIL=DAPL Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
+VOICE_AGENT_API_KEY=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 SUPABASE_LEADS_TABLE=leads
@@ -90,6 +91,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - SQL schema lives in `supabase/schema.sql`
 - Server helper lives in `src/lib/supabase-leads.ts`
 - `src/app/api/contact/route.ts` attempts to save every validated lead to Supabase before sending email / Telegram notifications
+- `src/app/api/voice-leads/route.ts` lets a phone/voice AI agent create leads in the same Supabase workflow
 - Required environment variables:
   - `SUPABASE_URL`
   - `SUPABASE_SERVICE_ROLE_KEY`
@@ -97,6 +99,16 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Supabase storage is optional for now. If it is not configured or insert fails, the form can still deliver through email / Telegram.
 - The service role key must remain server-only and must never be exposed with a `NEXT_PUBLIC_` prefix.
 - Because automatic table exposure was disabled in Supabase, `public.leads` must explicitly grant `usage` on `public` plus `select, insert, update` on the table to `service_role`.
+
+## Voice AI lead intake
+- Endpoint: `POST /api/voice-leads`
+- Retell pilot setup lives in `RETELL_SETUP.md`
+- Authentication: set `VOICE_AGENT_API_KEY` in the server environment and send it from the voice provider as `Authorization: Bearer <key>` or `x-api-key: <key>`.
+- Expected JSON fields:
+  - required: `name`, `phone`, `address`, and either `issue` or `callSummary`
+  - optional: `email`, `appliance`, `promoCode`, `preferredDate` (`YYYY-MM-DD`), `provider`, `callId`, `transcript`
+- The endpoint stores leads with `lead_source: voice-agent`, uses a local fallback email when the caller does not provide one, and records call metadata in `lead_activity`.
+- Voice-agent setup should instruct the caller-facing agent to collect customer name, callback phone, service address, appliance type, issue summary, and preferred service date before calling this endpoint.
 
 ## Leads admin dashboard
 - Admin entry point: `/admin/leads`

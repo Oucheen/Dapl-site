@@ -13,10 +13,14 @@ import { ServiceAreasSection } from "@/components/sections/service-areas-section
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 import { SectionProgress } from "@/components/ui/section-progress";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
+import { getReviewSummary, type ReviewSummary } from "@/lib/review-summary";
 
-const REVIEWS_SECTION_ENABLED = false;
+const REVIEWS_SECTION_ENABLED = true;
 
-const localBusinessSchema = {
+export const revalidate = 3600;
+
+function getLocalBusinessSchema(reviewSummary: ReviewSummary) {
+  return {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: "DAPL Appliance Repair",
@@ -40,6 +44,11 @@ const localBusinessSchema = {
   })),
   url: "https://www.daplappliance.com",
   serviceType: "Appliance Repair Service",
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: reviewSummary.rating,
+    reviewCount: String(reviewSummary.reviewCountValue),
+  },
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",
@@ -57,6 +66,7 @@ const localBusinessSchema = {
     },
   ],
 };
+}
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -71,7 +81,10 @@ const faqSchema = {
   })),
 };
 
-export default function Home() {
+export default async function Home() {
+  const reviewSummary = await getReviewSummary();
+  const localBusinessSchema = getLocalBusinessSchema(reviewSummary);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
@@ -83,7 +96,7 @@ export default function Home() {
         <BrandsSection />
         <WhyChooseUsSection />
         <ServiceAreasSection />
-        {REVIEWS_SECTION_ENABLED ? <ReviewsSection /> : null}
+        {REVIEWS_SECTION_ENABLED ? <ReviewsSection summary={reviewSummary} /> : null}
         <FAQSection />
         <ContactSection />
         <BottomCtaSection />

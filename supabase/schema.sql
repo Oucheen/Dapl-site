@@ -79,6 +79,14 @@ create table if not exists public.lead_activity (
   metadata jsonb not null default '{}'::jsonb
 );
 
+create table if not exists public.review_summary (
+  id text primary key,
+  updated_at timestamptz not null default now(),
+  rating numeric(2,1) not null,
+  review_count integer not null check (review_count >= 0),
+  review_url text
+);
+
 alter table public.leads
   add column if not exists admin_notes text,
   add column if not exists scheduled_date date,
@@ -128,11 +136,19 @@ before update on public.invoices
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_review_summary_updated_at on public.review_summary;
+
+create trigger set_review_summary_updated_at
+before update on public.review_summary
+for each row
+execute function public.set_updated_at();
+
 alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.invoice_payments enable row level security;
 alter table public.lead_activity enable row level security;
+alter table public.review_summary enable row level security;
 
 grant usage on schema public to service_role;
 grant select, insert, update, delete on public.leads to service_role;
@@ -140,3 +156,4 @@ grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
 grant select, insert on public.lead_activity to service_role;
+grant select, insert, update, delete on public.review_summary to service_role;
