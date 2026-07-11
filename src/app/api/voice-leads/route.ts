@@ -19,6 +19,17 @@ const MAX = {
 
 type VoiceLeadPayload = Record<string, unknown>;
 
+function objectValue(data: VoiceLeadPayload, key: string) {
+  const value = data[key];
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as VoiceLeadPayload)
+    : null;
+}
+
+function getPayloadData(body: VoiceLeadPayload) {
+  return objectValue(body, "args") || objectValue(body, "arguments") || body;
+}
+
 function text(data: VoiceLeadPayload, key: string, max = 1000) {
   const value = data[key];
 
@@ -119,7 +130,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const data = body as VoiceLeadPayload;
+  const data = getPayloadData(body as VoiceLeadPayload);
   const name = text(data, "name", MAX.name);
   const phone = text(data, "phone", MAX.phone);
   const emailRaw = text(data, "email", MAX.email);
