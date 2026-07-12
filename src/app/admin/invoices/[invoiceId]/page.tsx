@@ -631,34 +631,36 @@ export default async function InvoicePage({
                 ))
               : null}
 
-            <div className="hidden px-5 py-6 print:block print:px-0">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+            <div className="hidden px-5 py-6 print:block print:px-0 print:py-3">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                 Line items
               </p>
-              <h2 className="mt-1 text-xl font-black text-primary">Services and charges</h2>
+              <h2 className="mt-1 text-xl font-black text-primary print:text-sm">
+                Services and charges
+              </h2>
 
-              <table className="mt-5 w-full border-collapse text-sm">
+              <table className="mt-5 w-full border-collapse text-sm print:mt-2 print:text-[10px]">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    <th className="py-3 pr-4">Description</th>
-                    <th className="py-3 pr-4 text-right">Qty</th>
-                    <th className="py-3 pr-4 text-right">Unit</th>
-                    <th className="py-3 text-right">Total</th>
+                    <th className="py-3 pr-4 print:py-1.5">Description</th>
+                    <th className="py-3 pr-4 text-right print:py-1.5">Qty</th>
+                    <th className="py-3 pr-4 text-right print:py-1.5">Unit</th>
+                    <th className="py-3 text-right print:py-1.5">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id} className="border-b border-border">
-                      <td className="py-3 pr-4 font-semibold text-foreground">
+                      <td className="py-3 pr-4 font-semibold text-foreground print:py-1.5">
                         {item.description}
                       </td>
-                      <td className="py-3 pr-4 text-right text-muted">
+                      <td className="py-3 pr-4 text-right text-muted print:py-1.5">
                         {formatQuantity(item.quantity)}
                       </td>
-                      <td className="py-3 pr-4 text-right text-muted">
+                      <td className="py-3 pr-4 text-right text-muted print:py-1.5">
                         {formatMoney(item.unit_price)}
                       </td>
-                      <td className="py-3 text-right font-bold text-foreground">
+                      <td className="py-3 text-right font-bold text-foreground print:py-1.5">
                         {getLineTotal(item)}
                       </td>
                     </tr>
@@ -666,7 +668,7 @@ export default async function InvoicePage({
                 </tbody>
               </table>
 
-              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm">
+              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-3 print:max-w-[14rem] print:space-y-1 print:text-[10px]">
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Subtotal</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
@@ -681,7 +683,7 @@ export default async function InvoicePage({
                   <span className="text-muted">Tax</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
                   <span className="font-black text-primary">Total</span>
                   <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
                 </div>
@@ -691,38 +693,38 @@ export default async function InvoicePage({
                     <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
                   <span className="font-black text-primary">Amount due</span>
                   <span className="font-black text-primary">{formatMoney(amountDue)}</span>
                 </div>
               </div>
 
               {hasPayments ? (
-                <div className="mt-8">
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                <div className="mt-8 print:mt-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                     Payment History
                   </p>
-                  <table className="mt-3 w-full border-collapse text-sm">
+                  <table className="mt-3 w-full border-collapse text-sm print:mt-1 print:text-[10px]">
                     <thead>
                       <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        <th className="py-3 pr-4">Date</th>
-                        <th className="py-3 pr-4">Method</th>
-                        <th className="py-3 text-right">Amount</th>
+                        <th className="py-3 pr-4 print:py-1.5">Date</th>
+                        <th className="py-3 pr-4 print:py-1.5">Method</th>
+                        <th className="py-3 text-right print:py-1.5">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {payments.map((payment) => (
                         <tr key={payment.id} className="border-b border-border">
-                          <td className="py-3 pr-4 text-muted">
+                          <td className="py-3 pr-4 text-muted print:py-1.5">
                             {formatShortDateTime(payment.payment_date)} ET
                           </td>
-                          <td className="py-3 pr-4 text-foreground">
+                          <td className="py-3 pr-4 text-foreground print:py-1.5">
                             {formatPaymentMethod(payment.method)}
                             {payment.note ? (
                               <span className="mt-1 block text-xs text-muted">{payment.note}</span>
                             ) : null}
                           </td>
-                          <td className="py-3 text-right font-bold text-foreground">
+                          <td className="py-3 text-right font-bold text-foreground print:py-1.5">
                             {formatMoney(payment.amount)}
                           </td>
                         </tr>
@@ -733,15 +735,15 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            <section className="border-t border-border px-5 py-5 sm:px-7">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+            <section className="border-t border-border px-5 py-5 print:px-0 print:py-3 sm:px-7">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                 Terms and warranty
               </p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-muted">
+              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-1.5 print:grid print:grid-cols-2 print:gap-x-5 print:gap-y-1 print:space-y-0 print:text-[9px] print:leading-4">
                 {INVOICE_TERMS.map((term) => (
                   <p key={term}>{term}</p>
                 ))}
-                <p>
+                <p className="print:col-span-2">
                   <span className="font-bold text-foreground">Note:</span> {INVOICE_TAX_NOTE}
                 </p>
               </div>

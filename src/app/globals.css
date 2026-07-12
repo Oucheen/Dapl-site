@@ -72,7 +72,7 @@ html {
 
 @media print {
   @page {
-    margin: 0.5in;
+    margin: 0.35in;
   }
 
   html,
