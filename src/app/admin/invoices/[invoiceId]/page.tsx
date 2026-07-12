@@ -38,6 +38,15 @@ const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
 
 const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
 const BUSINESS_EMAIL = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
+const INVOICE_TERMS = [
+  "90-day labor and parts warranty.",
+  "No warranty is provided for maintenance, cleaning of units, or defrosting of refrigerators and freezers.",
+  "Our company and technicians are not responsible for other problems that arise with household appliances after the technician leaves your home.",
+  "If a deposit is made for a spare part and the customer refuses repair, the company will retain an additional 25% of the order value as a restocking fee, with a minimum fee of $30.",
+  "Thank you for choosing our company. Our main task is to leave a good memory and working household appliances. Take care of yourself.",
+];
+const INVOICE_TAX_NOTE =
+  "Sales tax on parts was paid at the time of purchase. No sales tax is charged to the customer.";
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -723,6 +732,20 @@ export default async function InvoicePage({
                 </div>
               ) : null}
             </div>
+
+            <section className="border-t border-border px-5 py-5 sm:px-7">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Terms and warranty
+              </p>
+              <div className="mt-3 space-y-2 text-sm leading-6 text-muted">
+                {INVOICE_TERMS.map((term) => (
+                  <p key={term}>{term}</p>
+                ))}
+                <p>
+                  <span className="font-bold text-foreground">Note:</span> {INVOICE_TAX_NOTE}
+                </p>
+              </div>
+            </section>
 
             {canManageInvoiceCharges ? (
               <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">

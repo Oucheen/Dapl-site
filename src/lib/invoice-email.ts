@@ -120,6 +120,20 @@ function buildPaymentRows(payments: InvoicePaymentRecord[]) {
     .join("");
 }
 
+function buildInvoiceTermsHtml() {
+  return `
+    <div style="margin-top: 28px; padding: 18px; border: 1px solid #dbe3ec; border-radius: 14px; background: #ffffff; color: #475569; font-size: 13px; line-height: 1.7;">
+      <p style="margin: 0 0 10px; color: #0b1d3a; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;">Terms and warranty</p>
+      <p style="margin: 0;">90-day labor and parts warranty.</p>
+      <p style="margin: 8px 0 0;">No warranty is provided for maintenance, cleaning of units, or defrosting of refrigerators and freezers.</p>
+      <p style="margin: 8px 0 0;">Our company and technicians are not responsible for other problems that arise with household appliances after the technician leaves your home.</p>
+      <p style="margin: 8px 0 0;">If a deposit is made for a spare part and the customer refuses repair, the company will retain an additional 25% of the order value as a restocking fee, with a minimum fee of $30.</p>
+      <p style="margin: 8px 0 0;">Thank you for choosing our company. Our main task is to leave a good memory and working household appliances. Take care of yourself.</p>
+      <p style="margin: 12px 0 0;"><strong style="color: #0b1d3a;">Note:</strong> Sales tax on parts was paid at the time of purchase. No sales tax is charged to the customer.</p>
+    </div>
+  `;
+}
+
 function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: string) {
   const { invoice, items, payments } = invoiceData;
   const discountAmount = Number(invoice.discount_amount ?? 0);
@@ -269,6 +283,8 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
                 `
                 : ""
             }
+
+            ${buildInvoiceTermsHtml()}
 
             <div style="margin-top: 28px; padding: 18px; border-radius: 14px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.7;">
               <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email. Replies go to ${escapeHtml(replyToEmail)}.</p>
