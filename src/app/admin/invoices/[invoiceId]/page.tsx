@@ -390,22 +390,22 @@ export default async function InvoicePage({
                     alt="DAPL Appliance Repair logo"
                     width={76}
                     height={76}
-                    className="h-16 w-16 object-contain print:h-14 print:w-14"
+                    className="h-16 w-16 object-contain print:h-16 print:w-16"
                   />
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[10px]">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[11px]">
                       DAPL Appliance Repair
                     </p>
-                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted print:text-[11px] print:leading-4">
+                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted print:text-xs print:leading-5">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
                     <a
                       href={`mailto:${BUSINESS_EMAIL}`}
-                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-[11px] print:leading-4 print:text-slate-700"
+                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-xs print:leading-5 print:text-slate-700"
                     >
                       {BUSINESS_EMAIL}
                     </a>
-                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted print:mt-1 print:text-[10px] print:leading-4">
+                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted print:mt-1.5 print:text-[11px] print:leading-5">
                       DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
                     </p>
                   </div>
@@ -415,13 +415,13 @@ export default async function InvoicePage({
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                     Invoice
                   </p>
-                  <p className="mt-1 text-xl font-black text-primary print:whitespace-nowrap print:text-lg">
+                  <p className="mt-1 text-xl font-black text-primary print:whitespace-nowrap print:text-xl">
                     {invoice.invoice_number}
                   </p>
-                  <p className="mt-2 text-sm text-muted print:text-[11px]">
+                  <p className="mt-2 text-sm text-muted print:text-xs">
                     Created {formatDateTime(invoice.created_at)} ET
                   </p>
-                  <p className="mt-1 text-sm font-semibold capitalize text-muted print:text-[11px]">
+                  <p className="mt-1 text-sm font-semibold capitalize text-muted print:text-xs">
                     Status: {invoice.status}
                   </p>
                 </div>
@@ -638,15 +638,15 @@ export default async function InvoicePage({
                 ))
               : null}
 
-            <div className="hidden px-5 py-6 print:block print:px-0 print:py-3">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
+            <div className="hidden px-5 py-6 print:block print:px-0 print:py-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[10px]">
                 Line items
               </p>
-              <h2 className="mt-1 text-xl font-black text-primary print:text-sm">
+              <h2 className="mt-1 text-xl font-black text-primary print:text-base">
                 Services and charges
               </h2>
 
-              <table className="mt-5 w-full border-collapse text-sm print:mt-2 print:text-[11px]">
+              <table className="mt-5 w-full border-collapse text-sm print:mt-3 print:text-xs">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
                     <th className="py-3 pr-4 print:py-1.5">Description</th>
@@ -675,7 +675,7 @@ export default async function InvoicePage({
                 </tbody>
               </table>
 
-              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-3 print:max-w-[15rem] print:space-y-1 print:text-[11px]">
+              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-4 print:max-w-[16rem] print:space-y-1.5 print:text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Subtotal</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
@@ -690,7 +690,7 @@ export default async function InvoicePage({
                   <span className="text-muted">Tax</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-2 print:text-sm">
                   <span className="font-black text-primary">Total</span>
                   <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
                 </div>
@@ -700,7 +700,7 @@ export default async function InvoicePage({
                     <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-2 print:text-sm">
                   <span className="font-black text-primary">Amount due</span>
                   <span className="font-black text-primary">{formatMoney(amountDue)}</span>
                 </div>
@@ -742,11 +742,11 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            <section className="border-t border-border px-5 py-5 print:px-0 print:py-3 sm:px-7">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[10px]">
+            <section className="border-t border-border px-5 py-5 print:px-0 print:py-4 sm:px-7">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[11px]">
                 Terms and warranty
               </p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-2 print:grid print:grid-cols-2 print:gap-x-6 print:gap-y-1.5 print:space-y-0 print:text-[10px] print:leading-4">
+              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-2.5 print:grid print:grid-cols-2 print:gap-x-7 print:gap-y-2 print:space-y-0 print:text-[11px] print:leading-5">
                 {INVOICE_TERMS.map((term) => (
                   <p key={term}>{term}</p>
                 ))}
