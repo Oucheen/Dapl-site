@@ -114,6 +114,99 @@ function buildVoiceMessage(input: {
   return sections.filter(Boolean).join("\n\n").slice(0, MAX.message);
 }
 
+function getRequestOrigin(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+
+  if (forwardedHost) {
+    return `${forwardedProto || "https"}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
+function getAdminLeadUrl(request: Request, leadId: string | undefined) {
+  if (!leadId) {
+    return "";
+  }
+
+  return `${getRequestOrigin(request)}/admin/leads/${leadId}`;
+}
+
+function getAdminInvoicesSearchUrl(request: Request, query: string) {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return "";
+  }
+
+  const params = new URLSearchParams({ q: trimmedQuery, view: "all" });
+  return `${getRequestOrigin(request)}/admin/invoices?${params.toString()}`;
+}
+
+function buildVoiceTelegramMessage(input: {
+  name: string;
+  phone: string;
+  address: string;
+  appliance: string;
+  issue: string;
+  callSummary: string;
+  promoCode: string;
+  preferredDate: string;
+  provider: string;
+  callId: string;
+}) {
+  const lines = [
+    "New voice agent lead",
+    `Name: ${input.name}`,
+    `Phone: ${input.phone}`,
+    `Address: ${input.address}`,
+    input.appliance ? `Appliance: ${input.appliance}` : "",
+    input.issue ? `Issue: ${input.issue}` : "",
+    input.callSummary ? `Summary: ${input.callSummary}` : "",
+    input.promoCode ? `Promo code: ${input.promoCode}` : "",
+    input.preferredDate ? `Preferred date: ${input.preferredDate}` : "",
+    input.provider ? `Provider: ${input.provider}` : "",
+    input.callId ? `Call ID: ${input.callId}` : "",
+  ];
+
+  return lines.filter(Boolean).join("\n");
+}
+
+async function sendTelegramNotification(input: {
+  botToken: string;
+  chatId: string;
+  text: string;
+  buttons?: { text: string; url: string }[];
+}) {
+  const buttons = input.buttons?.filter((button) => button.url.trim()) ?? [];
+  const response = await fetch(
+    `https://api.telegram.org/bot${input.botToken}/sendMessage`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: input.chatId,
+        text: input.text,
+        ...(buttons.length
+          ? {
+              reply_markup: {
+                inline_keyboard: [buttons],
+              },
+            }
+          : {}),
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Telegram error: ${response.status} ${details}`);
+  }
+}
+
 export async function POST(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -220,6 +313,36 @@ export async function POST(request: Request) {
         hasTranscript: Boolean(transcript),
       },
     });
+  }
+
+  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (telegramBotToken && telegramChatId) {
+    try {
+      await sendTelegramNotification({
+        botToken: telegramBotToken,
+        chatId: telegramChatId,
+        text: buildVoiceTelegramMessage({
+          name,
+          phone,
+          address,
+          appliance,
+          issue,
+          callSummary,
+          promoCode,
+          preferredDate,
+          provider: provider || "retell",
+          callId,
+        }),
+        buttons: [
+          { text: "Open Lead", url: getAdminLeadUrl(request, leadStorageResult.id) },
+          { text: "Invoices", url: getAdminInvoicesSearchUrl(request, phone) },
+        ],
+      });
+    } catch (error) {
+      console.error("Voice lead Telegram error:", error);
+    }
   }
 
   return NextResponse.json({
