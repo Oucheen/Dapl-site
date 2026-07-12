@@ -68,6 +68,10 @@ function formatPaymentMethod(value: string) {
     .join(" ");
 }
 
+function isPlaceholderCustomerEmail(value: string | null | undefined) {
+  return Boolean(value?.trim().toLowerCase().endsWith("@daplappliance.local"));
+}
+
 function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
@@ -136,6 +140,9 @@ function buildInvoiceTermsHtml() {
 
 function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: string) {
   const { invoice, items, payments } = invoiceData;
+  const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
+    ? null
+    : invoice.customer_email;
   const discountAmount = Number(invoice.discount_amount ?? 0);
   const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
   const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
@@ -173,8 +180,8 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
                     : ""
                 }
                 ${
-                  invoice.customer_email
-                    ? `<p style="margin: 6px 0 0; color: #334155;">${escapeHtml(invoice.customer_email)}</p>`
+                  customerEmail
+                    ? `<p style="margin: 6px 0 0; color: #334155;">${escapeHtml(customerEmail)}</p>`
                     : ""
                 }
               </div>
@@ -301,7 +308,9 @@ export async function sendInvoiceEmail(
   invoiceData: InvoiceWithItems,
 ): Promise<SendInvoiceEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const to = invoiceData.invoice.customer_email?.trim();
+  const to = isPlaceholderCustomerEmail(invoiceData.invoice.customer_email)
+    ? ""
+    : invoiceData.invoice.customer_email?.trim();
 
   if (!apiKey) {
     return { ok: false, reason: "config" };

@@ -160,6 +160,10 @@ function getQueryValue(value: string | string[] | undefined) {
   return value;
 }
 
+function isPlaceholderCustomerEmail(value: string | null | undefined) {
+  return Boolean(value?.trim().toLowerCase().endsWith("@daplappliance.local"));
+}
+
 function getEmailNotice(status: string | undefined, customerEmail: string | null): PageNotice | null {
   if (status === "sent") {
     return {
@@ -307,17 +311,20 @@ export default async function InvoicePage({
   }
 
   const { invoice, items, payments } = invoiceData;
+  const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
+    ? null
+    : invoice.customer_email;
   const [activity, customerHistory, invoiceLead] = await Promise.all([
     listActivitiesForInvoice(invoice.id, 8),
     listCustomerHistory({
       phone: invoice.customer_phone,
-      email: invoice.customer_email,
+      email: customerEmail,
       excludeInvoiceId: invoice.id,
     }),
     invoice.lead_id ? getSupabaseLeadById(invoice.lead_id) : Promise.resolve(null),
   ]);
   const notices: PageNotice[] = [
-    getEmailNotice(getQueryValue(query.email), invoice.customer_email),
+    getEmailNotice(getQueryValue(query.email), customerEmail),
     getActionNotice(getQueryValue(query.notice)),
   ].filter((notice): notice is PageNotice => notice !== null);
   const discountAmount = Number(invoice.discount_amount ?? 0);
@@ -383,22 +390,22 @@ export default async function InvoicePage({
                     alt="DAPL Appliance Repair logo"
                     width={76}
                     height={76}
-                    className="h-16 w-16 object-contain"
+                    className="h-16 w-16 object-contain print:h-14 print:w-14"
                   />
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[10px]">
                       DAPL Appliance Repair
                     </p>
-                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted">
+                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted print:text-[11px] print:leading-4">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
                     <a
                       href={`mailto:${BUSINESS_EMAIL}`}
-                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-slate-700"
+                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-[11px] print:leading-4 print:text-slate-700"
                     >
                       {BUSINESS_EMAIL}
                     </a>
-                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted">
+                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted print:mt-1 print:text-[10px] print:leading-4">
                       DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
                     </p>
                   </div>
@@ -408,13 +415,13 @@ export default async function InvoicePage({
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                     Invoice
                   </p>
-                  <p className="mt-1 text-xl font-black text-primary">
+                  <p className="mt-1 text-xl font-black text-primary print:whitespace-nowrap print:text-lg">
                     {invoice.invoice_number}
                   </p>
-                  <p className="mt-2 text-sm text-muted">
+                  <p className="mt-2 text-sm text-muted print:text-[11px]">
                     Created {formatDateTime(invoice.created_at)} ET
                   </p>
-                  <p className="mt-1 text-sm font-semibold capitalize text-muted">
+                  <p className="mt-1 text-sm font-semibold capitalize text-muted print:text-[11px]">
                     Status: {invoice.status}
                   </p>
                 </div>
@@ -435,12 +442,12 @@ export default async function InvoicePage({
                     {invoice.customer_phone}
                   </a>
                 ) : null}
-                {invoice.customer_email ? (
+                {customerEmail ? (
                   <a
-                    href={`mailto:${invoice.customer_email}`}
+                    href={`mailto:${customerEmail}`}
                     className="mt-1 block break-words text-muted hover:text-primary"
                   >
-                    {invoice.customer_email}
+                    {customerEmail}
                   </a>
                 ) : null}
               </section>
@@ -639,7 +646,7 @@ export default async function InvoicePage({
                 Services and charges
               </h2>
 
-              <table className="mt-5 w-full border-collapse text-sm print:mt-2 print:text-[10px]">
+              <table className="mt-5 w-full border-collapse text-sm print:mt-2 print:text-[11px]">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
                     <th className="py-3 pr-4 print:py-1.5">Description</th>
@@ -668,7 +675,7 @@ export default async function InvoicePage({
                 </tbody>
               </table>
 
-              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-3 print:max-w-[14rem] print:space-y-1 print:text-[10px]">
+              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-3 print:max-w-[15rem] print:space-y-1 print:text-[11px]">
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Subtotal</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
@@ -736,10 +743,10 @@ export default async function InvoicePage({
             </div>
 
             <section className="border-t border-border px-5 py-5 print:px-0 print:py-3 sm:px-7">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[10px]">
                 Terms and warranty
               </p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-1.5 print:grid print:grid-cols-2 print:gap-x-5 print:gap-y-1 print:space-y-0 print:text-[9px] print:leading-4">
+              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-2 print:grid print:grid-cols-2 print:gap-x-6 print:gap-y-1.5 print:space-y-0 print:text-[10px] print:leading-4">
                 {INVOICE_TERMS.map((term) => (
                   <p key={term}>{term}</p>
                 ))}
@@ -841,12 +848,12 @@ export default async function InvoicePage({
               <input type="hidden" name="id" value={invoice.id} />
               <button
                 type="submit"
-                disabled={!invoice.customer_email}
+                disabled={!customerEmail}
                 className="w-full rounded-lg bg-accent px-3 py-3 text-xs font-bold text-accent-foreground transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
               >
                 {invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
               </button>
-              {!invoice.customer_email ? (
+              {!customerEmail ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
                   Customer email is missing, so this invoice cannot be sent yet.
                 </p>
