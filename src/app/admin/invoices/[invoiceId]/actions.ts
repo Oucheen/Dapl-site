@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { sendInvoiceEmail } from "@/lib/invoice-email";
+import { sendInvoiceSms } from "@/lib/invoice-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
@@ -142,6 +143,42 @@ export async function sendInvoiceEmailAction(formData: FormData) {
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}?email=sent`);
+}
+
+export async function sendInvoiceSmsAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const id = String(formData.get("id") || "");
+  const invoiceData = await getInvoiceById(id);
+
+  if (!invoiceData) {
+    redirect("/admin/invoices?sms=missing");
+  }
+
+  const result = await sendInvoiceSms(invoiceData);
+
+  if (!result.ok) {
+    redirect(`/admin/invoices/${id}?sms=${result.reason}`);
+  }
+
+  let leadId = invoiceData.invoice.lead_id;
+
+  if (invoiceData.invoice.status === "draft") {
+    const updated = await updateInvoiceStatus(id, "sent");
+    leadId = updated.leadId;
+  }
+
+  await createLeadActivity({
+    leadId,
+    invoiceId: id,
+    eventType: "invoice_sms_sent",
+    title: "Invoice SMS sent",
+    details: result.messageSid ? `Sent to ${result.to}. Twilio SID ${result.messageSid}.` : `Sent to ${result.to}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?sms=sent`);
 }
 
 export async function updateInvoiceItemsAction(formData: FormData) {

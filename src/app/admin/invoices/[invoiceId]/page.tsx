@@ -24,6 +24,7 @@ import {
   deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
   sendInvoiceEmailAction,
+  sendInvoiceSmsAction,
   updateInvoiceItemsAction,
   updateInvoiceStatusAction,
 } from "./actions";
@@ -202,6 +203,44 @@ function getEmailNotice(status: string | undefined, customerEmail: string | null
   return null;
 }
 
+function getSmsNotice(status: string | undefined, customerPhone: string | null): PageNotice | null {
+  if (status === "sent") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice SMS sent",
+      body: customerPhone
+        ? `The invoice link was sent to ${customerPhone}.`
+        : "The invoice SMS was sent.",
+    };
+  }
+
+  if (status === "missing_phone") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Customer phone is missing",
+      body: "Add a customer phone number before sending this invoice by SMS.",
+    };
+  }
+
+  if (status === "config") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Twilio is not configured",
+      body: "Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in Vercel before sending invoice SMS.",
+    };
+  }
+
+  if (status === "send_error") {
+    return {
+      className: "border-accent/20 bg-accent/5 text-accent",
+      title: "Invoice SMS was not sent",
+      body: "Twilio returned an error. Check Vercel logs for the exact delivery issue.",
+    };
+  }
+
+  return null;
+}
+
 function getActionNotice(status: string | undefined): PageNotice | null {
   if (status === "status_updated") {
     return {
@@ -293,6 +332,7 @@ export default async function InvoicePage({
   params: Promise<{ invoiceId: string }>;
   searchParams: Promise<{
     email?: string | string[] | undefined;
+    sms?: string | string[] | undefined;
     notice?: string | string[] | undefined;
   }>;
 }) {
@@ -325,6 +365,7 @@ export default async function InvoicePage({
   ]);
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), customerEmail),
+    getSmsNotice(getQueryValue(query.sms), invoice.customer_phone),
     getActionNotice(getQueryValue(query.notice)),
   ].filter((notice): notice is PageNotice => notice !== null);
   const discountAmount = Number(invoice.discount_amount ?? 0);
@@ -856,6 +897,21 @@ export default async function InvoicePage({
               {!customerEmail ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
                   Customer email is missing, so this invoice cannot be sent yet.
+                </p>
+              ) : null}
+            </form>
+            <form action={sendInvoiceSmsAction} className="mt-3">
+              <input type="hidden" name="id" value={invoice.id} />
+              <button
+                type="submit"
+                disabled={!invoice.customer_phone}
+                className="w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+              >
+                {invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
+              </button>
+              {!invoice.customer_phone ? (
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  Customer phone is missing, so this invoice cannot be sent by SMS yet.
                 </p>
               ) : null}
             </form>
