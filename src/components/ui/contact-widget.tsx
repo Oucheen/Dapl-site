@@ -216,7 +216,7 @@ export function ContactWidget() {
             <BookOnlineButton
               location="contact_widget"
               onClick={closeWidget}
-              className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
+              className="!flex !h-auto !min-h-0 !w-full !items-center !justify-between !rounded-xl !border-0 !bg-transparent !px-2.5 !py-2 !text-left !text-sm !font-semibold !normal-case !leading-normal !text-primary !shadow-none !transition hover:!bg-primary/5"
             >
               <span className="flex items-center gap-2.5">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-accent/20 bg-white text-accent shadow-sm shadow-accent/10">
