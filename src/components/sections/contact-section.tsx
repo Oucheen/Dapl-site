@@ -1,6 +1,7 @@
 "use client";
 
 import { FadeUp } from "@/components/ui/fade-up";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { sendGTMEvent } from "@next/third-parties/google";
 import { useMemo, useState } from "react";
@@ -311,6 +312,11 @@ export function ContactSection({
               >
                 Call +1 (704) 266-0508
               </a>
+              <BookOnlineButton
+                location={source}
+                gtmEvent={{ link_type: "contact_form_housecall_pro" }}
+                className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-white px-6 py-3 text-center text-sm font-semibold text-primary transition hover:bg-primary/5"
+              />
             </div>
             <p className="mt-4 text-xs leading-5 text-muted">
               By submitting this form, you agree we may contact you about your request. We do not

@@ -6,6 +6,7 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { RelatedServicesCarousel } from "@/components/service-pages/related-services-carousel";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
@@ -259,6 +260,11 @@ export function ServicePageTemplate({
                 >
                   Schedule {serviceLabel}
                 </TrackedAnchor>
+                <BookOnlineButton
+                  location={page.slug}
+                  gtmEvent={{ appliance: page.applianceName }}
+                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                />
                 <TrackedAnchor
                   href="tel:+17042660508"
                   gtmEvent={{

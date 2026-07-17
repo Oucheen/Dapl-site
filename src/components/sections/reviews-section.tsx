@@ -10,7 +10,7 @@ type ReviewSummaryView = {
 
 const fallbackGoogleRating: ReviewSummaryView = {
   rating: "5.0",
-  reviewCount: "80+",
+  reviewCount: "123+",
   reviewUrl: "https://www.google.com/search?q=DAPL+Appliance+Repair+reviews",
 };
 

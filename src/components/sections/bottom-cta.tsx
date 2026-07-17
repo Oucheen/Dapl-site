@@ -1,4 +1,5 @@
 import { FadeUp } from "@/components/ui/fade-up";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 
 export function BottomCtaSection() {
   return (
@@ -19,6 +20,10 @@ export function BottomCtaSection() {
               >
                 Call +1 (704) 266-0508
               </a>
+              <BookOnlineButton
+                location="bottom_cta"
+                className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-white/20"
+              />
               <a
                 href="mailto:dapl.appliance.repair@gmail.com"
                 className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-white/20"

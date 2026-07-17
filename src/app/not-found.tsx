@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 
 const quickLinks = [
@@ -56,6 +57,10 @@ export default function NotFound() {
                   >
                     Schedule Service
                   </Link>
+                  <BookOnlineButton
+                    location="not_found_hero"
+                    className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5"
+                  />
                   <Link
                     href="/"
                     className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5"

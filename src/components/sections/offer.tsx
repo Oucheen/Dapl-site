@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FadeUp } from "@/components/ui/fade-up";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 
 /** Edit this block to change the promo for your client. */
 export const SITE_OFFER = {
@@ -173,6 +174,11 @@ export function OfferSection() {
                 >
                   Schedule online
                 </a>
+                <BookOnlineButton
+                  location="offer_section"
+                  gtmEvent={{ promo_code: code }}
+                  className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-surface px-6 py-3 text-center text-sm font-semibold text-primary transition hover:bg-primary/5"
+                />
               </div>
             </div>
           </div>

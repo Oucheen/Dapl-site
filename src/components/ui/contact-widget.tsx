@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 
 function PhoneIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -211,6 +212,19 @@ export function ContactWidget() {
                 </span>
               </Link>
             )}
+
+            <BookOnlineButton
+              location="contact_widget"
+              onClick={closeWidget}
+              className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-accent/20 bg-white text-accent shadow-sm shadow-accent/10">
+                  <CalendarIcon className="h-4 w-4" />
+                </span>
+                <span>Book Online</span>
+              </span>
+            </BookOnlineButton>
 
             <button
               type="button"

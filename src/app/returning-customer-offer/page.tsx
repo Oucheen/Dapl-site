@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 
 export const metadata: Metadata = {
@@ -66,6 +67,11 @@ export default function ReturningCustomerOfferPage() {
                   <span className="mr-2 inline-flex h-2.5 w-2.5 rounded-full bg-white/90 shadow-[0_0_0_6px_rgba(255,255,255,0.12)]" />
                   Claim Your Offer
                 </a>
+                <BookOnlineButton
+                  location="returning_customer_offer"
+                  gtmEvent={{ promo_code: "RETURN15" }}
+                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                />
                 <a
                   href="tel:+17042660508"
                   className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"

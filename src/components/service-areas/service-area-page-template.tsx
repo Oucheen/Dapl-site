@@ -4,6 +4,7 @@ import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
@@ -167,6 +168,11 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                 >
                   Schedule Service in {page.city}
                 </TrackedAnchor>
+                <BookOnlineButton
+                  location={page.slug}
+                  gtmEvent={{ service_area: cityLabel }}
+                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                />
                 <TrackedAnchor
                   href="tel:+17042660508"
                   gtmEvent={{

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { brandPages } from "@/content/brand-pages";
 
 const navItems = [
@@ -176,6 +177,10 @@ export function Header({ logoHref }: HeaderProps = {}) {
             >
               Schedule Your Repair
             </a>
+            <BookOnlineButton
+              location="site_header"
+              className="rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            />
           </nav>
 
           <button
@@ -278,6 +283,11 @@ export function Header({ logoHref }: HeaderProps = {}) {
               >
                 Schedule Your Repair
               </a>
+              <BookOnlineButton
+                location="mobile_header"
+                onClick={closeMenu}
+                className="inline-flex w-fit rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              />
             </nav>
           </motion.div>
         ) : null}
