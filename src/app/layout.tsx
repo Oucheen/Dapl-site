@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import { housecallProBookingScriptUrl } from "@/components/ui/housecall-pro-config";
+import { ChatLeadWidget } from "@/components/ui/chat-lead-widget";
 import { ContactWidget } from "@/components/ui/contact-widget";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import "./globals.css";
@@ -111,6 +112,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         {children}
+        <ChatLeadWidget />
         <ContactWidget />
         <CookieConsent />
       </body>
