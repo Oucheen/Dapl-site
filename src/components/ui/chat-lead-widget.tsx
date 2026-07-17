@@ -212,6 +212,11 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function fallbackEmail(phone: string) {
+  const normalizedPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
+  return `chat-${normalizedPhone || "lead"}@daplappliance.local`;
+}
+
 export function ChatLeadWidget() {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
@@ -340,8 +345,14 @@ export function ChatLeadWidget() {
     }
 
     if (step === "email") {
+      if (!value) {
+        setDraftValue("email", "");
+        goToStep("address");
+        return;
+      }
+
       if (!isValidEmail(value)) {
-        setErrorMessage("Please enter a valid email address.");
+        setErrorMessage("Please enter a valid email address, or skip this step.");
         return;
       }
       setDraftValue("email", value);
@@ -372,8 +383,9 @@ export function ChatLeadWidget() {
     const message = [
       `Chat request for ${draft.appliance || "appliance service"}.`,
       `Issue: ${draft.issue}`,
+      draft.email ? "" : "Email was not provided by the customer.",
       "Submitted through the website chat widget.",
-    ].join("\n");
+    ].filter(Boolean).join("\n");
 
     try {
       const response = await fetch("/api/contact", {
@@ -382,7 +394,7 @@ export function ChatLeadWidget() {
         body: JSON.stringify({
           name: draft.name,
           phone: draft.phone,
-          email: draft.email,
+          email: draft.email || fallbackEmail(draft.phone),
           address: draft.address,
           appliance: draft.appliance === "Not sure" ? "Other / not sure" : draft.appliance,
           promoCode: "",
@@ -422,7 +434,7 @@ export function ChatLeadWidget() {
     issue: "What is going on with it?",
     name: "What is your name?",
     phone: "What phone number should we call?",
-    email: "What email should we use?",
+    email: "What email should we use? You can skip this.",
     address: "What is the service address?",
     date: "Preferred service date? You can skip this.",
     confirm: "Ready to send this request?",
@@ -546,6 +558,18 @@ export function ChatLeadWidget() {
                   {step === "date" ? "Continue" : "Next"}
                   <ArrowIcon className="h-4 w-4" />
                 </button>
+                {step === "email" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftValue("email", "");
+                      goToStep("address");
+                    }}
+                    className="w-full rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
+                  >
+                    Skip email
+                  </button>
+                ) : null}
                 {step === "date" ? (
                   <button
                     type="button"
@@ -570,6 +594,11 @@ export function ChatLeadWidget() {
                   <p>
                     <strong className="text-foreground">Phone:</strong> {draft.phone}
                   </p>
+                  {draft.email ? (
+                    <p>
+                      <strong className="text-foreground">Email:</strong> {draft.email}
+                    </p>
+                  ) : null}
                   <p>
                     <strong className="text-foreground">Appliance:</strong> {draft.appliance}
                   </p>
