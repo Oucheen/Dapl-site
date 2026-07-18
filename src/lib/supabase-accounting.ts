@@ -158,19 +158,17 @@ export async function listAccountingData(input: {
 
   const invoiceParams = new URLSearchParams({
     select: "*",
-    created_at: `gte.${input.start}`,
+    created_at: `lt.${input.end}`,
     order: "created_at.desc",
-    limit: "500",
+    limit: "1000",
   });
-  invoiceParams.append("created_at", `lt.${input.end}`);
 
   const paymentsParams = new URLSearchParams({
     select: "*",
-    payment_date: `gte.${input.start}`,
+    payment_date: `lt.${input.end}`,
     order: "payment_date.desc,created_at.desc",
-    limit: "1000",
+    limit: "2000",
   });
-  paymentsParams.append("payment_date", `lt.${input.end}`);
 
   const expensesParams = new URLSearchParams({
     select: "*",

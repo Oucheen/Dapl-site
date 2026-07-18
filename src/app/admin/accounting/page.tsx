@@ -62,6 +62,15 @@ function sumMoney<T>(items: T[], getValue: (item: T) => number | string | null |
   ) / 100;
 }
 
+function isDateInRange(value: string | null | undefined, start: string, end: string) {
+  if (!value) {
+    return false;
+  }
+
+  const date = value.slice(0, 10);
+  return date >= start && date < end;
+}
+
 function expenseCategoryTotals(expenses: ExpenseRecord[]) {
   const totals = new Map<string, number>();
 
@@ -98,6 +107,16 @@ function returnTo(month: string) {
   return `/admin/accounting?month=${encodeURIComponent(month)}`;
 }
 
+function getPaymentTotalsByInvoice(payments: Awaited<ReturnType<typeof listAccountingData>>["payments"]) {
+  const totals = new Map<string, number>();
+
+  for (const payment of payments) {
+    totals.set(payment.invoice_id, (totals.get(payment.invoice_id) ?? 0) + Number(payment.amount ?? 0));
+  }
+
+  return totals;
+}
+
 export default async function AccountingAdminPage({
   searchParams,
 }: {
@@ -132,11 +151,28 @@ export default async function AccountingAdminPage({
     error = caught instanceof Error ? caught.message : "Could not load accounting data.";
   }
 
-  const nonVoidInvoices = data.invoices.filter((invoice) => invoice.status !== "void");
-  const revenue = sumMoney(nonVoidInvoices, (invoice) => invoice.total);
-  const collected = sumMoney(data.payments, (payment) => payment.amount);
+  const periodInvoices = data.invoices.filter((invoice) =>
+    isDateInRange(invoice.created_at, monthRange.start, monthRange.end),
+  );
+  const periodPayments = data.payments.filter((payment) =>
+    isDateInRange(payment.payment_date, monthRange.start, monthRange.end),
+  );
+  const nonVoidPeriodInvoices = periodInvoices.filter((invoice) => invoice.status !== "void");
+  const paymentTotalsByInvoice = getPaymentTotalsByInvoice(data.payments);
+  const openReceivables = data.invoices
+    .filter((invoice) => invoice.status !== "void")
+    .map((invoice) => {
+      const paid = paymentTotalsByInvoice.get(invoice.id) ?? 0;
+      const amountDue = Math.max(0, Number(invoice.total ?? 0) - paid);
+
+      return { invoice, paid, amountDue };
+    })
+    .filter((item) => item.amountDue > 0.009)
+    .sort((a, b) => b.amountDue - a.amountDue);
+  const revenue = sumMoney(nonVoidPeriodInvoices, (invoice) => invoice.total);
+  const collected = sumMoney(periodPayments, (payment) => payment.amount);
   const expenses = sumMoney(data.expenses, (expense) => expense.amount);
-  const unpaid = Math.max(0, revenue - collected);
+  const unpaid = sumMoney(openReceivables, (item) => item.amountDue);
   const profit = collected - expenses;
   const categoryTotals = expenseCategoryTotals(data.expenses);
   const canManageExpenses = permissions.hasElevatedAccess && data.expensesReady && !error;
@@ -258,7 +294,7 @@ export default async function AccountingAdminPage({
           {[
             { label: "Invoice value", value: revenue, note: "Non-void invoices created this month" },
             { label: "Collected", value: collected, note: "Payments recorded this month" },
-            { label: "Unpaid", value: unpaid, note: "Invoice value minus collected payments" },
+            { label: "Open receivables", value: unpaid, note: "Unpaid balance from current and past invoices" },
             { label: "Expenses", value: expenses, note: "Manual expenses this month" },
             { label: "Estimated profit", value: profit, note: "Collected minus expenses" },
           ].map((card) => (
@@ -271,6 +307,64 @@ export default async function AccountingAdminPage({
             </div>
           ))}
         </div>
+
+        <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-xl font-black text-primary">Open receivables</h2>
+            <p className="mt-1 text-sm text-muted">
+              Current and past invoices with remaining balance before the end of{" "}
+              {getMonthLabel(monthRange.month)}.
+            </p>
+          </div>
+
+          {openReceivables.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm leading-6 text-muted">
+              No unpaid invoice balances found for this period.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {openReceivables.slice(0, 12).map(({ invoice, paid, amountDue }) => (
+                <Link
+                  key={invoice.id}
+                  href={`/admin/invoices/${invoice.id}`}
+                  className="grid gap-4 px-5 py-5 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_130px_130px_130px]"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Invoice
+                    </p>
+                    <p className="mt-2 break-words font-black text-primary">
+                      {invoice.invoice_number}
+                    </p>
+                    <p className="mt-1 break-words text-sm text-muted">
+                      {invoice.customer_name} - {formatDate(invoice.created_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Total
+                    </p>
+                    <p className="mt-2 font-black text-foreground">
+                      {formatMoney(invoice.total)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Paid
+                    </p>
+                    <p className="mt-2 font-black text-foreground">{formatMoney(paid)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Due
+                    </p>
+                    <p className="mt-2 font-black text-accent">{formatMoney(amountDue)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
