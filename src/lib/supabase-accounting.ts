@@ -109,8 +109,13 @@ function validateDate(value: string) {
   return value;
 }
 
-function isMissingTableError(status: number, details: string) {
-  return status === 404 || details.includes("PGRST205") || details.includes("Could not find the table");
+function isExpensesSetupError(status: number, details: string) {
+  return (
+    status === 404 ||
+    details.includes("PGRST205") ||
+    details.includes("Could not find the table") ||
+    details.includes("permission denied for table")
+  );
 }
 
 export function getMonthRange(month: string | null | undefined) {
@@ -137,7 +142,9 @@ export const expensesTableSql = `create table if not exists public.expenses (
   note text
 );
 
-create index if not exists expenses_expense_date_idx on public.expenses (expense_date desc);`;
+create index if not exists expenses_expense_date_idx on public.expenses (expense_date desc);
+
+grant select, insert, delete on public.expenses to service_role;`;
 
 export async function listAccountingData(input: {
   start: string;
@@ -206,7 +213,7 @@ export async function listAccountingData(input: {
   } else {
     const details = await expenseResponse.text();
 
-    if (isMissingTableError(expenseResponse.status, details)) {
+    if (isExpensesSetupError(expenseResponse.status, details)) {
       expensesReady = false;
     } else {
       throw new Error(`Supabase expenses fetch failed: ${expenseResponse.status} ${details}`);
