@@ -38,6 +38,12 @@ const initialDraft: LeadDraft = {
   preferredDate: "",
 };
 
+const chatInviteStorageKey = "dapl_chat_invite_dismissed";
+const firstInviteDelayMs = 4500;
+const firstInviteHideMs = 16000;
+const secondInviteDelayMs = 60000;
+const secondInviteHideMs = 72000;
+
 const applianceOptions = [
   "Refrigerator",
   "Washer",
@@ -244,18 +250,33 @@ export function ChatLeadWidget() {
     }
 
     setIsMounted(true);
-    const dismissed = window.sessionStorage.getItem("dapl_chat_dismissed") === "1";
+    const isInviteDismissed = () =>
+      window.sessionStorage.getItem(chatInviteStorageKey) === "1";
 
-    if (dismissed) {
+    if (isInviteDismissed()) {
       return;
     }
 
-    const inviteTimer = window.setTimeout(() => {
-      setShowInvite(true);
-    }, 4500);
+    const showInviteIfAllowed = () => {
+      if (!isInviteDismissed()) {
+        setShowInvite(true);
+      }
+    };
+
+    const firstInviteTimer = window.setTimeout(showInviteIfAllowed, firstInviteDelayMs);
+    const firstHideTimer = window.setTimeout(() => {
+      setShowInvite(false);
+    }, firstInviteHideMs);
+    const secondInviteTimer = window.setTimeout(showInviteIfAllowed, secondInviteDelayMs);
+    const secondHideTimer = window.setTimeout(() => {
+      setShowInvite(false);
+    }, secondInviteHideMs);
 
     return () => {
-      window.clearTimeout(inviteTimer);
+      window.clearTimeout(firstInviteTimer);
+      window.clearTimeout(firstHideTimer);
+      window.clearTimeout(secondInviteTimer);
+      window.clearTimeout(secondHideTimer);
     };
   }, [isAdminRoute]);
 
@@ -272,6 +293,7 @@ export function ChatLeadWidget() {
   const openChat = () => {
     setIsOpen(true);
     setShowInvite(false);
+    window.sessionStorage.setItem(chatInviteStorageKey, "1");
     sendGTMEvent({
       event: "chat_open",
       location: "chat_widget",
@@ -281,7 +303,12 @@ export function ChatLeadWidget() {
   const closeChat = () => {
     setIsOpen(false);
     setShowInvite(false);
-    window.sessionStorage.setItem("dapl_chat_dismissed", "1");
+    window.sessionStorage.setItem(chatInviteStorageKey, "1");
+  };
+
+  const dismissInvite = () => {
+    setShowInvite(false);
+    window.sessionStorage.setItem(chatInviteStorageKey, "1");
   };
 
   const resetChat = () => {
@@ -421,7 +448,7 @@ export function ChatLeadWidget() {
       });
 
       setStatus("success");
-      window.sessionStorage.setItem("dapl_chat_dismissed", "1");
+      window.sessionStorage.setItem(chatInviteStorageKey, "1");
     } catch {
       setStatus("error");
       setErrorMessage("Network error. Please call us instead.");
@@ -429,8 +456,8 @@ export function ChatLeadWidget() {
   };
 
   const currentQuestion = {
-    intro: "Need appliance repair? I can help send a quick request.",
-    appliance: "What appliance needs service?",
+    intro: "Hi, thanks for visiting DAPL. If something is wrong with an appliance, I can help send the details to our team in under a minute.",
+    appliance: "What appliance are you having trouble with?",
     issue: "What is going on with it?",
     name: "What is your name?",
     phone: "What phone number should we call?",
@@ -659,8 +686,22 @@ export function ChatLeadWidget() {
       ) : null}
 
       {showInvite && !isOpen ? (
-        <div className="mb-3 mr-1 max-w-[17rem] rounded-2xl rounded-br-sm border border-border bg-white px-4 py-3 text-sm leading-6 text-foreground shadow-[0_14px_36px_rgba(15,42,86,0.16)]">
-          Need help scheduling appliance repair?
+        <div className="mb-3 mr-1 flex max-w-[18rem] items-start gap-3 rounded-2xl rounded-br-sm border border-border bg-white px-4 py-3 text-sm leading-6 text-foreground shadow-[0_14px_36px_rgba(15,42,86,0.16)]">
+          <button
+            type="button"
+            onClick={openChat}
+            className="min-w-0 flex-1 text-left"
+          >
+            Hi, need help with an appliance? We can take a quick request here.
+          </button>
+          <button
+            type="button"
+            onClick={dismissInvite}
+            aria-label="Dismiss chat invitation"
+            className="-mr-1 mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 hover:text-foreground"
+          >
+            <CloseIcon className="h-3.5 w-3.5" />
+          </button>
         </div>
       ) : null}
 

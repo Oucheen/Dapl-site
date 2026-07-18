@@ -138,16 +138,16 @@ export function ContactWidget() {
   return (
     <div
       ref={widgetRef}
-      className={`fixed bottom-5 right-5 z-40 flex flex-col items-end transition-all duration-200 ${
+      className={`pointer-events-none fixed bottom-5 right-5 z-[60] flex flex-col items-end transition-all duration-200 ${
         isVisible
-          ? "pointer-events-auto translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-3 opacity-0"
+          ? "translate-y-0 opacity-100"
+          : "translate-y-3 opacity-0"
       }`}
     >
       <div
         className={`transition-all duration-200 ${
           isOpen
-            ? "mb-1 translate-y-0 opacity-100"
+            ? "pointer-events-auto mb-1 translate-y-0 opacity-100"
             : "pointer-events-none mb-0 translate-y-2 opacity-0"
         }`}
       >
@@ -248,6 +248,8 @@ export function ContactWidget() {
         aria-expanded={isOpen}
         aria-label={isOpen ? "Close contact actions" : "Open contact actions"}
         className={`relative inline-flex h-14 w-14 items-center justify-center text-white transition duration-200 hover:-translate-y-0.5 ${
+          isVisible ? "pointer-events-auto" : "pointer-events-none"
+        } ${
           isOpen
             ? "rounded-[1.15rem] bg-primary shadow-[0_18px_42px_rgba(15,42,86,0.18)]"
             : "rounded-full bg-primary shadow-[0_16px_34px_rgba(15,42,86,0.22)] hover:shadow-[0_20px_40px_rgba(15,42,86,0.28)]"
