@@ -300,6 +300,12 @@ export default async function LeadsAdminPage({
             >
               View invoices
             </Link>
+            <Link
+              href="/admin/accounting"
+              className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Accounting
+            </Link>
             <form action={logoutAdmin}>
               <button
                 type="submit"
