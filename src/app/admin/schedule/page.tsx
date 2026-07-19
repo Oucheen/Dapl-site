@@ -83,12 +83,27 @@ function getTimeHour(value?: string | null) {
 }
 
 function invoiceBelongsToWindow(invoice: InvoiceRecord, window: (typeof SERVICE_WINDOWS)[number]) {
-  if (invoice.service_window === window.label) {
-    return true;
+  if (invoice.service_window) {
+    return invoice.service_window === window.label;
   }
 
   const serviceHour = getTimeHour(invoice.service_time);
   return serviceHour !== null && serviceHour >= window.start && serviceHour < window.end;
+}
+
+function invoiceHasScheduleConflict(invoice: InvoiceRecord) {
+  if (!invoice.service_window || !invoice.service_time) {
+    return false;
+  }
+
+  const selectedWindow = SERVICE_WINDOWS.find((window) => window.label === invoice.service_window);
+  const serviceHour = getTimeHour(invoice.service_time);
+
+  if (!selectedWindow || serviceHour === null) {
+    return false;
+  }
+
+  return serviceHour < selectedWindow.start || serviceHour >= selectedWindow.end;
 }
 
 function getInvoiceScheduleLabel(invoice: InvoiceRecord) {
@@ -140,6 +155,10 @@ export default async function ScheduleAdminPage({
         `${right.service_time ?? "99:99"} ${right.customer_name}`,
       ),
     );
+  const needsTimeInvoices = scheduledInvoices.filter(
+    (invoice) => !invoice.service_window && !invoice.service_time,
+  );
+  const conflictInvoices = scheduledInvoices.filter(invoiceHasScheduleConflict);
   const unscheduledInvoices = invoices
     .filter((invoice) => !invoice.service_date && invoice.status !== "paid" && invoice.status !== "void")
     .slice(0, 20);
@@ -225,6 +244,27 @@ export default async function ScheduleAdminPage({
           </div>
         </div>
 
+        {conflictInvoices.length ? (
+          <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-50 p-5 text-sm text-amber-800 shadow-sm">
+            <p className="font-black">Time needs attention</p>
+            <p className="mt-1 leading-6">
+              Some jobs have an exact time outside the selected time window. They stay in the
+              selected window, but the invoice should be corrected.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {conflictInvoices.map((invoice) => (
+                <Link
+                  key={invoice.id}
+                  href={`/admin/invoices/${invoice.id}`}
+                  className="rounded-full border border-amber-500/25 bg-white px-3 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-100"
+                >
+                  {invoice.customer_name}: {getInvoiceScheduleLabel(invoice)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-4">
             {SERVICE_WINDOWS.map((window) => {
@@ -243,38 +283,51 @@ export default async function ScheduleAdminPage({
 
                   {windowInvoices.length ? (
                     <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                      {windowInvoices.map((invoice) => (
-                        <Link
-                          key={invoice.id}
-                          href={`/admin/invoices/${invoice.id}`}
-                          className="block rounded-xl border border-border bg-slate-50 p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="truncate font-black text-primary">
-                                {invoice.customer_name}
-                              </p>
-                              <p className="mt-1 text-xs font-bold text-muted">
-                                {getInvoiceScheduleLabel(invoice)}
-                              </p>
+                      {windowInvoices.map((invoice) => {
+                        const hasConflict = invoiceHasScheduleConflict(invoice);
+
+                        return (
+                          <Link
+                            key={invoice.id}
+                            href={`/admin/invoices/${invoice.id}`}
+                            className={`block rounded-xl border p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${
+                              hasConflict
+                                ? "border-amber-500/35 bg-amber-50"
+                                : "border-border bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate font-black text-primary">
+                                  {invoice.customer_name}
+                                </p>
+                                <p className="mt-1 text-xs font-bold text-muted">
+                                  {getInvoiceScheduleLabel(invoice)}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${statusClasses[invoice.status]}`}
+                              >
+                                {invoice.status}
+                              </span>
                             </div>
-                            <span
-                              className={`shrink-0 rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${statusClasses[invoice.status]}`}
-                            >
-                              {invoice.status}
-                            </span>
-                          </div>
-                          <p className="mt-3 text-sm leading-5 text-muted">
-                            {invoice.service_address || "Address not set"}
-                          </p>
-                          <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
-                            <span>{invoice.customer_phone || "No phone"}</span>
-                            <span>{invoice.assigned_technician || "No technician"}</span>
-                            <span>{invoice.appliance || "Appliance not set"}</span>
-                            <span className="font-bold text-primary">{formatMoney(invoice.total)}</span>
-                          </div>
-                        </Link>
-                      ))}
+                            {hasConflict ? (
+                              <p className="mt-3 rounded-lg bg-white/80 px-3 py-2 text-xs font-bold text-amber-800">
+                                Exact time is outside this window.
+                              </p>
+                            ) : null}
+                            <p className="mt-3 text-sm leading-5 text-muted">
+                              {invoice.service_address || "Address not set"}
+                            </p>
+                            <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
+                              <span>{invoice.customer_phone || "No phone"}</span>
+                              <span>{invoice.assigned_technician || "No technician"}</span>
+                              <span>{invoice.appliance || "Appliance not set"}</span>
+                              <span className="font-bold text-primary">{formatMoney(invoice.total)}</span>
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-muted">
@@ -290,6 +343,29 @@ export default async function ScheduleAdminPage({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Needs scheduling
             </p>
+            <h2 className="mt-1 text-xl font-black text-primary">Date set, time missing</h2>
+            <div className="mt-4 grid gap-3">
+              {needsTimeInvoices.length ? (
+                needsTimeInvoices.map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    href={`/admin/invoices/${invoice.id}`}
+                    className="rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-sm transition hover:border-primary/30 hover:bg-white"
+                  >
+                    <p className="font-black text-primary">{invoice.customer_name}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">
+                      {invoice.appliance || "Appliance not set"} / {invoice.service_address || "Address not set"}
+                    </p>
+                  </Link>
+                ))
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  Every job for this day has a time.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-border pt-5">
             <h2 className="mt-1 text-xl font-black text-primary">Open invoices without date</h2>
             <div className="mt-4 grid gap-3">
               {unscheduledInvoices.length ? (
@@ -310,6 +386,7 @@ export default async function ScheduleAdminPage({
                   Everything open has a date.
                 </p>
               )}
+            </div>
             </div>
           </aside>
         </div>
