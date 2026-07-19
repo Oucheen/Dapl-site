@@ -22,6 +22,8 @@ export type InvoiceRecord = {
   service_address: string | null;
   appliance: string | null;
   service_date: string | null;
+  service_time?: string | null;
+  service_window?: string | null;
   assigned_technician: string | null;
   notes: string | null;
   promo_code: string | null;
@@ -72,6 +74,13 @@ export type InvoicePaymentInput = {
   paymentDate?: string | null;
   paymentTime?: string | null;
   note?: string | null;
+};
+
+export type InvoiceScheduleInput = {
+  serviceDate?: string | null;
+  serviceTime?: string | null;
+  serviceWindow?: string | null;
+  assignedTechnician?: string | null;
 };
 
 export const INVOICE_ITEM_TEMPLATES = [
@@ -762,6 +771,74 @@ export async function updateInvoiceStatus(id: string, status: InvoiceStatus) {
   if (leadId) {
     const leadStatus = status === "paid" ? "completed" : status === "void" ? "cancelled" : "invoiced";
     await updateSupabaseLeadStatus(leadId, leadStatus);
+  }
+
+  return { leadId };
+}
+
+function normalizeScheduleDate(value?: string | null) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+    throw new Error("Service date must be a valid date.");
+  }
+
+  return trimmedValue;
+}
+
+function normalizeScheduleTime(value?: string | null) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(trimmedValue)) {
+    throw new Error("Service time must be a valid time.");
+  }
+
+  return trimmedValue;
+}
+
+function normalizeScheduleText(value?: string | null) {
+  const trimmedValue = value?.trim();
+  return trimmedValue || null;
+}
+
+export async function updateInvoiceSchedule(id: string, input: InvoiceScheduleInput) {
+  assertUuid(id);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const leadId = await getInvoiceLeadId(config, id);
+  const serviceDate = normalizeScheduleDate(input.serviceDate);
+  const serviceTime = normalizeScheduleTime(input.serviceTime);
+
+  const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      service_date: serviceDate,
+      service_time: serviceTime,
+      service_window: normalizeScheduleText(input.serviceWindow),
+      assigned_technician: normalizeScheduleText(input.assignedTechnician),
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice schedule update failed: ${response.status} ${details}`);
   }
 
   return { leadId };

@@ -35,6 +35,7 @@ export const dynamic = "force-dynamic";
 type LeadStatusFilter = LeadAdminStatus | "all";
 type LeadViewFilter = "active" | "archive" | "all";
 type LeadActivitiesById = Awaited<ReturnType<typeof listActivitiesForLeads>>;
+type InvoiceListItem = Awaited<ReturnType<typeof listInvoices>>[number];
 
 const ACTIVE_STATUSES = new Set<LeadAdminStatus>(["new", "contacted", "confirmed", "invoiced"]);
 const ARCHIVE_STATUSES = new Set<LeadAdminStatus>(["completed", "cancelled"]);
@@ -94,6 +95,38 @@ function formatPrice(value: number | string | null | undefined) {
   }
 
   return price.toFixed(2);
+}
+
+function formatVisitTime(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const [hourValue, minuteValue] = value.split(":");
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return value;
+  }
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
+function getInvoiceVisitTime(invoice?: InvoiceListItem) {
+  if (!invoice) {
+    return "";
+  }
+
+  const serviceTime = formatVisitTime(invoice.service_time);
+
+  if (serviceTime && invoice.service_window) {
+    return `${serviceTime} (${invoice.service_window})`;
+  }
+
+  return serviceTime || invoice.service_window || "";
 }
 
 function leadCountLabel(count: number) {
@@ -299,6 +332,12 @@ export default async function LeadsAdminPage({
               className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
               View invoices
+            </Link>
+            <Link
+              href="/admin/schedule"
+              className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Schedule
             </Link>
             <Link
               href="/admin/accounting"
@@ -657,8 +696,8 @@ export default async function LeadsAdminPage({
                       <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-800">
                         <p className="font-black">Invoice created</p>
                         <p className="mt-1">
-                          Visit date, estimate, and technician now live inside the invoice. This
-                          lead can stay invoiced or move to completed / cancelled from here.
+                          Visit date, time, estimate, and technician now live inside the invoice.
+                          This lead can stay invoiced or move to completed / cancelled from here.
                         </p>
                       </div>
                     ) : null}
@@ -682,7 +721,11 @@ export default async function LeadsAdminPage({
                         <input
                           type="date"
                           name="scheduledDate"
-                          defaultValue={lead.scheduled_date ?? ""}
+                          defaultValue={
+                            hasInvoice
+                              ? (invoice?.service_date ?? lead.scheduled_date ?? "")
+                              : (lead.scheduled_date ?? "")
+                          }
                           disabled={hasInvoice}
                           className={
                             hasInvoice
@@ -691,6 +734,18 @@ export default async function LeadsAdminPage({
                           }
                         />
                       </label>
+                      {hasInvoice ? (
+                        <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                          Visit time
+                          <input
+                            type="text"
+                            value={getInvoiceVisitTime(invoice)}
+                            disabled
+                            readOnly
+                            className={lockedFieldClass}
+                          />
+                        </label>
+                      ) : null}
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Estimate
                         <input

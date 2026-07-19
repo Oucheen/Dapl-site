@@ -10,6 +10,7 @@ import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
+  type InvoiceRecord,
   type InvoiceStatus,
   calculateInvoiceAmountDue,
   calculateInvoicePaidAmount,
@@ -26,6 +27,7 @@ import {
   sendInvoiceEmailAction,
   sendInvoiceSmsAction,
   updateInvoiceItemsAction,
+  updateInvoiceScheduleAction,
   updateInvoiceStatusAction,
 } from "./actions";
 import { PrintButton } from "./print-button";
@@ -48,6 +50,7 @@ const INVOICE_TERMS = [
 ];
 const INVOICE_TAX_NOTE =
   "Sales tax on parts was paid at the time of purchase. No sales tax is charged to the customer.";
+const SERVICE_WINDOWS = ["8:00 AM - 10:00 AM", "10:00 AM - 12:00 PM", "12:00 PM - 2:00 PM", "2:00 PM - 4:00 PM", "4:00 PM - 6:00 PM", "6:00 PM - 8:00 PM"];
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -73,6 +76,34 @@ function formatDate(value: string | null) {
     dateStyle: "medium",
     timeZone: CHARLOTTE_TIME_ZONE,
   }).format(getDateForCharlotteDisplay(value));
+}
+
+function formatServiceTime(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const [hourValue, minuteValue] = value.split(":");
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return value;
+  }
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
+function getServiceScheduleLabel(invoice: Pick<InvoiceRecord, "service_time" | "service_window">) {
+  const serviceTime = formatServiceTime(invoice.service_time);
+
+  if (serviceTime && invoice.service_window) {
+    return `${serviceTime} (${invoice.service_window})`;
+  }
+
+  return serviceTime || invoice.service_window || "Not set";
 }
 
 function formatDateTime(value: string) {
@@ -255,6 +286,14 @@ function getActionNotice(status: string | undefined): PageNotice | null {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
       title: "Job marked completed",
       body: "The invoice is paid and the related lead was moved to completed.",
+    };
+  }
+
+  if (status === "schedule_updated") {
+    return {
+      className: "border-emerald-500/25 bg-emerald-50 text-emerald-800",
+      title: "Visit schedule saved",
+      body: "Service date, time window, and technician were updated.",
     };
   }
 
@@ -501,6 +540,10 @@ export default async function InvoicePage({
                 <div>
                   <p className="font-bold text-foreground">Service date</p>
                   <p className="mt-1">{formatDate(invoice.service_date)}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">Service time</p>
+                  <p className="mt-1">{getServiceScheduleLabel(invoice)}</p>
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Appliance</p>
@@ -952,6 +995,67 @@ export default async function InvoicePage({
                 className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
               >
                 Save invoice status
+              </button>
+            </form>
+
+            <form action={updateInvoiceScheduleAction} className="mt-5 grid gap-3 border-t border-border pt-5">
+              <input type="hidden" name="id" value={invoice.id} />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  Visit schedule
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Use this to place the customer on the dispatch calendar.
+                </p>
+              </div>
+              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                Visit date
+                <input
+                  type="date"
+                  name="serviceDate"
+                  defaultValue={invoice.service_date ?? ""}
+                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                Exact time
+                <input
+                  type="time"
+                  name="serviceTime"
+                  defaultValue={invoice.service_time ?? ""}
+                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                Time window
+                <select
+                  name="serviceWindow"
+                  defaultValue={invoice.service_window ?? ""}
+                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                >
+                  <option value="">Not selected</option>
+                  {SERVICE_WINDOWS.map((window) => (
+                    <option key={window} value={window}>
+                      {window}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                Technician
+                <input
+                  type="text"
+                  name="assignedTechnician"
+                  defaultValue={invoice.assigned_technician ?? ""}
+                  placeholder="Name"
+                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                />
+              </label>
+              <button
+                type="submit"
+                className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Save visit schedule
               </button>
             </form>
 

@@ -20,6 +20,7 @@ import {
   type InvoiceItemInput,
   type InvoiceStatus,
   updateInvoiceItems,
+  updateInvoiceSchedule,
   updateInvoiceStatus,
 } from "@/lib/supabase-invoices";
 
@@ -107,6 +108,35 @@ export async function markInvoiceCompletedAction(formData: FormData) {
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}?notice=job_completed`);
+}
+
+export async function updateInvoiceScheduleAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const id = String(formData.get("id") || "");
+  const serviceDate = String(formData.get("serviceDate") || "");
+  const serviceTime = String(formData.get("serviceTime") || "");
+  const serviceWindow = String(formData.get("serviceWindow") || "");
+  const assignedTechnician = String(formData.get("assignedTechnician") || "");
+
+  const { leadId } = await updateInvoiceSchedule(id, {
+    serviceDate,
+    serviceTime,
+    serviceWindow,
+    assignedTechnician,
+  });
+  await createLeadActivity({
+    leadId,
+    invoiceId: id,
+    eventType: "invoice_schedule_updated",
+    title: "Visit schedule updated",
+    details: "Service date, time window, and technician were updated.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/schedule");
+  revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?notice=schedule_updated`);
 }
 
 export async function sendInvoiceEmailAction(formData: FormData) {
