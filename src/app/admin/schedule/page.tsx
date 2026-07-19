@@ -55,6 +55,7 @@ const technicianColorClasses = [
   "border-l-indigo-600",
 ];
 const MAX_JOBS_PER_TECH_WINDOW = 2;
+const MAX_ROUTE_STOPS = 10;
 
 export const dynamic = "force-dynamic";
 
@@ -175,6 +176,43 @@ function getScheduleHref(date: string, technician: string, view: ScheduleView = 
   }
 
   return `/admin/schedule?${params.toString()}`;
+}
+
+function getMapsSearchUrl(address: string | null | undefined) {
+  const normalizedAddress = address?.trim();
+
+  if (!normalizedAddress) {
+    return "";
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`;
+}
+
+function getMapsRouteUrl(invoices: InvoiceRecord[]) {
+  const routeInvoices = invoices
+    .filter((invoice) => invoice.service_address?.trim())
+    .slice(0, MAX_ROUTE_STOPS);
+
+  if (!routeInvoices.length) {
+    return "";
+  }
+
+  const destination = routeInvoices[routeInvoices.length - 1]?.service_address?.trim() ?? "";
+  const waypoints = routeInvoices
+    .slice(0, -1)
+    .map((invoice) => invoice.service_address?.trim())
+    .filter((address): address is string => Boolean(address));
+  const params = new URLSearchParams({
+    api: "1",
+    travelmode: "driving",
+    destination,
+  });
+
+  if (waypoints.length) {
+    params.set("waypoints", waypoints.join("|"));
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 function shiftDate(value: string, days: number) {
@@ -340,6 +378,8 @@ export default async function ScheduleAdminPage({
   const conflictWarnings = getScheduleConflictWarnings(
     selectedView === "week" ? visibleWeekInvoices : scheduledInvoices,
   );
+  const routeDayUrl =
+    selectedTechnician && selectedView === "day" ? getMapsRouteUrl(scheduledInvoices) : "";
   const needPartsInvoices = invoices
     .filter((invoice) => getJobStatus(invoice) === "need_parts" && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
@@ -468,6 +508,20 @@ export default async function ScheduleAdminPage({
             >
               Week view
             </Link>
+            {routeDayUrl ? (
+              <a
+                href={routeDayUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+              >
+                Route day
+              </a>
+            ) : (
+              <span className="rounded-full border border-border bg-slate-50 px-4 py-2 text-sm font-bold text-muted">
+                Select technician for route
+              </span>
+            )}
           </div>
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
             <Link
@@ -557,11 +611,11 @@ export default async function ScheduleAdminPage({
                     {dayInvoices.length ? (
                       dayInvoices.map((invoice) => {
                         const jobStatus = getJobStatus(invoice);
+                        const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
                         return (
-                          <Link
+                          <article
                             key={invoice.id}
-                            href={`/admin/invoices/${invoice.id}`}
                             className={`rounded-xl border border-l-4 bg-slate-50 p-3 text-xs transition hover:border-primary/30 hover:bg-white ${getTechnicianColorClass(
                               invoice.assigned_technician,
                               technicians,
@@ -577,7 +631,25 @@ export default async function ScheduleAdminPage({
                             >
                               {getJobStatusLabel(jobStatus)}
                             </span>
-                          </Link>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <Link
+                                href={`/admin/invoices/${invoice.id}`}
+                                className="rounded-lg border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                              >
+                                Invoice
+                              </Link>
+                              {mapsUrl ? (
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="rounded-lg border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                                >
+                                  Maps
+                                </a>
+                              ) : null}
+                            </div>
+                          </article>
                         );
                       })
                     ) : (
@@ -616,6 +688,7 @@ export default async function ScheduleAdminPage({
                           invoice.assigned_technician,
                           technicians,
                         );
+                        const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
                         return (
                           <article
@@ -685,6 +758,16 @@ export default async function ScheduleAdminPage({
                               >
                                 Invoice
                               </Link>
+                              {mapsUrl ? (
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                                >
+                                  Maps
+                                </a>
+                              ) : null}
                               <form action={updateDispatchJobStatusAction}>
                                 <input type="hidden" name="invoiceId" value={invoice.id} />
                                 <input type="hidden" name="selectedDate" value={selectedDate} />

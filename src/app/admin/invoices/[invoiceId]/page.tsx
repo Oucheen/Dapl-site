@@ -106,6 +106,16 @@ function getServiceScheduleLabel(invoice: Pick<InvoiceRecord, "service_time" | "
   return serviceTime || invoice.service_window || "Not set";
 }
 
+function getMapsSearchUrl(address: string | null | undefined) {
+  const normalizedAddress = address?.trim();
+
+  if (!normalizedAddress) {
+    return "";
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`;
+}
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -420,6 +430,7 @@ export default async function InvoicePage({
     (permissions.canManageInvoiceCharges || canEditOpenManualInvoice) && !isInvoiceClosed;
   const lineItemsLockedByRole = !canManageInvoiceCharges && !isInvoiceClosed;
   const paymentInputDefaults = getCharlotteDateTimeInputValues();
+  const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
       (status.value !== "paid" || invoice.status === "paid" || amountDue <= 0) &&
@@ -536,6 +547,16 @@ export default async function InvoicePage({
                 <div>
                   <p className="font-bold text-foreground">Service address</p>
                   <p className="mt-1 break-words">{invoice.service_address || "Not set"}</p>
+                  {mapsUrl ? (
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex rounded-lg border border-primary/15 bg-white px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/5 print:hidden"
+                    >
+                      Open in Google Maps
+                    </a>
+                  ) : null}
                 </div>
                 <div>
                   <p className="font-bold text-foreground">Service date</p>
