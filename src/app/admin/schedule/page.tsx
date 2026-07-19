@@ -2,7 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
-import { type InvoiceRecord, type InvoiceStatus, listInvoices } from "@/lib/supabase-invoices";
+import {
+  type InvoiceJobStatus,
+  type InvoiceRecord,
+  type InvoiceStatus,
+  listInvoices,
+} from "@/lib/supabase-invoices";
+import { updateDispatchJobStatusAction, updateDispatchScheduleAction } from "./actions";
 
 const SERVICE_WINDOWS = [
   { label: "8:00 AM - 10:00 AM", start: 8, end: 10 },
@@ -19,6 +25,35 @@ const statusClasses: Record<InvoiceStatus, string> = {
   paid: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
   void: "border-slate-300 bg-slate-100 text-slate-500",
 };
+
+const JOB_STATUSES: { value: InvoiceJobStatus; label: string }[] = [
+  { value: "scheduled", label: "Scheduled" },
+  { value: "on_the_way", label: "On the way" },
+  { value: "in_progress", label: "In progress" },
+  { value: "need_parts", label: "Need parts" },
+  { value: "done", label: "Done" },
+  { value: "reschedule", label: "Reschedule" },
+  { value: "canceled", label: "Canceled" },
+];
+
+const jobStatusClasses: Record<InvoiceJobStatus, string> = {
+  scheduled: "border-primary/20 bg-primary/5 text-primary",
+  on_the_way: "border-sky-500/25 bg-sky-50 text-sky-700",
+  in_progress: "border-indigo-500/25 bg-indigo-50 text-indigo-700",
+  need_parts: "border-amber-500/25 bg-amber-50 text-amber-800",
+  done: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
+  reschedule: "border-orange-500/25 bg-orange-50 text-orange-700",
+  canceled: "border-slate-300 bg-slate-100 text-slate-500",
+};
+
+const technicianColorClasses = [
+  "border-l-primary",
+  "border-l-emerald-600",
+  "border-l-sky-600",
+  "border-l-amber-600",
+  "border-l-rose-600",
+  "border-l-indigo-600",
+];
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +74,10 @@ function getSelectedDate(value: string | string[] | undefined) {
   }
 
   return getTodayDateInput();
+}
+
+function getSelectedTechnician(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value || "";
 }
 
 function formatScheduleDate(value: string) {
@@ -116,8 +155,14 @@ function getInvoiceScheduleLabel(invoice: InvoiceRecord) {
   return serviceTime || invoice.service_window || "Time not set";
 }
 
-function getDateHref(date: string) {
-  return `/admin/schedule?date=${date}`;
+function getScheduleHref(date: string, technician: string) {
+  const params = new URLSearchParams({ date });
+
+  if (technician) {
+    params.set("tech", technician);
+  }
+
+  return `/admin/schedule?${params.toString()}`;
 }
 
 function shiftDate(value: string, days: number) {
@@ -126,11 +171,39 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
+function getTechnicians(invoices: InvoiceRecord[]) {
+  return Array.from(
+    new Set(
+      invoices
+        .map((invoice) => invoice.assigned_technician?.trim())
+        .filter((technician): technician is string => Boolean(technician)),
+    ),
+  ).sort((left, right) => left.localeCompare(right));
+}
+
+function getTechnicianColorClass(technician: string | null | undefined, technicians: string[]) {
+  if (!technician) {
+    return "border-l-slate-300";
+  }
+
+  const technicianIndex = technicians.indexOf(technician);
+  return technicianColorClasses[Math.max(technicianIndex, 0) % technicianColorClasses.length];
+}
+
+function getJobStatus(invoice: InvoiceRecord) {
+  return invoice.job_status ?? (invoice.service_date ? "scheduled" : "reschedule");
+}
+
+function getJobStatusLabel(jobStatus: InvoiceJobStatus) {
+  return JOB_STATUSES.find((status) => status.value === jobStatus)?.label ?? jobStatus;
+}
+
 export default async function ScheduleAdminPage({
   searchParams,
 }: {
   searchParams?: Promise<{
     date?: string | string[];
+    tech?: string | string[];
   }>;
 }) {
   if (!(await isAdminAuthenticated())) {
@@ -139,6 +212,7 @@ export default async function ScheduleAdminPage({
 
   const params = await searchParams;
   const selectedDate = getSelectedDate(params?.date);
+  const selectedTechnician = getSelectedTechnician(params?.tech);
   let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
   let error = "";
 
@@ -148,8 +222,10 @@ export default async function ScheduleAdminPage({
     error = caught instanceof Error ? caught.message : "Could not load schedule.";
   }
 
+  const technicians = getTechnicians(invoices);
   const scheduledInvoices = invoices
     .filter((invoice) => invoice.service_date === selectedDate && invoice.status !== "void")
+    .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
     .sort((left, right) =>
       `${left.service_time ?? "99:99"} ${left.customer_name}`.localeCompare(
         `${right.service_time ?? "99:99"} ${right.customer_name}`,
@@ -161,6 +237,7 @@ export default async function ScheduleAdminPage({
   const conflictInvoices = scheduledInvoices.filter(invoiceHasScheduleConflict);
   const unscheduledInvoices = invoices
     .filter((invoice) => !invoice.service_date && invoice.status !== "paid" && invoice.status !== "void")
+    .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
     .slice(0, 20);
 
   return (
@@ -202,6 +279,11 @@ export default async function ScheduleAdminPage({
             <p className="mt-2 break-words">{error}</p>
           </div>
         ) : null}
+        <datalist id="schedule-technicians">
+          {technicians.map((technician) => (
+            <option key={technician} value={technician} />
+          ))}
+        </datalist>
 
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -215,12 +297,15 @@ export default async function ScheduleAdminPage({
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                href={getDateHref(shiftDate(selectedDate, -1))}
+                href={getScheduleHref(shiftDate(selectedDate, -1), selectedTechnician)}
                 className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
               >
                 Previous day
               </Link>
               <form className="flex gap-2" action="/admin/schedule">
+                {selectedTechnician ? (
+                  <input type="hidden" name="tech" value={selectedTechnician} />
+                ) : null}
                 <input
                   type="date"
                   name="date"
@@ -235,12 +320,37 @@ export default async function ScheduleAdminPage({
                 </button>
               </form>
               <Link
-                href={getDateHref(shiftDate(selectedDate, 1))}
+                href={getScheduleHref(shiftDate(selectedDate, 1), selectedTechnician)}
                 className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
               >
                 Next day
               </Link>
             </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+            <Link
+              href={getScheduleHref(selectedDate, "")}
+              className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                selectedTechnician
+                  ? "border-primary/15 bg-white text-primary hover:bg-primary/5"
+                  : "border-primary bg-primary text-primary-foreground"
+              }`}
+            >
+              All technicians
+            </Link>
+            {technicians.map((technician) => (
+              <Link
+                key={technician}
+                href={getScheduleHref(selectedDate, technician)}
+                className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                  selectedTechnician === technician
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-primary/15 bg-white text-primary hover:bg-primary/5"
+                }`}
+              >
+                {technician}
+              </Link>
+            ))}
           </div>
         </div>
 
@@ -285,12 +395,16 @@ export default async function ScheduleAdminPage({
                     <div className="mt-4 grid gap-3 lg:grid-cols-2">
                       {windowInvoices.map((invoice) => {
                         const hasConflict = invoiceHasScheduleConflict(invoice);
+                        const jobStatus = getJobStatus(invoice);
+                        const technicianColorClass = getTechnicianColorClass(
+                          invoice.assigned_technician,
+                          technicians,
+                        );
 
                         return (
-                          <Link
+                          <article
                             key={invoice.id}
-                            href={`/admin/invoices/${invoice.id}`}
-                            className={`block rounded-xl border p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${
+                            className={`rounded-xl border border-l-4 p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${technicianColorClass} ${
                               hasConflict
                                 ? "border-amber-500/35 bg-amber-50"
                                 : "border-border bg-slate-50"
@@ -305,11 +419,18 @@ export default async function ScheduleAdminPage({
                                   {getInvoiceScheduleLabel(invoice)}
                                 </p>
                               </div>
-                              <span
-                                className={`shrink-0 rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${statusClasses[invoice.status]}`}
-                              >
-                                {invoice.status}
-                              </span>
+                              <div className="flex shrink-0 flex-col items-end gap-1">
+                                <span
+                                  className={`rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${statusClasses[invoice.status]}`}
+                                >
+                                  {invoice.status}
+                                </span>
+                                <span
+                                  className={`rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
+                                >
+                                  {getJobStatusLabel(jobStatus)}
+                                </span>
+                              </div>
                             </div>
                             {hasConflict ? (
                               <p className="mt-3 rounded-lg bg-white/80 px-3 py-2 text-xs font-bold text-amber-800">
@@ -325,7 +446,114 @@ export default async function ScheduleAdminPage({
                               <span>{invoice.appliance || "Appliance not set"}</span>
                               <span className="font-bold text-primary">{formatMoney(invoice.total)}</span>
                             </div>
-                          </Link>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {invoice.customer_phone ? (
+                                <>
+                                  <a
+                                    href={`tel:${invoice.customer_phone}`}
+                                    className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                                  >
+                                    Call
+                                  </a>
+                                  <a
+                                    href={`sms:${invoice.customer_phone}`}
+                                    className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                                  >
+                                    SMS
+                                  </a>
+                                </>
+                              ) : null}
+                              <Link
+                                href={`/admin/invoices/${invoice.id}`}
+                                className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                              >
+                                Invoice
+                              </Link>
+                              <form action={updateDispatchJobStatusAction}>
+                                <input type="hidden" name="invoiceId" value={invoice.id} />
+                                <input type="hidden" name="selectedDate" value={selectedDate} />
+                                <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                                <input type="hidden" name="jobStatus" value="done" />
+                                <button
+                                  type="submit"
+                                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                                >
+                                  Done
+                                </button>
+                              </form>
+                            </div>
+                            <form
+                              action={updateDispatchScheduleAction}
+                              className="mt-4 grid gap-2 border-t border-border pt-4 sm:grid-cols-2"
+                            >
+                              <input type="hidden" name="invoiceId" value={invoice.id} />
+                              <input type="hidden" name="selectedDate" value={selectedDate} />
+                              <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                Date
+                                <input
+                                  type="date"
+                                  name="serviceDate"
+                                  defaultValue={invoice.service_date ?? selectedDate}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                Window
+                                <select
+                                  name="serviceWindow"
+                                  defaultValue={invoice.service_window ?? window.label}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                >
+                                  <option value="">Not selected</option>
+                                  {SERVICE_WINDOWS.map((serviceWindow) => (
+                                    <option key={serviceWindow.label} value={serviceWindow.label}>
+                                      {serviceWindow.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                Time
+                                <input
+                                  type="time"
+                                  name="serviceTime"
+                                  defaultValue={invoice.service_time ?? ""}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                Technician
+                                <input
+                                  type="text"
+                                  name="assignedTechnician"
+                                  defaultValue={invoice.assigned_technician ?? ""}
+                                  list="schedule-technicians"
+                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2">
+                                Job status
+                                <select
+                                  name="jobStatus"
+                                  defaultValue={jobStatus}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                >
+                                  {JOB_STATUSES.map((status) => (
+                                    <option key={status.value} value={status.value}>
+                                      {status.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 sm:col-span-2"
+                              >
+                                Save schedule
+                              </button>
+                            </form>
+                          </article>
                         );
                       })}
                     </div>
@@ -347,16 +575,77 @@ export default async function ScheduleAdminPage({
             <div className="mt-4 grid gap-3">
               {needsTimeInvoices.length ? (
                 needsTimeInvoices.map((invoice) => (
-                  <Link
+                  <article
                     key={invoice.id}
-                    href={`/admin/invoices/${invoice.id}`}
-                    className="rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-sm transition hover:border-primary/30 hover:bg-white"
+                    className={`rounded-xl border border-l-4 border-amber-500/25 bg-amber-50 p-4 text-sm ${getTechnicianColorClass(
+                      invoice.assigned_technician,
+                      technicians,
+                    )}`}
                   >
-                    <p className="font-black text-primary">{invoice.customer_name}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-black text-primary">{invoice.customer_name}</p>
+                      <Link
+                        href={`/admin/invoices/${invoice.id}`}
+                        className="rounded-lg bg-white px-2 py-1 text-[0.65rem] font-bold text-primary"
+                      >
+                        Invoice
+                      </Link>
+                    </div>
                     <p className="mt-1 text-xs leading-5 text-muted">
                       {invoice.appliance || "Appliance not set"} / {invoice.service_address || "Address not set"}
                     </p>
-                  </Link>
+                    <form action={updateDispatchScheduleAction} className="mt-3 grid gap-2">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                      <input type="hidden" name="serviceDate" value={selectedDate} />
+                      <select
+                        name="serviceWindow"
+                        defaultValue={invoice.service_window ?? ""}
+                        className="rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      >
+                        <option value="">Select window</option>
+                        {SERVICE_WINDOWS.map((serviceWindow) => (
+                          <option key={serviceWindow.label} value={serviceWindow.label}>
+                            {serviceWindow.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="time"
+                          name="serviceTime"
+                          defaultValue={invoice.service_time ?? ""}
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                        <input
+                          type="text"
+                          name="assignedTechnician"
+                          defaultValue={invoice.assigned_technician ?? ""}
+                          list="schedule-technicians"
+                          placeholder="Tech"
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </div>
+                      <select
+                        name="jobStatus"
+                        defaultValue={getJobStatus(invoice)}
+                        className="rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      >
+                        {JOB_STATUSES.map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Save slot
+                      </button>
+                    </form>
+                  </article>
                 ))
               ) : (
                 <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
@@ -370,16 +659,72 @@ export default async function ScheduleAdminPage({
             <div className="mt-4 grid gap-3">
               {unscheduledInvoices.length ? (
                 unscheduledInvoices.map((invoice) => (
-                  <Link
+                  <article
                     key={invoice.id}
-                    href={`/admin/invoices/${invoice.id}`}
-                    className="rounded-xl border border-border bg-slate-50 p-4 text-sm transition hover:border-primary/30 hover:bg-white"
+                    className={`rounded-xl border border-l-4 border-border bg-slate-50 p-4 text-sm ${getTechnicianColorClass(
+                      invoice.assigned_technician,
+                      technicians,
+                    )}`}
                   >
-                    <p className="font-black text-primary">{invoice.customer_name}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-black text-primary">{invoice.customer_name}</p>
+                      <Link
+                        href={`/admin/invoices/${invoice.id}`}
+                        className="rounded-lg bg-white px-2 py-1 text-[0.65rem] font-bold text-primary"
+                      >
+                        Invoice
+                      </Link>
+                    </div>
                     <p className="mt-1 text-xs leading-5 text-muted">
                       {invoice.appliance || "Appliance not set"} / {invoice.service_address || "Address not set"}
                     </p>
-                  </Link>
+                    <form action={updateDispatchScheduleAction} className="mt-3 grid gap-2">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                      <input
+                        type="date"
+                        name="serviceDate"
+                        defaultValue={selectedDate}
+                        className="rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      />
+                      <select
+                        name="serviceWindow"
+                        defaultValue={invoice.service_window ?? ""}
+                        className="rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      >
+                        <option value="">Select window</option>
+                        {SERVICE_WINDOWS.map((serviceWindow) => (
+                          <option key={serviceWindow.label} value={serviceWindow.label}>
+                            {serviceWindow.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="time"
+                          name="serviceTime"
+                          defaultValue={invoice.service_time ?? ""}
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                        <input
+                          type="text"
+                          name="assignedTechnician"
+                          defaultValue={invoice.assigned_technician ?? ""}
+                          list="schedule-technicians"
+                          placeholder="Tech"
+                          className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </div>
+                      <input type="hidden" name="jobStatus" value="scheduled" />
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Put on schedule
+                      </button>
+                    </form>
+                  </article>
                 ))
               ) : (
                 <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">

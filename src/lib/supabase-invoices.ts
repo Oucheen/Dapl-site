@@ -8,6 +8,14 @@ import {
 } from "@/lib/supabase-leads";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "void";
+export type InvoiceJobStatus =
+  | "scheduled"
+  | "on_the_way"
+  | "in_progress"
+  | "need_parts"
+  | "done"
+  | "reschedule"
+  | "canceled";
 
 export type InvoiceRecord = {
   id: string;
@@ -25,6 +33,7 @@ export type InvoiceRecord = {
   service_time?: string | null;
   service_window?: string | null;
   assigned_technician: string | null;
+  job_status?: InvoiceJobStatus | null;
   notes: string | null;
   promo_code: string | null;
   discount_amount: number | string;
@@ -81,6 +90,7 @@ export type InvoiceScheduleInput = {
   serviceTime?: string | null;
   serviceWindow?: string | null;
   assignedTechnician?: string | null;
+  jobStatus?: InvoiceJobStatus | null;
 };
 
 export const INVOICE_ITEM_TEMPLATES = [
@@ -809,6 +819,30 @@ function normalizeScheduleText(value?: string | null) {
   return trimmedValue || null;
 }
 
+const ALLOWED_JOB_STATUSES: InvoiceJobStatus[] = [
+  "scheduled",
+  "on_the_way",
+  "in_progress",
+  "need_parts",
+  "done",
+  "reschedule",
+  "canceled",
+];
+
+function normalizeJobStatus(value?: InvoiceJobStatus | string | null) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  if (!ALLOWED_JOB_STATUSES.includes(trimmedValue as InvoiceJobStatus)) {
+    throw new Error("Invalid job status.");
+  }
+
+  return trimmedValue as InvoiceJobStatus;
+}
+
 export async function updateInvoiceSchedule(id: string, input: InvoiceScheduleInput) {
   assertUuid(id);
 
@@ -821,6 +855,22 @@ export async function updateInvoiceSchedule(id: string, input: InvoiceScheduleIn
   const leadId = await getInvoiceLeadId(config, id);
   const serviceDate = normalizeScheduleDate(input.serviceDate);
   const serviceTime = normalizeScheduleTime(input.serviceTime);
+  const updatePayload: {
+    service_date: string | null;
+    service_time: string | null;
+    service_window: string | null;
+    assigned_technician: string | null;
+    job_status?: InvoiceJobStatus | null;
+  } = {
+    service_date: serviceDate,
+    service_time: serviceTime,
+    service_window: normalizeScheduleText(input.serviceWindow),
+    assigned_technician: normalizeScheduleText(input.assignedTechnician),
+  };
+
+  if (input.jobStatus !== undefined) {
+    updatePayload.job_status = normalizeJobStatus(input.jobStatus);
+  }
 
   const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${id}`, {
     method: "PATCH",
@@ -828,17 +878,47 @@ export async function updateInvoiceSchedule(id: string, input: InvoiceScheduleIn
       ...headers(config),
       Prefer: "return=minimal",
     },
-    body: JSON.stringify({
-      service_date: serviceDate,
-      service_time: serviceTime,
-      service_window: normalizeScheduleText(input.serviceWindow),
-      assigned_technician: normalizeScheduleText(input.assignedTechnician),
-    }),
+    body: JSON.stringify(updatePayload),
   });
 
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase invoice schedule update failed: ${response.status} ${details}`);
+  }
+
+  return { leadId };
+}
+
+export async function updateInvoiceJobStatus(id: string, jobStatus: InvoiceJobStatus) {
+  assertUuid(id);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const normalizedJobStatus = normalizeJobStatus(jobStatus);
+
+  if (!normalizedJobStatus) {
+    throw new Error("Job status is required.");
+  }
+
+  const leadId = await getInvoiceLeadId(config, id);
+  const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      job_status: normalizedJobStatus,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice job status update failed: ${response.status} ${details}`);
   }
 
   return { leadId };
