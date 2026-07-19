@@ -1227,7 +1227,7 @@ export default async function InvoicePage({
                 Activity
               </p>
               {activity.length > 0 ? (
-                <ul className="mt-4 space-y-4">
+                <ul className="mt-4 max-h-80 space-y-4 overflow-y-auto pr-2">
                   {activity.map((item) => {
                     const actorName = getActivityActorName(item);
 
