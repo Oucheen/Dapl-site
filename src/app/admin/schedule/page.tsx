@@ -54,8 +54,11 @@ const technicianColorClasses = [
   "border-l-rose-600",
   "border-l-indigo-600",
 ];
+const MAX_JOBS_PER_TECH_WINDOW = 2;
 
 export const dynamic = "force-dynamic";
+
+type ScheduleView = "day" | "week";
 
 function getTodayDateInput() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -78,6 +81,11 @@ function getSelectedDate(value: string | string[] | undefined) {
 
 function getSelectedTechnician(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value || "";
+}
+
+function getSelectedView(value: string | string[] | undefined): ScheduleView {
+  const selectedView = Array.isArray(value) ? value[0] : value;
+  return selectedView === "week" ? "week" : "day";
 }
 
 function formatScheduleDate(value: string) {
@@ -155,11 +163,15 @@ function getInvoiceScheduleLabel(invoice: InvoiceRecord) {
   return serviceTime || invoice.service_window || "Time not set";
 }
 
-function getScheduleHref(date: string, technician: string) {
+function getScheduleHref(date: string, technician: string, view: ScheduleView = "day") {
   const params = new URLSearchParams({ date });
 
   if (technician) {
     params.set("tech", technician);
+  }
+
+  if (view === "week") {
+    params.set("view", "week");
   }
 
   return `/admin/schedule?${params.toString()}`;
@@ -169,6 +181,19 @@ function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T12:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+function getWeekDates(startDate: string) {
+  return Array.from({ length: 7 }, (_, index) => shiftDate(startDate, index));
+}
+
+function formatWeekDay(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function getTechnicians(invoices: InvoiceRecord[]) {
@@ -198,12 +223,74 @@ function getJobStatusLabel(jobStatus: InvoiceJobStatus) {
   return JOB_STATUSES.find((status) => status.value === jobStatus)?.label ?? jobStatus;
 }
 
+function getInvoiceWindowLabel(invoice: InvoiceRecord) {
+  if (invoice.service_window) {
+    return invoice.service_window;
+  }
+
+  const serviceHour = getTimeHour(invoice.service_time);
+  const matchingWindow = SERVICE_WINDOWS.find(
+    (window) => serviceHour !== null && serviceHour >= window.start && serviceHour < window.end,
+  );
+
+  return matchingWindow?.label ?? "No window";
+}
+
+function getScheduleConflictWarnings(invoices: InvoiceRecord[]) {
+  const warnings: { key: string; title: string; body: string; invoiceIds: string[] }[] = [];
+  const byExactTime = new Map<string, InvoiceRecord[]>();
+  const byTechnicianWindow = new Map<string, InvoiceRecord[]>();
+
+  for (const invoice of invoices) {
+    const technician = invoice.assigned_technician?.trim() || "Unassigned";
+
+    if (invoice.service_time) {
+      const exactKey = `${invoice.service_date}|${technician}|${invoice.service_time}`;
+      byExactTime.set(exactKey, [...(byExactTime.get(exactKey) ?? []), invoice]);
+    }
+
+    const windowLabel = getInvoiceWindowLabel(invoice);
+
+    if (windowLabel !== "No window") {
+      const windowKey = `${invoice.service_date}|${technician}|${windowLabel}`;
+      byTechnicianWindow.set(windowKey, [...(byTechnicianWindow.get(windowKey) ?? []), invoice]);
+    }
+  }
+
+  for (const [key, group] of byExactTime.entries()) {
+    if (group.length > 1) {
+      const [, technician, serviceTime] = key.split("|");
+      warnings.push({
+        key: `exact-${key}`,
+        title: "Exact time conflict",
+        body: `${technician} has ${group.length} jobs at ${formatServiceTime(serviceTime)}.`,
+        invoiceIds: group.map((invoice) => invoice.id),
+      });
+    }
+  }
+
+  for (const [key, group] of byTechnicianWindow.entries()) {
+    if (group.length > MAX_JOBS_PER_TECH_WINDOW) {
+      const [, technician, windowLabel] = key.split("|");
+      warnings.push({
+        key: `window-${key}`,
+        title: "Window overload",
+        body: `${technician} has ${group.length} jobs in ${windowLabel}.`,
+        invoiceIds: group.map((invoice) => invoice.id),
+      });
+    }
+  }
+
+  return warnings;
+}
+
 export default async function ScheduleAdminPage({
   searchParams,
 }: {
   searchParams?: Promise<{
     date?: string | string[];
     tech?: string | string[];
+    view?: string | string[];
   }>;
 }) {
   if (!(await isAdminAuthenticated())) {
@@ -213,6 +300,7 @@ export default async function ScheduleAdminPage({
   const params = await searchParams;
   const selectedDate = getSelectedDate(params?.date);
   const selectedTechnician = getSelectedTechnician(params?.tech);
+  const selectedView = getSelectedView(params?.view);
   let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
   let error = "";
 
@@ -223,6 +311,7 @@ export default async function ScheduleAdminPage({
   }
 
   const technicians = getTechnicians(invoices);
+  const weekDates = getWeekDates(selectedDate);
   const scheduledInvoices = invoices
     .filter((invoice) => invoice.service_date === selectedDate && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
@@ -235,6 +324,26 @@ export default async function ScheduleAdminPage({
     (invoice) => !invoice.service_window && !invoice.service_time,
   );
   const conflictInvoices = scheduledInvoices.filter(invoiceHasScheduleConflict);
+  const visibleWeekInvoices = invoices
+    .filter(
+      (invoice) =>
+        invoice.service_date &&
+        weekDates.includes(invoice.service_date) &&
+        invoice.status !== "void" &&
+        (!selectedTechnician || invoice.assigned_technician === selectedTechnician),
+    )
+    .sort((left, right) =>
+      `${left.service_date ?? ""} ${left.service_time ?? "99:99"} ${left.customer_name}`.localeCompare(
+        `${right.service_date ?? ""} ${right.service_time ?? "99:99"} ${right.customer_name}`,
+      ),
+    );
+  const conflictWarnings = getScheduleConflictWarnings(
+    selectedView === "week" ? visibleWeekInvoices : scheduledInvoices,
+  );
+  const needPartsInvoices = invoices
+    .filter((invoice) => getJobStatus(invoice) === "need_parts" && invoice.status !== "void")
+    .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
+    .slice(0, 20);
   const unscheduledInvoices = invoices
     .filter((invoice) => !invoice.service_date && invoice.status !== "paid" && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
@@ -292,20 +401,27 @@ export default async function ScheduleAdminPage({
                 Selected day
               </p>
               <h2 className="mt-1 text-2xl font-black text-primary">
-                {formatScheduleDate(selectedDate)}
+                {selectedView === "week"
+                  ? `${formatWeekDay(weekDates[0])} - ${formatWeekDay(weekDates[6])}`
+                  : formatScheduleDate(selectedDate)}
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                href={getScheduleHref(shiftDate(selectedDate, -1), selectedTechnician)}
+                href={getScheduleHref(
+                  shiftDate(selectedDate, selectedView === "week" ? -7 : -1),
+                  selectedTechnician,
+                  selectedView,
+                )}
                 className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
               >
-                Previous day
+                Previous {selectedView === "week" ? "week" : "day"}
               </Link>
               <form className="flex gap-2" action="/admin/schedule">
                 {selectedTechnician ? (
                   <input type="hidden" name="tech" value={selectedTechnician} />
                 ) : null}
+                {selectedView === "week" ? <input type="hidden" name="view" value="week" /> : null}
                 <input
                   type="date"
                   name="date"
@@ -320,16 +436,42 @@ export default async function ScheduleAdminPage({
                 </button>
               </form>
               <Link
-                href={getScheduleHref(shiftDate(selectedDate, 1), selectedTechnician)}
+                href={getScheduleHref(
+                  shiftDate(selectedDate, selectedView === "week" ? 7 : 1),
+                  selectedTechnician,
+                  selectedView,
+                )}
                 className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
               >
-                Next day
+                Next {selectedView === "week" ? "week" : "day"}
               </Link>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
             <Link
-              href={getScheduleHref(selectedDate, "")}
+              href={getScheduleHref(selectedDate, selectedTechnician, "day")}
+              className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                selectedView === "day"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-primary/15 bg-white text-primary hover:bg-primary/5"
+              }`}
+            >
+              Day view
+            </Link>
+            <Link
+              href={getScheduleHref(selectedDate, selectedTechnician, "week")}
+              className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                selectedView === "week"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-primary/15 bg-white text-primary hover:bg-primary/5"
+              }`}
+            >
+              Week view
+            </Link>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+            <Link
+              href={getScheduleHref(selectedDate, "", selectedView)}
               className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                 selectedTechnician
                   ? "border-primary/15 bg-white text-primary hover:bg-primary/5"
@@ -341,7 +483,7 @@ export default async function ScheduleAdminPage({
             {technicians.map((technician) => (
               <Link
                 key={technician}
-                href={getScheduleHref(selectedDate, technician)}
+                href={getScheduleHref(selectedDate, technician, selectedView)}
                 className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                   selectedTechnician === technician
                     ? "border-primary bg-primary text-primary-foreground"
@@ -375,6 +517,80 @@ export default async function ScheduleAdminPage({
           </div>
         ) : null}
 
+        {conflictWarnings.length ? (
+          <div className="mt-4 rounded-2xl border border-red-500/25 bg-red-50 p-5 text-sm text-red-800 shadow-sm">
+            <p className="font-black">Dispatch conflicts</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {conflictWarnings.map((warning) => (
+                <div key={warning.key} className="rounded-xl bg-white p-4">
+                  <p className="font-black">{warning.title}</p>
+                  <p className="mt-1 leading-6">{warning.body}</p>
+                  <p className="mt-2 text-xs font-bold text-red-700">
+                    {warning.invoiceIds.length} linked invoices
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {selectedView === "week" ? (
+          <div className="mt-6 grid gap-4 xl:grid-cols-7">
+            {weekDates.map((date) => {
+              const dayInvoices = visibleWeekInvoices.filter((invoice) => invoice.service_date === date);
+
+              return (
+                <section key={date} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-black text-primary">{formatWeekDay(date)}</h3>
+                      <p className="mt-1 text-xs font-bold text-muted">{dayInvoices.length} jobs</p>
+                    </div>
+                    <Link
+                      href={getScheduleHref(date, selectedTechnician, "day")}
+                      className="rounded-lg border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Day
+                    </Link>
+                  </div>
+                  <div className="mt-4 grid gap-3">
+                    {dayInvoices.length ? (
+                      dayInvoices.map((invoice) => {
+                        const jobStatus = getJobStatus(invoice);
+
+                        return (
+                          <Link
+                            key={invoice.id}
+                            href={`/admin/invoices/${invoice.id}`}
+                            className={`rounded-xl border border-l-4 bg-slate-50 p-3 text-xs transition hover:border-primary/30 hover:bg-white ${getTechnicianColorClass(
+                              invoice.assigned_technician,
+                              technicians,
+                            )}`}
+                          >
+                            <p className="font-black text-primary">{invoice.customer_name}</p>
+                            <p className="mt-1 font-bold text-muted">{getInvoiceScheduleLabel(invoice)}</p>
+                            <p className="mt-2 leading-5 text-muted">
+                              {invoice.assigned_technician || "No technician"}
+                            </p>
+                            <span
+                              className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
+                            >
+                              {getJobStatusLabel(jobStatus)}
+                            </span>
+                          </Link>
+                        );
+                      })
+                    ) : (
+                      <p className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-muted">
+                        No jobs.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        ) : (
         <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-4">
             {SERVICE_WINDOWS.map((window) => {
@@ -472,6 +688,7 @@ export default async function ScheduleAdminPage({
                               <form action={updateDispatchJobStatusAction}>
                                 <input type="hidden" name="invoiceId" value={invoice.id} />
                                 <input type="hidden" name="selectedDate" value={selectedDate} />
+                                <input type="hidden" name="selectedView" value={selectedView} />
                                 <input type="hidden" name="technicianFilter" value={selectedTechnician} />
                                 <input type="hidden" name="jobStatus" value="done" />
                                 <button
@@ -488,6 +705,7 @@ export default async function ScheduleAdminPage({
                             >
                               <input type="hidden" name="invoiceId" value={invoice.id} />
                               <input type="hidden" name="selectedDate" value={selectedDate} />
+                              <input type="hidden" name="selectedView" value={selectedView} />
                               <input type="hidden" name="technicianFilter" value={selectedTechnician} />
                               <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
                                 Date
@@ -571,6 +789,61 @@ export default async function ScheduleAdminPage({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Needs scheduling
             </p>
+            <h2 className="mt-1 text-xl font-black text-primary">Need parts</h2>
+            <div className="mt-4 grid gap-3">
+              {needPartsInvoices.length ? (
+                needPartsInvoices.map((invoice) => (
+                  <article
+                    key={invoice.id}
+                    className={`rounded-xl border border-l-4 border-amber-500/25 bg-amber-50 p-4 text-sm ${getTechnicianColorClass(
+                      invoice.assigned_technician,
+                      technicians,
+                    )}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-black text-primary">{invoice.customer_name}</p>
+                      <Link
+                        href={`/admin/invoices/${invoice.id}`}
+                        className="rounded-lg bg-white px-2 py-1 text-[0.65rem] font-bold text-primary"
+                      >
+                        Invoice
+                      </Link>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-muted">
+                      {invoice.appliance || "Appliance not set"} / {invoice.assigned_technician || "No technician"}
+                    </p>
+                    {invoice.notes ? (
+                      <p className="mt-2 line-clamp-3 text-xs leading-5 text-amber-900">
+                        {invoice.notes}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs leading-5 text-muted">
+                        Add part details in invoice notes.
+                      </p>
+                    )}
+                    <form action={updateDispatchJobStatusAction} className="mt-3">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="selectedView" value={selectedView} />
+                      <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                      <input type="hidden" name="jobStatus" value="scheduled" />
+                      <button
+                        type="submit"
+                        className="w-full rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-amber-100"
+                      >
+                        Parts ready
+                      </button>
+                    </form>
+                  </article>
+                ))
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  No jobs are waiting for parts.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-border pt-5">
             <h2 className="mt-1 text-xl font-black text-primary">Date set, time missing</h2>
             <div className="mt-4 grid gap-3">
               {needsTimeInvoices.length ? (
@@ -597,6 +870,7 @@ export default async function ScheduleAdminPage({
                     <form action={updateDispatchScheduleAction} className="mt-3 grid gap-2">
                       <input type="hidden" name="invoiceId" value={invoice.id} />
                       <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="selectedView" value={selectedView} />
                       <input type="hidden" name="technicianFilter" value={selectedTechnician} />
                       <input type="hidden" name="serviceDate" value={selectedDate} />
                       <select
@@ -653,10 +927,11 @@ export default async function ScheduleAdminPage({
                 </p>
               )}
             </div>
+            </div>
 
             <div className="mt-5 border-t border-border pt-5">
-            <h2 className="mt-1 text-xl font-black text-primary">Open invoices without date</h2>
-            <div className="mt-4 grid gap-3">
+              <h2 className="mt-1 text-xl font-black text-primary">Open invoices without date</h2>
+              <div className="mt-4 grid gap-3">
               {unscheduledInvoices.length ? (
                 unscheduledInvoices.map((invoice) => (
                   <article
@@ -681,6 +956,7 @@ export default async function ScheduleAdminPage({
                     <form action={updateDispatchScheduleAction} className="mt-3 grid gap-2">
                       <input type="hidden" name="invoiceId" value={invoice.id} />
                       <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="selectedView" value={selectedView} />
                       <input type="hidden" name="technicianFilter" value={selectedTechnician} />
                       <input
                         type="date"
@@ -731,10 +1007,11 @@ export default async function ScheduleAdminPage({
                   Everything open has a date.
                 </p>
               )}
-            </div>
+              </div>
             </div>
           </aside>
         </div>
+        )}
       </section>
     </main>
   );
