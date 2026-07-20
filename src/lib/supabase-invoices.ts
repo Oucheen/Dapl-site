@@ -924,6 +924,35 @@ export async function updateInvoiceJobStatus(id: string, jobStatus: InvoiceJobSt
   return { leadId };
 }
 
+export async function updateInvoiceNotes(id: string, notes: string) {
+  assertUuid(id);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const leadId = await getInvoiceLeadId(config, id);
+  const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      notes: notes.trim() || null,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice notes update failed: ${response.status} ${details}`);
+  }
+
+  return { leadId };
+}
+
 async function getInvoicePaymentState(
   config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
   invoiceId: string,

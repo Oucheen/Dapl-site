@@ -9,6 +9,7 @@ import {
   listInvoices,
 } from "@/lib/supabase-invoices";
 import { updateDispatchJobStatusAction } from "@/app/admin/schedule/actions";
+import { addTechnicianPartAction, updateTechnicianInvoiceNotesAction } from "./actions";
 
 const JOB_STATUSES: { value: InvoiceJobStatus; label: string }[] = [
   { value: "scheduled", label: "Scheduled" },
@@ -36,6 +37,7 @@ const jobStatusClasses: Record<InvoiceJobStatus, string> = {
   reschedule: "border-orange-500/25 bg-orange-50 text-orange-700",
   canceled: "border-slate-300 bg-slate-100 text-slate-500",
 };
+const MAX_ROUTE_STOPS = 10;
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +119,39 @@ function getMapsSearchUrl(address: string | null | undefined) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`;
 }
 
+function getMapsRouteUrl(invoices: InvoiceRecord[]) {
+  const routeInvoices = invoices
+    .filter((invoice) => invoice.service_address?.trim())
+    .slice(0, MAX_ROUTE_STOPS);
+
+  if (!routeInvoices.length) {
+    return "";
+  }
+
+  const destination = routeInvoices[routeInvoices.length - 1]?.service_address?.trim() ?? "";
+  const waypoints = routeInvoices
+    .slice(0, -1)
+    .map((invoice) => invoice.service_address?.trim())
+    .filter((address): address is string => Boolean(address));
+  const params = new URLSearchParams({
+    api: "1",
+    travelmode: "driving",
+    destination,
+  });
+
+  if (waypoints.length) {
+    params.set("waypoints", waypoints.join("|"));
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function shiftDate(value: string, days: number) {
+  const date = new Date(`${value}T12:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function getTechnicians(invoices: InvoiceRecord[]) {
   return Array.from(
     new Set(
@@ -143,6 +178,7 @@ export default async function TechnicianDayPage({
   searchParams?: Promise<{
     date?: string | string[];
     tech?: string | string[];
+    notice?: string | string[];
   }>;
 }) {
   if (!(await isAdminAuthenticated())) {
@@ -152,6 +188,7 @@ export default async function TechnicianDayPage({
   const params = await searchParams;
   const selectedDate = getSelectedDate(params?.date);
   const selectedTechnician = getQueryValue(params?.tech);
+  const notice = getQueryValue(params?.notice);
   let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
   let error = "";
 
@@ -174,6 +211,12 @@ export default async function TechnicianDayPage({
         `${right.service_time ?? "99:99"} ${right.customer_name}`,
       ),
     );
+  const routeDayUrl = selectedTechnician ? getMapsRouteUrl(visibleInvoices) : "";
+  const doneCount = visibleInvoices.filter((invoice) => getJobStatus(invoice) === "done").length;
+  const activeCount = visibleInvoices.filter((invoice) =>
+    ["scheduled", "on_the_way", "in_progress"].includes(getJobStatus(invoice)),
+  ).length;
+  const needsPartsCount = visibleInvoices.filter((invoice) => getJobStatus(invoice) === "need_parts").length;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -190,16 +233,36 @@ export default async function TechnicianDayPage({
               Daily job view for quick field updates.
             </p>
           </div>
-          <Link
-            href="/admin/invoices"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
-          >
-            Invoices
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/invoices"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Invoices
+            </Link>
+            <Link
+              href="/admin/parts"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Parts
+            </Link>
+          </div>
         </div>
       </header>
 
       <section className="container-shell py-8">
+        {notice === "note_saved" ? (
+          <div className="mb-5 rounded-2xl border border-emerald-500/25 bg-emerald-50 p-5 text-sm font-bold text-emerald-700">
+            Technician note saved.
+          </div>
+        ) : null}
+
+        {notice === "part_added" ? (
+          <div className="mb-5 rounded-2xl border border-emerald-500/25 bg-emerald-50 p-5 text-sm font-bold text-emerald-700">
+            Part added to this job.
+          </div>
+        ) : null}
+
         {error ? (
           <div className="mb-5 rounded-2xl border border-red-500/25 bg-red-50 p-5 text-sm text-red-700">
             <p className="font-black">Could not load technician jobs.</p>
@@ -214,6 +277,10 @@ export default async function TechnicianDayPage({
                 Selected day
               </p>
               <h2 className="mt-1 text-2xl font-black text-primary">{formatDate(selectedDate)}</h2>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                {visibleInvoices.length} jobs / {activeCount} active / {doneCount} done /{" "}
+                {needsPartsCount} need parts
+              </p>
             </div>
             <form action="/admin/technician" className="flex flex-wrap gap-2">
               <input
@@ -241,6 +308,34 @@ export default async function TechnicianDayPage({
                 Open
               </button>
             </form>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+            <Link
+              href={getTechnicianHref(shiftDate(selectedDate, -1), selectedTechnician)}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Previous day
+            </Link>
+            <Link
+              href={getTechnicianHref(shiftDate(selectedDate, 1), selectedTechnician)}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Next day
+            </Link>
+            {routeDayUrl ? (
+              <a
+                href={routeDayUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+              >
+                Route day
+              </a>
+            ) : (
+              <span className="rounded-full border border-border bg-slate-50 px-4 py-2 text-sm font-bold text-muted">
+                Select one tech for route
+              </span>
+            )}
           </div>
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
             <Link
@@ -276,7 +371,7 @@ export default async function TechnicianDayPage({
               const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
               return (
-                <article key={invoice.id} className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+                <article key={invoice.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <p className="text-xl font-black text-primary">{invoice.customer_name}</p>
@@ -308,13 +403,13 @@ export default async function TechnicianDayPage({
                       <>
                         <a
                           href={`tel:${invoice.customer_phone}`}
-                          className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:bg-primary/90 sm:flex-none"
                         >
                           Call
                         </a>
                         <a
                           href={`sms:${invoice.customer_phone}`}
-                          className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-primary/15 bg-white px-4 py-3 text-sm font-black text-primary transition hover:bg-primary/5 sm:flex-none"
                         >
                           SMS
                         </a>
@@ -325,20 +420,20 @@ export default async function TechnicianDayPage({
                         href={mapsUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                        className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700 sm:flex-none"
                       >
                         Maps
                       </a>
                     ) : null}
                     <Link
                       href={`/admin/invoices/${invoice.id}`}
-                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-primary/15 bg-white px-4 py-3 text-sm font-black text-primary transition hover:bg-primary/5 sm:flex-none"
                     >
                       Invoice
                     </Link>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+                  <div className="mt-4 grid gap-2 border-t border-border pt-4 sm:grid-cols-3 lg:grid-cols-5">
                     {(["on_the_way", "in_progress", "need_parts", "done", "reschedule"] as InvoiceJobStatus[]).map(
                       (status) => (
                         <form key={status} action={updateDispatchJobStatusAction}>
@@ -349,13 +444,65 @@ export default async function TechnicianDayPage({
                           <input type="hidden" name="jobStatus" value={status} />
                           <button
                             type="submit"
-                            className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${jobStatusClasses[status]}`}
+                            className={`min-h-11 w-full rounded-xl border px-3 py-3 text-xs font-black transition ${jobStatusClasses[status]}`}
                           >
                             {getJobStatusLabel(status)}
                           </button>
                         </form>
                       ),
                     )}
+                  </div>
+
+                  <div className="mt-4 grid gap-4 border-t border-border pt-4 lg:grid-cols-2">
+                    <form action={updateTechnicianInvoiceNotesAction} className="grid gap-2">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Field note
+                        <textarea
+                          name="notes"
+                          rows={3}
+                          defaultValue={invoice.notes ?? ""}
+                          placeholder="Work performed, diagnosis, customer request..."
+                          className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-normal normal-case leading-6 tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        className="min-h-11 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Save note
+                      </button>
+                    </form>
+
+                    <form action={addTechnicianPartAction} className="grid gap-2">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="selectedDate" value={selectedDate} />
+                      <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Add needed part
+                        <input
+                          type="text"
+                          name="partName"
+                          required
+                          placeholder="Part name"
+                          className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        name="partNote"
+                        placeholder="Part note, model, symptom..."
+                        className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                      <button
+                        type="submit"
+                        className="min-h-11 rounded-xl border border-amber-500/25 bg-amber-50 px-4 py-3 text-sm font-black text-amber-800 transition hover:bg-amber-100"
+                      >
+                        Add part
+                      </button>
+                    </form>
                   </div>
                 </article>
               );
