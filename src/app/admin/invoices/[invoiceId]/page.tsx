@@ -485,6 +485,12 @@ export default async function InvoicePage({
   const lineItemsLockedByRole = !canManageInvoiceCharges && !isInvoiceClosed;
   const paymentInputDefaults = getCharlotteDateTimeInputValues();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
+  const scheduleHref = invoice.service_date
+    ? `/admin/schedule?date=${encodeURIComponent(invoice.service_date)}`
+    : "/admin/schedule";
+  const technicianDayHref = invoice.service_date
+    ? `/admin/technician?date=${encodeURIComponent(invoice.service_date)}${invoice.assigned_technician ? `&tech=${encodeURIComponent(invoice.assigned_technician)}` : ""}`
+    : "/admin/technician";
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
       (status.value !== "paid" || invoice.status === "paid" || amountDue <= 0) &&
@@ -506,11 +512,25 @@ export default async function InvoicePage({
               Invoice {invoice.invoice_number}
             </h1>
           </div>
-          <span
-            className={`inline-flex w-fit rounded-full border px-4 py-2 text-sm font-bold ${statusClasses[invoice.status]}`}
-          >
-            {invoice.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={scheduleHref}
+              className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Schedule
+            </Link>
+            <Link
+              href={technicianDayHref}
+              className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Technician day
+            </Link>
+            <span
+              className={`inline-flex w-fit rounded-full border px-4 py-2 text-sm font-bold ${statusClasses[invoice.status]}`}
+            >
+              {invoice.status}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -1300,6 +1320,20 @@ export default async function InvoicePage({
                 <p className="mt-1 text-xs leading-5 text-muted">
                   Use this to place the customer on the dispatch calendar.
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={scheduleHref}
+                    className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                  >
+                    Open schedule
+                  </Link>
+                  <Link
+                    href={technicianDayHref}
+                    className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                  >
+                    Technician day
+                  </Link>
+                </div>
               </div>
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Visit date
