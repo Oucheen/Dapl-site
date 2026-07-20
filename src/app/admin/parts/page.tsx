@@ -124,6 +124,18 @@ export default async function PartsInventoryPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/admin"
+              className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/admin/search"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Search
+            </Link>
+            <Link
               href="/admin/schedule"
               className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >

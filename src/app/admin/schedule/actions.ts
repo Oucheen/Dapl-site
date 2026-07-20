@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
+  getInvoiceById,
   type InvoiceJobStatus,
   updateInvoiceJobStatus,
   updateInvoiceSchedule,
@@ -125,6 +126,46 @@ export async function updateDispatchScheduleAction(formData: FormData) {
     eventType: "dispatch_schedule_updated",
     title: "Dispatch schedule updated",
     details: "Visit date, time window, technician, or job status was updated from schedule.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(getDispatchRedirect(formData, selectedDate, technicianFilter, selectedView));
+}
+
+export async function moveDispatchScheduleAction(formData: FormData) {
+  await requireScheduleAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const selectedDate = getScheduleRedirectDate(formData);
+  const selectedView = getScheduleRedirectView(formData);
+  const technicianFilter = String(formData.get("technicianFilter") || "");
+  const serviceDate = String(formData.get("serviceDate") || selectedDate || "");
+  const serviceTime = String(formData.get("serviceTime") || "");
+  const serviceWindow = String(formData.get("serviceWindow") || "");
+  const invoiceData = await getInvoiceById(invoiceId);
+
+  if (!invoiceData) {
+    throw new Error("Invoice not found.");
+  }
+
+  const assignedTechnician = technicianFilter || invoiceData.invoice.assigned_technician || "";
+  const { leadId } = await updateInvoiceSchedule(invoiceId, {
+    serviceDate,
+    serviceTime,
+    serviceWindow,
+    assignedTechnician,
+    jobStatus: "scheduled",
+  });
+
+  await createLeadActivity({
+    leadId,
+    invoiceId,
+    eventType: "dispatch_schedule_moved",
+    title: "Dispatch job moved",
+    details: `Moved to ${serviceDate} ${serviceWindow}.`,
   });
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");

@@ -8,7 +8,12 @@ import {
   type InvoiceStatus,
   listInvoices,
 } from "@/lib/supabase-invoices";
-import { updateDispatchJobStatusAction, updateDispatchScheduleAction } from "./actions";
+import {
+  moveDispatchScheduleAction,
+  updateDispatchJobStatusAction,
+  updateDispatchScheduleAction,
+} from "./actions";
+import { DraggableScheduleCard, ScheduleDropZone } from "./drag-drop";
 
 const SERVICE_WINDOWS = [
   { label: "8:00 AM - 10:00 AM", start: 8, end: 10 },
@@ -543,6 +548,18 @@ export default async function ScheduleAdminPage({
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/admin"
+              className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/admin/search"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Search
+            </Link>
+            <Link
               href="/admin/invoices"
               className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
@@ -860,8 +877,17 @@ export default async function ScheduleAdminPage({
                         : null;
 
                       return (
-                        <div
+                        <ScheduleDropZone
                           key={`${date}-${window.label}`}
+                          action={moveDispatchScheduleAction}
+                          serviceDate={date}
+                          serviceWindow={window.label}
+                          serviceTime={getSlotTime(window)}
+                          selectedDate={selectedDate}
+                          selectedView={selectedView}
+                          technicianFilter={selectedTechnician}
+                        >
+                        <div
                           className={`rounded-xl border p-3 ${
                             selectedTechnician && windowInvoices.length > MAX_JOBS_PER_TECH_WINDOW
                               ? "border-red-500/25 bg-red-50"
@@ -892,46 +918,47 @@ export default async function ScheduleAdminPage({
                                 const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
                                 return (
-                                  <article
-                                    key={invoice.id}
-                                    className={`rounded-lg border border-l-4 bg-white p-2 text-xs transition hover:border-primary/30 ${getTechnicianColorClass(
-                                      invoice.assigned_technician,
-                                      technicians,
-                                    )}`}
-                                  >
-                                    <p className="truncate font-black text-primary">
-                                      {invoice.customer_name}
-                                    </p>
-                                    <p className="mt-1 font-bold text-muted">
-                                      {getInvoiceScheduleLabel(invoice)}
-                                    </p>
-                                    <p className="mt-1 truncate leading-5 text-muted">
-                                      {invoice.assigned_technician || "No technician"}
-                                    </p>
-                                    <span
-                                      className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
+                                  <DraggableScheduleCard key={invoice.id} invoiceId={invoice.id}>
+                                    <article
+                                      className={`rounded-lg border border-l-4 bg-white p-2 text-xs transition hover:border-primary/30 ${getTechnicianColorClass(
+                                        invoice.assigned_technician,
+                                        technicians,
+                                      )}`}
                                     >
-                                      {getJobStatusLabel(jobStatus)}
-                                    </span>
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                      <Link
-                                        href={`/admin/invoices/${invoice.id}`}
-                                        className="rounded-md border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                                      <p className="truncate font-black text-primary">
+                                        {invoice.customer_name}
+                                      </p>
+                                      <p className="mt-1 font-bold text-muted">
+                                        {getInvoiceScheduleLabel(invoice)}
+                                      </p>
+                                      <p className="mt-1 truncate leading-5 text-muted">
+                                        {invoice.assigned_technician || "No technician"}
+                                      </p>
+                                      <span
+                                        className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
                                       >
-                                        Invoice
-                                      </Link>
-                                      {mapsUrl ? (
-                                        <a
-                                          href={mapsUrl}
-                                          target="_blank"
-                                          rel="noreferrer"
+                                        {getJobStatusLabel(jobStatus)}
+                                      </span>
+                                      <div className="mt-2 flex flex-wrap gap-1.5">
+                                        <Link
+                                          href={`/admin/invoices/${invoice.id}`}
                                           className="rounded-md border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
                                         >
-                                          Maps
-                                        </a>
-                                      ) : null}
-                                    </div>
-                                  </article>
+                                          Invoice
+                                        </Link>
+                                        {mapsUrl ? (
+                                          <a
+                                            href={mapsUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="rounded-md border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                                          >
+                                            Maps
+                                          </a>
+                                        ) : null}
+                                      </div>
+                                    </article>
+                                  </DraggableScheduleCard>
                                 );
                               })
                             ) : (
@@ -941,6 +968,7 @@ export default async function ScheduleAdminPage({
                             )}
                           </div>
                         </div>
+                        </ScheduleDropZone>
                       );
                     })}
                   </div>
@@ -957,7 +985,17 @@ export default async function ScheduleAdminPage({
               );
 
               return (
-                <section key={window.label} className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+                <ScheduleDropZone
+                  key={window.label}
+                  action={moveDispatchScheduleAction}
+                  serviceDate={selectedDate}
+                  serviceWindow={window.label}
+                  serviceTime={getSlotTime(window)}
+                  selectedDate={selectedDate}
+                  selectedView={selectedView}
+                  technicianFilter={selectedTechnician}
+                >
+                <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between gap-4">
                     <h3 className="text-lg font-black text-primary">{window.label}</h3>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-muted">
@@ -977,14 +1015,14 @@ export default async function ScheduleAdminPage({
                         const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
                         return (
-                          <article
-                            key={invoice.id}
-                            className={`rounded-xl border border-l-4 p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${technicianColorClass} ${
-                              hasConflict
-                                ? "border-amber-500/35 bg-amber-50"
-                                : "border-border bg-slate-50"
-                            }`}
-                          >
+                          <DraggableScheduleCard key={invoice.id} invoiceId={invoice.id}>
+                            <article
+                              className={`rounded-xl border border-l-4 p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${technicianColorClass} ${
+                                hasConflict
+                                  ? "border-amber-500/35 bg-amber-50"
+                                  : "border-border bg-slate-50"
+                              }`}
+                            >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <p className="truncate font-black text-primary">
@@ -1153,7 +1191,8 @@ export default async function ScheduleAdminPage({
                                 Save schedule
                               </button>
                             </form>
-                          </article>
+                            </article>
+                          </DraggableScheduleCard>
                         );
                       })}
                     </div>
@@ -1163,6 +1202,7 @@ export default async function ScheduleAdminPage({
                     </p>
                   )}
                 </section>
+                </ScheduleDropZone>
               );
             })}
           </div>

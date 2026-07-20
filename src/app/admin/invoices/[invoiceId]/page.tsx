@@ -678,6 +678,12 @@ export default async function InvoicePage({
               Dashboard
             </Link>
             <Link
+              href="/admin/search"
+              className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Search
+            </Link>
+            <Link
               href={scheduleHref}
               className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
             >

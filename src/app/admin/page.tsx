@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listAccountingData, getMonthRange } from "@/lib/supabase-accounting";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
@@ -15,6 +16,12 @@ import {
 import { logoutAdmin } from "./leads/actions";
 
 const adminLinks = [
+  {
+    href: "/admin/search",
+    title: "Global search",
+    description: "Find customers, phones, addresses, invoices, appliances, technicians, and parts.",
+    cta: "Search CRM",
+  },
   {
     href: "/admin/leads",
     title: "Leads",
@@ -235,6 +242,15 @@ export default async function AdminPage() {
         ) : null}
 
         <section className="mb-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="mb-5 border-b border-border pb-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+              Global search
+            </p>
+            <div className="mt-3">
+              <AdminGlobalSearch />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
