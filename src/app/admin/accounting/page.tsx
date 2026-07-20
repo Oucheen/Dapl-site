@@ -137,6 +137,7 @@ export default async function AccountingAdminPage({
   searchParams?: Promise<{
     month?: string | string[];
     notice?: string | string[];
+    expenseId?: string | string[];
   }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
@@ -148,6 +149,7 @@ export default async function AccountingAdminPage({
   const params = await searchParams;
   const monthRange = getMonthRange(getQueryValue(params?.month));
   const notice = getNotice(params?.notice);
+  const selectedExpenseId = getQueryValue(params?.expenseId);
   let data: Awaited<ReturnType<typeof listAccountingData>> = {
     invoices: [],
     payments: [],
@@ -625,10 +627,16 @@ export default async function AccountingAdminPage({
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {data.expenses.map((expense) => (
+              {data.expenses.map((expense) => {
+                const isSelectedExpense = expense.id === selectedExpenseId;
+
+                return (
                 <div
+                  id={`expense-${expense.id}`}
                   key={expense.id}
-                  className="grid gap-4 px-5 py-5 md:grid-cols-[130px_minmax(0,1fr)_130px_90px]"
+                  className={`scroll-mt-6 grid gap-4 px-5 py-5 md:grid-cols-[130px_minmax(0,1fr)_130px_90px] ${
+                    isSelectedExpense ? "bg-emerald-50 ring-2 ring-inset ring-emerald-500/30" : ""
+                  }`}
                 >
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
@@ -685,7 +693,8 @@ export default async function AccountingAdminPage({
                     ) : null}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

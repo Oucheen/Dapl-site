@@ -55,6 +55,7 @@ const technicianColorClasses = [
   "border-l-indigo-600",
 ];
 const MAX_JOBS_PER_TECH_WINDOW = 2;
+const MAX_JOBS_PER_TECH_DAY = 6;
 const MAX_ROUTE_STOPS = 10;
 const DEFAULT_UNASSIGNED_TECHNICIAN = "Unassigned";
 
@@ -386,6 +387,37 @@ function getRecommendedSlots(
     .slice(0, 8);
 }
 
+function getTechnicianDayLoads(invoices: InvoiceRecord[], technicians: string[]) {
+  const technicianNames = technicians.length ? technicians : [DEFAULT_UNASSIGNED_TECHNICIAN];
+
+  return technicianNames.map((technician) => {
+    const assignedTechnician = technician === DEFAULT_UNASSIGNED_TECHNICIAN ? "" : technician;
+    const technicianInvoices = invoices.filter((invoice) =>
+      assignedTechnician
+        ? invoice.assigned_technician === assignedTechnician
+        : !invoice.assigned_technician,
+    );
+    const activeJobs = technicianInvoices.filter((invoice) => {
+      const jobStatus = getJobStatus(invoice);
+      return jobStatus !== "done" && jobStatus !== "canceled";
+    });
+    const routeUrl = getMapsRouteUrl(technicianInvoices);
+
+    return {
+      technician,
+      assignedTechnician,
+      totalJobs: technicianInvoices.length,
+      activeJobs: activeJobs.length,
+      doneJobs: technicianInvoices.filter((invoice) => getJobStatus(invoice) === "done").length,
+      needsPartsJobs: technicianInvoices.filter((invoice) => getJobStatus(invoice) === "need_parts").length,
+      missingTimeJobs: technicianInvoices.filter(
+        (invoice) => !invoice.service_window && !invoice.service_time,
+      ).length,
+      routeUrl,
+    };
+  });
+}
+
 export default async function ScheduleAdminPage({
   searchParams,
 }: {
@@ -454,6 +486,45 @@ export default async function ScheduleAdminPage({
     .slice(0, 20);
   const recommendedSlots = getRecommendedSlots(invoices, weekDates, technicians, selectedTechnician);
   const selectedDateRecommendedSlots = recommendedSlots.filter((slot) => slot.date === selectedDate);
+  const selectedDayLoadTechnicians = selectedTechnician ? [selectedTechnician] : technicians;
+  const technicianDayLoads = getTechnicianDayLoads(scheduledInvoices, selectedDayLoadTechnicians);
+  const activeTodayCount = scheduledInvoices.filter((invoice) => {
+    const jobStatus = getJobStatus(invoice);
+    return jobStatus !== "done" && jobStatus !== "canceled";
+  }).length;
+  const doneTodayCount = scheduledInvoices.filter((invoice) => getJobStatus(invoice) === "done").length;
+  const scheduleSummaryCards = [
+    {
+      label: "Jobs today",
+      value: scheduledInvoices.length,
+      note: `${activeTodayCount} active / ${doneTodayCount} done`,
+      href: getScheduleHref(selectedDate, selectedTechnician, "day"),
+    },
+    {
+      label: "Need time",
+      value: needsTimeInvoices.length,
+      note: "Date is set, exact slot is missing",
+      href: "#date-time-missing",
+    },
+    {
+      label: "Unscheduled",
+      value: unscheduledInvoices.length,
+      note: "Open invoices without date",
+      href: "#unscheduled-invoices",
+    },
+    {
+      label: "Parts hold",
+      value: needPartsInvoices.length,
+      note: "Jobs waiting for parts",
+      href: "#need-parts",
+    },
+    {
+      label: "Conflicts",
+      value: conflictWarnings.length + conflictInvoices.length,
+      note: "Overlaps or time/window mismatch",
+      href: "#schedule-conflicts",
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -628,8 +699,102 @@ export default async function ScheduleAdminPage({
           </div>
         </div>
 
+        <div className="mt-5 grid gap-3 md:grid-cols-5">
+          {scheduleSummaryCards.map((card) => (
+            <a
+              key={card.label}
+              href={card.href}
+              className={`rounded-2xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                card.value
+                  ? "border-primary/15 bg-white hover:border-primary/30"
+                  : "border-border bg-white"
+              }`}
+            >
+              <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted">
+                {card.label}
+              </span>
+              <span className="mt-2 block text-3xl font-black text-primary">{card.value}</span>
+              <span className="mt-1 block text-xs leading-5 text-muted">{card.note}</span>
+            </a>
+          ))}
+        </div>
+
+        <section className="mt-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Technician load
+              </p>
+              <h2 className="mt-1 text-xl font-black text-primary">Daily capacity</h2>
+            </div>
+            <p className="text-xs font-semibold text-muted">
+              Soft limit: {MAX_JOBS_PER_TECH_DAY} jobs per technician / {MAX_JOBS_PER_TECH_WINDOW} per window.
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {technicianDayLoads.map((load) => {
+              const isOverloaded = load.totalJobs > MAX_JOBS_PER_TECH_DAY;
+              const loadPercent = Math.min(100, Math.round((load.totalJobs / MAX_JOBS_PER_TECH_DAY) * 100));
+
+              return (
+                <article
+                  key={load.technician}
+                  className={`rounded-xl border border-l-4 p-4 ${getTechnicianColorClass(
+                    load.assignedTechnician,
+                    technicians,
+                  )} ${isOverloaded ? "border-red-500/25 bg-red-50" : "border-border bg-slate-50"}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-black text-primary">{load.technician}</h3>
+                      <p className="mt-1 text-xs font-semibold text-muted">
+                        {load.activeJobs} active / {load.doneJobs} done
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-1 text-[0.65rem] font-bold ${
+                        isOverloaded ? "bg-red-100 text-red-700" : "bg-white text-muted"
+                      }`}
+                    >
+                      {load.totalJobs} jobs
+                    </span>
+                  </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                    <div
+                      className={`h-full rounded-full ${isOverloaded ? "bg-red-500" : "bg-emerald-500"}`}
+                      style={{ width: `${loadPercent}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
+                    <span>{load.missingTimeJobs} need time</span>
+                    <span>{load.needsPartsJobs} need parts</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={getScheduleHref(selectedDate, load.assignedTechnician, "day")}
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Open day
+                    </Link>
+                    {load.routeUrl ? (
+                      <a
+                        href={load.routeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                      >
+                        Route
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
         {conflictInvoices.length ? (
-          <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-50 p-5 text-sm text-amber-800 shadow-sm">
+          <div id="schedule-conflicts" className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-50 p-5 text-sm text-amber-800 shadow-sm">
             <p className="font-black">Time needs attention</p>
             <p className="mt-1 leading-6">
               Some jobs have an exact time outside the selected time window. They stay in the
@@ -650,7 +815,7 @@ export default async function ScheduleAdminPage({
         ) : null}
 
         {conflictWarnings.length ? (
-          <div className="mt-4 rounded-2xl border border-red-500/25 bg-red-50 p-5 text-sm text-red-800 shadow-sm">
+          <div id={conflictInvoices.length ? undefined : "schedule-conflicts"} className="mt-4 rounded-2xl border border-red-500/25 bg-red-50 p-5 text-sm text-red-800 shadow-sm">
             <p className="font-black">Dispatch conflicts</p>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {conflictWarnings.map((warning) => (
@@ -1045,7 +1210,7 @@ export default async function ScheduleAdminPage({
               )}
             </div>
 
-            <div className="mt-5 border-t border-border pt-5">
+            <div id="need-parts" className="mt-5 scroll-mt-6 border-t border-border pt-5">
             <h2 className="mt-1 text-xl font-black text-primary">Need parts</h2>
             <div className="mt-4 grid gap-3">
               {needPartsInvoices.length ? (
@@ -1101,7 +1266,7 @@ export default async function ScheduleAdminPage({
             </div>
             </div>
 
-            <div className="mt-5 border-t border-border pt-5">
+            <div id="date-time-missing" className="mt-5 scroll-mt-6 border-t border-border pt-5">
             <h2 className="mt-1 text-xl font-black text-primary">Date set, time missing</h2>
             <div className="mt-4 grid gap-3">
               {needsTimeInvoices.length ? (
@@ -1213,7 +1378,7 @@ export default async function ScheduleAdminPage({
             </div>
             </div>
 
-            <div className="mt-5 border-t border-border pt-5">
+            <div id="unscheduled-invoices" className="mt-5 scroll-mt-6 border-t border-border pt-5">
               <h2 className="mt-1 text-xl font-black text-primary">Open invoices without date</h2>
               <div className="mt-4 grid gap-3">
               {unscheduledInvoices.length ? (

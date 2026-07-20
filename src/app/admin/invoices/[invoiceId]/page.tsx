@@ -189,6 +189,17 @@ function formatQuantity(value: number | string | null | undefined) {
   return String(amount);
 }
 
+function getExpenseMonth(value: string | null | undefined) {
+  return value?.slice(0, 7) || new Date().toISOString().slice(0, 7);
+}
+
+function getAccountingExpenseHref(expenseId: string, expensedAt: string | null | undefined) {
+  const month = getExpenseMonth(expensedAt);
+  return `/admin/accounting?month=${encodeURIComponent(month)}&expenseId=${encodeURIComponent(
+    expenseId,
+  )}#expense-${expenseId}`;
+}
+
 function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
@@ -1178,9 +1189,17 @@ export default async function InvoicePage({
                               Delete
                             </button>
                             {part.expense_id ? (
-                              <span className="rounded-lg border border-emerald-500/25 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">
-                                Expensed
-                              </span>
+                              <>
+                                <span className="rounded-lg border border-emerald-500/25 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">
+                                  Expensed
+                                </span>
+                                <Link
+                                  href={getAccountingExpenseHref(part.expense_id, part.expensed_at)}
+                                  className="rounded-lg border border-primary/15 bg-white px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                                >
+                                  Open expense
+                                </Link>
+                              </>
                             ) : canAddPartExpense ? (
                               <>
                                 <select
