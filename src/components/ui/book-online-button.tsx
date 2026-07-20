@@ -45,6 +45,13 @@ export function BookOnlineButton({
           link_type: "housecall_pro_modal",
           ...gtmEvent,
         });
+        sendGTMEvent({
+          event: "book_online_click",
+          location,
+          link_type: "housecall_pro_modal",
+          booking_provider: "housecall_pro",
+          ...gtmEvent,
+        });
 
         window.HCPWidget?.openModal();
       }}
