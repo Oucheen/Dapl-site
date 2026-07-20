@@ -412,6 +412,12 @@ export default async function ScheduleAdminPage({
               Invoices
             </Link>
             <Link
+              href="/admin/technician"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Technician day
+            </Link>
+            <Link
               href="/admin/accounting"
               className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
@@ -779,6 +785,19 @@ export default async function ScheduleAdminPage({
                                   className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
                                 >
                                   Done
+                                </button>
+                              </form>
+                              <form action={updateDispatchJobStatusAction}>
+                                <input type="hidden" name="invoiceId" value={invoice.id} />
+                                <input type="hidden" name="selectedDate" value={selectedDate} />
+                                <input type="hidden" name="selectedView" value={selectedView} />
+                                <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                                <input type="hidden" name="jobStatus" value="reschedule" />
+                                <button
+                                  type="submit"
+                                  className="rounded-lg border border-orange-500/25 bg-white px-3 py-2 text-xs font-bold text-orange-700 transition hover:bg-orange-50"
+                                >
+                                  Reschedule
                                 </button>
                               </form>
                             </div>

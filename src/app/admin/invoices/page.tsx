@@ -284,6 +284,12 @@ export default async function InvoicesAdminPage({
               Schedule
             </Link>
             <Link
+              href="/admin/technician"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Technician day
+            </Link>
+            <Link
               href="/admin/accounting"
               className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >

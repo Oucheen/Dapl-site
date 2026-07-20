@@ -18,19 +18,27 @@ import {
 } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
+  addInvoicePartAction,
   addInvoicePaymentAction,
   addInvoiceTemplateItemAction,
   applyServiceCallDiscountAction,
   deleteInvoiceItemAction,
+  deleteInvoicePartAction,
   deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
   sendInvoiceEmailAction,
   sendInvoiceSmsAction,
   updateInvoiceItemsAction,
+  updateInvoicePartAction,
   updateInvoiceScheduleAction,
   updateInvoiceStatusAction,
 } from "./actions";
 import { PrintButton } from "./print-button";
+import {
+  invoicePartsTableSql,
+  listInvoiceParts,
+  type InvoicePartStatus,
+} from "@/lib/supabase-parts";
 
 const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -51,12 +59,28 @@ const INVOICE_TERMS = [
 const INVOICE_TAX_NOTE =
   "Sales tax on parts was paid at the time of purchase. No sales tax is charged to the customer.";
 const SERVICE_WINDOWS = ["8:00 AM - 10:00 AM", "10:00 AM - 12:00 PM", "12:00 PM - 2:00 PM", "2:00 PM - 4:00 PM", "4:00 PM - 6:00 PM", "6:00 PM - 8:00 PM"];
+const PART_STATUSES: { value: InvoicePartStatus; label: string }[] = [
+  { value: "needed", label: "Needed" },
+  { value: "ordered", label: "Ordered" },
+  { value: "received", label: "Received" },
+  { value: "installed", label: "Installed" },
+  { value: "returned", label: "Returned" },
+  { value: "canceled", label: "Canceled" },
+];
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
   sent: "border-amber-500/25 bg-amber-50 text-amber-700",
   paid: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
   void: "border-slate-300 bg-slate-100 text-slate-500",
+};
+const partStatusClasses: Record<InvoicePartStatus, string> = {
+  needed: "border-amber-500/25 bg-amber-50 text-amber-800",
+  ordered: "border-sky-500/25 bg-sky-50 text-sky-700",
+  received: "border-indigo-500/25 bg-indigo-50 text-indigo-700",
+  installed: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
+  returned: "border-slate-300 bg-slate-100 text-slate-600",
+  canceled: "border-red-500/25 bg-red-50 text-red-700",
 };
 
 export const dynamic = "force-dynamic";
@@ -363,6 +387,30 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "part_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Part added",
+      body: "The part was added to this job.",
+    };
+  }
+
+  if (status === "part_saved") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Part saved",
+      body: "Part status, supplier, cost, or notes were updated.",
+    };
+  }
+
+  if (status === "part_deleted") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Part removed",
+      body: "The part was removed from this job.",
+    };
+  }
+
   if (status === "permission_denied") {
     return {
       className: "border-amber-500/20 bg-amber-50 text-amber-800",
@@ -403,7 +451,7 @@ export default async function InvoicePage({
   const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
     ? null
     : invoice.customer_email;
-  const [activity, customerHistory, invoiceLead] = await Promise.all([
+  const [activity, customerHistory, invoiceLead, partsData] = await Promise.all([
     listActivitiesForInvoice(invoice.id, 8),
     listCustomerHistory({
       phone: invoice.customer_phone,
@@ -411,7 +459,13 @@ export default async function InvoicePage({
       excludeInvoiceId: invoice.id,
     }),
     invoice.lead_id ? getSupabaseLeadById(invoice.lead_id) : Promise.resolve(null),
+    listInvoiceParts(invoice.id),
   ]);
+  const invoiceParts = partsData.parts;
+  const partsReady = partsData.ready;
+  const openPartsCount = invoiceParts.filter(
+    (part) => part.status !== "installed" && part.status !== "returned" && part.status !== "canceled",
+  ).length;
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), customerEmail),
     getSmsNotice(getQueryValue(query.sms), invoice.customer_phone),
@@ -935,6 +989,224 @@ export default async function InvoicePage({
                 </p>
               </div>
             ) : null}
+
+            <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Parts
+                  </p>
+                  <h2 className="mt-1 text-xl font-black text-primary">Parts needed for this job</h2>
+                </div>
+                <span className="w-fit rounded-full border border-amber-500/25 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+                  {openPartsCount} open
+                </span>
+              </div>
+
+              {!partsReady ? (
+                <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                  <p className="font-black">Parts table is not ready.</p>
+                  <p className="mt-1">
+                    Run this SQL in Supabase once, then refresh this invoice.
+                  </p>
+                  <pre className="mt-3 max-h-48 overflow-auto rounded-lg bg-white p-3 text-xs text-foreground">
+                    {invoicePartsTableSql}
+                  </pre>
+                </div>
+              ) : (
+                <>
+                  {invoiceParts.length ? (
+                    <div className="mt-5 grid gap-3">
+                      {invoiceParts.map((part) => (
+                        <form
+                          key={part.id}
+                          action={updateInvoicePartAction}
+                          className="rounded-xl border border-border bg-slate-50 p-4"
+                        >
+                          <input type="hidden" name="invoiceId" value={invoice.id} />
+                          <input type="hidden" name="partId" value={part.id} />
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Part name
+                                <input
+                                  type="text"
+                                  name="partName"
+                                  defaultValue={part.part_name}
+                                  required
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Status
+                                <select
+                                  name="status"
+                                  defaultValue={part.status}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                >
+                                  {PART_STATUSES.map((status) => (
+                                    <option key={status.value} value={status.value}>
+                                      {status.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Part number
+                                <input
+                                  type="text"
+                                  name="partNumber"
+                                  defaultValue={part.part_number ?? ""}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Supplier
+                                <input
+                                  type="text"
+                                  name="supplier"
+                                  defaultValue={part.supplier ?? ""}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Qty
+                                <input
+                                  type="number"
+                                  name="quantity"
+                                  min="0.01"
+                                  step="0.01"
+                                  defaultValue={formatQuantity(part.quantity)}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                                Cost
+                                <input
+                                  type="number"
+                                  name="cost"
+                                  min="0"
+                                  step="0.01"
+                                  defaultValue={formatInputMoney(part.cost)}
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2">
+                                Note
+                                <input
+                                  type="text"
+                                  name="note"
+                                  defaultValue={part.note ?? ""}
+                                  placeholder="Order note, ETA, return reason..."
+                                  className="min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                                />
+                              </label>
+                            </div>
+                            <span
+                              className={`w-fit shrink-0 rounded-full border px-3 py-1 text-xs font-bold capitalize ${partStatusClasses[part.status]}`}
+                            >
+                              {part.status.replace("_", " ")}
+                            </span>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="submit"
+                              className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                            >
+                              Save part
+                            </button>
+                            <button
+                              form={`delete-part-${part.id}`}
+                              type="submit"
+                              className="rounded-lg border border-red-500/25 bg-white px-4 py-2 text-xs font-bold text-red-700 transition hover:bg-red-50"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </form>
+                      ))}
+                      {invoiceParts.map((part) => (
+                        <form key={`delete-${part.id}`} id={`delete-part-${part.id}`} action={deleteInvoicePartAction}>
+                          <input type="hidden" name="invoiceId" value={invoice.id} />
+                          <input type="hidden" name="partId" value={part.id} />
+                        </form>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                      No parts are attached to this job yet.
+                    </p>
+                  )}
+
+                  <form action={addInvoicePartAction} className="mt-5 rounded-xl border border-border bg-white p-4">
+                    <input type="hidden" name="invoiceId" value={invoice.id} />
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                      Add part
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <input
+                        type="text"
+                        name="partName"
+                        placeholder="Part name"
+                        required
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                      <input
+                        type="text"
+                        name="partNumber"
+                        placeholder="Part number"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                      <input
+                        type="text"
+                        name="supplier"
+                        placeholder="Supplier"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                      <select
+                        name="status"
+                        defaultValue="needed"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      >
+                        {PART_STATUSES.map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        name="quantity"
+                        min="0.01"
+                        step="0.01"
+                        defaultValue="1"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                      />
+                      <input
+                        type="number"
+                        name="cost"
+                        min="0"
+                        step="0.01"
+                        placeholder="Cost"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                      <input
+                        type="text"
+                        name="note"
+                        placeholder="Note"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2 lg:col-span-2"
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Add part
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </section>
           </article>
 
           <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">

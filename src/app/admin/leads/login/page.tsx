@@ -65,10 +65,26 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
                 type="submit"
                 className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/15 transition hover:bg-primary/90"
               >
-                Open leads
+                Open admin dashboard
               </button>
             </form>
           )}
+
+          <div className="mt-7 border-t border-border pt-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+              Quick links after sign in
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["Leads", "Schedule", "Technician day", "Invoices", "Accounting"].map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
       </div>
     </main>

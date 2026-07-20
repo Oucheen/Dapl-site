@@ -41,6 +41,27 @@ function getScheduleRedirectView(formData: FormData) {
 }
 
 function getScheduleRedirect(selectedDate: string, technician = "", view = "day") {
+  const params = getScheduleRedirectParams(selectedDate, technician, view);
+  const query = params.toString();
+  return query ? `/admin/schedule?${query}` : "/admin/schedule";
+}
+
+function getTechnicianRedirect(selectedDate: string, technician = "") {
+  const params = new URLSearchParams();
+
+  if (selectedDate) {
+    params.set("date", selectedDate);
+  }
+
+  if (technician) {
+    params.set("tech", technician);
+  }
+
+  const query = params.toString();
+  return query ? `/admin/technician?${query}` : "/admin/technician";
+}
+
+function getScheduleRedirectParams(selectedDate: string, technician = "", view = "day") {
   const params = new URLSearchParams();
 
   if (selectedDate) {
@@ -55,8 +76,13 @@ function getScheduleRedirect(selectedDate: string, technician = "", view = "day"
     params.set("view", "week");
   }
 
-  const query = params.toString();
-  return query ? `/admin/schedule?${query}` : "/admin/schedule";
+  return params;
+}
+
+function getDispatchRedirect(formData: FormData, selectedDate: string, technician: string, view: string) {
+  return String(formData.get("returnTo") || "") === "technician"
+    ? getTechnicianRedirect(selectedDate, technician)
+    : getScheduleRedirect(selectedDate, technician, view);
 }
 
 function getJobStatus(value: FormDataEntryValue | null) {
@@ -103,8 +129,9 @@ export async function updateDispatchScheduleAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
   revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(getScheduleRedirect(selectedDate, technicianFilter, selectedView));
+  redirect(getDispatchRedirect(formData, selectedDate, technicianFilter, selectedView));
 }
 
 export async function updateDispatchJobStatusAction(formData: FormData) {
@@ -131,6 +158,7 @@ export async function updateDispatchJobStatusAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
   revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(getScheduleRedirect(selectedDate, technicianFilter, selectedView));
+  redirect(getDispatchRedirect(formData, selectedDate, technicianFilter, selectedView));
 }

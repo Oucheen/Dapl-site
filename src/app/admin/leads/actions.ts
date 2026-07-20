@@ -61,7 +61,7 @@ export async function loginAdmin(formData: FormData) {
   }
 
   await setAdminSession(user);
-  redirect("/admin/leads");
+  redirect("/admin");
 }
 
 export async function logoutAdmin() {

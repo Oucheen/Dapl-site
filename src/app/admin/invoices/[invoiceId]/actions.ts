@@ -23,9 +23,23 @@ import {
   updateInvoiceSchedule,
   updateInvoiceStatus,
 } from "@/lib/supabase-invoices";
+import {
+  addInvoicePart,
+  deleteInvoicePart,
+  type InvoicePartStatus,
+  updateInvoicePart,
+} from "@/lib/supabase-parts";
 
 const ALLOWED_INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid", "void"];
 const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
+const ALLOWED_PART_STATUSES: InvoicePartStatus[] = [
+  "needed",
+  "ordered",
+  "received",
+  "installed",
+  "returned",
+  "canceled",
+];
 
 async function requireInvoiceAdmin() {
   const permissions = await getCurrentAdminPermissions();
@@ -39,6 +53,16 @@ async function requireInvoiceAdmin() {
 
 function redirectPermissionDenied(invoiceId: string) {
   redirect(`/admin/invoices/${invoiceId}?notice=permission_denied`);
+}
+
+function getPartStatus(value: FormDataEntryValue | null) {
+  const status = String(value || "");
+
+  if (!ALLOWED_PART_STATUSES.includes(status as InvoicePartStatus)) {
+    throw new Error("Invalid part status.");
+  }
+
+  return status as InvoicePartStatus;
 }
 
 async function canEditInvoiceLineItems(
@@ -135,6 +159,7 @@ export async function updateInvoiceScheduleAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
   revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}?notice=schedule_updated`);
 }
@@ -338,6 +363,98 @@ export async function deleteInvoiceItemAction(formData: FormData) {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}?notice=item_deleted`);
+}
+
+export async function addInvoicePartAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const partName = String(formData.get("partName") || "");
+  const partNumber = String(formData.get("partNumber") || "");
+  const supplier = String(formData.get("supplier") || "");
+  const status = getPartStatus(formData.get("status"));
+  const quantity = String(formData.get("quantity") || "1");
+  const cost = String(formData.get("cost") || "0");
+  const note = String(formData.get("note") || "");
+
+  await addInvoicePart(invoiceId, {
+    partName,
+    partNumber,
+    supplier,
+    status,
+    quantity,
+    cost,
+    note,
+  });
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_part_added",
+    title: "Part added",
+    details: `${partName || "Part"} was added with status ${status}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=part_added`);
+}
+
+export async function updateInvoicePartAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const partId = String(formData.get("partId") || "");
+  const partName = String(formData.get("partName") || "");
+  const partNumber = String(formData.get("partNumber") || "");
+  const supplier = String(formData.get("supplier") || "");
+  const status = getPartStatus(formData.get("status"));
+  const quantity = String(formData.get("quantity") || "1");
+  const cost = String(formData.get("cost") || "0");
+  const note = String(formData.get("note") || "");
+
+  await updateInvoicePart(partId, {
+    partName,
+    partNumber,
+    supplier,
+    status,
+    quantity,
+    cost,
+    note,
+  });
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_part_updated",
+    title: "Part updated",
+    details: `${partName || "Part"} was updated to ${status}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=part_saved`);
+}
+
+export async function deleteInvoicePartAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const partId = String(formData.get("partId") || "");
+
+  await deleteInvoicePart(partId);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_part_deleted",
+    title: "Part removed",
+    details: "A part record was removed.",
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=part_deleted`);
 }
 
 export async function addInvoicePaymentAction(formData: FormData) {
