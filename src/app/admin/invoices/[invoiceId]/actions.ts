@@ -408,7 +408,6 @@ export async function updateInvoicePartAction(formData: FormData) {
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const partId = String(formData.get("partId") || "");
-  const paymentMethod = String(formData.get("paymentMethod") || "Cash");
   const partName = String(formData.get("partName") || "");
   const partNumber = String(formData.get("partNumber") || "");
   const supplier = String(formData.get("supplier") || "");

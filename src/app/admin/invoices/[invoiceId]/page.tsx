@@ -10,6 +10,7 @@ import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
+  type InvoiceJobStatus,
   type InvoiceRecord,
   type InvoiceStatus,
   calculateInvoiceAmountDue,
@@ -69,6 +70,7 @@ const PART_STATUSES: { value: InvoicePartStatus; label: string }[] = [
   { value: "canceled", label: "Canceled" },
 ];
 const PART_EXPENSE_PAYMENT_METHODS = ["Cash", "Card", "Zelle", "Check", "Bank transfer", "Other"];
+const CLOSED_PART_STATUSES = new Set<InvoicePartStatus>(["installed", "returned", "canceled"]);
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -204,6 +206,10 @@ function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
 }
 
+function getLineTotalAmount(item: InvoiceItemRecord) {
+  return Number(item.quantity ?? 0) * Number(item.unit_price ?? 0);
+}
+
 function formatPaymentMethod(value: string) {
   return value
     .split(/[-_\s]+/)
@@ -241,6 +247,111 @@ function getQueryValue(value: string | string[] | undefined) {
 
 function isPlaceholderCustomerEmail(value: string | null | undefined) {
   return Boolean(value?.trim().toLowerCase().endsWith("@daplappliance.local"));
+}
+
+function getJobStatus(invoice: InvoiceRecord): InvoiceJobStatus {
+  return invoice.job_status ?? (invoice.service_date ? "scheduled" : "reschedule");
+}
+
+function getNextAction(input: {
+  invoice: InvoiceRecord;
+  amountDue: number;
+  openPartsCount: number;
+  unexpensedPartsCount: number;
+  customerEmail: string | null;
+  scheduleHref: string;
+}) {
+  const jobStatus = getJobStatus(input.invoice);
+
+  if (input.invoice.status === "void") {
+    return {
+      title: "Invoice is void",
+      body: "No next action is required unless this invoice needs to be reopened.",
+      href: "/admin/invoices",
+      cta: "Open invoices",
+      className: "border-slate-300 bg-slate-50 text-slate-700",
+    };
+  }
+
+  if (!input.invoice.service_date) {
+    return {
+      title: "Schedule this job",
+      body: "Add the customer to the dispatch calendar before assigning the route.",
+      href: input.scheduleHref,
+      cta: "Open schedule",
+      className: "border-amber-500/25 bg-amber-50 text-amber-900",
+    };
+  }
+
+  if (!input.invoice.service_time && !input.invoice.service_window) {
+    return {
+      title: "Add visit time",
+      body: "The date is set, but the technician still needs a time window or exact time.",
+      href: input.scheduleHref,
+      cta: "Set time",
+      className: "border-amber-500/25 bg-amber-50 text-amber-900",
+    };
+  }
+
+  if (!input.invoice.assigned_technician) {
+    return {
+      title: "Assign technician",
+      body: "This job is on the calendar but does not have a technician yet.",
+      href: input.scheduleHref,
+      cta: "Assign tech",
+      className: "border-sky-500/25 bg-sky-50 text-sky-900",
+    };
+  }
+
+  if (jobStatus === "need_parts" || input.openPartsCount > 0) {
+    return {
+      title: "Follow up on parts",
+      body: input.unexpensedPartsCount
+        ? "Parts are still open, and at least one part cost has not been added to expenses."
+        : "Parts are still open for this job. Update status when ordered, received, or installed.",
+      href: "#internal-parts",
+      cta: "Review parts",
+      className: "border-orange-500/25 bg-orange-50 text-orange-900",
+    };
+  }
+
+  if (input.invoice.status === "draft" && input.customerEmail) {
+    return {
+      title: "Send invoice",
+      body: "The invoice is still draft. Send it once the customer-facing charges look correct.",
+      href: "#invoice-controls",
+      cta: "Review controls",
+      className: "border-primary/20 bg-primary/5 text-primary",
+    };
+  }
+
+  if (input.amountDue > 0) {
+    return {
+      title: "Collect balance",
+      body: `The customer still owes ${formatMoney(input.amountDue)}.`,
+      href: "#payment-history",
+      cta: "Add payment",
+      className: "border-red-500/25 bg-red-50 text-red-900",
+    };
+  }
+
+  if (input.invoice.status !== "paid") {
+    return {
+      title: "Mark completed",
+      body: "The invoice balance is zero. Mark the job completed to close it cleanly.",
+      href: "#invoice-controls",
+      cta: "Close job",
+      className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
+    };
+  }
+
+  return {
+    title: "Job is complete",
+    body: "Payment is recorded and the invoice is closed.",
+    href: "/admin",
+    cta: "Admin dashboard",
+    className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
+  };
 }
 
 function getEmailNotice(status: string | undefined, customerEmail: string | null): PageNotice | null {
@@ -493,7 +604,7 @@ export default async function InvoicePage({
   const invoiceParts = partsData.parts;
   const partsReady = partsData.ready;
   const openPartsCount = invoiceParts.filter(
-    (part) => part.status !== "installed" && part.status !== "returned" && part.status !== "canceled",
+    (part) => !CLOSED_PART_STATUSES.has(part.status),
   ).length;
   const notices: PageNotice[] = [
     getEmailNotice(getQueryValue(query.email), customerEmail),
@@ -505,6 +616,16 @@ export default async function InvoicePage({
   const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const knownPartsCost = invoiceParts.reduce((sum, part) => sum + Number(part.cost ?? 0), 0);
+  const expensedPartsCost = invoiceParts
+    .filter((part) => part.expense_id)
+    .reduce((sum, part) => sum + Number(part.cost ?? 0), 0);
+  const unexpensedParts = invoiceParts.filter((part) => !part.expense_id && Number(part.cost ?? 0) > 0);
+  const unexpensedPartsCost = unexpensedParts.reduce((sum, part) => sum + Number(part.cost ?? 0), 0);
+  const customerPartsCharge = items
+    .filter((item) => /part/i.test(item.description))
+    .reduce((sum, item) => sum + getLineTotalAmount(item), 0);
+  const estimatedJobProfit = paidAmount - knownPartsCost;
   const hasPayments = payments.length > 0;
   const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
   const isManualInvoice = invoiceLead?.lead_source === "manual-admin";
@@ -520,6 +641,14 @@ export default async function InvoicePage({
   const technicianDayHref = invoice.service_date
     ? `/admin/technician?date=${encodeURIComponent(invoice.service_date)}${invoice.assigned_technician ? `&tech=${encodeURIComponent(invoice.assigned_technician)}` : ""}`
     : "/admin/technician";
+  const nextAction = getNextAction({
+    invoice,
+    amountDue,
+    openPartsCount,
+    unexpensedPartsCount: unexpensedParts.length,
+    customerEmail,
+    scheduleHref,
+  });
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
       (status.value !== "paid" || invoice.status === "paid" || amountDue <= 0) &&
@@ -542,6 +671,12 @@ export default async function InvoicePage({
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin"
+              className="inline-flex w-fit rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Dashboard
+            </Link>
             <Link
               href={scheduleHref}
               className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
@@ -1047,7 +1182,7 @@ export default async function InvoicePage({
               </div>
             ) : null}
 
-            <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
+            <section id="internal-parts" className="scroll-mt-6 border-t border-border px-5 py-5 print:hidden sm:px-7">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
@@ -1076,6 +1211,33 @@ export default async function InvoicePage({
                 </div>
               ) : (
                 <>
+                  <div className="mt-5 grid gap-3 md:grid-cols-4">
+                    <div className="rounded-xl border border-border bg-slate-50 p-4">
+                      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted">
+                        Known parts cost
+                      </p>
+                      <p className="mt-2 text-2xl font-black text-primary">{formatMoney(knownPartsCost)}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-slate-50 p-4">
+                      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted">
+                        Added to expenses
+                      </p>
+                      <p className="mt-2 text-2xl font-black text-primary">{formatMoney(expensedPartsCost)}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-slate-50 p-4">
+                      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted">
+                        Not expensed
+                      </p>
+                      <p className="mt-2 text-2xl font-black text-primary">{formatMoney(unexpensedPartsCost)}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-slate-50 p-4">
+                      <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted">
+                        Customer parts charge
+                      </p>
+                      <p className="mt-2 text-2xl font-black text-primary">{formatMoney(customerPartsCharge)}</p>
+                    </div>
+                  </div>
+
                   {invoiceParts.length ? (
                     <div className="mt-5 grid gap-3">
                       {invoiceParts.map((part) => {
@@ -1191,7 +1353,7 @@ export default async function InvoicePage({
                             {part.expense_id ? (
                               <>
                                 <span className="rounded-lg border border-emerald-500/25 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">
-                                  Expensed
+                                  Expensed{part.expensed_at ? ` ${formatDate(part.expensed_at)}` : ""}
                                 </span>
                                 <Link
                                   href={getAccountingExpenseHref(part.expense_id, part.expensed_at)}
@@ -1202,6 +1364,9 @@ export default async function InvoicePage({
                               </>
                             ) : canAddPartExpense ? (
                               <>
+                                <span className="rounded-lg border border-amber-500/25 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800">
+                                  Not expensed
+                                </span>
                                 <select
                                   name="paymentMethod"
                                   form={`expense-part-${part.id}`}
@@ -1224,7 +1389,7 @@ export default async function InvoicePage({
                               </>
                             ) : (
                               <span className="rounded-lg border border-border bg-white px-4 py-2 text-xs font-bold text-muted">
-                                Add cost first
+                                Not expensed / add cost first
                               </span>
                             )}
                           </div>
@@ -1321,10 +1486,58 @@ export default async function InvoicePage({
             </section>
           </article>
 
-          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
+          <aside id="invoice-controls" className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Invoice controls
             </p>
+            <div className={`mt-4 rounded-xl border p-4 ${nextAction.className}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] opacity-80">
+                Next action
+              </p>
+              <h2 className="mt-1 text-xl font-black">{nextAction.title}</h2>
+              <p className="mt-2 text-sm leading-6">{nextAction.body}</p>
+              <a
+                href={nextAction.href}
+                className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-slate-50"
+              >
+                {nextAction.cta}
+              </a>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-border bg-slate-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Job profit
+              </p>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Customer total</span>
+                  <span className="font-bold text-foreground">{formatMoney(invoice.total)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Collected</span>
+                  <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Known parts cost</span>
+                  <span className="font-bold text-red-700">-{formatMoney(knownPartsCost)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Not expensed yet</span>
+                  <span className="font-bold text-amber-700">{formatMoney(unexpensedPartsCost)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+                  <span className="font-black text-primary">Estimated profit</span>
+                  <span className={`font-black ${estimatedJobProfit >= 0 ? "text-primary" : "text-red-700"}`}>
+                    {formatMoney(estimatedJobProfit)}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-muted">
+                Estimate uses collected payments minus known parts cost. Labor, gas, ads, and other expenses
+                still live in accounting.
+              </p>
+            </div>
+
             <div className="mt-4">
               <PrintButton />
               <p className="mt-2 text-xs leading-5 text-muted">
@@ -1509,7 +1722,7 @@ export default async function InvoicePage({
               </div>
             </div>
 
-            <div className="mt-6 border-t border-border pt-5">
+            <div id="payment-history" className="mt-6 scroll-mt-6 border-t border-border pt-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
