@@ -110,8 +110,8 @@ export const INVOICE_ITEM_TEMPLATES = [
   },
   {
     key: "parts",
-    label: "Parts",
-    description: "Parts",
+    label: "Customer parts charge",
+    description: "Parts charge billed to customer",
     quantity: 1,
     unitPrice: 0,
   },

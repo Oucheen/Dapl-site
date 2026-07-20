@@ -682,8 +682,12 @@ export default async function InvoicePage({
                       Line items
                     </p>
                     <h2 className="mt-1 text-xl font-black text-primary">
-                      Services and charges
+                      Customer invoice charges
                     </h2>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      These rows are what the customer sees and pays. Job parts and supplier cost
+                      are tracked separately below.
+                    </p>
                   </div>
                   <span className="w-fit rounded-full border border-emerald-500/25 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                     {lineItemsLockedByRole ? "Owner only" : "Locked"}
@@ -744,8 +748,12 @@ export default async function InvoicePage({
                       Line items
                     </p>
                     <h2 className="mt-1 text-xl font-black text-primary">
-                      Services and charges
+                      Customer invoice charges
                     </h2>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      These rows are what the customer sees and pays. Job parts and supplier cost
+                      are tracked separately below.
+                    </p>
                   </div>
                   <button
                     type="submit"
@@ -839,7 +847,7 @@ export default async function InvoicePage({
                 Line items
               </p>
               <h2 className="mt-1 text-xl font-black text-primary print:text-base">
-                Services and charges
+                Customer invoice charges
               </h2>
 
               <table className="mt-5 w-full border-collapse text-sm print:mt-3 print:text-xs">
@@ -960,7 +968,7 @@ export default async function InvoicePage({
                       Quick templates
                     </p>
                     <p className="mt-1 text-sm leading-6 text-muted">
-                      Add a common charge, then edit the description or price above if needed.
+                      Add a customer-facing charge, then edit the description or price above if needed.
                     </p>
                   </div>
                   <form action={addInvoiceItemAction}>
@@ -1031,9 +1039,13 @@ export default async function InvoicePage({
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                    Parts
+                    Internal parts
                   </p>
                   <h2 className="mt-1 text-xl font-black text-primary">Parts needed for this job</h2>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Track ordered parts, supplier cost, and expenses here. This does not change the
+                    customer invoice total unless you also add a customer charge above.
+                  </p>
                 </div>
                 <span className="w-fit rounded-full border border-amber-500/25 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
                   {openPartsCount} open
