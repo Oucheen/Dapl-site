@@ -6,6 +6,7 @@ import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { sendInvoiceSms } from "@/lib/invoice-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
+import { createExpense } from "@/lib/supabase-accounting";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   addInvoiceItem,
@@ -26,6 +27,8 @@ import {
 import {
   addInvoicePart,
   deleteInvoicePart,
+  getInvoicePartById,
+  markInvoicePartExpensed,
   type InvoicePartStatus,
   updateInvoicePart,
 } from "@/lib/supabase-parts";
@@ -455,6 +458,63 @@ export async function deleteInvoicePartAction(formData: FormData) {
   revalidatePath("/admin/technician");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}?notice=part_deleted`);
+}
+
+export async function addInvoicePartExpenseAction(formData: FormData) {
+  const permissions = await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const partId = String(formData.get("partId") || "");
+
+  if (!permissions.hasElevatedAccess) {
+    redirectPermissionDenied(invoiceId);
+  }
+
+  const [invoiceData, part] = await Promise.all([getInvoiceById(invoiceId), getInvoicePartById(partId)]);
+
+  if (!invoiceData || !part || part.invoice_id !== invoiceId) {
+    throw new Error("Part not found for this invoice.");
+  }
+
+  if (part.expense_id) {
+    redirect(`/admin/invoices/${invoiceId}?notice=part_already_expensed`);
+  }
+
+  const cost = Number(part.cost ?? 0);
+
+  if (!Number.isFinite(cost) || cost <= 0) {
+    throw new Error("Part cost must be greater than 0 before adding it to expenses.");
+  }
+
+  const expenseId = await createExpense({
+    expenseDate: new Date().toISOString().slice(0, 10),
+    category: "Parts",
+    vendor: part.supplier ?? "",
+    description: `${part.part_name} / invoice ${invoiceData.invoice.invoice_number}`,
+    amount: cost,
+    paymentMethod: "Cash",
+    note: [
+      invoiceData.invoice.customer_name,
+      part.part_number ? `Part #${part.part_number}` : "",
+      part.note ?? "",
+    ]
+      .filter(Boolean)
+      .join(" / "),
+  });
+  await markInvoicePartExpensed(part.id, expenseId);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_part_expensed",
+    title: "Part added to expenses",
+    details: `${part.part_name} was added to accounting expenses for $${cost.toFixed(2)}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/accounting");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=part_expensed`);
 }
 
 export async function addInvoicePaymentAction(formData: FormData) {

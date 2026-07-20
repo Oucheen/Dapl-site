@@ -16,6 +16,8 @@ export type InvoicePartRecord = {
   status: InvoicePartStatus;
   quantity: number | string;
   cost: number | string;
+  expense_id: string | null;
+  expensed_at: string | null;
   note: string | null;
 };
 
@@ -158,8 +160,14 @@ export const invoicePartsTableSql = `create table if not exists public.invoice_p
   status text not null default 'needed',
   quantity numeric(10,2) not null default 1,
   cost numeric(10,2) not null default 0 check (cost >= 0),
+  expense_id uuid,
+  expensed_at timestamptz,
   note text
 );
+
+alter table public.invoice_parts
+  add column if not exists expense_id uuid,
+  add column if not exists expensed_at timestamptz;
 
 create index if not exists invoice_parts_invoice_id_idx on public.invoice_parts (invoice_id);
 create index if not exists invoice_parts_status_idx on public.invoice_parts (status);
@@ -197,6 +205,34 @@ export async function listInvoiceParts(invoiceId: string) {
   }
 
   return { parts: (await response.json()) as InvoicePartRecord[], ready: true, error: "" };
+}
+
+export async function getInvoicePartById(partId: string) {
+  assertUuid(partId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    id: `eq.${partId}`,
+    limit: "1",
+  });
+  const response = await fetch(`${getTableUrl(config, config.invoicePartsTable)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice part fetch failed: ${response.status} ${details}`);
+  }
+
+  const parts = (await response.json()) as InvoicePartRecord[];
+  return parts[0] ?? null;
 }
 
 export async function addInvoicePart(invoiceId: string, input: InvoicePartInput) {
@@ -284,5 +320,33 @@ export async function deleteInvoicePart(partId: string) {
   if (!response.ok) {
     const details = await response.text();
     throw new Error(`Supabase invoice part delete failed: ${response.status} ${details}`);
+  }
+}
+
+export async function markInvoicePartExpensed(partId: string, expenseId: string) {
+  assertUuid(partId);
+  assertUuid(expenseId);
+
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(`${getTableUrl(config, config.invoicePartsTable)}?id=eq.${partId}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      expense_id: expenseId,
+      expensed_at: new Date().toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice part expense link failed: ${response.status} ${details}`);
   }
 }

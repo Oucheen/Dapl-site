@@ -18,6 +18,7 @@ import {
 } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
+  addInvoicePartExpenseAction,
   addInvoicePartAction,
   addInvoicePaymentAction,
   addInvoiceTemplateItemAction,
@@ -408,6 +409,22 @@ function getActionNotice(status: string | undefined): PageNotice | null {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
       title: "Part removed",
       body: "The part was removed from this job.",
+    };
+  }
+
+  if (status === "part_expensed") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Part added to expenses",
+      body: "The part cost was added to accounting and linked to this part record.",
+    };
+  }
+
+  if (status === "part_already_expensed") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Part already expensed",
+      body: "This part is already linked to an accounting expense.",
     };
   }
 
@@ -1037,7 +1054,12 @@ export default async function InvoicePage({
                 <>
                   {invoiceParts.length ? (
                     <div className="mt-5 grid gap-3">
-                      {invoiceParts.map((part) => (
+                      {invoiceParts.map((part) => {
+                        const partCost = Number(part.cost ?? 0);
+                        const canAddPartExpense =
+                          Number.isFinite(partCost) && partCost > 0 && !part.expense_id;
+
+                        return (
                         <form
                           key={part.id}
                           action={updateInvoicePartAction}
@@ -1142,14 +1164,38 @@ export default async function InvoicePage({
                             >
                               Delete
                             </button>
+                            {part.expense_id ? (
+                              <span className="rounded-lg border border-emerald-500/25 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">
+                                Expensed
+                              </span>
+                            ) : canAddPartExpense ? (
+                              <button
+                                form={`expense-part-${part.id}`}
+                                type="submit"
+                                className="rounded-lg border border-emerald-500/25 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
+                              >
+                                Add to expenses
+                              </button>
+                            ) : (
+                              <span className="rounded-lg border border-border bg-white px-4 py-2 text-xs font-bold text-muted">
+                                Add cost first
+                              </span>
+                            )}
                           </div>
                         </form>
-                      ))}
+                        );
+                      })}
                       {invoiceParts.map((part) => (
-                        <form key={`delete-${part.id}`} id={`delete-part-${part.id}`} action={deleteInvoicePartAction}>
-                          <input type="hidden" name="invoiceId" value={invoice.id} />
-                          <input type="hidden" name="partId" value={part.id} />
-                        </form>
+                        <div key={`part-actions-${part.id}`} className="hidden">
+                          <form id={`delete-part-${part.id}`} action={deleteInvoicePartAction}>
+                            <input type="hidden" name="invoiceId" value={invoice.id} />
+                            <input type="hidden" name="partId" value={part.id} />
+                          </form>
+                          <form id={`expense-part-${part.id}`} action={addInvoicePartExpenseAction}>
+                            <input type="hidden" name="invoiceId" value={invoice.id} />
+                            <input type="hidden" name="partId" value={part.id} />
+                          </form>
+                        </div>
                       ))}
                     </div>
                   ) : (

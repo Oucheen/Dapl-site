@@ -254,7 +254,7 @@ export async function createExpense(input: ExpenseInput) {
     method: "POST",
     headers: {
       ...headers(config),
-      Prefer: "return=minimal",
+      Prefer: "return=representation",
     },
     body: JSON.stringify({
       expense_date: expenseDate,
@@ -271,6 +271,15 @@ export async function createExpense(input: ExpenseInput) {
     const details = await response.text();
     throw new Error(`Supabase expense insert failed: ${response.status} ${details}`);
   }
+
+  const rows = (await response.json()) as Pick<ExpenseRecord, "id">[];
+  const expenseId = rows[0]?.id;
+
+  if (!expenseId) {
+    throw new Error("Supabase expense insert returned no expense id.");
+  }
+
+  return expenseId;
 }
 
 export async function deleteExpenseById(id: string) {
