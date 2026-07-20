@@ -408,6 +408,7 @@ export async function updateInvoicePartAction(formData: FormData) {
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const partId = String(formData.get("partId") || "");
+  const paymentMethod = String(formData.get("paymentMethod") || "Cash");
   const partName = String(formData.get("partName") || "");
   const partNumber = String(formData.get("partNumber") || "");
   const supplier = String(formData.get("supplier") || "");
@@ -465,6 +466,7 @@ export async function addInvoicePartExpenseAction(formData: FormData) {
 
   const invoiceId = String(formData.get("invoiceId") || "");
   const partId = String(formData.get("partId") || "");
+  const paymentMethod = String(formData.get("paymentMethod") || "Cash");
 
   if (!permissions.hasElevatedAccess) {
     redirectPermissionDenied(invoiceId);
@@ -487,12 +489,13 @@ export async function addInvoicePartExpenseAction(formData: FormData) {
   }
 
   const expenseId = await createExpense({
+    invoiceId,
     expenseDate: new Date().toISOString().slice(0, 10),
     category: "Parts",
     vendor: part.supplier ?? "",
     description: `${part.part_name} / invoice ${invoiceData.invoice.invoice_number}`,
     amount: cost,
-    paymentMethod: "Cash",
+    paymentMethod,
     note: [
       invoiceData.invoice.customer_name,
       part.part_number ? `Part #${part.part_number}` : "",

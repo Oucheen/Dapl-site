@@ -34,6 +34,12 @@ const adminLinks = [
     description: "Monthly revenue, collected payments, expenses, profit, and receivables.",
     cta: "Open accounting",
   },
+  {
+    href: "/admin/parts",
+    title: "Parts inventory",
+    description: "Track needed, ordered, received, installed, returned, and expensed job parts.",
+    cta: "Open parts",
+  },
 ];
 
 export const dynamic = "force-dynamic";

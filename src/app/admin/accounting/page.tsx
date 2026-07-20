@@ -117,6 +117,20 @@ function getPaymentTotalsByInvoice(payments: Awaited<ReturnType<typeof listAccou
   return totals;
 }
 
+function getExpenseTotalsByInvoice(expenses: ExpenseRecord[]) {
+  const totals = new Map<string, number>();
+
+  for (const expense of expenses) {
+    if (!expense.invoice_id) {
+      continue;
+    }
+
+    totals.set(expense.invoice_id, (totals.get(expense.invoice_id) ?? 0) + Number(expense.amount ?? 0));
+  }
+
+  return totals;
+}
+
 export default async function AccountingAdminPage({
   searchParams,
 }: {
@@ -159,6 +173,7 @@ export default async function AccountingAdminPage({
   );
   const nonVoidPeriodInvoices = periodInvoices.filter((invoice) => invoice.status !== "void");
   const paymentTotalsByInvoice = getPaymentTotalsByInvoice(data.payments);
+  const expenseTotalsByInvoice = getExpenseTotalsByInvoice(data.expenses);
   const openReceivables = data.invoices
     .filter((invoice) => invoice.status !== "void")
     .map((invoice) => {
@@ -175,6 +190,17 @@ export default async function AccountingAdminPage({
   const unpaid = sumMoney(openReceivables, (item) => item.amountDue);
   const profit = collected - expenses;
   const categoryTotals = expenseCategoryTotals(data.expenses);
+  const jobProfitRows = nonVoidPeriodInvoices
+    .map((invoice) => {
+      const paid = paymentTotalsByInvoice.get(invoice.id) ?? 0;
+      const linkedExpenses = expenseTotalsByInvoice.get(invoice.id) ?? 0;
+      const estimatedProfit = paid - linkedExpenses;
+
+      return { invoice, paid, linkedExpenses, estimatedProfit };
+    })
+    .filter((item) => item.paid > 0 || item.linkedExpenses > 0)
+    .sort((a, b) => b.estimatedProfit - a.estimatedProfit)
+    .slice(0, 12);
   const canManageExpenses = permissions.hasElevatedAccess && data.expensesReady && !error;
 
   return (
@@ -208,6 +234,12 @@ export default async function AccountingAdminPage({
               className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
               Schedule
+            </Link>
+            <Link
+              href="/admin/parts"
+              className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Parts inventory
             </Link>
             <Link
               href="/admin/technician"
@@ -262,6 +294,12 @@ export default async function AccountingAdminPage({
             >
               Next
             </Link>
+            <a
+              href={`/admin/accounting/export?month=${encodeURIComponent(monthRange.month)}`}
+              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+            >
+              Export CSV
+            </a>
           </div>
         </div>
 
@@ -371,6 +409,61 @@ export default async function AccountingAdminPage({
                       Due
                     </p>
                     <p className="mt-2 font-black text-accent">{formatMoney(amountDue)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-xl font-black text-primary">Profit by job</h2>
+            <p className="mt-1 text-sm text-muted">
+              Uses collected payments minus expenses linked to each invoice.
+            </p>
+          </div>
+
+          {jobProfitRows.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm leading-6 text-muted">
+              Job profit appears after payments and invoice-linked expenses are recorded.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {jobProfitRows.map(({ invoice, paid, linkedExpenses, estimatedProfit }) => (
+                <Link
+                  key={invoice.id}
+                  href={`/admin/invoices/${invoice.id}`}
+                  className="grid gap-4 px-5 py-5 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_120px_120px_130px]"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Job
+                    </p>
+                    <p className="mt-2 break-words font-black text-primary">
+                      {invoice.customer_name}
+                    </p>
+                    <p className="mt-1 break-words text-sm text-muted">
+                      {invoice.invoice_number} / {invoice.appliance || "Appliance not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Collected
+                    </p>
+                    <p className="mt-2 font-black text-foreground">{formatMoney(paid)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Expenses
+                    </p>
+                    <p className="mt-2 font-black text-accent">{formatMoney(linkedExpenses)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                      Profit
+                    </p>
+                    <p className="mt-2 font-black text-primary">{formatMoney(estimatedProfit)}</p>
                   </div>
                 </Link>
               ))}
@@ -552,9 +645,17 @@ export default async function AccountingAdminPage({
                     </p>
                     <p className="mt-1 break-words text-sm text-muted">
                       {expense.category}
-                      {expense.vendor ? ` · ${expense.vendor}` : ""}
-                      {expense.payment_method ? ` · ${expense.payment_method}` : ""}
+                      {expense.vendor ? ` / ${expense.vendor}` : ""}
+                      {expense.payment_method ? ` / ${expense.payment_method}` : ""}
                     </p>
+                    {expense.invoice_id ? (
+                      <Link
+                        href={`/admin/invoices/${expense.invoice_id}`}
+                        className="mt-2 inline-flex rounded-full border border-primary/15 bg-white px-3 py-1 text-xs font-bold text-primary transition hover:bg-primary/5"
+                      >
+                        Open linked invoice
+                      </Link>
+                    ) : null}
                     {expense.note ? (
                       <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted">
                         {expense.note}

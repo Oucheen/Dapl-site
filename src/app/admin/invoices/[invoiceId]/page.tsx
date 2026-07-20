@@ -68,6 +68,7 @@ const PART_STATUSES: { value: InvoicePartStatus; label: string }[] = [
   { value: "returned", label: "Returned" },
   { value: "canceled", label: "Canceled" },
 ];
+const PART_EXPENSE_PAYMENT_METHODS = ["Cash", "Card", "Zelle", "Check", "Bank transfer", "Other"];
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -1181,13 +1182,27 @@ export default async function InvoicePage({
                                 Expensed
                               </span>
                             ) : canAddPartExpense ? (
-                              <button
-                                form={`expense-part-${part.id}`}
-                                type="submit"
-                                className="rounded-lg border border-emerald-500/25 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
-                              >
-                                Add to expenses
-                              </button>
+                              <>
+                                <select
+                                  name="paymentMethod"
+                                  form={`expense-part-${part.id}`}
+                                  defaultValue="Cash"
+                                  className="rounded-lg border border-emerald-500/25 bg-white px-3 py-2 text-xs font-bold text-emerald-700 outline-none ring-emerald-500/20 focus:border-emerald-500 focus:ring-2"
+                                >
+                                  {PART_EXPENSE_PAYMENT_METHODS.map((method) => (
+                                    <option key={method} value={method}>
+                                      {method}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  form={`expense-part-${part.id}`}
+                                  type="submit"
+                                  className="rounded-lg border border-emerald-500/25 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
+                                >
+                                  Add to expenses
+                                </button>
+                              </>
                             ) : (
                               <span className="rounded-lg border border-border bg-white px-4 py-2 text-xs font-bold text-muted">
                                 Add cost first

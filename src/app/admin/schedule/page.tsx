@@ -56,6 +56,7 @@ const technicianColorClasses = [
 ];
 const MAX_JOBS_PER_TECH_WINDOW = 2;
 const MAX_ROUTE_STOPS = 10;
+const DEFAULT_UNASSIGNED_TECHNICIAN = "Unassigned";
 
 export const dynamic = "force-dynamic";
 
@@ -322,6 +323,69 @@ function getScheduleConflictWarnings(invoices: InvoiceRecord[]) {
   return warnings;
 }
 
+function getSlotInvoices(
+  invoices: InvoiceRecord[],
+  date: string,
+  window: (typeof SERVICE_WINDOWS)[number],
+  technician = "",
+) {
+  return invoices.filter(
+    (invoice) =>
+      invoice.service_date === date &&
+      invoice.status !== "void" &&
+      invoiceBelongsToWindow(invoice, window) &&
+      (!technician || invoice.assigned_technician === technician),
+  );
+}
+
+function getSlotTime(window: (typeof SERVICE_WINDOWS)[number]) {
+  return `${String(window.start).padStart(2, "0")}:00`;
+}
+
+function getScheduleCandidateTechnicians(technicians: string[], selectedTechnician: string) {
+  if (selectedTechnician) {
+    return [selectedTechnician];
+  }
+
+  return technicians.length ? technicians : [DEFAULT_UNASSIGNED_TECHNICIAN];
+}
+
+function getRecommendedSlots(
+  invoices: InvoiceRecord[],
+  dates: string[],
+  technicians: string[],
+  selectedTechnician: string,
+) {
+  const candidateTechnicians = getScheduleCandidateTechnicians(technicians, selectedTechnician);
+
+  return dates
+    .flatMap((date, dateIndex) =>
+      SERVICE_WINDOWS.flatMap((window, windowIndex) =>
+        candidateTechnicians.map((technician) => {
+          const assignedTechnician = technician === DEFAULT_UNASSIGNED_TECHNICIAN ? "" : technician;
+          const jobsInSlot = getSlotInvoices(invoices, date, window, assignedTechnician).length;
+          const score = jobsInSlot * 100 + dateIndex * 10 + windowIndex;
+
+          return {
+            key: `${date}-${window.label}-${technician}`,
+            date,
+            dateLabel: formatWeekDay(date),
+            window,
+            time: getSlotTime(window),
+            technician,
+            assignedTechnician,
+            jobsInSlot,
+            remainingCapacity: Math.max(0, MAX_JOBS_PER_TECH_WINDOW - jobsInSlot),
+            score,
+          };
+        }),
+      ),
+    )
+    .filter((slot) => slot.jobsInSlot < MAX_JOBS_PER_TECH_WINDOW)
+    .sort((left, right) => left.score - right.score)
+    .slice(0, 8);
+}
+
 export default async function ScheduleAdminPage({
   searchParams,
 }: {
@@ -388,6 +452,8 @@ export default async function ScheduleAdminPage({
     .filter((invoice) => !invoice.service_date && invoice.status !== "paid" && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
     .slice(0, 20);
+  const recommendedSlots = getRecommendedSlots(invoices, weekDates, technicians, selectedTechnician);
+  const selectedDateRecommendedSlots = recommendedSlots.filter((slot) => slot.date === selectedDate);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -422,6 +488,12 @@ export default async function ScheduleAdminPage({
               className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
               Accounting
+            </Link>
+            <Link
+              href="/admin/parts"
+              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Parts
             </Link>
           </div>
         </div>
@@ -614,55 +686,98 @@ export default async function ScheduleAdminPage({
                     </Link>
                   </div>
                   <div className="mt-4 grid gap-3">
-                    {dayInvoices.length ? (
-                      dayInvoices.map((invoice) => {
-                        const jobStatus = getJobStatus(invoice);
-                        const mapsUrl = getMapsSearchUrl(invoice.service_address);
+                    {SERVICE_WINDOWS.map((window) => {
+                      const windowInvoices = dayInvoices.filter((invoice) =>
+                        invoiceBelongsToWindow(invoice, window),
+                      );
+                      const openCapacity = selectedTechnician
+                        ? Math.max(0, MAX_JOBS_PER_TECH_WINDOW - windowInvoices.length)
+                        : null;
 
-                        return (
-                          <article
-                            key={invoice.id}
-                            className={`rounded-xl border border-l-4 bg-slate-50 p-3 text-xs transition hover:border-primary/30 hover:bg-white ${getTechnicianColorClass(
-                              invoice.assigned_technician,
-                              technicians,
-                            )}`}
-                          >
-                            <p className="font-black text-primary">{invoice.customer_name}</p>
-                            <p className="mt-1 font-bold text-muted">{getInvoiceScheduleLabel(invoice)}</p>
-                            <p className="mt-2 leading-5 text-muted">
-                              {invoice.assigned_technician || "No technician"}
-                            </p>
-                            <span
-                              className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
-                            >
-                              {getJobStatusLabel(jobStatus)}
-                            </span>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <Link
-                                href={`/admin/invoices/${invoice.id}`}
-                                className="rounded-lg border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
-                              >
-                                Invoice
-                              </Link>
-                              {mapsUrl ? (
-                                <a
-                                  href={mapsUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="rounded-lg border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
-                                >
-                                  Maps
-                                </a>
-                              ) : null}
+                      return (
+                        <div
+                          key={`${date}-${window.label}`}
+                          className={`rounded-xl border p-3 ${
+                            selectedTechnician && windowInvoices.length > MAX_JOBS_PER_TECH_WINDOW
+                              ? "border-red-500/25 bg-red-50"
+                              : windowInvoices.length
+                                ? "border-border bg-slate-50"
+                                : "border-dashed border-border bg-white"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-black text-primary">{window.label}</p>
+                              <p className="mt-0.5 text-[0.65rem] font-bold text-muted">
+                                {openCapacity === null
+                                  ? "All techs"
+                                  : openCapacity
+                                    ? `${openCapacity} open`
+                                    : "Full"}
+                              </p>
                             </div>
-                          </article>
-                        );
-                      })
-                    ) : (
-                      <p className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-muted">
-                        No jobs.
-                      </p>
-                    )}
+                            <span className="rounded-full bg-white px-2 py-1 text-[0.65rem] font-bold text-muted">
+                              {windowInvoices.length}
+                            </span>
+                          </div>
+                          <div className="mt-3 grid gap-2">
+                            {windowInvoices.length ? (
+                              windowInvoices.map((invoice) => {
+                                const jobStatus = getJobStatus(invoice);
+                                const mapsUrl = getMapsSearchUrl(invoice.service_address);
+
+                                return (
+                                  <article
+                                    key={invoice.id}
+                                    className={`rounded-lg border border-l-4 bg-white p-2 text-xs transition hover:border-primary/30 ${getTechnicianColorClass(
+                                      invoice.assigned_technician,
+                                      technicians,
+                                    )}`}
+                                  >
+                                    <p className="truncate font-black text-primary">
+                                      {invoice.customer_name}
+                                    </p>
+                                    <p className="mt-1 font-bold text-muted">
+                                      {getInvoiceScheduleLabel(invoice)}
+                                    </p>
+                                    <p className="mt-1 truncate leading-5 text-muted">
+                                      {invoice.assigned_technician || "No technician"}
+                                    </p>
+                                    <span
+                                      className={`mt-2 inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
+                                    >
+                                      {getJobStatusLabel(jobStatus)}
+                                    </span>
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                      <Link
+                                        href={`/admin/invoices/${invoice.id}`}
+                                        className="rounded-md border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                                      >
+                                        Invoice
+                                      </Link>
+                                      {mapsUrl ? (
+                                        <a
+                                          href={mapsUrl}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="rounded-md border border-primary/15 bg-white px-2 py-1 text-[0.65rem] font-bold text-primary transition hover:bg-primary/5"
+                                        >
+                                          Maps
+                                        </a>
+                                      ) : null}
+                                    </div>
+                                  </article>
+                                );
+                              })
+                            ) : (
+                              <p className="rounded-lg bg-slate-50 p-2 text-[0.65rem] leading-5 text-muted">
+                                Open slot.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </section>
               );
@@ -891,6 +1006,46 @@ export default async function ScheduleAdminPage({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Needs scheduling
             </p>
+            <h2 className="mt-1 text-xl font-black text-primary">Recommended open slots</h2>
+            <div className="mt-4 grid gap-3">
+              {recommendedSlots.length ? (
+                recommendedSlots.slice(0, 4).map((slot, index) => (
+                  <div
+                    key={slot.key}
+                    className="rounded-xl border border-emerald-500/20 bg-emerald-50 p-4 text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-black text-primary">
+                          {index === 0 ? "Best slot" : `Option ${index + 1}`}
+                        </p>
+                        <p className="mt-1 text-xs font-bold text-emerald-800">
+                          {slot.dateLabel} / {slot.window.label}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-2 py-1 text-[0.65rem] font-bold text-emerald-800">
+                        {slot.remainingCapacity} open
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-muted">
+                      {slot.technician} / suggested time {formatServiceTime(slot.time)}
+                    </p>
+                    <Link
+                      href={getScheduleHref(slot.date, slot.assignedTechnician, "day")}
+                      className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-emerald-100"
+                    >
+                      Open this day
+                    </Link>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  No open slots in the selected week.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-border pt-5">
             <h2 className="mt-1 text-xl font-black text-primary">Need parts</h2>
             <div className="mt-4 grid gap-3">
               {needPartsInvoices.length ? (
@@ -943,6 +1098,7 @@ export default async function ScheduleAdminPage({
                   No jobs are waiting for parts.
                 </p>
               )}
+            </div>
             </div>
 
             <div className="mt-5 border-t border-border pt-5">
@@ -1021,6 +1177,32 @@ export default async function ScheduleAdminPage({
                         Save slot
                       </button>
                     </form>
+                    {selectedDateRecommendedSlots.length ? (
+                      <div className="mt-3 grid gap-2 border-t border-amber-500/20 pt-3">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-amber-800">
+                          Quick open slots
+                        </p>
+                        {selectedDateRecommendedSlots.slice(0, 2).map((slot) => (
+                          <form key={`${invoice.id}-${slot.key}`} action={updateDispatchScheduleAction}>
+                            <input type="hidden" name="invoiceId" value={invoice.id} />
+                            <input type="hidden" name="selectedDate" value={selectedDate} />
+                            <input type="hidden" name="selectedView" value={selectedView} />
+                            <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                            <input type="hidden" name="serviceDate" value={slot.date} />
+                            <input type="hidden" name="serviceWindow" value={slot.window.label} />
+                            <input type="hidden" name="serviceTime" value={slot.time} />
+                            <input type="hidden" name="assignedTechnician" value={slot.assignedTechnician} />
+                            <input type="hidden" name="jobStatus" value="scheduled" />
+                            <button
+                              type="submit"
+                              className="w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-bold text-primary transition hover:bg-amber-100"
+                            >
+                              {slot.window.label} / {slot.technician}
+                            </button>
+                          </form>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 ))
               ) : (
@@ -1102,6 +1284,32 @@ export default async function ScheduleAdminPage({
                         Put on schedule
                       </button>
                     </form>
+                    {recommendedSlots.length ? (
+                      <div className="mt-3 grid gap-2 border-t border-border pt-3">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                          Suggested slots
+                        </p>
+                        {recommendedSlots.slice(0, 3).map((slot) => (
+                          <form key={`${invoice.id}-${slot.key}`} action={updateDispatchScheduleAction}>
+                            <input type="hidden" name="invoiceId" value={invoice.id} />
+                            <input type="hidden" name="selectedDate" value={selectedDate} />
+                            <input type="hidden" name="selectedView" value={selectedView} />
+                            <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                            <input type="hidden" name="serviceDate" value={slot.date} />
+                            <input type="hidden" name="serviceWindow" value={slot.window.label} />
+                            <input type="hidden" name="serviceTime" value={slot.time} />
+                            <input type="hidden" name="assignedTechnician" value={slot.assignedTechnician} />
+                            <input type="hidden" name="jobStatus" value="scheduled" />
+                            <button
+                              type="submit"
+                              className="w-full rounded-lg border border-primary/15 bg-white px-3 py-2 text-left text-xs font-bold text-primary transition hover:bg-primary/5"
+                            >
+                              {slot.dateLabel} / {slot.window.label} / {slot.technician}
+                            </button>
+                          </form>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 ))
               ) : (

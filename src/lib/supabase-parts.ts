@@ -207,6 +207,36 @@ export async function listInvoiceParts(invoiceId: string) {
   return { parts: (await response.json()) as InvoicePartRecord[], ready: true, error: "" };
 }
 
+export async function listAllInvoiceParts(limit = 500) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    order: "created_at.desc",
+    limit: String(limit),
+  });
+  const response = await fetch(`${getTableUrl(config, config.invoicePartsTable)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+
+    if (isPartsSetupError(response.status, details)) {
+      return { parts: [] as InvoicePartRecord[], ready: false, error: details };
+    }
+
+    throw new Error(`Supabase invoice parts fetch failed: ${response.status} ${details}`);
+  }
+
+  return { parts: (await response.json()) as InvoicePartRecord[], ready: true, error: "" };
+}
+
 export async function getInvoicePartById(partId: string) {
   assertUuid(partId);
 

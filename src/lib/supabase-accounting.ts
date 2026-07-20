@@ -3,6 +3,7 @@ import type { InvoiceRecord, InvoicePaymentRecord } from "@/lib/supabase-invoice
 export type ExpenseRecord = {
   id: string;
   created_at: string;
+  invoice_id?: string | null;
   expense_date: string;
   category: string;
   vendor: string | null;
@@ -13,6 +14,7 @@ export type ExpenseRecord = {
 };
 
 export type ExpenseInput = {
+  invoiceId?: string | null;
   expenseDate: string;
   category: string;
   vendor: string;
@@ -133,6 +135,7 @@ export function getMonthRange(month: string | null | undefined) {
 export const expensesTableSql = `create table if not exists public.expenses (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
+  invoice_id uuid references public.invoices(id) on delete set null,
   expense_date date not null default current_date,
   category text not null,
   vendor text,
@@ -142,7 +145,11 @@ export const expensesTableSql = `create table if not exists public.expenses (
   note text
 );
 
+alter table public.expenses
+  add column if not exists invoice_id uuid references public.invoices(id) on delete set null;
+
 create index if not exists expenses_expense_date_idx on public.expenses (expense_date desc);
+create index if not exists expenses_invoice_id_idx on public.expenses (invoice_id);
 
 grant select, insert, delete on public.expenses to service_role;`;
 
@@ -236,7 +243,12 @@ export async function createExpense(input: ExpenseInput) {
   const expenseDate = validateDate(input.expenseDate);
   const category = input.category.trim();
   const description = input.description.trim();
+  const invoiceId = input.invoiceId?.trim() || null;
   const amount = toMoney(input.amount);
+
+  if (invoiceId) {
+    assertUuid(invoiceId);
+  }
 
   if (!category) {
     throw new Error("Category is required.");
@@ -257,6 +269,7 @@ export async function createExpense(input: ExpenseInput) {
       Prefer: "return=representation",
     },
     body: JSON.stringify({
+      invoice_id: invoiceId,
       expense_date: expenseDate,
       category,
       vendor: input.vendor.trim() || null,
