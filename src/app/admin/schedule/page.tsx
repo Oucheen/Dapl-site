@@ -280,6 +280,11 @@ function getJobStatus(invoice: InvoiceRecord) {
   return invoice.job_status ?? (invoice.service_date ? "scheduled" : "reschedule");
 }
 
+function isClosedScheduleJob(invoice: InvoiceRecord) {
+  const jobStatus = getJobStatus(invoice);
+  return jobStatus === "done" || jobStatus === "canceled";
+}
+
 function getJobStatusLabel(jobStatus: InvoiceJobStatus) {
   return JOB_STATUSES.find((status) => status.value === jobStatus)?.label ?? jobStatus;
 }
@@ -467,7 +472,7 @@ export default async function ScheduleAdminPage({
 
   const technicians = await getCrmTechnicianNames(invoices.map((invoice) => invoice.assigned_technician));
   const weekDates = getWeekDates(selectedDate);
-  const scheduledInvoices = invoices
+  const dayInvoices = invoices
     .filter((invoice) => invoice.service_date === selectedDate && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
     .sort((left, right) =>
@@ -475,6 +480,8 @@ export default async function ScheduleAdminPage({
         `${right.service_time ?? "99:99"} ${right.customer_name}`,
       ),
     );
+  const scheduledInvoices = dayInvoices.filter((invoice) => !isClosedScheduleJob(invoice));
+  const closedTodayInvoices = dayInvoices.filter(isClosedScheduleJob);
   const needsTimeInvoices = scheduledInvoices.filter(
     (invoice) => !invoice.service_window && !invoice.service_time,
   );
@@ -485,6 +492,7 @@ export default async function ScheduleAdminPage({
         invoice.service_date &&
         weekDates.includes(invoice.service_date) &&
         invoice.status !== "void" &&
+        !isClosedScheduleJob(invoice) &&
         (!selectedTechnician || invoice.assigned_technician === selectedTechnician),
     )
     .sort((left, right) =>
@@ -513,12 +521,13 @@ export default async function ScheduleAdminPage({
     const jobStatus = getJobStatus(invoice);
     return jobStatus !== "done" && jobStatus !== "canceled";
   }).length;
-  const doneTodayCount = scheduledInvoices.filter((invoice) => getJobStatus(invoice) === "done").length;
+  const doneTodayCount = dayInvoices.filter((invoice) => getJobStatus(invoice) === "done").length;
+  const canceledTodayCount = dayInvoices.filter((invoice) => getJobStatus(invoice) === "canceled").length;
   const scheduleSummaryCards = [
     {
       label: "Jobs today",
-      value: scheduledInvoices.length,
-      note: `${activeTodayCount} active / ${doneTodayCount} done`,
+      value: dayInvoices.length,
+      note: `${activeTodayCount} active / ${doneTodayCount} done / ${canceledTodayCount} canceled`,
       href: getScheduleHref(selectedDate, selectedTechnician, "day"),
     },
     {
@@ -1282,6 +1291,47 @@ export default async function ScheduleAdminPage({
               );
             })}
           </div>
+
+          {closedTodayInvoices.length ? (
+            <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Closed today
+                  </p>
+                  <h3 className="mt-1 text-lg font-black text-primary">Done and canceled jobs</h3>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-muted">
+                  {closedTodayInvoices.length} jobs
+                </span>
+              </div>
+              <div className="mt-4 grid gap-2 md:grid-cols-2">
+                {closedTodayInvoices.map((invoice) => {
+                  const jobStatus = getJobStatus(invoice);
+
+                  return (
+                    <Link
+                      key={invoice.id}
+                      href={`/admin/invoices/${invoice.id}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm transition hover:border-primary/25 hover:bg-white"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-black text-primary">{invoice.customer_name}</span>
+                        <span className="mt-1 block truncate text-xs text-muted">
+                          {getInvoiceScheduleLabel(invoice)} / {invoice.assigned_technician || "No technician"}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-1 text-[0.65rem] font-bold uppercase ${jobStatusClasses[jobStatus]}`}
+                      >
+                        {getJobStatusLabel(jobStatus)}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
 
           <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">

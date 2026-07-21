@@ -76,6 +76,10 @@ export async function addTelegramUserAction(formData: FormData) {
   await addTelegramUser(getTelegramUserInput(formData, true));
 
   revalidatePath("/admin/telegram");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/leads");
   redirect("/admin/telegram?notice=added");
 }
 
@@ -87,6 +91,10 @@ export async function updateTelegramUserAction(formData: FormData) {
   await updateTelegramUser(id, getTelegramUserInput(formData, getIsActive(formData.get("isActive"))));
 
   revalidatePath("/admin/telegram");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/leads");
   redirect("/admin/telegram?notice=updated");
 }
 
@@ -96,5 +104,9 @@ export async function deleteTelegramUserAction(formData: FormData) {
   await deleteTelegramUser(String(formData.get("id") || ""));
 
   revalidatePath("/admin/telegram");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/leads");
   redirect("/admin/telegram?notice=deleted");
 }

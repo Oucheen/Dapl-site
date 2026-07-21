@@ -22,62 +22,74 @@ const adminLinks = [
     title: "Global search",
     description: "Find customers, phones, addresses, invoices, appliances, technicians, and parts.",
     cta: "Search CRM",
+    group: "Operations",
   },
   {
     href: "/admin/leads",
     title: "Leads",
     description: "Website requests, customer details, statuses, and invoice creation.",
     cta: "Open leads",
+    group: "Operations",
   },
   {
     href: "/admin/schedule",
     title: "Dispatch schedule",
     description: "Day and week schedule, technician filters, maps, routes, and conflicts.",
     cta: "Open schedule",
+    group: "Operations",
   },
   {
     href: "/admin/technician",
     title: "Technician day",
     description: "Simple daily view for field updates: call, maps, job status, and invoice.",
     cta: "Open technician view",
-  },
-  {
-    href: "/admin/telegram",
-    title: "Telegram access",
-    description: "Manage technician bot users, Telegram IDs, CRM technician names, and roles.",
-    cta: "Open bot access",
-  },
-  {
-    href: "/admin/users",
-    title: "CRM users",
-    description: "Manage admin passwords, staff names, roles, and active access.",
-    cta: "Open CRM users",
+    group: "Operations",
   },
   {
     href: "/admin/invoices",
     title: "Invoices",
     description: "Invoice list, payments, line items, parts, and customer timeline.",
     cta: "Open invoices",
+    group: "Money",
   },
   {
     href: "/admin/accounting",
     title: "Accounting",
     description: "Monthly revenue, collected payments, expenses, profit, and receivables.",
     cta: "Open accounting",
+    group: "Money",
   },
   {
     href: "/admin/checks",
     title: "Check deposits",
     description: "Increase-style queue for received, submitted, accepted, cleared, and rejected checks.",
     cta: "Open checks",
+    group: "Money",
   },
   {
     href: "/admin/parts",
     title: "Parts inventory",
     description: "Track needed, ordered, received, installed, returned, and expensed job parts.",
     cta: "Open parts",
+    group: "Operations",
+  },
+  {
+    href: "/admin/telegram",
+    title: "Telegram access",
+    description: "Bot users, Telegram IDs, technician names, and roles.",
+    cta: "Open bot access",
+    group: "Settings",
+  },
+  {
+    href: "/admin/users",
+    title: "CRM users",
+    description: "Passwords, staff names, roles, and active access.",
+    cta: "Open CRM users",
+    group: "Settings",
   },
 ];
+
+const adminLinkGroups = ["Operations", "Money", "Settings"];
 
 export const dynamic = "force-dynamic";
 
@@ -465,24 +477,63 @@ export default async function AdminPage() {
           </div>
         </section>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {adminLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-            >
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                CRM
-              </span>
-              <span className="mt-2 block text-2xl font-black text-primary">{item.title}</span>
-              <span className="mt-3 block text-sm leading-6 text-muted">{item.description}</span>
-              <span className="mt-5 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition group-hover:bg-primary/90">
-                {item.cta}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                CRM navigation
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-primary">Work areas</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/admin/leads"
+                className="inline-flex rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Leads
+              </Link>
+              <Link
+                href="/admin/schedule"
+                className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+              >
+                Schedule
+              </Link>
+              <Link
+                href="/admin/accounting"
+                className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+              >
+                Accounting
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 xl:grid-cols-3">
+            {adminLinkGroups.map((group) => (
+              <div key={group} className="rounded-xl border border-border bg-slate-50 p-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.16em] text-muted">{group}</h3>
+                <div className="mt-3 grid gap-2">
+                  {adminLinks
+                    .filter((item) => item.group === group)
+                    .map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="group rounded-lg border border-border bg-white p-3 transition hover:border-primary/30 hover:bg-primary/5"
+                      >
+                        <span className="flex items-center justify-between gap-3">
+                          <span className="font-black text-primary">{item.title}</span>
+                          <span className="text-xs font-black text-primary transition group-hover:translate-x-0.5">
+                            Open
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-muted">{item.description}</span>
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );
