@@ -135,6 +135,17 @@ create table if not exists public.telegram_users (
   note text
 );
 
+create table if not exists public.telegram_bot_sessions (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  telegram_user_id text not null,
+  mode text not null check (mode in ('add_part', 'add_photo')),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  expires_at timestamptz not null,
+  payload jsonb not null default '{}'::jsonb
+);
+
 create table if not exists public.admin_users (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -181,6 +192,10 @@ create index if not exists lead_activity_invoice_id_created_at_idx
   on public.lead_activity (invoice_id, created_at desc);
 create index if not exists telegram_users_active_idx on public.telegram_users (is_active);
 create index if not exists telegram_users_role_idx on public.telegram_users (role);
+create unique index if not exists telegram_bot_sessions_user_id_idx
+  on public.telegram_bot_sessions (telegram_user_id);
+create index if not exists telegram_bot_sessions_expires_at_idx
+  on public.telegram_bot_sessions (expires_at);
 create index if not exists admin_users_active_idx on public.admin_users (is_active);
 create index if not exists admin_users_role_idx on public.admin_users (role);
 
@@ -234,6 +249,13 @@ before update on public.telegram_users
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_telegram_bot_sessions_updated_at on public.telegram_bot_sessions;
+
+create trigger set_telegram_bot_sessions_updated_at
+before update on public.telegram_bot_sessions
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_admin_users_updated_at on public.admin_users;
 
 create trigger set_admin_users_updated_at
@@ -250,6 +272,7 @@ alter table public.warehouse_parts enable row level security;
 alter table public.lead_activity enable row level security;
 alter table public.review_summary enable row level security;
 alter table public.telegram_users enable row level security;
+alter table public.telegram_bot_sessions enable row level security;
 alter table public.admin_users enable row level security;
 
 grant usage on schema public to service_role;
@@ -262,4 +285,5 @@ grant select, insert, update, delete on public.warehouse_parts to service_role;
 grant select, insert on public.lead_activity to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
 grant select, insert, update, delete on public.telegram_users to service_role;
+grant select, insert, update, delete on public.telegram_bot_sessions to service_role;
 grant select, insert, update, delete on public.admin_users to service_role;

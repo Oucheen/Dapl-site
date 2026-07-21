@@ -1,5 +1,10 @@
 import { revalidatePath } from "next/cache";
 import { createLeadActivity } from "@/lib/supabase-activity";
+import {
+  clearTelegramBotSession,
+  getTelegramBotSession,
+  upsertTelegramBotSession,
+} from "@/lib/supabase-telegram-bot-sessions";
 import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import {
   addInvoicePart,
@@ -344,8 +349,8 @@ function findInvoiceReference(text: string) {
   return text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i)?.[0] ?? "";
 }
 
-function getInvoiceByReference(invoices: InvoiceRecord[], reference: string) {
-  const normalizedReference = reference.trim().toLowerCase();
+function getInvoiceByReference(invoices: InvoiceRecord[], reference: string | null | undefined) {
+  const normalizedReference = reference?.trim().toLowerCase() ?? "";
 
   if (!normalizedReference) {
     return null;
@@ -418,16 +423,44 @@ async function sendCommandHelp(chatId: number, invoice: InvoiceRecord, type: "pa
   const textByType = {
     part:
       `<b>Add part</b>\n` +
-      `Send:\n<code>/part ${escapeHtml(invoiceNumber)} | gas valve | 12345 | customer needs quote</code>`,
+      `For ${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoiceNumber)}\n` +
+      `Send:\n<code>gas valve | 12345 | customer needs quote</code>\n\n` +
+      `Part number and note are optional.`,
     photo:
       `<b>Add photo</b>\n` +
-      `Send a photo with caption:\n<code>${escapeHtml(invoiceNumber)} before repair</code>`,
+      `For ${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoiceNumber)}\n` +
+      `Send the next photo here. Caption is optional.`,
   } satisfies Record<typeof type, string>;
 
   await sendTelegram({
     chatId,
     text: textByType[type],
   });
+}
+
+async function setBotSession(
+  chatId: number,
+  technician: TelegramTechnician,
+  invoice: InvoiceRecord,
+  mode: "add_part" | "add_photo",
+) {
+  const result = await upsertTelegramBotSession({
+    telegramUserId: technician.telegramUserId,
+    mode,
+    invoiceId: invoice.id,
+    ttlMinutes: 15,
+  });
+
+  if (result.ready) {
+    return true;
+  }
+
+  await sendTelegram({
+    chatId,
+    text:
+      "Session storage is not ready yet. Run the telegram_bot_sessions SQL in Supabase. For now, use the full command with invoice number.",
+  });
+  return false;
 }
 
 async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, technician: TelegramTechnician) {
@@ -462,7 +495,10 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
       return;
     }
 
-    await answerCallbackQuery(callbackQuery.id, "Template sent.");
+    const mode = CALLBACK_HELP_MAP[action] === "part" ? "add_part" : "add_photo";
+    const sessionReady = await setBotSession(chatId, technician, invoice, mode);
+
+    await answerCallbackQuery(callbackQuery.id, sessionReady ? "Ready." : "Session storage missing.");
     await sendCommandHelp(chatId, invoice, CALLBACK_HELP_MAP[action]);
     return;
   }
@@ -504,18 +540,70 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
   });
 }
 
+async function addPartFromText(input: {
+  chatId: number;
+  user: TelegramUser | undefined;
+  technician: TelegramTechnician;
+  invoice: InvoiceRecord;
+  text: string;
+}) {
+  const segments = input.text.split("|").map((item) => item.trim());
+  const partName = segments[0] ?? "";
+  const partNumber = segments[1] ?? "";
+  const note = segments.slice(2).join(" | ");
+
+  if (!partName) {
+    await sendTelegram({
+      chatId: input.chatId,
+      text: "Send part like: <code>gas valve | 12345 | customer needs quote</code>",
+    });
+    return;
+  }
+
+  await addInvoicePart(input.invoice.id, {
+    partName,
+    partNumber,
+    status: "needed",
+    quantity: 1,
+    cost: 0,
+    note: note || `Added from Telegram by ${input.technician.technicianName}`,
+  });
+
+  await createLeadActivity({
+    leadId: input.invoice.lead_id,
+    invoiceId: input.invoice.id,
+    eventType: "telegram_part_added",
+    title: "Part added from Telegram",
+    details: `${partName}${partNumber ? ` / ${partNumber}` : ""}${note ? ` / ${note}` : ""}`,
+    metadata: getActivityActor(input.user, input.technician),
+  });
+
+  await clearTelegramBotSession(input.technician.telegramUserId);
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/parts");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${input.invoice.id}`);
+
+  await sendTelegram({
+    chatId: input.chatId,
+    text: `<b>Part added</b>\n${escapeHtml(partName)}\n${escapeHtml(input.invoice.customer_name)} / ${escapeHtml(input.invoice.invoice_number)}`,
+  });
+}
+
 async function handlePartCommand(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, rawText: string) {
   const [, rest = ""] = rawText.match(/^\/?part\s+([\s\S]+)$/i) ?? [];
-  const segments = rest.split("|").map((item) => item.trim());
-  const reference = findInvoiceReference(segments[0] ?? "");
-  const partName = segments[1] ?? "";
-  const partNumber = segments[2] ?? "";
-  const note = segments.slice(3).join(" | ");
+  const reference = findInvoiceReference(rest);
+  const textWithoutReference = reference
+    ? rest.replace(reference, "").trim().replace(/^[-|:]+/, "").trim()
+    : rest.trim();
 
-  if (!reference || !partName) {
+  if (!reference) {
     await sendTelegram({
       chatId,
-      text: "Use: <code>/part DAPL-YYYYMMDD-XXXX | part name | part number | note</code>",
+      text: "Use: <code>/part DAPL-YYYYMMDD-XXXX | gas valve | 12345 | note</code>, or press Add part under a job first.",
     });
     return;
   }
@@ -528,34 +616,51 @@ async function handlePartCommand(chatId: number, user: TelegramUser | undefined,
     return;
   }
 
-  await addInvoicePart(invoice.id, {
-    partName,
-    partNumber,
-    status: "needed",
-    quantity: 1,
-    cost: 0,
-    note: note || `Added from Telegram by ${technician.technicianName}`,
-  });
+  await addPartFromText({ chatId, user, technician, invoice, text: textWithoutReference });
+}
+
+async function logPhotoForInvoice(input: {
+  chatId: number;
+  user: TelegramUser | undefined;
+  technician: TelegramTechnician;
+  invoice: InvoiceRecord;
+  message: TelegramMessage;
+  caption: string;
+}) {
+  const photo = input.message.photo?.at(-1);
+
+  if (!photo) {
+    return;
+  }
 
   await createLeadActivity({
-    leadId: invoice.lead_id,
-    invoiceId: invoice.id,
-    eventType: "telegram_part_added",
-    title: "Part added from Telegram",
-    details: `${partName}${partNumber ? ` / ${partNumber}` : ""}${note ? ` / ${note}` : ""}`,
-    metadata: getActivityActor(user, technician),
+    leadId: input.invoice.lead_id,
+    invoiceId: input.invoice.id,
+    eventType: "telegram_job_photo",
+    title: "Job photo received",
+    details: input.caption || "Photo was sent from Telegram.",
+    metadata: {
+      ...getActivityActor(input.user, input.technician),
+      telegramPhoto: {
+        fileId: photo.file_id,
+        fileUniqueId: photo.file_unique_id,
+        width: photo.width,
+        height: photo.height,
+        fileSize: photo.file_size ?? null,
+        caption: input.caption,
+      },
+    },
   });
+
+  await clearTelegramBotSession(input.technician.telegramUserId);
 
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
-  revalidatePath("/admin/parts");
-  revalidatePath("/admin/schedule");
-  revalidatePath("/admin/technician");
-  revalidatePath(`/admin/invoices/${invoice.id}`);
+  revalidatePath(`/admin/invoices/${input.invoice.id}`);
 
   await sendTelegram({
-    chatId,
-    text: `<b>Part added</b>\n${escapeHtml(partName)}\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
+    chatId: input.chatId,
+    text: `<b>Photo logged</b>\n${escapeHtml(input.invoice.customer_name)} / ${escapeHtml(input.invoice.invoice_number)}`,
   });
 }
 
@@ -568,15 +673,30 @@ async function handlePhotoMessage(chatId: number, user: TelegramUser | undefined
     return;
   }
 
+  const sessionData = await getTelegramBotSession(technician.telegramUserId);
+  const invoices = await listInvoices(500);
+
+  if (!reference && sessionData.session?.mode === "add_photo") {
+    const sessionInvoice = getInvoiceByReference(invoices, sessionData.session.invoice_id);
+
+    if (!sessionInvoice || !technicianCanSeeInvoice(technician, sessionInvoice)) {
+      await clearTelegramBotSession(technician.telegramUserId);
+      await sendTelegram({ chatId, text: "Saved photo session expired or access was denied. Press Photo under the job again." });
+      return;
+    }
+
+    await logPhotoForInvoice({ chatId, user, technician, invoice: sessionInvoice, message, caption });
+    return;
+  }
+
   if (!reference) {
     await sendTelegram({
       chatId,
-      text: "Photo received, but invoice is missing. Add invoice number in caption, for example: <code>DAPL-YYYYMMDD-XXXX before repair</code>",
+      text: "Photo received, but job is not selected. Press Photo under the job first.",
     });
     return;
   }
 
-  const invoices = await listInvoices(500);
   const invoice = getInvoiceByReference(invoices, reference);
 
   if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
@@ -586,33 +706,7 @@ async function handlePhotoMessage(chatId: number, user: TelegramUser | undefined
 
   const photoNote = caption.replace(reference, "").trim().replace(/^[-|:]+/, "").trim();
 
-  await createLeadActivity({
-    leadId: invoice.lead_id,
-    invoiceId: invoice.id,
-    eventType: "telegram_job_photo",
-    title: "Job photo received",
-    details: photoNote || "Photo was sent from Telegram.",
-    metadata: {
-      ...getActivityActor(user, technician),
-      telegramPhoto: {
-        fileId: photo.file_id,
-        fileUniqueId: photo.file_unique_id,
-        width: photo.width,
-        height: photo.height,
-        fileSize: photo.file_size ?? null,
-        caption,
-      },
-    },
-  });
-
-  revalidatePath("/admin/leads");
-  revalidatePath("/admin/invoices");
-  revalidatePath(`/admin/invoices/${invoice.id}`);
-
-  await sendTelegram({
-    chatId,
-    text: `<b>Photo logged</b>\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
-  });
+  await logPhotoForInvoice({ chatId, user, technician, invoice, message, caption: photoNote });
 }
 
 async function sendHelp(chatId: number) {
@@ -622,7 +716,7 @@ async function sendHelp(chatId: number) {
       `<b>DAPL technician bot</b>\n` +
       `/today - show today's jobs\n` +
       `/tomorrow - show tomorrow's jobs\n` +
-      `/part DAPL-... | part name | part number | note\n` +
+      `Use Add part or Photo under a job for field updates.\n` +
       `/start - show this help`,
     replyMarkup: {
       inline_keyboard: [
@@ -682,6 +776,32 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
   if (message?.photo?.length) {
     await handlePhotoMessage(chatId, user, technician, message);
     return;
+  }
+
+  if (rawText) {
+    const sessionData = await getTelegramBotSession(technician.telegramUserId);
+
+    if (sessionData.session?.mode === "add_part") {
+      const invoices = await listInvoices(500);
+      const invoice = getInvoiceByReference(invoices, sessionData.session.invoice_id);
+
+      if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+        await clearTelegramBotSession(technician.telegramUserId);
+        await sendTelegram({ chatId, text: "Saved part session expired or access was denied. Press Add part under the job again." });
+        return;
+      }
+
+      await addPartFromText({ chatId, user, technician, invoice, text: rawText });
+      return;
+    }
+
+    if (sessionData.session?.mode === "add_photo") {
+      await sendTelegram({
+        chatId,
+        text: "Send a photo now, or press Today/Tomorrow to choose another job.",
+      });
+      return;
+    }
   }
 
   await sendHelp(chatId);

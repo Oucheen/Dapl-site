@@ -94,6 +94,10 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Technician bot commands:
   - `/start` shows help and the user's Telegram ID
   - `/today` sends today's jobs with Maps, Invoice, and job status buttons
+- Technician bot stores short-lived action context in `telegram_bot_sessions`:
+  - pressing `Add part` under a job lets the next message be `part name | part number | note` without manually typing the invoice number
+  - pressing `Photo` under a job lets the next photo attach to that job without manually typing the invoice number
+  - sessions expire after about 15 minutes
 - `TELEGRAM_TECHNICIANS` is now only a fallback for testing before the `telegram_users` table is created
 - Telegram webhook setup example:
   - `https://api.telegram.org/bot<TELEGRAM_TECH_BOT_TOKEN>/setWebhook?url=https://www.daplappliance.com/api/telegram&secret_token=<TELEGRAM_WEBHOOK_SECRET>`
