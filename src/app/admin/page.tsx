@@ -66,6 +66,12 @@ const adminLinks = [
     cta: "Open accounting",
   },
   {
+    href: "/admin/checks",
+    title: "Check deposits",
+    description: "Increase-style queue for received, submitted, accepted, cleared, and rejected checks.",
+    cta: "Open checks",
+  },
+  {
     href: "/admin/parts",
     title: "Parts inventory",
     description: "Track needed, ordered, received, installed, returned, and expensed job parts.",

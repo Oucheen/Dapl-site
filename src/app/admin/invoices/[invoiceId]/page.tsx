@@ -19,6 +19,7 @@ import {
 } from "@/lib/supabase-invoices";
 import {
   addInvoiceItemAction,
+  addInvoiceCheckAction,
   addInvoicePartExpenseAction,
   addInvoicePartAction,
   addInvoicePaymentAction,
@@ -31,6 +32,7 @@ import {
   sendInvoiceEmailAction,
   sendInvoiceSmsAction,
   updateInvoiceItemsAction,
+  updateInvoiceCheckStatusAction,
   updateInvoicePartAction,
   updateInvoiceScheduleAction,
   updateInvoiceStatusAction,
@@ -41,6 +43,11 @@ import {
   listInvoiceParts,
   type InvoicePartStatus,
 } from "@/lib/supabase-parts";
+import {
+  invoiceChecksTableSql,
+  listInvoiceChecks,
+  type InvoiceCheckStatus,
+} from "@/lib/supabase-checks";
 
 const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
@@ -71,6 +78,15 @@ const PART_STATUSES: { value: InvoicePartStatus; label: string }[] = [
 ];
 const PART_EXPENSE_PAYMENT_METHODS = ["Cash", "Card", "Zelle", "Check", "Bank transfer", "Other"];
 const CLOSED_PART_STATUSES = new Set<InvoicePartStatus>(["installed", "returned", "canceled"]);
+const CHECK_STATUSES: { value: InvoiceCheckStatus; label: string }[] = [
+  { value: "received", label: "Received" },
+  { value: "ready_to_submit", label: "Ready to submit" },
+  { value: "submitted", label: "Submitted" },
+  { value: "accepted", label: "Accepted" },
+  { value: "cleared", label: "Cleared" },
+  { value: "rejected", label: "Rejected" },
+  { value: "void", label: "Void" },
+];
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -85,6 +101,15 @@ const partStatusClasses: Record<InvoicePartStatus, string> = {
   installed: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
   returned: "border-slate-300 bg-slate-100 text-slate-600",
   canceled: "border-red-500/25 bg-red-50 text-red-700",
+};
+const checkStatusClasses: Record<InvoiceCheckStatus, string> = {
+  received: "border-amber-500/25 bg-amber-50 text-amber-800",
+  ready_to_submit: "border-sky-500/25 bg-sky-50 text-sky-700",
+  submitted: "border-indigo-500/25 bg-indigo-50 text-indigo-700",
+  accepted: "border-primary/20 bg-primary/5 text-primary",
+  cleared: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
+  rejected: "border-red-500/25 bg-red-50 text-red-700",
+  void: "border-slate-300 bg-slate-100 text-slate-600",
 };
 
 export const dynamic = "force-dynamic";
@@ -511,6 +536,30 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "check_added") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Check received",
+      body: "The check was added to the Increase-style check queue.",
+    };
+  }
+
+  if (status === "check_status_updated") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Check status saved",
+      body: "The check queue was updated.",
+    };
+  }
+
+  if (status === "check_cleared") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Check cleared",
+      body: "The check was marked cleared and added to invoice payments.",
+    };
+  }
+
   if (status === "part_added") {
     return {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
@@ -591,7 +640,7 @@ export default async function InvoicePage({
   const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
     ? null
     : invoice.customer_email;
-  const [activity, customerHistory, invoiceLead, partsData] = await Promise.all([
+  const [activity, customerHistory, invoiceLead, partsData, checksData] = await Promise.all([
     listActivitiesForInvoice(invoice.id, 8),
     listCustomerHistory({
       phone: invoice.customer_phone,
@@ -600,9 +649,14 @@ export default async function InvoicePage({
     }),
     invoice.lead_id ? getSupabaseLeadById(invoice.lead_id) : Promise.resolve(null),
     listInvoiceParts(invoice.id),
+    listInvoiceChecks(invoice.id),
   ]);
   const invoiceParts = partsData.parts;
   const partsReady = partsData.ready;
+  const invoiceChecks = checksData.checks;
+  const checksReady = checksData.ready;
+  const openChecks = invoiceChecks.filter((check) => !["cleared", "rejected", "void"].includes(check.status));
+  const pendingCheckAmount = openChecks.reduce((sum, check) => sum + Number(check.amount ?? 0), 0);
   const openPartsCount = invoiceParts.filter(
     (part) => !CLOSED_PART_STATUSES.has(part.status),
   ).length;
@@ -1726,6 +1780,204 @@ export default async function InvoicePage({
                 <span className="font-black text-primary">Amount due</span>
                 <span className="font-black text-primary">{formatMoney(amountDue)}</span>
               </div>
+              {pendingCheckAmount > 0 ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted">Checks pending</span>
+                  <span className="font-bold text-amber-700">{formatMoney(pendingCheckAmount)}</span>
+                </div>
+              ) : null}
+            </div>
+
+            <div id="check-deposits" className="mt-6 scroll-mt-6 border-t border-border pt-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Check deposits
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Increase-ready tracking for paper checks before they become invoice payments.
+                  </p>
+                </div>
+                {openChecks.length ? (
+                  <span className="rounded-full border border-amber-500/25 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                    {openChecks.length} pending
+                  </span>
+                ) : null}
+              </div>
+
+              {!checksReady ? (
+                <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-xs leading-6 text-amber-900">
+                  <p className="font-black">Checks table is not ready yet</p>
+                  <p className="mt-1">
+                    Run this SQL in Supabase SQL Editor to enable check tracking.
+                  </p>
+                  <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-white p-3 text-[0.7rem] text-foreground">
+                    {invoiceChecksTableSql}
+                  </pre>
+                </div>
+              ) : (
+                <>
+                  <form action={addInvoiceCheckAction} className="mt-4 grid gap-3 rounded-xl border border-border bg-slate-50 p-3">
+                    <input type="hidden" name="invoiceId" value={invoice.id} />
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Amount
+                        <input
+                          type="number"
+                          name="amount"
+                          min="0.01"
+                          step="0.01"
+                          defaultValue={amountDue > 0 ? formatInputMoney(amountDue) : ""}
+                          required
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Received date
+                        <input
+                          type="date"
+                          name="receivedAt"
+                          defaultValue={paymentInputDefaults.date}
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                    </div>
+                    <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      Check number
+                      <input
+                        type="text"
+                        name="checkNumber"
+                        placeholder="Optional"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Payer name
+                        <input
+                          type="text"
+                          name="payerName"
+                          defaultValue={invoice.customer_name}
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Payer bank
+                        <input
+                          type="text"
+                          name="payerBank"
+                          placeholder="Optional"
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Front image URL
+                        <input
+                          type="url"
+                          name="frontImageUrl"
+                          placeholder="Increase/Supabase image URL"
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Back image URL
+                        <input
+                          type="url"
+                          name="backImageUrl"
+                          placeholder="Increase/Supabase image URL"
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                    </div>
+                    <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      Note
+                      <input
+                        type="text"
+                        name="note"
+                        placeholder="Memo, approval, or deposit note"
+                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Receive check
+                    </button>
+                  </form>
+
+                  {invoiceChecks.length ? (
+                    <ul className="mt-5 space-y-3">
+                      {invoiceChecks.map((check) => (
+                        <li
+                          id={`check-${check.id}`}
+                          key={check.id}
+                          className="scroll-mt-6 rounded-xl border border-border bg-slate-50 p-3 text-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-black text-primary">{formatMoney(check.amount)}</p>
+                              <p className="mt-1 text-xs font-semibold text-muted">
+                                {check.check_number ? `Check #${check.check_number} / ` : ""}
+                                {formatDate(check.received_at)}
+                              </p>
+                              <p className="mt-1 break-words text-xs leading-5 text-muted">
+                                {[check.payer_name, check.payer_bank, check.increase_status]
+                                  .filter(Boolean)
+                                  .join(" / ") || "No payer details"}
+                              </p>
+                              {check.note ? (
+                                <p className="mt-2 break-words text-xs leading-5 text-muted">{check.note}</p>
+                              ) : null}
+                              {check.payment_id ? (
+                                <span className="mt-2 inline-flex rounded-full border border-emerald-500/25 bg-white px-2 py-1 text-[0.65rem] font-bold text-emerald-700">
+                                  Payment linked
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className="grid min-w-[150px] gap-2">
+                              <span
+                                className={`rounded-full border px-3 py-1 text-center text-xs font-bold ${
+                                  checkStatusClasses[check.status]
+                                }`}
+                              >
+                                {CHECK_STATUSES.find((status) => status.value === check.status)?.label ?? check.status}
+                              </span>
+                              <form action={updateInvoiceCheckStatusAction} className="grid gap-2">
+                                <input type="hidden" name="invoiceId" value={invoice.id} />
+                                <input type="hidden" name="checkId" value={check.id} />
+                                <select
+                                  name="status"
+                                  defaultValue={check.status}
+                                  className="rounded-lg border border-border bg-white px-2 py-2 text-xs font-bold text-primary outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                >
+                                  {CHECK_STATUSES.map((status) => (
+                                    <option key={status.value} value={status.value}>
+                                      {status.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="submit"
+                                  className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                                >
+                                  Save status
+                                </button>
+                              </form>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                      No checks recorded for this invoice yet.
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             <div id="payment-history" className="mt-6 scroll-mt-6 border-t border-border pt-5">

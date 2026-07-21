@@ -7,6 +7,7 @@ import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { sendInvoiceSms } from "@/lib/invoice-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { createExpense } from "@/lib/supabase-accounting";
+import { createInvoiceCheck, updateInvoiceCheckStatus } from "@/lib/supabase-checks";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import {
   addInvoiceItem,
@@ -573,4 +574,68 @@ export async function deleteInvoicePaymentAction(formData: FormData) {
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${invoiceId}`);
   redirect(`/admin/invoices/${invoiceId}?notice=payment_deleted`);
+}
+
+export async function addInvoiceCheckAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const amount = String(formData.get("amount") || "");
+  const checkNumber = String(formData.get("checkNumber") || "");
+  const payerName = String(formData.get("payerName") || "");
+  const payerBank = String(formData.get("payerBank") || "");
+  const receivedAt = String(formData.get("receivedAt") || "");
+  const frontImageUrl = String(formData.get("frontImageUrl") || "");
+  const backImageUrl = String(formData.get("backImageUrl") || "");
+  const note = String(formData.get("note") || "");
+
+  const checkId = await createInvoiceCheck(invoiceId, {
+    amount,
+    checkNumber,
+    payerName,
+    payerBank,
+    receivedAt,
+    frontImageUrl,
+    backImageUrl,
+    note,
+  });
+
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_check_received",
+    title: "Check received",
+    details: `${payerName || "Customer"} check ${checkNumber ? `#${checkNumber} ` : ""}was recorded for $${Number(
+      String(amount || 0).replace(",", "."),
+    ).toFixed(2)}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/checks");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=check_added#check-${checkId}`);
+}
+
+export async function updateInvoiceCheckStatusAction(formData: FormData) {
+  await requireInvoiceAdmin();
+
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const checkId = String(formData.get("checkId") || "");
+  const status = String(formData.get("status") || "");
+  const result = await updateInvoiceCheckStatus(checkId, status);
+
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_check_status_updated",
+    title: "Check status updated",
+    details: result.paymentCreated
+      ? `Check was marked ${status} and added to invoice payments.`
+      : `Check was marked ${status}.`,
+  });
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/checks");
+  revalidatePath(`/admin/invoices/${invoiceId}`);
+  redirect(`/admin/invoices/${invoiceId}?notice=${result.paymentCreated ? "check_cleared" : "check_status_updated"}#check-${checkId}`);
 }

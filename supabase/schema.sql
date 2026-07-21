@@ -68,6 +68,27 @@ create table if not exists public.invoice_payments (
   note text
 );
 
+create table if not exists public.invoice_checks (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  payment_id uuid references public.invoice_payments(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  received_at date not null default current_date,
+  amount numeric(10,2) not null check (amount > 0),
+  check_number text,
+  payer_name text,
+  payer_bank text,
+  front_image_url text,
+  back_image_url text,
+  increase_check_deposit_id text,
+  increase_status text,
+  status text not null default 'received' check (
+    status in ('received', 'ready_to_submit', 'submitted', 'accepted', 'cleared', 'rejected', 'void')
+  ),
+  note text
+);
+
 create table if not exists public.lead_activity (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -132,6 +153,10 @@ create index if not exists invoices_status_idx on public.invoices (status);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items (invoice_id);
 create index if not exists invoice_payments_invoice_id_payment_date_idx
   on public.invoice_payments (invoice_id, payment_date asc);
+create index if not exists invoice_checks_invoice_id_idx on public.invoice_checks (invoice_id);
+create index if not exists invoice_checks_status_received_at_idx
+  on public.invoice_checks (status, received_at desc);
+create index if not exists invoice_checks_payment_id_idx on public.invoice_checks (payment_id);
 create index if not exists lead_activity_lead_id_created_at_idx
   on public.lead_activity (lead_id, created_at desc);
 create index if not exists lead_activity_invoice_id_created_at_idx
@@ -170,6 +195,13 @@ before update on public.review_summary
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_invoice_checks_updated_at on public.invoice_checks;
+
+create trigger set_invoice_checks_updated_at
+before update on public.invoice_checks
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_telegram_users_updated_at on public.telegram_users;
 
 create trigger set_telegram_users_updated_at
@@ -188,6 +220,7 @@ alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.invoice_payments enable row level security;
+alter table public.invoice_checks enable row level security;
 alter table public.lead_activity enable row level security;
 alter table public.review_summary enable row level security;
 alter table public.telegram_users enable row level security;
@@ -198,6 +231,7 @@ grant select, insert, update, delete on public.leads to service_role;
 grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
+grant select, insert, update, delete on public.invoice_checks to service_role;
 grant select, insert on public.lead_activity to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
 grant select, insert, update, delete on public.telegram_users to service_role;

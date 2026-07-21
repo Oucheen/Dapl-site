@@ -181,9 +181,6 @@ export async function verifyAdminLogin(password: string): Promise<AdminSessionUs
       };
     }
 
-    if (crmUser.ready) {
-      return null;
-    }
   } catch {
     // Fall back to env-based users when Supabase auth storage is unavailable.
   }
@@ -226,9 +223,6 @@ export async function getCurrentAdminUser() {
       };
     }
 
-    if (crmUser.ready) {
-      return null;
-    }
   } catch {
     // Fall back to signed cookie/env behavior when Supabase auth storage is unavailable.
   }

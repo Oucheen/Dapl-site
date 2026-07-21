@@ -1058,7 +1058,7 @@ export async function addInvoicePayment(invoiceId: string, input: InvoicePayment
     method: "POST",
     headers: {
       ...headers(config),
-      Prefer: "return=minimal",
+      Prefer: "return=representation",
     },
     body: JSON.stringify({
       invoice_id: invoiceId,
@@ -1074,7 +1074,11 @@ export async function addInvoicePayment(invoiceId: string, input: InvoicePayment
     throw new Error(`Supabase invoice payment insert failed: ${response.status} ${details}`);
   }
 
-  return reconcileInvoicePaymentStatus(config, invoiceId);
+  const payments = (await response.json()) as Pick<InvoicePaymentRecord, "id">[];
+  const paymentId = payments[0]?.id ?? null;
+  const paymentState = await reconcileInvoicePaymentStatus(config, invoiceId);
+
+  return { ...paymentState, paymentId };
 }
 
 export async function deleteInvoicePayment(invoiceId: string, paymentId: string) {

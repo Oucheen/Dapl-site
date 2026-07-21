@@ -52,6 +52,7 @@ SUPABASE_LEADS_TABLE=leads
 SUPABASE_INVOICES_TABLE=invoices
 SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
 SUPABASE_INVOICE_PAYMENTS_TABLE=invoice_payments
+SUPABASE_INVOICE_CHECKS_TABLE=invoice_checks
 SUPABASE_ACTIVITY_TABLE=lead_activity
 LEADS_ADMIN_PASSWORD=...
 LEADS_ADMIN_SESSION_SECRET=...
@@ -127,6 +128,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice list route: `/admin/invoices`
 - Manual invoice route: `/admin/invoices/new`
 - Invoice detail route: `/admin/invoices/[invoiceId]`
+- Check deposit queue route: `/admin/checks`
 - `/admin` redirects to `/admin/leads`
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
 - Admin login supports database-managed users through the `admin_users` Supabase table and `/admin/users`.
@@ -178,6 +180,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `public.invoices`
   - `public.invoice_items`
   - `public.invoice_payments`
+  - `public.invoice_checks`
 - Activity log table:
   - `public.lead_activity`
 - Invoice MVP currently supports:
@@ -189,6 +192,9 @@ For local development, create `.env.local` with the same keys if you want the fo
   - quick invoice line templates on invoice detail pages: Diagnostic, Labor, Parts, Repair service, Maintenance, Installation
   - automatic subtotal / total recalculation from invoice items
   - manual payment history for cash, Zelle, card, check, or other payments
+  - Increase-style paper check tracking from invoice detail pages and `/admin/checks`
+  - check statuses: `received`, `ready_to_submit`, `submitted`, `accepted`, `cleared`, `rejected`, `void`
+  - marking a check `cleared` creates a linked invoice payment automatically, so pending checks do not close invoices too early
   - automatic amount-due calculation from invoice total minus recorded payments
   - invoice status updates: `draft`, `sent`, `paid`, `void`
 - Invoice detail pages now have a `Print / save as PDF` button. Print styles hide admin controls and render a clean invoice document with plain line items and totals, so Chrome/Edge can save the invoice as PDF.

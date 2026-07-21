@@ -244,6 +244,12 @@ export default async function AccountingAdminPage({
               View invoices
             </Link>
             <Link
+              href="/admin/checks"
+              className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
+            >
+              Checks
+            </Link>
+            <Link
               href="/admin/schedule"
               className="inline-flex items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
             >
