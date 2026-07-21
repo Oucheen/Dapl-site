@@ -2,7 +2,11 @@ import { revalidatePath } from "next/cache";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import {
+  addInvoicePart,
+} from "@/lib/supabase-parts";
+import {
   listInvoices,
+  updateInvoiceNotes,
   updateInvoiceJobStatus,
   type InvoiceJobStatus,
   type InvoiceRecord,
@@ -25,6 +29,14 @@ type TelegramMessage = {
   from?: TelegramUser;
   chat: TelegramChat;
   text?: string;
+  caption?: string;
+  photo?: Array<{
+    file_id: string;
+    file_unique_id: string;
+    width: number;
+    height: number;
+    file_size?: number;
+  }>;
 };
 
 type TelegramCallbackQuery = {
@@ -66,14 +78,26 @@ const CALLBACK_STATUS_MAP: Record<string, InvoiceJobStatus> = {
   parts: "need_parts",
   done: "done",
 };
+const CALLBACK_HELP_MAP: Record<string, "note" | "part" | "photo"> = {
+  note: "note",
+  addpart: "part",
+  photo: "photo",
+};
 
-function getTodayDateInput() {
+function getDateInput(dayOffset = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + dayOffset);
+
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date());
+  }).format(date);
+}
+
+function getTodayDateInput() {
+  return getDateInput();
 }
 
 function escapeHtml(value: string | number | null | undefined) {
@@ -151,6 +175,21 @@ function getTelegramUserDisplayName(user: TelegramUser | undefined) {
 
   const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim();
   return fullName || user.username || `Telegram ${user.id}`;
+}
+
+function getActivityActor(user: TelegramUser | undefined, technician: TelegramTechnician) {
+  return {
+    actor: {
+      id: user?.id ? `telegram-${user.id}` : `telegram-${technician.telegramUserId}`,
+      name: technician.technicianName,
+      role: technician.role,
+    },
+    telegram: {
+      userId: user?.id ?? technician.telegramUserId,
+      username: user?.username ?? null,
+      displayName: getTelegramUserDisplayName(user),
+    },
+  };
 }
 
 async function getAuthorizedTechnician(user: TelegramUser | undefined) {
@@ -276,6 +315,11 @@ function buildJobButtons(invoice: InvoiceRecord) {
       ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
       { text: "Invoice", url: invoiceUrl },
     ],
+    [
+      { text: "Add note", callback_data: `help:note:${invoice.id}` },
+      { text: "Add part", callback_data: `help:addpart:${invoice.id}` },
+      { text: "Photo", callback_data: `help:photo:${invoice.id}` },
+    ],
   ];
 
   return { inline_keyboard: buttons.filter((row) => row.length) };
@@ -289,37 +333,62 @@ function technicianCanSeeInvoice(technician: TelegramTechnician, invoice: Invoic
   return invoice.assigned_technician?.trim().toLowerCase() === technician.technicianName.toLowerCase();
 }
 
-async function sendTodayJobs(chatId: number, technician: TelegramTechnician) {
-  const today = getTodayDateInput();
+function findInvoiceReference(text: string) {
+  const invoiceNumber = text.match(/DAPL-\d{8}-[A-Z0-9]+/i)?.[0]?.toUpperCase();
+
+  if (invoiceNumber) {
+    return invoiceNumber;
+  }
+
+  return text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i)?.[0] ?? "";
+}
+
+function getInvoiceByReference(invoices: InvoiceRecord[], reference: string) {
+  const normalizedReference = reference.trim().toLowerCase();
+
+  if (!normalizedReference) {
+    return null;
+  }
+
+  return (
+    invoices.find(
+      (invoice) =>
+        invoice.id.toLowerCase() === normalizedReference ||
+        invoice.invoice_number.toLowerCase() === normalizedReference,
+    ) ?? null
+  );
+}
+
+async function sendJobsForDate(chatId: number, technician: TelegramTechnician, date: string, label: string) {
   const invoices = await listInvoices(500);
-  const todayInvoices = invoices
-    .filter((invoice) => invoice.status !== "void" && invoice.service_date === today)
+  const dayInvoices = invoices
+    .filter((invoice) => invoice.status !== "void" && invoice.service_date === date)
     .filter((invoice) => technicianCanSeeInvoice(technician, invoice))
     .sort((left, right) =>
       `${left.service_time ?? "99:99"} ${left.customer_name}`.localeCompare(
         `${right.service_time ?? "99:99"} ${right.customer_name}`,
       ),
     );
-  const activeInvoices = todayInvoices.filter((invoice) => OPEN_JOB_STATUSES.has(getJobStatus(invoice)));
+  const activeInvoices = dayInvoices.filter((invoice) => OPEN_JOB_STATUSES.has(getJobStatus(invoice)));
 
   await sendTelegram({
     chatId,
     text:
-      `<b>Today jobs</b>\n` +
-      `Date: ${escapeHtml(today)}\n` +
+      `<b>${escapeHtml(label)} jobs</b>\n` +
+      `Date: ${escapeHtml(date)}\n` +
       `Technician: ${escapeHtml(technician.role === "technician" ? technician.technicianName : "All technicians")}\n` +
-      `Jobs: ${todayInvoices.length} / active: ${activeInvoices.length}`,
+      `Jobs: ${dayInvoices.length} / active: ${activeInvoices.length}`,
   });
 
-  if (!todayInvoices.length) {
+  if (!dayInvoices.length) {
     await sendTelegram({
       chatId,
-      text: "No jobs are scheduled for today.",
+      text: `No jobs are scheduled for ${label.toLowerCase()}.`,
     });
     return;
   }
 
-  for (const invoice of todayInvoices.slice(0, 15)) {
+  for (const invoice of dayInvoices.slice(0, 15)) {
     await sendTelegram({
       chatId,
       text: buildJobMessage(invoice),
@@ -327,12 +396,40 @@ async function sendTodayJobs(chatId: number, technician: TelegramTechnician) {
     });
   }
 
-  if (todayInvoices.length > 15) {
+  if (dayInvoices.length > 15) {
     await sendTelegram({
       chatId,
       text: `Showing first 15 jobs. Open CRM for the full day.`,
     });
   }
+}
+
+async function sendTodayJobs(chatId: number, technician: TelegramTechnician) {
+  await sendJobsForDate(chatId, technician, getTodayDateInput(), "Today");
+}
+
+async function sendTomorrowJobs(chatId: number, technician: TelegramTechnician) {
+  await sendJobsForDate(chatId, technician, getDateInput(1), "Tomorrow");
+}
+
+async function sendCommandHelp(chatId: number, invoice: InvoiceRecord, type: "note" | "part" | "photo") {
+  const invoiceNumber = invoice.invoice_number;
+  const textByType = {
+    note:
+      `<b>Add note</b>\n` +
+      `Send:\n<code>/note ${escapeHtml(invoiceNumber)} customer approved repair, return tomorrow</code>`,
+    part:
+      `<b>Add part</b>\n` +
+      `Send:\n<code>/part ${escapeHtml(invoiceNumber)} | gas valve | 12345 | customer needs quote</code>`,
+    photo:
+      `<b>Add photo</b>\n` +
+      `Send a photo with caption:\n<code>${escapeHtml(invoiceNumber)} before repair</code>`,
+  } satisfies Record<typeof type, string>;
+
+  await sendTelegram({
+    chatId,
+    text: textByType[type],
+  });
 }
 
 async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, technician: TelegramTechnician) {
@@ -341,7 +438,26 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
   const jobStatus = CALLBACK_STATUS_MAP[action];
   const chatId = callbackQuery.message?.chat.id;
 
-  if (!jobStatus || !invoiceId || !chatId) {
+  if (!invoiceId || !chatId) {
+    await answerCallbackQuery(callbackQuery.id, "Invalid action.");
+    return;
+  }
+
+  if (CALLBACK_HELP_MAP[action]) {
+    const invoices = await listInvoices(500);
+    const invoice = invoices.find((item) => item.id === invoiceId);
+
+    if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+      await answerCallbackQuery(callbackQuery.id, "Access denied for this job.");
+      return;
+    }
+
+    await answerCallbackQuery(callbackQuery.id, "Template sent.");
+    await sendCommandHelp(chatId, invoice, CALLBACK_HELP_MAP[action]);
+    return;
+  }
+
+  if (!jobStatus) {
     await answerCallbackQuery(callbackQuery.id, "Invalid action.");
     return;
   }
@@ -362,17 +478,7 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
     eventType: "telegram_job_status_updated",
     title: "Telegram job status updated",
     details: `Job status changed to ${jobStatus.replaceAll("_", " ")} from Telegram bot.`,
-    metadata: {
-      actor: {
-        id: `telegram-${callbackQuery.from.id}`,
-        name: technician.technicianName,
-        role: technician.role,
-      },
-      telegram: {
-        userId: callbackQuery.from.id,
-        username: callbackQuery.from.username ?? null,
-      },
-    },
+    metadata: getActivityActor(callbackQuery.from, technician),
   });
 
   revalidatePath("/admin/leads");
@@ -388,20 +494,171 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
   });
 }
 
-async function sendHelp(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician | null) {
-  const identity = user?.id ? `\nYour Telegram ID: <code>${user.id}</code>` : "";
-  const access = technician
-    ? `\nAccess: ${escapeHtml(technician.technicianName)} (${escapeHtml(technician.role)})`
-    : "\nAccess: not configured";
+async function handleNoteCommand(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, rawText: string) {
+  const [, rest = ""] = rawText.match(/^\/?note\s+([\s\S]+)$/i) ?? [];
+  const reference = findInvoiceReference(rest);
+  const note = reference ? rest.replace(reference, "").trim().replace(/^[-|:]+/, "").trim() : "";
 
+  if (!reference || !note) {
+    await sendTelegram({
+      chatId,
+      text: "Use: <code>/note DAPL-YYYYMMDD-XXXX note text</code>",
+    });
+    return;
+  }
+
+  const invoices = await listInvoices(500);
+  const invoice = getInvoiceByReference(invoices, reference);
+
+  if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+    await sendTelegram({ chatId, text: "Invoice not found or access denied." });
+    return;
+  }
+
+  const stampedNote = `[Telegram / ${technician.technicianName}] ${note}`;
+  const nextNotes = [invoice.notes?.trim(), stampedNote].filter(Boolean).join("\n\n");
+  const { leadId } = await updateInvoiceNotes(invoice.id, nextNotes);
+
+  await createLeadActivity({
+    leadId,
+    invoiceId: invoice.id,
+    eventType: "telegram_note_added",
+    title: "Telegram note added",
+    details: note,
+    metadata: getActivityActor(user, technician),
+  });
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${invoice.id}`);
+
+  await sendTelegram({
+    chatId,
+    text: `<b>Note added</b>\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
+  });
+}
+
+async function handlePartCommand(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, rawText: string) {
+  const [, rest = ""] = rawText.match(/^\/?part\s+([\s\S]+)$/i) ?? [];
+  const segments = rest.split("|").map((item) => item.trim());
+  const reference = findInvoiceReference(segments[0] ?? "");
+  const partName = segments[1] ?? "";
+  const partNumber = segments[2] ?? "";
+  const note = segments.slice(3).join(" | ");
+
+  if (!reference || !partName) {
+    await sendTelegram({
+      chatId,
+      text: "Use: <code>/part DAPL-YYYYMMDD-XXXX | part name | part number | note</code>",
+    });
+    return;
+  }
+
+  const invoices = await listInvoices(500);
+  const invoice = getInvoiceByReference(invoices, reference);
+
+  if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+    await sendTelegram({ chatId, text: "Invoice not found or access denied." });
+    return;
+  }
+
+  await addInvoicePart(invoice.id, {
+    partName,
+    partNumber,
+    status: "needed",
+    quantity: 1,
+    cost: 0,
+    note: note || `Added from Telegram by ${technician.technicianName}`,
+  });
+
+  await createLeadActivity({
+    leadId: invoice.lead_id,
+    invoiceId: invoice.id,
+    eventType: "telegram_part_added",
+    title: "Part added from Telegram",
+    details: `${partName}${partNumber ? ` / ${partNumber}` : ""}${note ? ` / ${note}` : ""}`,
+    metadata: getActivityActor(user, technician),
+  });
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath("/admin/parts");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+  revalidatePath(`/admin/invoices/${invoice.id}`);
+
+  await sendTelegram({
+    chatId,
+    text: `<b>Part added</b>\n${escapeHtml(partName)}\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
+  });
+}
+
+async function handlePhotoMessage(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, message: TelegramMessage) {
+  const caption = message.caption?.trim() ?? "";
+  const reference = findInvoiceReference(caption);
+  const photo = message.photo?.at(-1);
+
+  if (!photo) {
+    return;
+  }
+
+  if (!reference) {
+    await sendTelegram({
+      chatId,
+      text: "Photo received, but invoice is missing. Add invoice number in caption, for example: <code>DAPL-YYYYMMDD-XXXX before repair</code>",
+    });
+    return;
+  }
+
+  const invoices = await listInvoices(500);
+  const invoice = getInvoiceByReference(invoices, reference);
+
+  if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+    await sendTelegram({ chatId, text: "Invoice not found or access denied for this photo." });
+    return;
+  }
+
+  const photoNote = caption.replace(reference, "").trim().replace(/^[-|:]+/, "").trim();
+
+  await createLeadActivity({
+    leadId: invoice.lead_id,
+    invoiceId: invoice.id,
+    eventType: "telegram_job_photo",
+    title: "Job photo received",
+    details: photoNote || "Photo was sent from Telegram.",
+    metadata: {
+      ...getActivityActor(user, technician),
+      telegramPhoto: {
+        fileId: photo.file_id,
+        fileUniqueId: photo.file_unique_id,
+        width: photo.width,
+        height: photo.height,
+        fileSize: photo.file_size ?? null,
+        caption,
+      },
+    },
+  });
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${invoice.id}`);
+
+  await sendTelegram({
+    chatId,
+    text: `<b>Photo logged</b>\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
+  });
+}
+
+async function sendHelp(chatId: number) {
   await sendTelegram({
     chatId,
     text:
       `<b>DAPL technician bot</b>\n` +
       `/today - show today's jobs\n` +
-      `/start - show this help` +
-      identity +
-      access,
+      `/tomorrow - show tomorrow's jobs\n` +
+      `/note DAPL-... note text\n` +
+      `/part DAPL-... | part name | part number | note\n` +
+      `/start - show this help`,
   });
 }
 
@@ -432,11 +689,32 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
   }
 
   const text = message?.text?.trim().toLowerCase() || "";
+  const rawText = message?.text?.trim() || "";
 
   if (text === "/today" || text === "today") {
     await sendTodayJobs(chatId, technician);
     return;
   }
 
-  await sendHelp(chatId, user, technician);
+  if (text === "/tomorrow" || text === "tomorrow") {
+    await sendTomorrowJobs(chatId, technician);
+    return;
+  }
+
+  if (/^\/?note\s+/i.test(rawText)) {
+    await handleNoteCommand(chatId, user, technician, rawText);
+    return;
+  }
+
+  if (/^\/?part\s+/i.test(rawText)) {
+    await handlePartCommand(chatId, user, technician, rawText);
+    return;
+  }
+
+  if (message?.photo?.length) {
+    await handlePhotoMessage(chatId, user, technician, message);
+    return;
+  }
+
+  await sendHelp(chatId);
 }
