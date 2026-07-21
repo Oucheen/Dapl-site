@@ -54,7 +54,6 @@ SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
 SUPABASE_INVOICE_PAYMENTS_TABLE=invoice_payments
 SUPABASE_ACTIVITY_TABLE=lead_activity
 LEADS_ADMIN_PASSWORD=...
-LEADS_ADMIN_USERS=Owner|owner-password|owner;Dmytro|employee-password|staff
 LEADS_ADMIN_SESSION_SECRET=...
 ```
 
@@ -130,13 +129,16 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Invoice detail route: `/admin/invoices/[invoiceId]`
 - `/admin` redirects to `/admin/leads`
 - Admin routes are marked `noindex, nofollow` via `src/app/admin/layout.tsx`
-- Admin login supports either the legacy single `LEADS_ADMIN_PASSWORD` or multiple staff users through `LEADS_ADMIN_USERS`.
-- `LEADS_ADMIN_USERS` format is semicolon-separated: `Name|password|role;Second Name|password2|staff`.
+- Admin login supports database-managed users through the `admin_users` Supabase table and `/admin/users`.
+- Legacy `LEADS_ADMIN_PASSWORD` / `LEADS_ADMIN_USERS` remain fallback access if the table is missing or unavailable.
+- Passwords stored in `admin_users` are salted PBKDF2 hashes, not plaintext passwords.
+- `/admin/users` is owner-only and can add users, change roles, reset passwords, deactivate access, and delete users.
+- Legacy `LEADS_ADMIN_USERS` format is semicolon-separated: `Name|password|role;Second Name|password2|staff`.
   Roles are normalized to lowercase automatically, so `BOSS` becomes `boss`.
 - When multiple staff users are configured, the signed-in user name is stored in the admin session and new activity-log rows show who made each change.
 - The floating contact widget is hidden on `/admin` routes
 - Auth is intentionally simple for the first CRM step:
-  - `LEADS_ADMIN_PASSWORD` is required in Vercel
+  - `LEADS_ADMIN_PASSWORD` is useful as fallback/bootstrapping owner access in Vercel
   - `LEADS_ADMIN_SESSION_SECRET` is optional but recommended
   - the session cookie is httpOnly, scoped to `/admin`, and lasts 8 hours
 - The dashboard reads the newest leads from Supabase and can update lead statuses:

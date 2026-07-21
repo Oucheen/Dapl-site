@@ -54,7 +54,7 @@ function withNotice(path: string, notice: string) {
 
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
-  const user = verifyAdminLogin(password);
+  const user = await verifyAdminLogin(password);
 
   if (!user) {
     redirect("/admin/leads/login?error=1");

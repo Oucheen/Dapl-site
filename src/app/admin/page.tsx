@@ -48,6 +48,12 @@ const adminLinks = [
     cta: "Open bot access",
   },
   {
+    href: "/admin/users",
+    title: "CRM users",
+    description: "Manage admin passwords, staff names, roles, and active access.",
+    cta: "Open CRM users",
+  },
+  {
     href: "/admin/invoices",
     title: "Invoices",
     description: "Invoice list, payments, line items, parts, and customer timeline.",

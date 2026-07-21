@@ -1,5 +1,11 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import {
+  findCrmUserByPassword,
+  getActiveCrmUserById,
+  listCrmUsers,
+  normalizeCrmUserRole,
+} from "@/lib/supabase-admin-users";
 
 const ADMIN_COOKIE = "dapl_leads_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 8;
@@ -123,16 +129,15 @@ function readSessionValue(value: string | undefined): AdminSessionUser | null {
 
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Partial<AdminSessionUser>;
-    const user = getAdminUsers().find((adminUser) => adminUser.id === parsed.id);
 
-    if (!user) {
+    if (!parsed.id || !parsed.name || !parsed.role) {
       return null;
     }
 
     return {
-      id: user.id,
-      name: user.name,
-      role: user.role,
+      id: parsed.id,
+      name: parsed.name,
+      role: normalizeRole(parsed.role),
     };
   } catch {
     return null;
@@ -146,11 +151,43 @@ function safeCompare(a: string, b: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-export function isAdminConfigured() {
-  return Boolean(getAdminUsers().length > 0 && getSessionSecret());
+export async function isAdminConfigured() {
+  if (!getSessionSecret()) {
+    return false;
+  }
+
+  try {
+    const crmUsers = await listCrmUsers(1);
+
+    if (crmUsers.ready) {
+      return crmUsers.users.some((user) => user.is_active) || getAdminUsers().length > 0;
+    }
+  } catch {
+    // Fall back to env-based admin configuration.
+  }
+
+  return getAdminUsers().length > 0;
 }
 
-export function verifyAdminLogin(password: string): AdminSessionUser | null {
+export async function verifyAdminLogin(password: string): Promise<AdminSessionUser | null> {
+  try {
+    const crmUser = await findCrmUserByPassword(password);
+
+    if (crmUser.user) {
+      return {
+        id: crmUser.user.id,
+        name: crmUser.user.name,
+        role: crmUser.user.role,
+      };
+    }
+
+    if (crmUser.ready) {
+      return null;
+    }
+  } catch {
+    // Fall back to env-based users when Supabase auth storage is unavailable.
+  }
+
   const users = getAdminUsers();
 
   for (const user of users) {
@@ -166,13 +203,52 @@ export function verifyAdminLogin(password: string): AdminSessionUser | null {
   return null;
 }
 
-export function verifyAdminPassword(password: string) {
-  return Boolean(verifyAdminLogin(password));
+export async function verifyAdminPassword(password: string) {
+  return Boolean(await verifyAdminLogin(password));
 }
 
 export async function getCurrentAdminUser() {
   const cookieStore = await cookies();
-  return readSessionValue(cookieStore.get(ADMIN_COOKIE)?.value);
+  const sessionUser = readSessionValue(cookieStore.get(ADMIN_COOKIE)?.value);
+
+  if (!sessionUser) {
+    return null;
+  }
+
+  try {
+    const crmUser = await getActiveCrmUserById(sessionUser.id);
+
+    if (crmUser.user) {
+      return {
+        id: crmUser.user.id,
+        name: crmUser.user.name,
+        role: crmUser.user.role,
+      };
+    }
+
+    if (crmUser.ready) {
+      return null;
+    }
+  } catch {
+    // Fall back to signed cookie/env behavior when Supabase auth storage is unavailable.
+  }
+
+  const envUser = getAdminUsers().find((adminUser) => adminUser.id === sessionUser.id);
+
+  if (envUser) {
+    return {
+      id: envUser.id,
+      name: envUser.name,
+      role: envUser.role,
+    };
+  }
+
+  return /^[0-9a-f-]{36}$/i.test(sessionUser.id)
+    ? null
+    : {
+        ...sessionUser,
+        role: normalizeCrmUserRole(sessionUser.role),
+      };
 }
 
 export function isElevatedAdminRole(role: string | null | undefined) {

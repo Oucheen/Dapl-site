@@ -19,7 +19,7 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
 
   const params = await searchParams;
   const hasError = params?.error === "1";
-  const configured = isAdminConfigured();
+  const configured = await isAdminConfigured();
 
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc,#eef4fb)] px-4 py-10 text-foreground">
@@ -42,9 +42,9 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
           {!configured ? (
             <div className="mt-6 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm leading-6 text-foreground">
               Add <span className="font-mono font-semibold">LEADS_ADMIN_PASSWORD</span> in
-              Vercel Environment Variables before using this page, or configure
-              <span className="font-mono font-semibold"> LEADS_ADMIN_USERS</span> for
-              multiple staff passwords.
+              Vercel Environment Variables before using this page, or create the
+              <span className="font-mono font-semibold"> admin_users</span> table for
+              database-managed staff passwords.
             </div>
           ) : (
             <form action={loginAdmin} className="mt-7 space-y-5">
