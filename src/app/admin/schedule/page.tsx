@@ -1075,7 +1075,7 @@ export default async function ScheduleAdminPage({
                         return (
                           <DraggableScheduleCard key={invoice.id} invoiceId={invoice.id}>
                             <article
-                              className={`rounded-xl border border-l-4 p-4 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${technicianColorClass} ${
+                              className={`rounded-xl border border-l-4 p-3 transition hover:border-primary/30 hover:bg-white hover:shadow-sm ${technicianColorClass} ${
                                 hasConflict
                                   ? "border-amber-500/35 bg-amber-50"
                                   : "border-border bg-slate-50"
@@ -1108,16 +1108,16 @@ export default async function ScheduleAdminPage({
                                 Exact time is outside this window.
                               </p>
                             ) : null}
-                            <p className="mt-3 text-sm leading-5 text-muted">
+                            <p className="mt-2 line-clamp-1 text-sm leading-5 text-muted">
                               {invoice.service_address || "Address not set"}
                             </p>
-                            <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
+                            <div className="mt-2 grid gap-1 text-xs text-muted sm:grid-cols-2">
                               <span>{invoice.customer_phone || "No phone"}</span>
                               <span>{invoice.assigned_technician || "No technician"}</span>
                               <span>{invoice.appliance || "Appliance not set"}</span>
                               <span className="font-bold text-primary">{formatMoney(invoice.total)}</span>
                             </div>
-                            <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="mt-3 flex flex-wrap gap-2">
                               {invoice.customer_phone ? (
                                 <>
                                   <a
@@ -1177,78 +1177,83 @@ export default async function ScheduleAdminPage({
                                 </button>
                               </form>
                             </div>
-                            <form
-                              action={updateDispatchScheduleAction}
-                              className="mt-4 grid gap-2 border-t border-border pt-4 sm:grid-cols-2"
-                            >
-                              <input type="hidden" name="invoiceId" value={invoice.id} />
-                              <input type="hidden" name="selectedDate" value={selectedDate} />
-                              <input type="hidden" name="selectedView" value={selectedView} />
-                              <input type="hidden" name="technicianFilter" value={selectedTechnician} />
-                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
-                                Date
-                                <input
-                                  type="date"
-                                  name="serviceDate"
-                                  defaultValue={invoice.service_date ?? selectedDate}
-                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                                />
-                              </label>
-                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
-                                Window
-                                <select
-                                  name="serviceWindow"
-                                  defaultValue={invoice.service_window ?? window.label}
-                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                                >
-                                  <option value="">Not selected</option>
-                                  {SERVICE_WINDOWS.map((serviceWindow) => (
-                                    <option key={serviceWindow.label} value={serviceWindow.label}>
-                                      {serviceWindow.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
-                                Time
-                                <input
-                                  type="time"
-                                  name="serviceTime"
-                                  defaultValue={invoice.service_time ?? ""}
-                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                                />
-                              </label>
-                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
-                                Technician
-                                <input
-                                  type="text"
-                                  name="assignedTechnician"
-                                  defaultValue={invoice.assigned_technician ?? ""}
-                                  list="schedule-technicians"
-                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                                />
-                              </label>
-                              <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2">
-                                Job status
-                                <select
-                                  name="jobStatus"
-                                  defaultValue={jobStatus}
-                                  className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                                >
-                                  {JOB_STATUSES.map((status) => (
-                                    <option key={status.value} value={status.value}>
-                                      {status.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              <button
-                                type="submit"
-                                className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 sm:col-span-2"
+                            <details className="mt-3 border-t border-border pt-3">
+                              <summary className="cursor-pointer select-none text-xs font-black text-primary">
+                                Edit schedule
+                              </summary>
+                              <form
+                                action={updateDispatchScheduleAction}
+                                className="mt-3 grid gap-2 sm:grid-cols-2"
                               >
-                                Save schedule
-                              </button>
-                            </form>
+                                <input type="hidden" name="invoiceId" value={invoice.id} />
+                                <input type="hidden" name="selectedDate" value={selectedDate} />
+                                <input type="hidden" name="selectedView" value={selectedView} />
+                                <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                                <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                  Date
+                                  <input
+                                    type="date"
+                                    name="serviceDate"
+                                    defaultValue={invoice.service_date ?? selectedDate}
+                                    className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                  />
+                                </label>
+                                <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                  Window
+                                  <select
+                                    name="serviceWindow"
+                                    defaultValue={invoice.service_window ?? window.label}
+                                    className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                  >
+                                    <option value="">Not selected</option>
+                                    {SERVICE_WINDOWS.map((serviceWindow) => (
+                                      <option key={serviceWindow.label} value={serviceWindow.label}>
+                                        {serviceWindow.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                  Time
+                                  <input
+                                    type="time"
+                                    name="serviceTime"
+                                    defaultValue={invoice.service_time ?? ""}
+                                    className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                  />
+                                </label>
+                                <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
+                                  Technician
+                                  <input
+                                    type="text"
+                                    name="assignedTechnician"
+                                    defaultValue={invoice.assigned_technician ?? ""}
+                                    list="schedule-technicians"
+                                    className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                  />
+                                </label>
+                                <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2">
+                                  Job status
+                                  <select
+                                    name="jobStatus"
+                                    defaultValue={jobStatus}
+                                    className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                                  >
+                                    {JOB_STATUSES.map((status) => (
+                                      <option key={status.value} value={status.value}>
+                                        {status.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <button
+                                  type="submit"
+                                  className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 sm:col-span-2"
+                                >
+                                  Save schedule
+                                </button>
+                              </form>
+                            </details>
                             </article>
                           </DraggableScheduleCard>
                         );
