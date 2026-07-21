@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getCrmReminders, type CrmReminder } from "@/lib/crm-reminders";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
@@ -266,16 +267,6 @@ function formatWeekDay(value: string) {
   }).format(getDateForCharlotteDisplay(value));
 }
 
-function getTechnicians(invoices: InvoiceRecord[]) {
-  return Array.from(
-    new Set(
-      invoices
-        .map((invoice) => invoice.assigned_technician?.trim())
-        .filter((technician): technician is string => Boolean(technician)),
-    ),
-  ).sort((left, right) => left.localeCompare(right));
-}
-
 function getTechnicianColorClass(technician: string | null | undefined, technicians: string[]) {
   if (!technician) {
     return "border-l-slate-300";
@@ -474,7 +465,7 @@ export default async function ScheduleAdminPage({
     error = caught instanceof Error ? caught.message : "Could not load schedule.";
   }
 
-  const technicians = getTechnicians(invoices);
+  const technicians = await getCrmTechnicianNames(invoices.map((invoice) => invoice.assigned_technician));
   const weekDates = getWeekDates(selectedDate);
   const scheduledInvoices = invoices
     .filter((invoice) => invoice.service_date === selectedDate && invoice.status !== "void")

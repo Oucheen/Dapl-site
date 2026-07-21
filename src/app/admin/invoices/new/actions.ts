@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
-import { createManualInvoice } from "@/lib/supabase-invoices";
+import { createManualInvoice, getInvoiceById } from "@/lib/supabase-invoices";
+import { notifyTechnicianJobAssigned } from "@/lib/telegram-job-notifications";
 
 export async function createManualInvoiceAction(formData: FormData) {
   const permissions = await getCurrentAdminPermissions();
@@ -43,7 +44,19 @@ export async function createManualInvoiceAction(formData: FormData) {
       : `Created from the admin dashboard for a non-website lead by ${permissions.user.name}.`,
   });
 
+  try {
+    const invoiceData = await getInvoiceById(invoiceId);
+
+    if (invoiceData?.invoice.assigned_technician) {
+      await notifyTechnicianJobAssigned(invoiceData.invoice);
+    }
+  } catch {
+    // Telegram notifications should not block manual invoice creation.
+  }
+
   revalidatePath("/admin/leads");
   revalidatePath("/admin/invoices");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
   redirect(`/admin/invoices/${invoiceId}`);
 }

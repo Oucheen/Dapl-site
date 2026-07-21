@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
   type InvoiceJobStatus,
@@ -152,16 +153,6 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-function getTechnicians(invoices: InvoiceRecord[]) {
-  return Array.from(
-    new Set(
-      invoices
-        .map((invoice) => invoice.assigned_technician?.trim())
-        .filter((technician): technician is string => Boolean(technician)),
-    ),
-  ).sort((left, right) => left.localeCompare(right));
-}
-
 function getTechnicianHref(date: string, technician: string) {
   const params = new URLSearchParams({ date });
 
@@ -198,7 +189,7 @@ export default async function TechnicianDayPage({
     error = caught instanceof Error ? caught.message : "Could not load technician jobs.";
   }
 
-  const technicians = getTechnicians(invoices);
+  const technicians = await getCrmTechnicianNames(invoices.map((invoice) => invoice.assigned_technician));
   const visibleInvoices = invoices
     .filter(
       (invoice) =>

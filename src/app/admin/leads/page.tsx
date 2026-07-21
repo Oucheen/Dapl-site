@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getActivityActorName, listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
@@ -295,6 +296,10 @@ export default async function LeadsAdminPage({
       .filter((invoice) => invoice.lead_id)
       .map((invoice) => [invoice.lead_id as string, invoice]),
   );
+  const technicians = await getCrmTechnicianNames([
+    ...invoices.map((invoice) => invoice.assigned_technician),
+    ...leads.map((lead) => lead.assigned_technician),
+  ]);
   const visibleLeads =
     selectedStatus === "all"
       ? viewLeads
@@ -376,6 +381,12 @@ export default async function LeadsAdminPage({
       </header>
 
       <section className="container-shell py-8">
+        <datalist id="crm-technicians">
+          {technicians.map((technician) => (
+            <option key={technician} value={technician} />
+          ))}
+        </datalist>
+
         <div className="mb-5 grid gap-3 lg:grid-cols-3">
           {LEAD_VIEWS.map((view) => {
             const isActive = selectedView === view.value;
@@ -786,6 +797,7 @@ export default async function LeadsAdminPage({
                         <input
                           type="text"
                           name="assignedTechnician"
+                          list="crm-technicians"
                           defaultValue={lead.assigned_technician ?? ""}
                           placeholder="Name"
                           disabled={hasInvoice}

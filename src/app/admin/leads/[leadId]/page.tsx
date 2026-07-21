@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForLead } from "@/lib/supabase-activity";
@@ -120,6 +121,10 @@ export default async function LeadDetailPage({
 
   const invoiceData = invoiceId ? await getInvoiceById(invoiceId) : null;
   const invoice = invoiceData?.invoice ?? null;
+  const technicians = await getCrmTechnicianNames([
+    lead.assigned_technician,
+    invoice?.assigned_technician,
+  ]);
   const customerHistory = await listCustomerHistory({
     phone: lead.phone,
     email: lead.email,
@@ -134,6 +139,12 @@ export default async function LeadDetailPage({
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <datalist id="crm-technicians">
+        {technicians.map((technician) => (
+          <option key={technician} value={technician} />
+        ))}
+      </datalist>
+
       <header className="border-b border-border bg-white">
         <div className="container-shell flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -382,6 +393,7 @@ export default async function LeadDetailPage({
                 <input
                   type="text"
                   name="assignedTechnician"
+                  list="crm-technicians"
                   defaultValue={lead.assigned_technician ?? ""}
                   placeholder="Name"
                   disabled={hasInvoice}

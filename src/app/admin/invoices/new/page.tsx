@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { createManualInvoiceAction } from "./actions";
 
 const APPLIANCE_OPTIONS = [
@@ -28,6 +29,7 @@ export default async function NewInvoicePage() {
   }
 
   const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
+  const technicians = await getCrmTechnicianNames();
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -169,12 +171,19 @@ export default async function NewInvoicePage() {
                   Technician
                   <input
                     name="assignedTechnician"
+                    list="crm-technicians"
                     placeholder="Name"
                     className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                   />
                 </label>
               </div>
             </section>
+
+            <datalist id="crm-technicians">
+              {technicians.map((technician) => (
+                <option key={technician} value={technician} />
+              ))}
+            </datalist>
 
             {canBackdateManualInvoices ? (
               <section className="rounded-2xl border border-primary/10 bg-primary/5 p-4">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
@@ -651,6 +652,7 @@ export default async function InvoicePage({
     listInvoiceParts(invoice.id),
     listInvoiceChecks(invoice.id),
   ]);
+  const technicians = await getCrmTechnicianNames([invoice.assigned_technician]);
   const invoiceParts = partsData.parts;
   const partsReady = partsData.ready;
   const invoiceChecks = checksData.checks;
@@ -1738,11 +1740,17 @@ export default async function InvoicePage({
                 <input
                   type="text"
                   name="assignedTechnician"
+                  list="crm-technicians"
                   defaultValue={invoice.assigned_technician ?? ""}
                   placeholder="Name"
                   className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                 />
               </label>
+              <datalist id="crm-technicians">
+                {technicians.map((technician) => (
+                  <option key={technician} value={technician} />
+                ))}
+              </datalist>
               <button
                 type="submit"
                 className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
