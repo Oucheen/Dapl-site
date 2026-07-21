@@ -229,6 +229,11 @@ export default async function AdminPage() {
     .filter((payment) => getCharlotteDateFromTimestamp(payment.payment_date) === today)
     .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
   const reminders = getCrmReminders({ invoices, payments, parts: invoiceParts, today }).slice(0, 8);
+  const visibleAdminLinks =
+    permissions.user.role === "owner" ? adminLinks : adminLinks.filter((item) => item.group !== "Settings");
+  const visibleAdminLinkGroups = adminLinkGroups.filter((group) =>
+    visibleAdminLinks.some((item) => item.group === group),
+  );
   const todayDashboardCards = [
     {
       label: "Jobs today",
@@ -508,11 +513,11 @@ export default async function AdminPage() {
           </div>
 
           <div className="mt-5 grid gap-5 xl:grid-cols-3">
-            {adminLinkGroups.map((group) => (
+            {visibleAdminLinkGroups.map((group) => (
               <div key={group} className="rounded-xl border border-border bg-slate-50 p-4">
                 <h3 className="text-xs font-black uppercase tracking-[0.16em] text-muted">{group}</h3>
                 <div className="mt-3 grid gap-2">
-                  {adminLinks
+                  {visibleAdminLinks
                     .filter((item) => item.group === group)
                     .map((item) => (
                       <Link

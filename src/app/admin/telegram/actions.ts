@@ -19,7 +19,7 @@ async function requireTelegramAccessAdmin() {
     redirect("/admin/leads/login");
   }
 
-  if (!permissions.hasElevatedAccess) {
+  if (permissions.user.role !== "owner") {
     redirect("/admin?notice=telegram_permission_denied");
   }
 

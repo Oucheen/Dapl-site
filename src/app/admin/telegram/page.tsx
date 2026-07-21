@@ -189,7 +189,7 @@ export default async function TelegramAccessPage({
     redirect("/admin/leads/login");
   }
 
-  if (!permissions.hasElevatedAccess) {
+  if (permissions.user.role !== "owner") {
     redirect("/admin");
   }
 
