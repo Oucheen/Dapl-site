@@ -6,7 +6,6 @@ import {
 } from "@/lib/supabase-parts";
 import {
   listInvoices,
-  updateInvoiceNotes,
   updateInvoiceJobStatus,
   type InvoiceJobStatus,
   type InvoiceRecord,
@@ -78,8 +77,11 @@ const CALLBACK_STATUS_MAP: Record<string, InvoiceJobStatus> = {
   parts: "need_parts",
   done: "done",
 };
-const CALLBACK_HELP_MAP: Record<string, "note" | "part" | "photo"> = {
-  note: "note",
+const CALLBACK_DAY_MAP: Record<string, "today" | "tomorrow"> = {
+  today: "today",
+  tomorrow: "tomorrow",
+};
+const CALLBACK_HELP_MAP: Record<string, "part" | "photo"> = {
   addpart: "part",
   photo: "photo",
 };
@@ -316,7 +318,6 @@ function buildJobButtons(invoice: InvoiceRecord) {
       { text: "Invoice", url: invoiceUrl },
     ],
     [
-      { text: "Add note", callback_data: `help:note:${invoice.id}` },
       { text: "Add part", callback_data: `help:addpart:${invoice.id}` },
       { text: "Photo", callback_data: `help:photo:${invoice.id}` },
     ],
@@ -412,12 +413,9 @@ async function sendTomorrowJobs(chatId: number, technician: TelegramTechnician) 
   await sendJobsForDate(chatId, technician, getDateInput(1), "Tomorrow");
 }
 
-async function sendCommandHelp(chatId: number, invoice: InvoiceRecord, type: "note" | "part" | "photo") {
+async function sendCommandHelp(chatId: number, invoice: InvoiceRecord, type: "part" | "photo") {
   const invoiceNumber = invoice.invoice_number;
   const textByType = {
-    note:
-      `<b>Add note</b>\n` +
-      `Send:\n<code>/note ${escapeHtml(invoiceNumber)} customer approved repair, return tomorrow</code>`,
     part:
       `<b>Add part</b>\n` +
       `Send:\n<code>/part ${escapeHtml(invoiceNumber)} | gas valve | 12345 | customer needs quote</code>`,
@@ -437,6 +435,18 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
   const [, action, invoiceId] = data.split(":");
   const jobStatus = CALLBACK_STATUS_MAP[action];
   const chatId = callbackQuery.message?.chat.id;
+
+  if (CALLBACK_DAY_MAP[action] && chatId) {
+    await answerCallbackQuery(callbackQuery.id, CALLBACK_DAY_MAP[action] === "today" ? "Today jobs" : "Tomorrow jobs");
+
+    if (CALLBACK_DAY_MAP[action] === "today") {
+      await sendTodayJobs(chatId, technician);
+    } else {
+      await sendTomorrowJobs(chatId, technician);
+    }
+
+    return;
+  }
 
   if (!invoiceId || !chatId) {
     await answerCallbackQuery(callbackQuery.id, "Invalid action.");
@@ -491,50 +501,6 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
   await sendTelegram({
     chatId,
     text: `<b>Status updated</b>\n${escapeHtml(invoice.customer_name)}: ${escapeHtml(jobStatus.replaceAll("_", " "))}`,
-  });
-}
-
-async function handleNoteCommand(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, rawText: string) {
-  const [, rest = ""] = rawText.match(/^\/?note\s+([\s\S]+)$/i) ?? [];
-  const reference = findInvoiceReference(rest);
-  const note = reference ? rest.replace(reference, "").trim().replace(/^[-|:]+/, "").trim() : "";
-
-  if (!reference || !note) {
-    await sendTelegram({
-      chatId,
-      text: "Use: <code>/note DAPL-YYYYMMDD-XXXX note text</code>",
-    });
-    return;
-  }
-
-  const invoices = await listInvoices(500);
-  const invoice = getInvoiceByReference(invoices, reference);
-
-  if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
-    await sendTelegram({ chatId, text: "Invoice not found or access denied." });
-    return;
-  }
-
-  const stampedNote = `[Telegram / ${technician.technicianName}] ${note}`;
-  const nextNotes = [invoice.notes?.trim(), stampedNote].filter(Boolean).join("\n\n");
-  const { leadId } = await updateInvoiceNotes(invoice.id, nextNotes);
-
-  await createLeadActivity({
-    leadId,
-    invoiceId: invoice.id,
-    eventType: "telegram_note_added",
-    title: "Telegram note added",
-    details: note,
-    metadata: getActivityActor(user, technician),
-  });
-
-  revalidatePath("/admin/leads");
-  revalidatePath("/admin/invoices");
-  revalidatePath(`/admin/invoices/${invoice.id}`);
-
-  await sendTelegram({
-    chatId,
-    text: `<b>Note added</b>\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
   });
 }
 
@@ -656,9 +622,16 @@ async function sendHelp(chatId: number) {
       `<b>DAPL technician bot</b>\n` +
       `/today - show today's jobs\n` +
       `/tomorrow - show tomorrow's jobs\n` +
-      `/note DAPL-... note text\n` +
       `/part DAPL-... | part name | part number | note\n` +
       `/start - show this help`,
+    replyMarkup: {
+      inline_keyboard: [
+        [
+          { text: "Today", callback_data: "menu:today" },
+          { text: "Tomorrow", callback_data: "menu:tomorrow" },
+        ],
+      ],
+    },
   });
 }
 
@@ -698,11 +671,6 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
 
   if (text === "/tomorrow" || text === "tomorrow") {
     await sendTomorrowJobs(chatId, technician);
-    return;
-  }
-
-  if (/^\/?note\s+/i.test(rawText)) {
-    await handleNoteCommand(chatId, user, technician, rawText);
     return;
   }
 
