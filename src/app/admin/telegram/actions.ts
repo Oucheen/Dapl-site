@@ -57,13 +57,13 @@ function getTelegramUserInput(formData: FormData, isActive: boolean) {
     redirect(getTelegramRedirect("telegram_id_invalid"));
   }
 
-  if (role === "technician" && !technicianName) {
+  if (!technicianName) {
     redirect(getTelegramRedirect("technician_name_required"));
   }
 
   return {
     telegramUserId,
-    technicianName: technicianName || (role === "owner" ? "Owner" : "Dispatcher"),
+    technicianName,
     role,
     isActive,
     note: String(formData.get("note") || ""),

@@ -65,7 +65,7 @@ function getFormError(value: string | string[] | undefined) {
   }
 
   if (error === "technician_name_required") {
-    return "CRM technician name is required for technician role. For owner or dispatcher it can be blank.";
+    return "CRM technician name is required.";
   }
 
   return "";
