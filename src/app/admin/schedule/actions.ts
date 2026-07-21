@@ -6,10 +6,15 @@ import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   getInvoiceById,
+  type InvoiceRecord,
   type InvoiceJobStatus,
   updateInvoiceJobStatus,
   updateInvoiceSchedule,
 } from "@/lib/supabase-invoices";
+import {
+  notifyTechnicianJobAssigned,
+  shouldNotifyTechnicianJobAssigned,
+} from "@/lib/telegram-job-notifications";
 
 const ALLOWED_JOB_STATUSES: InvoiceJobStatus[] = [
   "scheduled",
@@ -100,6 +105,19 @@ function getJobStatus(value: FormDataEntryValue | null) {
   return jobStatus as InvoiceJobStatus;
 }
 
+async function notifyTechnicianScheduleChange(previousInvoice: InvoiceRecord | null, invoiceId: string) {
+  try {
+    const nextInvoiceData = await getInvoiceById(invoiceId);
+    const nextInvoice = nextInvoiceData?.invoice;
+
+    if (nextInvoice && shouldNotifyTechnicianJobAssigned(previousInvoice, nextInvoice)) {
+      await notifyTechnicianJobAssigned(nextInvoice);
+    }
+  } catch {
+    // Telegram notifications should not block schedule updates.
+  }
+}
+
 export async function updateDispatchScheduleAction(formData: FormData) {
   await requireScheduleAdmin();
 
@@ -112,6 +130,7 @@ export async function updateDispatchScheduleAction(formData: FormData) {
   const serviceWindow = String(formData.get("serviceWindow") || "");
   const assignedTechnician = String(formData.get("assignedTechnician") || "");
   const jobStatus = getJobStatus(formData.get("jobStatus"));
+  const previousInvoiceData = await getInvoiceById(invoiceId);
 
   const { leadId } = await updateInvoiceSchedule(invoiceId, {
     serviceDate,
@@ -120,6 +139,7 @@ export async function updateDispatchScheduleAction(formData: FormData) {
     assignedTechnician,
     jobStatus,
   });
+  await notifyTechnicianScheduleChange(previousInvoiceData?.invoice ?? null, invoiceId);
   await createLeadActivity({
     leadId,
     invoiceId,
@@ -159,6 +179,7 @@ export async function moveDispatchScheduleAction(formData: FormData) {
     assignedTechnician,
     jobStatus: "scheduled",
   });
+  await notifyTechnicianScheduleChange(invoiceData.invoice, invoiceId);
 
   await createLeadActivity({
     leadId,

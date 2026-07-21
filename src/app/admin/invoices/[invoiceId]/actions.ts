@@ -20,6 +20,7 @@ import {
   getInvoiceById,
   getLeadIdForInvoice,
   type InvoiceItemInput,
+  type InvoiceRecord,
   type InvoiceStatus,
   updateInvoiceItems,
   updateInvoiceSchedule,
@@ -33,6 +34,10 @@ import {
   type InvoicePartStatus,
   updateInvoicePart,
 } from "@/lib/supabase-parts";
+import {
+  notifyTechnicianJobAssigned,
+  shouldNotifyTechnicianJobAssigned,
+} from "@/lib/telegram-job-notifications";
 
 const ALLOWED_INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid", "void"];
 const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
@@ -91,6 +96,19 @@ async function canEditInvoiceLineItems(
   return lead?.lead_source === "manual-admin";
 }
 
+async function notifyTechnicianScheduleChange(previousInvoice: InvoiceRecord | null, invoiceId: string) {
+  try {
+    const nextInvoiceData = await getInvoiceById(invoiceId);
+    const nextInvoice = nextInvoiceData?.invoice;
+
+    if (nextInvoice && shouldNotifyTechnicianJobAssigned(previousInvoice, nextInvoice)) {
+      await notifyTechnicianJobAssigned(nextInvoice);
+    }
+  } catch {
+    // Telegram notifications should not block invoice schedule updates.
+  }
+}
+
 export async function updateInvoiceStatusAction(formData: FormData) {
   const permissions = await requireInvoiceAdmin();
 
@@ -146,6 +164,7 @@ export async function updateInvoiceScheduleAction(formData: FormData) {
   const serviceTime = String(formData.get("serviceTime") || "");
   const serviceWindow = String(formData.get("serviceWindow") || "");
   const assignedTechnician = String(formData.get("assignedTechnician") || "");
+  const previousInvoiceData = await getInvoiceById(id);
 
   const { leadId } = await updateInvoiceSchedule(id, {
     serviceDate,
@@ -153,6 +172,7 @@ export async function updateInvoiceScheduleAction(formData: FormData) {
     serviceWindow,
     assignedTechnician,
   });
+  await notifyTechnicianScheduleChange(previousInvoiceData?.invoice ?? null, id);
   await createLeadActivity({
     leadId,
     invoiceId: id,

@@ -202,6 +202,44 @@ export async function getTelegramUserByTelegramId(telegramUserId: string) {
   return { user: users[0] ?? null, ready: true, error: "" };
 }
 
+export async function getTelegramUserByTechnicianName(technicianName: string) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    return { user: null, ready: false, error: "Supabase is not configured." };
+  }
+
+  const name = technicianName.trim();
+
+  if (!name) {
+    return { user: null, ready: true, error: "" };
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    technician_name: `eq.${name}`,
+    is_active: "eq.true",
+    limit: "1",
+  });
+  const response = await fetch(`${getTableUrl(config)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+
+    if (isSetupError(response.status, details)) {
+      return { user: null, ready: false, error: details };
+    }
+
+    throw new Error(`Supabase telegram user by technician fetch failed: ${response.status} ${details}`);
+  }
+
+  const users = (await response.json()) as TelegramUserRecord[];
+  return { user: users[0] ?? null, ready: true, error: "" };
+}
+
 export async function addTelegramUser(input: TelegramUserInput) {
   const config = getSupabaseConfig();
 
