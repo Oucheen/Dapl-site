@@ -44,9 +44,19 @@ function normalizeRole(role: string) {
 
 function getAdminUsers() {
   const configuredUsers = process.env.LEADS_ADMIN_USERS;
+  const legacyPassword = getAdminPassword();
+  const legacyName = process.env.LEADS_ADMIN_NAME || "Admin";
+  const legacyUser = legacyPassword
+    ? {
+        id: normalizeUserId(legacyName) || "admin",
+        name: legacyName,
+        password: legacyPassword,
+        role: "owner",
+      }
+    : null;
 
   if (configuredUsers) {
-    return configuredUsers
+    const users = configuredUsers
       .split(";")
       .map((entry) => {
         const [name, password, role = "staff"] = entry.split("|").map((part) => part.trim());
@@ -63,24 +73,19 @@ function getAdminUsers() {
         };
       })
       .filter(Boolean) as Array<AdminSessionUser & { password: string }>;
+
+    if (legacyUser && !users.some((user) => user.password === legacyUser.password)) {
+      return [...users, legacyUser];
+    }
+
+    return users;
   }
 
-  const password = getAdminPassword();
-
-  if (!password) {
+  if (!legacyUser) {
     return [];
   }
 
-  const name = process.env.LEADS_ADMIN_NAME || "Admin";
-
-  return [
-    {
-      id: normalizeUserId(name) || "admin",
-      name,
-      password,
-      role: "owner",
-    },
-  ];
+  return [legacyUser];
 }
 
 function signSessionPayload(payload: string) {
