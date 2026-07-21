@@ -53,6 +53,7 @@ SUPABASE_INVOICES_TABLE=invoices
 SUPABASE_INVOICE_ITEMS_TABLE=invoice_items
 SUPABASE_INVOICE_PAYMENTS_TABLE=invoice_payments
 SUPABASE_INVOICE_CHECKS_TABLE=invoice_checks
+SUPABASE_WAREHOUSE_PARTS_TABLE=warehouse_parts
 SUPABASE_ACTIVITY_TABLE=lead_activity
 LEADS_ADMIN_PASSWORD=...
 LEADS_ADMIN_SESSION_SECRET=...
@@ -181,6 +182,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `public.invoice_items`
   - `public.invoice_payments`
   - `public.invoice_checks`
+  - `public.warehouse_parts`
 - Activity log table:
   - `public.lead_activity`
 - Invoice MVP currently supports:
@@ -220,6 +222,10 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Activity writes are best-effort, so admin workflows should still work if the `lead_activity` table has not been created yet. To enable visible history, run the latest `supabase/schema.sql` in Supabase SQL Editor.
 - Manual invoices create a normal lead first with `lead_source: manual-admin`, then create a draft invoice from it. This keeps phone/offline work in the same lead/invoice/status workflow as website submissions.
 - If invoice creation or payment history fails with a Supabase permission or missing-table error, run the latest `supabase/schema.sql` invoice-table/payment-table block and grants for `service_role`.
+- `/admin/parts` separates:
+  - `Warehouse inventory`: parts bought for stock and stored by the business, with quantity, unit cost, location, and stock status
+  - `Job parts`: parts tied to a specific customer invoice/job, with job status and accounting expense linking
+- Warehouse statuses are `in_stock`, `reserved`, `used`, `returned`, and `archived`. Warehouse records do not change invoice totals or job part costs by themselves.
 
 ## Main implemented features
 

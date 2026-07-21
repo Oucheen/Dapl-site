@@ -89,6 +89,22 @@ create table if not exists public.invoice_checks (
   note text
 );
 
+create table if not exists public.warehouse_parts (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  part_name text not null,
+  part_number text,
+  supplier text,
+  status text not null default 'in_stock' check (
+    status in ('in_stock', 'reserved', 'used', 'returned', 'archived')
+  ),
+  quantity_on_hand numeric(10,2) not null default 0 check (quantity_on_hand >= 0),
+  unit_cost numeric(10,2) not null default 0 check (unit_cost >= 0),
+  location text,
+  note text
+);
+
 create table if not exists public.lead_activity (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -157,6 +173,8 @@ create index if not exists invoice_checks_invoice_id_idx on public.invoice_check
 create index if not exists invoice_checks_status_received_at_idx
   on public.invoice_checks (status, received_at desc);
 create index if not exists invoice_checks_payment_id_idx on public.invoice_checks (payment_id);
+create index if not exists warehouse_parts_status_idx on public.warehouse_parts (status);
+create index if not exists warehouse_parts_part_number_idx on public.warehouse_parts (part_number);
 create index if not exists lead_activity_lead_id_created_at_idx
   on public.lead_activity (lead_id, created_at desc);
 create index if not exists lead_activity_invoice_id_created_at_idx
@@ -202,6 +220,13 @@ before update on public.invoice_checks
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_warehouse_parts_updated_at on public.warehouse_parts;
+
+create trigger set_warehouse_parts_updated_at
+before update on public.warehouse_parts
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_telegram_users_updated_at on public.telegram_users;
 
 create trigger set_telegram_users_updated_at
@@ -221,6 +246,7 @@ alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.invoice_payments enable row level security;
 alter table public.invoice_checks enable row level security;
+alter table public.warehouse_parts enable row level security;
 alter table public.lead_activity enable row level security;
 alter table public.review_summary enable row level security;
 alter table public.telegram_users enable row level security;
@@ -232,6 +258,7 @@ grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
 grant select, insert, update, delete on public.invoice_checks to service_role;
+grant select, insert, update, delete on public.warehouse_parts to service_role;
 grant select, insert on public.lead_activity to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
 grant select, insert, update, delete on public.telegram_users to service_role;
