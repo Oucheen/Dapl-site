@@ -1,5 +1,5 @@
 import { getTelegramUserByTechnicianName } from "@/lib/supabase-telegram-users";
-import type { InvoiceRecord } from "@/lib/supabase-invoices";
+import type { InvoiceJobStatus, InvoiceRecord } from "@/lib/supabase-invoices";
 
 const DEFAULT_SITE_URL = "https://www.daplappliance.com";
 
@@ -118,6 +118,48 @@ function buildJobNotificationButtons(invoice: InvoiceRecord) {
   return { inline_keyboard: buttons.filter((row) => row.length) };
 }
 
+function getStatusNotificationTitle(jobStatus: InvoiceJobStatus) {
+  if (jobStatus === "canceled") {
+    return "Job canceled";
+  }
+
+  if (jobStatus === "reschedule") {
+    return "Job needs reschedule";
+  }
+
+  return `Job status updated: ${jobStatus.replaceAll("_", " ")}`;
+}
+
+function buildJobStatusNotificationMessage(invoice: InvoiceRecord, jobStatus: InvoiceJobStatus) {
+  const serviceLabel = [formatServiceTime(invoice.service_time), invoice.service_window].filter(Boolean).join(" / ");
+
+  return [
+    `<b>${escapeHtml(getStatusNotificationTitle(jobStatus))}</b>`,
+    `<b>${escapeHtml(invoice.customer_name)}</b>`,
+    invoice.service_date ? `Date: ${escapeHtml(invoice.service_date)}` : "Date: not set",
+    serviceLabel ? `Time: ${escapeHtml(serviceLabel)}` : "Time: not set",
+    invoice.appliance ? `Appliance: ${escapeHtml(invoice.appliance)}` : null,
+    invoice.service_address ? `Address: ${escapeHtml(invoice.service_address)}` : null,
+    `Invoice: ${escapeHtml(invoice.invoice_number)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildJobStatusNotificationButtons(invoice: InvoiceRecord) {
+  const siteUrl = getSiteUrl();
+  const mapsUrl = getMapsSearchUrl(invoice.service_address);
+  const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const buttons: InlineButton[][] = [
+    [
+      ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
+      { text: "Invoice", url: invoiceUrl },
+    ],
+  ];
+
+  return { inline_keyboard: buttons.filter((row) => row.length) };
+}
+
 async function sendTelegram(input: {
   chatId: number | string;
   text: string;
@@ -167,5 +209,25 @@ export async function notifyTechnicianJobAssigned(invoice: InvoiceRecord) {
     chatId: telegramUser.user.telegram_user_id,
     text: buildJobNotificationMessage(invoice),
     replyMarkup: buildJobNotificationButtons(invoice),
+  });
+}
+
+export async function notifyTechnicianJobStatusChanged(invoice: InvoiceRecord, jobStatus: InvoiceJobStatus) {
+  const technicianName = invoice.assigned_technician?.trim();
+
+  if (!technicianName || invoice.status === "void") {
+    return { ok: false, reason: "missing_technician" as const };
+  }
+
+  const telegramUser = await getTelegramUserByTechnicianName(technicianName);
+
+  if (!telegramUser.user) {
+    return { ok: false, reason: telegramUser.ready ? "technician_not_found" : "telegram_users_not_ready" };
+  }
+
+  return sendTelegram({
+    chatId: telegramUser.user.telegram_user_id,
+    text: buildJobStatusNotificationMessage(invoice, jobStatus),
+    replyMarkup: buildJobStatusNotificationButtons(invoice),
   });
 }

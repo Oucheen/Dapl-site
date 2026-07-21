@@ -13,6 +13,7 @@ import {
 } from "@/lib/supabase-invoices";
 import {
   notifyTechnicianJobAssigned,
+  notifyTechnicianJobStatusChanged,
   shouldNotifyTechnicianJobAssigned,
 } from "@/lib/telegram-job-notifications";
 
@@ -118,6 +119,31 @@ async function notifyTechnicianScheduleChange(previousInvoice: InvoiceRecord | n
   }
 }
 
+function getCurrentJobStatus(invoice: InvoiceRecord) {
+  return invoice.job_status ?? (invoice.service_date ? "scheduled" : "reschedule");
+}
+
+async function notifyTechnicianStatusChange(previousInvoice: InvoiceRecord | null, invoiceId: string, jobStatus: InvoiceJobStatus) {
+  if (jobStatus !== "canceled" && jobStatus !== "reschedule") {
+    return;
+  }
+
+  if (previousInvoice && getCurrentJobStatus(previousInvoice) === jobStatus) {
+    return;
+  }
+
+  try {
+    const nextInvoiceData = await getInvoiceById(invoiceId);
+    const nextInvoice = nextInvoiceData?.invoice;
+
+    if (nextInvoice) {
+      await notifyTechnicianJobStatusChanged(nextInvoice, jobStatus);
+    }
+  } catch {
+    // Telegram notifications should not block job status updates.
+  }
+}
+
 export async function updateDispatchScheduleAction(formData: FormData) {
   await requireScheduleAdmin();
 
@@ -140,6 +166,9 @@ export async function updateDispatchScheduleAction(formData: FormData) {
     jobStatus,
   });
   await notifyTechnicianScheduleChange(previousInvoiceData?.invoice ?? null, invoiceId);
+  if (jobStatus) {
+    await notifyTechnicianStatusChange(previousInvoiceData?.invoice ?? null, invoiceId, jobStatus);
+  }
   await createLeadActivity({
     leadId,
     invoiceId,
@@ -209,7 +238,9 @@ export async function updateDispatchJobStatusAction(formData: FormData) {
     throw new Error("Job status is required.");
   }
 
+  const previousInvoiceData = await getInvoiceById(invoiceId);
   const { leadId } = await updateInvoiceJobStatus(invoiceId, jobStatus);
+  await notifyTechnicianStatusChange(previousInvoiceData?.invoice ?? null, invoiceId, jobStatus);
   await createLeadActivity({
     leadId,
     invoiceId,

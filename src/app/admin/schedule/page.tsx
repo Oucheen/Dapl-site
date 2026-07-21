@@ -1176,6 +1176,19 @@ export default async function ScheduleAdminPage({
                                   Reschedule
                                 </button>
                               </form>
+                              <form action={updateDispatchJobStatusAction}>
+                                <input type="hidden" name="invoiceId" value={invoice.id} />
+                                <input type="hidden" name="selectedDate" value={selectedDate} />
+                                <input type="hidden" name="selectedView" value={selectedView} />
+                                <input type="hidden" name="technicianFilter" value={selectedTechnician} />
+                                <input type="hidden" name="jobStatus" value="canceled" />
+                                <button
+                                  type="submit"
+                                  className="rounded-lg border border-red-500/25 bg-white px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-50"
+                                >
+                                  Cancel
+                                </button>
+                              </form>
                             </div>
                             <details className="mt-3 border-t border-border pt-3">
                               <summary className="cursor-pointer select-none text-xs font-black text-primary">
