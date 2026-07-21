@@ -87,6 +87,17 @@ create table if not exists public.review_summary (
   review_url text
 );
 
+create table if not exists public.telegram_users (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  telegram_user_id text not null unique,
+  technician_name text not null,
+  role text not null default 'technician' check (role in ('technician', 'dispatcher', 'owner')),
+  is_active boolean not null default true,
+  note text
+);
+
 alter table public.leads
   add column if not exists admin_notes text,
   add column if not exists scheduled_date date,
@@ -113,6 +124,8 @@ create index if not exists lead_activity_lead_id_created_at_idx
   on public.lead_activity (lead_id, created_at desc);
 create index if not exists lead_activity_invoice_id_created_at_idx
   on public.lead_activity (invoice_id, created_at desc);
+create index if not exists telegram_users_active_idx on public.telegram_users (is_active);
+create index if not exists telegram_users_role_idx on public.telegram_users (role);
 
 create or replace function public.set_updated_at()
 returns trigger as $$
@@ -143,12 +156,20 @@ before update on public.review_summary
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_telegram_users_updated_at on public.telegram_users;
+
+create trigger set_telegram_users_updated_at
+before update on public.telegram_users
+for each row
+execute function public.set_updated_at();
+
 alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.invoice_payments enable row level security;
 alter table public.lead_activity enable row level security;
 alter table public.review_summary enable row level security;
+alter table public.telegram_users enable row level security;
 
 grant usage on schema public to service_role;
 grant select, insert, update, delete on public.leads to service_role;
@@ -157,3 +178,4 @@ grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
 grant select, insert on public.lead_activity to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
+grant select, insert, update, delete on public.telegram_users to service_role;

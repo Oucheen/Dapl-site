@@ -42,6 +42,12 @@ const adminLinks = [
     cta: "Open technician view",
   },
   {
+    href: "/admin/telegram",
+    title: "Telegram access",
+    description: "Manage technician bot users, Telegram IDs, CRM technician names, and roles.",
+    cta: "Open bot access",
+  },
+  {
     href: "/admin/invoices",
     title: "Invoices",
     description: "Invoice list, payments, line items, parts, and customer timeline.",

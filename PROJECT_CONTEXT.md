@@ -44,7 +44,6 @@ CONTACT_FROM_EMAIL=DAPL Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 TELEGRAM_TECH_BOT_TOKEN=...
-TELEGRAM_TECHNICIANS=123456789|Dmytro Honcharenko|technician;987654321|Maksym|owner
 TELEGRAM_WEBHOOK_SECRET=...
 VOICE_AGENT_API_KEY=...
 SUPABASE_URL=...
@@ -90,13 +89,11 @@ For local development, create `.env.local` with the same keys if you want the fo
 - The request succeeds if at least one notification channel delivers successfully
 - Technician bot webhook is supported at `src/app/api/telegram/route.ts`
 - Technician bot uses `TELEGRAM_TECH_BOT_TOKEN`, separate from `TELEGRAM_BOT_TOKEN` used for lead notifications
+- Technician bot users are managed in `/admin/telegram` through the `telegram_users` Supabase table
 - Technician bot commands:
   - `/start` shows help and the user's Telegram ID
   - `/today` sends today's jobs with Maps, Invoice, and job status buttons
-- `TELEGRAM_TECHNICIANS` maps Telegram users to CRM technician names:
-  - `telegram_user_id|CRM Technician Name|technician`
-  - `telegram_user_id|Dispatcher Name|dispatcher`
-  - `telegram_user_id|Owner Name|owner`
+- `TELEGRAM_TECHNICIANS` is now only a fallback for testing before the `telegram_users` table is created
 - Telegram webhook setup example:
   - `https://api.telegram.org/bot<TELEGRAM_TECH_BOT_TOKEN>/setWebhook?url=https://www.daplappliance.com/api/telegram&secret_token=<TELEGRAM_WEBHOOK_SECRET>`
 

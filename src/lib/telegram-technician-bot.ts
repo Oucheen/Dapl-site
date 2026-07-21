@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createLeadActivity } from "@/lib/supabase-activity";
+import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import {
   listInvoices,
   updateInvoiceJobStatus,
@@ -152,10 +153,24 @@ function getTelegramUserDisplayName(user: TelegramUser | undefined) {
   return fullName || user.username || `Telegram ${user.id}`;
 }
 
-function getAuthorizedTechnician(user: TelegramUser | undefined) {
+async function getAuthorizedTechnician(user: TelegramUser | undefined) {
   const telegramUserId = user?.id ? String(user.id) : "";
 
   if (!telegramUserId) {
+    return null;
+  }
+
+  const telegramUser = await getTelegramUserByTelegramId(telegramUserId);
+
+  if (telegramUser.user) {
+    return {
+      telegramUserId: telegramUser.user.telegram_user_id,
+      technicianName: telegramUser.user.technician_name,
+      role: telegramUser.user.role,
+    } satisfies TelegramTechnician;
+  }
+
+  if (telegramUser.ready) {
     return null;
   }
 
@@ -395,7 +410,7 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
   const callbackQuery = update.callback_query;
   const user = message?.from ?? callbackQuery?.from;
   const chatId = message?.chat.id ?? callbackQuery?.message?.chat.id;
-  const technician = getAuthorizedTechnician(user);
+  const technician = await getAuthorizedTechnician(user);
 
   if (!chatId) {
     return;
