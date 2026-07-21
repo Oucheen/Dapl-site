@@ -298,6 +298,16 @@ function getNextAction(input: {
     };
   }
 
+  if (input.invoice.status === "paid") {
+    return {
+      title: "Job is complete",
+      body: "Payment is recorded and the invoice is closed.",
+      href: "/admin",
+      cta: "Admin dashboard",
+      className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
+    };
+  }
+
   if (!input.invoice.service_date) {
     return {
       title: "Schedule this job",
@@ -360,21 +370,11 @@ function getNextAction(input: {
     };
   }
 
-  if (input.invoice.status !== "paid") {
-    return {
-      title: "Mark completed",
-      body: "The invoice balance is zero. Mark the job completed to close it cleanly.",
-      href: "#invoice-controls",
-      cta: "Close job",
-      className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
-    };
-  }
-
   return {
-    title: "Job is complete",
-    body: "Payment is recorded and the invoice is closed.",
-    href: "/admin",
-    cta: "Admin dashboard",
+    title: "Mark completed",
+    body: "The invoice balance is zero. Mark the job completed to close it cleanly.",
+    href: "#invoice-controls",
+    cta: "Close job",
     className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
   };
 }
@@ -1817,96 +1817,104 @@ export default async function InvoicePage({
                 </div>
               ) : (
                 <>
-                  <form action={addInvoiceCheckAction} className="mt-4 grid gap-3 rounded-xl border border-border bg-slate-50 p-3">
-                    <input type="hidden" name="invoiceId" value={invoice.id} />
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <details className="mt-4 rounded-xl border border-border bg-slate-50 p-3">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg bg-white px-3 py-3 text-sm font-black text-primary transition hover:bg-primary/5">
+                      <span>Add / receive check</span>
+                      <span className="rounded-full border border-primary/15 px-3 py-1 text-xs">
+                        {pendingCheckAmount > 0 ? `${formatMoney(pendingCheckAmount)} pending` : "Open form"}
+                      </span>
+                    </summary>
+                    <form action={addInvoiceCheckAction} className="mt-4 grid gap-3">
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Amount
+                          <input
+                            type="number"
+                            name="amount"
+                            min="0.01"
+                            step="0.01"
+                            defaultValue={amountDue > 0 ? formatInputMoney(amountDue) : ""}
+                            required
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Received date
+                          <input
+                            type="date"
+                            name="receivedAt"
+                            defaultValue={paymentInputDefaults.date}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                      </div>
                       <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Amount
-                        <input
-                          type="number"
-                          name="amount"
-                          min="0.01"
-                          step="0.01"
-                          defaultValue={amountDue > 0 ? formatInputMoney(amountDue) : ""}
-                          required
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Received date
-                        <input
-                          type="date"
-                          name="receivedAt"
-                          defaultValue={paymentInputDefaults.date}
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                    </div>
-                    <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                      Check number
-                      <input
-                        type="text"
-                        name="checkNumber"
-                        placeholder="Optional"
-                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                      />
-                    </label>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Payer name
+                        Check number
                         <input
                           type="text"
-                          name="payerName"
-                          defaultValue={invoice.customer_name}
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Payer bank
-                        <input
-                          type="text"
-                          name="payerBank"
+                          name="checkNumber"
                           placeholder="Optional"
                           className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Payer name
+                          <input
+                            type="text"
+                            name="payerName"
+                            defaultValue={invoice.customer_name}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Payer bank
+                          <input
+                            type="text"
+                            name="payerBank"
+                            placeholder="Optional"
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Front image URL
+                          <input
+                            type="url"
+                            name="frontImageUrl"
+                            placeholder="Increase/Supabase image URL"
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Back image URL
+                          <input
+                            type="url"
+                            name="backImageUrl"
+                            placeholder="Increase/Supabase image URL"
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                          />
+                        </label>
+                      </div>
                       <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Front image URL
+                        Note
                         <input
-                          type="url"
-                          name="frontImageUrl"
-                          placeholder="Increase/Supabase image URL"
+                          type="text"
+                          name="note"
+                          placeholder="Memo, approval, or deposit note"
                           className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Back image URL
-                        <input
-                          type="url"
-                          name="backImageUrl"
-                          placeholder="Increase/Supabase image URL"
-                          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                    </div>
-                    <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                      Note
-                      <input
-                        type="text"
-                        name="note"
-                        placeholder="Memo, approval, or deposit note"
-                        className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-                    >
-                      Receive check
-                    </button>
-                  </form>
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                      >
+                        Receive check
+                      </button>
+                    </form>
+                  </details>
 
                   {invoiceChecks.length ? (
                     <ul className="mt-5 space-y-3">

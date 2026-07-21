@@ -80,7 +80,7 @@ export function getCrmReminders(input: GetCrmRemindersInput) {
   const hasPaymentData = Boolean(input.payments);
 
   for (const invoice of invoices) {
-    if (invoice.status === "void") {
+    if (invoice.status === "paid" || invoice.status === "void") {
       continue;
     }
 
@@ -91,7 +91,7 @@ export function getCrmReminders(input: GetCrmRemindersInput) {
     const appliance = invoice.appliance || "appliance";
     const serviceDate = invoice.service_date;
 
-    if (!serviceDate && invoice.status !== "paid") {
+    if (!serviceDate) {
       reminders.push({
         id: `schedule-${invoice.id}`,
         title: "Needs scheduling",
@@ -165,7 +165,7 @@ export function getCrmReminders(input: GetCrmRemindersInput) {
       });
     }
 
-    if (hasPaymentData && invoice.status !== "paid") {
+    if (hasPaymentData) {
       const amountDue = calculateInvoiceAmountDue(invoice, paymentsByInvoice.get(invoice.id) ?? []);
       const invoiceAgeDays = daysBetween(getRecordDate(invoice.created_at) ?? today, today);
 
