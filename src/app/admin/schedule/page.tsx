@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getCrmReminders, type CrmReminder } from "@/lib/crm-reminders";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
   type InvoiceJobStatus,
@@ -50,6 +51,30 @@ const jobStatusClasses: Record<InvoiceJobStatus, string> = {
   reschedule: "border-orange-500/25 bg-orange-50 text-orange-700",
   canceled: "border-slate-300 bg-slate-100 text-slate-500",
 };
+
+function getReminderTone(reminder: CrmReminder) {
+  if (reminder.severity === "high") {
+    return "border-red-500/25 bg-red-50 text-red-800";
+  }
+
+  if (reminder.severity === "medium") {
+    return "border-amber-500/25 bg-amber-50 text-amber-800";
+  }
+
+  return "border-sky-500/25 bg-sky-50 text-sky-800";
+}
+
+function getReminderAudienceLabel(audience: CrmReminder["audience"]) {
+  if (audience === "technician") {
+    return "Tech";
+  }
+
+  if (audience === "owner") {
+    return "Owner";
+  }
+
+  return "Dispatch";
+}
 
 const technicianColorClasses = [
   "border-l-primary",
@@ -530,6 +555,9 @@ export default async function ScheduleAdminPage({
       href: "#schedule-conflicts",
     },
   ];
+  const scheduleReminders = getCrmReminders({ invoices, today: selectedDate })
+    .filter((reminder) => reminder.audience !== "owner")
+    .slice(0, 6);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -735,6 +763,45 @@ export default async function ScheduleAdminPage({
             </a>
           ))}
         </div>
+
+        <section className="mt-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                Reminders
+              </p>
+              <h2 className="mt-1 text-xl font-black text-primary">Needs attention</h2>
+            </div>
+            <p className="text-xs font-semibold text-muted">
+              Internal dispatch and technician follow-ups for the selected day.
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {scheduleReminders.length ? (
+              scheduleReminders.map((reminder) => (
+                <Link
+                  key={reminder.id}
+                  href={reminder.href}
+                  className={`rounded-xl border p-4 text-sm transition hover:-translate-y-0.5 hover:shadow-sm ${getReminderTone(
+                    reminder,
+                  )}`}
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="font-black">{reminder.title}</span>
+                    <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[0.65rem] font-bold">
+                      {getReminderAudienceLabel(reminder.audience)}
+                    </span>
+                  </span>
+                  <span className="mt-1 block text-xs leading-5">{reminder.body}</span>
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                Nothing urgent is waiting for dispatch.
+              </p>
+            )}
+          </div>
+        </section>
 
         <section className="mt-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

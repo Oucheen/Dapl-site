@@ -2,9 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmReminders, type CrmReminder } from "@/lib/crm-reminders";
 import { listAccountingData, getMonthRange } from "@/lib/supabase-accounting";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
-import { listAllInvoiceParts } from "@/lib/supabase-parts";
+import { listAllInvoiceParts, type InvoicePartRecord } from "@/lib/supabase-parts";
 import {
   calculateInvoiceAmountDue,
   calculateInvoicePaidAmount,
@@ -109,6 +110,30 @@ function getPaymentTotalsByInvoice(payments: InvoicePaymentRecord[]) {
   return totals;
 }
 
+function getReminderTone(reminder: CrmReminder) {
+  if (reminder.severity === "high") {
+    return "border-red-500/25 bg-red-50 text-red-800";
+  }
+
+  if (reminder.severity === "medium") {
+    return "border-amber-500/25 bg-amber-50 text-amber-800";
+  }
+
+  return "border-sky-500/25 bg-sky-50 text-sky-800";
+}
+
+function getReminderAudienceLabel(audience: CrmReminder["audience"]) {
+  if (audience === "owner") {
+    return "Owner";
+  }
+
+  if (audience === "technician") {
+    return "Technician";
+  }
+
+  return "Dispatch";
+}
+
 export default async function AdminPage() {
   const permissions = await getCurrentAdminPermissions();
 
@@ -120,6 +145,7 @@ export default async function AdminPage() {
   const monthRange = getMonthRange(today.slice(0, 7));
   let invoices: InvoiceRecord[] = [];
   let payments: InvoicePaymentRecord[] = [];
+  let invoiceParts: InvoicePartRecord[] = [];
   let openPartsCount = 0;
   let dataError = "";
 
@@ -132,6 +158,7 @@ export default async function AdminPage() {
 
     invoices = invoiceRows;
     payments = accountingData.payments;
+    invoiceParts = partsData.parts;
     openPartsCount = partsData.parts.filter(
       (part) => part.status !== "installed" && part.status !== "returned" && part.status !== "canceled",
     ).length;
@@ -171,6 +198,7 @@ export default async function AdminPage() {
   const collectedToday = payments
     .filter((payment) => getCharlotteDateFromTimestamp(payment.payment_date) === today)
     .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
+  const reminders = getCrmReminders({ invoices, payments, parts: invoiceParts, today }).slice(0, 8);
   const todayDashboardCards = [
     {
       label: "Jobs today",
@@ -288,6 +316,45 @@ export default async function AdminPage() {
                 <span className="mt-1 block text-xs leading-5 text-muted">{card.note}</span>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-5 rounded-xl border border-border bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  Reminders
+                </p>
+                <h3 className="mt-1 font-black text-primary">Needs attention</h3>
+              </div>
+              <Link href="/admin/schedule" className="text-xs font-bold text-primary">
+                Dispatch
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-2 md:grid-cols-2">
+              {reminders.length ? (
+                reminders.map((reminder) => (
+                  <Link
+                    key={reminder.id}
+                    href={reminder.href}
+                    className={`rounded-lg border p-3 text-sm transition hover:-translate-y-0.5 hover:shadow-sm ${getReminderTone(
+                      reminder,
+                    )}`}
+                  >
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="font-black">{reminder.title}</span>
+                      <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[0.65rem] font-bold">
+                        {getReminderAudienceLabel(reminder.audience)}
+                      </span>
+                    </span>
+                    <span className="mt-1 block text-xs leading-5">{reminder.body}</span>
+                  </Link>
+                ))
+              ) : (
+                <p className="rounded-lg bg-slate-50 p-3 text-sm text-muted">
+                  Nothing urgent is waiting.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-3">

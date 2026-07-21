@@ -43,6 +43,9 @@ CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
 CONTACT_FROM_EMAIL=DAPL Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
+TELEGRAM_TECH_BOT_TOKEN=...
+TELEGRAM_TECHNICIANS=123456789|Dmytro Honcharenko|technician;987654321|Maksym|owner
+TELEGRAM_WEBHOOK_SECRET=...
 VOICE_AGENT_API_KEY=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
@@ -85,6 +88,17 @@ For local development, create `.env.local` with the same keys if you want the fo
 - If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set, each new lead is also sent to Telegram
 - Email and Telegram now work as parallel notification channels
 - The request succeeds if at least one notification channel delivers successfully
+- Technician bot webhook is supported at `src/app/api/telegram/route.ts`
+- Technician bot uses `TELEGRAM_TECH_BOT_TOKEN`, separate from `TELEGRAM_BOT_TOKEN` used for lead notifications
+- Technician bot commands:
+  - `/start` shows help and the user's Telegram ID
+  - `/today` sends today's jobs with Maps, Invoice, and job status buttons
+- `TELEGRAM_TECHNICIANS` maps Telegram users to CRM technician names:
+  - `telegram_user_id|CRM Technician Name|technician`
+  - `telegram_user_id|Dispatcher Name|dispatcher`
+  - `telegram_user_id|Owner Name|owner`
+- Telegram webhook setup example:
+  - `https://api.telegram.org/bot<TELEGRAM_TECH_BOT_TOKEN>/setWebhook?url=https://www.daplappliance.com/api/telegram&secret_token=<TELEGRAM_WEBHOOK_SECRET>`
 
 ## Supabase lead storage
 - Supabase lead storage is supported as an optional first step toward a mini CRM / invoice workflow
