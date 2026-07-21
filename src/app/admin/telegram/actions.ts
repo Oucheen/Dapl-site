@@ -40,16 +40,40 @@ function getIsActive(value: FormDataEntryValue | null) {
   return String(value || "") === "on";
 }
 
+function getTelegramRedirect(error: string) {
+  return `/admin/telegram?error=${encodeURIComponent(error)}`;
+}
+
+function getTelegramUserInput(formData: FormData, isActive: boolean) {
+  const role = getRole(formData.get("role"));
+  const telegramUserId = String(formData.get("telegramUserId") || "").trim();
+  const technicianName = String(formData.get("technicianName") || "").trim();
+
+  if (!telegramUserId) {
+    redirect(getTelegramRedirect("telegram_id_required"));
+  }
+
+  if (!/^\d{4,20}$/.test(telegramUserId)) {
+    redirect(getTelegramRedirect("telegram_id_invalid"));
+  }
+
+  if (role === "technician" && !technicianName) {
+    redirect(getTelegramRedirect("technician_name_required"));
+  }
+
+  return {
+    telegramUserId,
+    technicianName: technicianName || (role === "owner" ? "Owner" : "Dispatcher"),
+    role,
+    isActive,
+    note: String(formData.get("note") || ""),
+  };
+}
+
 export async function addTelegramUserAction(formData: FormData) {
   await requireTelegramAccessAdmin();
 
-  await addTelegramUser({
-    telegramUserId: String(formData.get("telegramUserId") || ""),
-    technicianName: String(formData.get("technicianName") || ""),
-    role: getRole(formData.get("role")),
-    isActive: true,
-    note: String(formData.get("note") || ""),
-  });
+  await addTelegramUser(getTelegramUserInput(formData, true));
 
   revalidatePath("/admin/telegram");
   redirect("/admin/telegram?notice=added");
@@ -60,13 +84,7 @@ export async function updateTelegramUserAction(formData: FormData) {
 
   const id = String(formData.get("id") || "");
 
-  await updateTelegramUser(id, {
-    telegramUserId: String(formData.get("telegramUserId") || ""),
-    technicianName: String(formData.get("technicianName") || ""),
-    role: getRole(formData.get("role")),
-    isActive: getIsActive(formData.get("isActive")),
-    note: String(formData.get("note") || ""),
-  });
+  await updateTelegramUser(id, getTelegramUserInput(formData, getIsActive(formData.get("isActive"))));
 
   revalidatePath("/admin/telegram");
   redirect("/admin/telegram?notice=updated");

@@ -53,6 +53,24 @@ function getNotice(value: string | string[] | undefined) {
   return "";
 }
 
+function getFormError(value: string | string[] | undefined) {
+  const error = Array.isArray(value) ? value[0] : value;
+
+  if (error === "telegram_id_required") {
+    return "Telegram ID is required.";
+  }
+
+  if (error === "telegram_id_invalid") {
+    return "Telegram ID must contain digits only.";
+  }
+
+  if (error === "technician_name_required") {
+    return "CRM technician name is required for technician role. For owner or dispatcher it can be blank.";
+  }
+
+  return "";
+}
+
 function RoleSelect({ defaultValue }: { defaultValue?: TelegramUserRole }) {
   return (
     <select
@@ -163,7 +181,7 @@ function AccessRow({ user }: { user: TelegramUserRecord }) {
 export default async function TelegramAccessPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ notice?: string | string[] }>;
+  searchParams?: Promise<{ notice?: string | string[]; error?: string | string[] }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
 
@@ -177,6 +195,7 @@ export default async function TelegramAccessPage({
 
   const params = await searchParams;
   const notice = getNotice(params?.notice);
+  const formError = getFormError(params?.error);
   let usersData: Awaited<ReturnType<typeof listTelegramUsers>> = {
     users: [],
     ready: true,
@@ -232,6 +251,12 @@ export default async function TelegramAccessPage({
         {notice ? (
           <div className="mb-5 rounded-2xl border border-emerald-500/25 bg-emerald-50 p-5 text-sm font-bold text-emerald-800">
             {notice}
+          </div>
+        ) : null}
+
+        {formError ? (
+          <div className="mb-5 rounded-2xl border border-red-500/25 bg-red-50 p-5 text-sm font-bold text-red-700">
+            {formError}
           </div>
         ) : null}
 
