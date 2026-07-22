@@ -395,7 +395,13 @@ function getInvoiceByReference(invoices: InvoiceRecord[], reference: string | nu
   );
 }
 
-async function sendJobsForDate(chatId: number, technician: TelegramTechnician, date: string, label: string) {
+async function sendJobsForDate(
+  chatId: number,
+  technician: TelegramTechnician,
+  date: string,
+  label: string,
+  options: { compactNoJobs?: boolean } = {},
+) {
   const invoices = await listInvoices(500);
   const dayInvoices = invoices
     .filter((invoice) => invoice.status !== "void" && invoice.service_date === date)
@@ -406,6 +412,17 @@ async function sendJobsForDate(chatId: number, technician: TelegramTechnician, d
       ),
     );
   const activeInvoices = dayInvoices.filter((invoice) => OPEN_JOB_STATUSES.has(getJobStatus(invoice)));
+
+  if (!dayInvoices.length && options.compactNoJobs) {
+    await sendTelegram({
+      chatId,
+      text:
+        `<b>Good morning, ${escapeHtml(technician.technicianName)}</b>\n` +
+        `Today jobs: 0\n` +
+        `No jobs are scheduled for today.`,
+    });
+    return;
+  }
 
   await sendTelegram({
     chatId,
@@ -454,7 +471,9 @@ export async function sendDailyTechnicianJobReminders(date = getTodayDateInput()
 
   for (const technician of technicians) {
     try {
-      await sendJobsForDate(Number(technician.telegramUserId), technician, date, "Today");
+      await sendJobsForDate(Number(technician.telegramUserId), technician, date, "Today", {
+        compactNoJobs: true,
+      });
       results.push({
         technician: technician.technicianName,
         telegramUserId: technician.telegramUserId,
