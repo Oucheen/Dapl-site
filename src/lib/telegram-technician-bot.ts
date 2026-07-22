@@ -5,7 +5,7 @@ import {
   getTelegramBotSession,
   upsertTelegramBotSession,
 } from "@/lib/supabase-telegram-bot-sessions";
-import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
+import { getTelegramUserByTelegramId, listTelegramUsers } from "@/lib/supabase-telegram-users";
 import {
   addInvoicePart,
 } from "@/lib/supabase-parts";
@@ -173,6 +173,36 @@ function getTechnicians() {
       } satisfies TelegramTechnician;
     })
     .filter(Boolean) as TelegramTechnician[];
+}
+
+async function getActiveReminderTechnicians() {
+  const technicians = new Map<string, TelegramTechnician>();
+
+  try {
+    const telegramUsers = await listTelegramUsers();
+
+    if (telegramUsers.ready) {
+      for (const user of telegramUsers.users) {
+        if (user.is_active && user.role === "technician") {
+          technicians.set(user.telegram_user_id, {
+            telegramUserId: user.telegram_user_id,
+            technicianName: user.technician_name,
+            role: user.role,
+          });
+        }
+      }
+    }
+  } catch {
+    // Fall back to env technicians when the database-backed list is unavailable.
+  }
+
+  for (const technician of getTechnicians()) {
+    if (technician.role === "technician" && !technicians.has(technician.telegramUserId)) {
+      technicians.set(technician.telegramUserId, technician);
+    }
+  }
+
+  return Array.from(technicians.values());
 }
 
 function getTelegramUserDisplayName(user: TelegramUser | undefined) {
@@ -416,6 +446,38 @@ async function sendTodayJobs(chatId: number, technician: TelegramTechnician) {
 
 async function sendTomorrowJobs(chatId: number, technician: TelegramTechnician) {
   await sendJobsForDate(chatId, technician, getDateInput(1), "Tomorrow");
+}
+
+export async function sendDailyTechnicianJobReminders(date = getTodayDateInput()) {
+  const technicians = await getActiveReminderTechnicians();
+  const results: Array<{ technician: string; telegramUserId: string; ok: boolean; error: string }> = [];
+
+  for (const technician of technicians) {
+    try {
+      await sendJobsForDate(Number(technician.telegramUserId), technician, date, "Today");
+      results.push({
+        technician: technician.technicianName,
+        telegramUserId: technician.telegramUserId,
+        ok: true,
+        error: "",
+      });
+    } catch (error) {
+      results.push({
+        technician: technician.technicianName,
+        telegramUserId: technician.telegramUserId,
+        ok: false,
+        error: error instanceof Error ? error.message : "Unknown Telegram reminder error.",
+      });
+    }
+  }
+
+  return {
+    date,
+    technicians: technicians.length,
+    sent: results.filter((result) => result.ok).length,
+    failed: results.filter((result) => !result.ok).length,
+    results,
+  };
 }
 
 async function sendCommandHelp(chatId: number, invoice: InvoiceRecord, type: "part" | "photo") {
