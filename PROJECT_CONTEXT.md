@@ -76,7 +76,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `generate_lead` on successful form submit
   - `phone_click` from hero, service-page CTA, contact form, and contact widget
   - `schedule_click` from homepage hero, service-page hero, and contact widget
-- `generate_lead` is also sent directly to GA4 from `src/components/sections/contact-section.tsx` as a reliability fallback
+- `generate_lead` is also sent directly to GA4 from `src/components/sections/contact-section.tsx` and `src/components/ui/chat-lead-widget.tsx` as a reliability fallback
 
 ## Resend status
 - Resend domain **daplappliance.com** is already verified
