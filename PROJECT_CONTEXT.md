@@ -67,7 +67,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Google Tag Manager container has been created
 - GTM container ID: `GTM-M2RWZXK9`
 - GTM is mounted globally from `src/app/layout.tsx` via `@next/third-parties/google`
-- A lightweight direct `gtag.js` loader is also mounted in `src/app/layout.tsx` with `send_page_view: false`, so direct GA4 events can be sent without duplicating page views already handled by GTM
+- A lightweight direct `gtag.js` loader is mounted in `src/app/layout.tsx` with `send_page_view: false`, but lead conversion events should go through GTM only to avoid duplicate GA4 key events
 - Next tracking step is inside GTM itself:
   - add a GA4 / Google tag using `G-KBVZ673NP2`
   - publish the container
@@ -76,7 +76,7 @@ For local development, create `.env.local` with the same keys if you want the fo
   - `generate_lead` on successful form submit
   - `phone_click` from hero, service-page CTA, contact form, and contact widget
   - `schedule_click` from homepage hero, service-page hero, and contact widget
-- `generate_lead` is also sent directly to GA4 from `src/components/sections/contact-section.tsx` and `src/components/ui/chat-lead-widget.tsx` as a reliability fallback
+- `generate_lead` should be sent to GA4 by the GTM tag only. The site-side `sendGTMEvent` payload includes `form_name`, `lead_source`, `appliance`, and `promo_code`; configure the GTM GA4 Event tag to pass those parameters through.
 
 ## Resend status
 - Resend domain **daplappliance.com** is already verified

@@ -35,20 +35,6 @@ type ContactSectionProps = {
   successMessage?: string;
 };
 
-type GtagFn = (
-  command: "event" | "config" | "js",
-  target: string | Date,
-  params?: Record<string, unknown>,
-) => void;
-
-function sendDirectGAEvent(eventName: string, params: Record<string, unknown>) {
-  const gtag = (window as Window & { gtag?: GtagFn }).gtag;
-
-  if (typeof gtag === "function") {
-    gtag("event", eventName, params);
-  }
-}
-
 export function ContactSection({
   eyebrow = "Contact",
   title = "Request a callback or schedule service",
@@ -113,13 +99,6 @@ export function ContactSection({
         promo_code: payload.promoCode || "",
         lead_source: payload.leadSource || source,
       });
-      sendDirectGAEvent("generate_lead", {
-        form_name: source,
-        appliance: payload.appliance || "unknown",
-        promo_code: payload.promoCode || "",
-        lead_source: payload.leadSource || source,
-      });
-
       setStatus("success");
       form.reset();
     } catch {

@@ -7,12 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 type ChatStatus = "idle" | "submitting" | "success" | "error";
 
-type GtagFn = (
-  command: "event" | "config" | "js",
-  target: string | Date,
-  params?: Record<string, unknown>,
-) => void;
-
 type ChatStep =
   | "intro"
   | "appliance"
@@ -227,14 +221,6 @@ function isValidEmail(value: string) {
 function fallbackEmail(phone: string) {
   const normalizedPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
   return `chat-${normalizedPhone || "lead"}@daplappliance.local`;
-}
-
-function sendDirectGAEvent(eventName: string, params: Record<string, unknown>) {
-  const gtag = (window as Window & { gtag?: GtagFn }).gtag;
-
-  if (typeof gtag === "function") {
-    gtag("event", eventName, params);
-  }
 }
 
 export function ChatLeadWidget() {
@@ -460,13 +446,6 @@ export function ChatLeadWidget() {
         promo_code: "",
         lead_source: "chat-widget",
       });
-      sendDirectGAEvent("generate_lead", {
-        form_name: "chat-widget",
-        appliance: draft.appliance || "unknown",
-        promo_code: "",
-        lead_source: "chat-widget",
-      });
-
       setStatus("success");
       window.sessionStorage.setItem(chatInviteStorageKey, "1");
     } catch {
