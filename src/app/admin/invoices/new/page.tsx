@@ -189,62 +189,48 @@ export default async function NewInvoicePage() {
               <section className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                    Manual timestamps
+                    Historical import
                   </p>
                   <p className="mt-2 text-sm leading-6 text-muted">
-                    Optional owner-only date and time overrides for phone calls, business-card
-                    calls, and older records. Service date still controls the job date shown on
-                    the invoice.
+                    Optional leadership-only dates for adding older customers and matching old
+                    invoice records. Service date controls the job date shown on the invoice;
+                    invoice created date and time control the invoice number prefix and Created
+                    timestamp. Use this for phone calls, business-card calls, and older records.
                   </p>
                 </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-border bg-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                      Lead received
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Date
-                        <input
-                          type="date"
-                          name="leadCreatedAt"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Time
-                        <input
-                          type="time"
-                          name="leadCreatedTime"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                      Invoice created
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Date
-                        <input
-                          type="date"
-                          name="invoiceCreatedAt"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Time
-                        <input
-                          type="time"
-                          name="invoiceCreatedTime"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                    </div>
-                  </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Lead created date optional
+                    <input
+                      type="date"
+                      name="leadCreatedAt"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Lead created time optional
+                    <input
+                      type="time"
+                      name="leadCreatedTime"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Invoice created date optional
+                    <input
+                      type="date"
+                      name="invoiceCreatedAt"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Invoice created time optional
+                    <input
+                      type="time"
+                      name="invoiceCreatedTime"
+                      className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                    />
+                  </label>
                 </div>
               </section>
             ) : null}
