@@ -18,6 +18,15 @@ const APPLIANCE_OPTIONS = [
   "Commercial Refrigerator",
   "Other / not sure",
 ];
+const SERVICE_WINDOWS = [
+  "",
+  "8:00 AM - 10:00 AM",
+  "10:00 AM - 12:00 PM",
+  "12:00 PM - 2:00 PM",
+  "2:00 PM - 4:00 PM",
+  "4:00 PM - 6:00 PM",
+  "6:00 PM - 8:00 PM",
+];
 
 export const dynamic = "force-dynamic";
 
@@ -144,6 +153,27 @@ export default async function NewInvoicePage() {
                     name="serviceDate"
                     className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
                   />
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Service time optional
+                  <input
+                    type="time"
+                    name="serviceTime"
+                    className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                  Time window optional
+                  <select
+                    name="serviceWindow"
+                    className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  >
+                    {SERVICE_WINDOWS.map((window) => (
+                      <option key={window || "empty"} value={window}>
+                        {window || "Select window"}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Estimate

@@ -571,6 +571,8 @@ export async function getInvoiceIdForLead(leadId: string) {
 type CreateInvoiceFromLeadOptions = {
   invoiceCreatedAt?: string;
   invoiceCreatedTime?: string;
+  serviceTime?: string | null;
+  serviceWindow?: string | null;
 };
 
 export async function createInvoiceFromLead(
@@ -606,6 +608,8 @@ export async function createInvoiceFromLead(
   const subtotal = toMoney(lead.estimated_price);
   const tax = 0;
   const total = calculateInvoiceTotal(subtotal, discountAmount, tax);
+  const serviceTime = normalizeScheduleTime(options.serviceTime);
+  const serviceWindow = normalizeScheduleText(options.serviceWindow);
 
   const invoiceResponse = await fetch(getTableUrl(config, config.invoicesTable), {
     method: "POST",
@@ -624,7 +628,10 @@ export async function createInvoiceFromLead(
       service_address: lead.service_address,
       appliance: lead.appliance,
       service_date: lead.scheduled_date ?? lead.preferred_date,
+      service_time: serviceTime,
+      service_window: serviceWindow,
       assigned_technician: lead.assigned_technician ?? null,
+      job_status: lead.scheduled_date && (serviceTime || serviceWindow) ? "scheduled" : null,
       notes: lead.admin_notes ?? null,
       promo_code: promoCode,
       discount_amount: discountAmount,
@@ -676,6 +683,8 @@ export async function createManualInvoice(input: ManualLeadInput) {
   const invoiceId = await createInvoiceFromLead(leadId, {
     invoiceCreatedAt: input.invoiceCreatedAt,
     invoiceCreatedTime: input.invoiceCreatedTime,
+    serviceTime: input.serviceTime,
+    serviceWindow: input.serviceWindow,
   });
 
   return { leadId, invoiceId };

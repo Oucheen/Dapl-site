@@ -64,6 +64,8 @@ export type ManualLeadInput = {
   appliance: string;
   promoCode: string;
   serviceDate: string;
+  serviceTime?: string;
+  serviceWindow?: string;
   estimatedPrice: string;
   assignedTechnician: string;
   notes: string;
