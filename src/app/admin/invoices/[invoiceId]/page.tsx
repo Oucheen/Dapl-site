@@ -772,31 +772,31 @@ export default async function InvoicePage({
         ))}
 
         <div className="grid gap-6 print:block xl:grid-cols-[minmax(0,1fr)_360px]">
-          <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
-            <div className="border-b border-border bg-slate-50/80 px-5 py-5 print:bg-white print:px-0 sm:px-7">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:text-[11px] print:shadow-none">
+            <div className="border-b border-border bg-slate-50/80 px-5 py-5 print:bg-white print:px-0 print:py-3 sm:px-7">
+              <div className="flex flex-col gap-5 print:gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-4">
                   <Image
                     src="/logo.jpg"
                     alt="DAPL Appliance Repair logo"
                     width={76}
                     height={76}
-                    className="h-16 w-16 object-contain print:h-16 print:w-16"
+                    className="h-16 w-16 object-contain print:h-12 print:w-12"
                   />
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[11px]">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[9px]">
                       DAPL Appliance Repair
                     </p>
-                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted print:text-xs print:leading-5">
+                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted print:text-[10px] print:leading-4">
                       9401 Peckham Rye Rd, Charlotte, NC 28227
                     </p>
                     <a
                       href={`mailto:${BUSINESS_EMAIL}`}
-                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-xs print:leading-5 print:text-slate-700"
+                      className="mt-1 block max-w-sm break-words text-sm leading-6 text-muted hover:text-primary print:text-[10px] print:leading-4 print:text-slate-700"
                     >
                       {BUSINESS_EMAIL}
                     </a>
-                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted print:mt-1.5 print:text-[11px] print:leading-5">
+                    <p className="mt-2 max-w-sm text-xs leading-5 text-muted print:mt-1 print:text-[9px] print:leading-4">
                       DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
                     </p>
                   </div>
@@ -806,7 +806,7 @@ export default async function InvoicePage({
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                     Invoice
                   </p>
-                  <p className="mt-1 text-xl font-black text-primary print:whitespace-nowrap print:text-xl">
+                  <p className="mt-1 text-xl font-black text-primary print:whitespace-nowrap print:text-lg">
                     {invoice.invoice_number}
                   </p>
                   <p className="mt-2 text-sm text-muted print:text-xs">
@@ -819,16 +819,16 @@ export default async function InvoicePage({
               </div>
             </div>
 
-            <div className="grid gap-5 border-b border-border px-5 py-5 print:px-0 sm:grid-cols-2 sm:px-7">
+            <div className="grid gap-5 border-b border-border px-5 py-5 print:gap-3 print:px-0 print:py-3 sm:grid-cols-2 sm:px-7">
               <section>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                   Bill to
                 </p>
-                <p className="mt-3 text-xl font-black text-primary">{invoice.customer_name}</p>
+                <p className="mt-3 text-xl font-black text-primary print:mt-2 print:text-base">{invoice.customer_name}</p>
                 {invoice.customer_phone ? (
                   <a
                     href={`tel:${invoice.customer_phone}`}
-                    className="mt-2 block font-semibold text-foreground hover:text-primary"
+                    className="mt-2 block font-semibold text-foreground hover:text-primary print:mt-1"
                   >
                     {invoice.customer_phone}
                   </a>
@@ -843,7 +843,7 @@ export default async function InvoicePage({
                 ) : null}
               </section>
 
-              <section className="grid gap-4 text-sm leading-6 text-muted sm:grid-cols-2">
+              <section className="grid gap-4 text-sm leading-6 text-muted print:gap-2 print:text-[10px] print:leading-4 sm:grid-cols-2">
                 <div>
                   <p className="font-bold text-foreground">Service address</p>
                   <p className="mt-1 break-words">{invoice.service_address || "Not set"}</p>
@@ -1051,7 +1051,7 @@ export default async function InvoicePage({
                 ))
               : null}
 
-            <div className="hidden px-5 py-6 print:block print:px-0 print:py-4">
+            <div className="hidden px-5 py-6 print:block print:px-0 print:py-3">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[10px]">
                 Line items
               </p>
@@ -1059,28 +1059,28 @@ export default async function InvoicePage({
                 Customer invoice charges
               </h2>
 
-              <table className="mt-5 w-full border-collapse text-sm print:mt-3 print:text-xs">
+              <table className="mt-5 w-full border-collapse text-sm print:mt-2 print:text-[10px]">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    <th className="py-3 pr-4 print:py-1.5">Description</th>
-                    <th className="py-3 pr-4 text-right print:py-1.5">Qty</th>
-                    <th className="py-3 pr-4 text-right print:py-1.5">Unit</th>
-                    <th className="py-3 text-right print:py-1.5">Total</th>
+                    <th className="py-3 pr-4 print:py-1">Description</th>
+                    <th className="py-3 pr-4 text-right print:py-1">Qty</th>
+                    <th className="py-3 pr-4 text-right print:py-1">Unit</th>
+                    <th className="py-3 text-right print:py-1">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id} className="border-b border-border">
-                      <td className="py-3 pr-4 font-semibold text-foreground print:py-1.5">
+                      <td className="py-3 pr-4 font-semibold text-foreground print:py-1">
                         {item.description}
                       </td>
-                      <td className="py-3 pr-4 text-right text-muted print:py-1.5">
+                      <td className="py-3 pr-4 text-right text-muted print:py-1">
                         {formatQuantity(item.quantity)}
                       </td>
-                      <td className="py-3 pr-4 text-right text-muted print:py-1.5">
+                      <td className="py-3 pr-4 text-right text-muted print:py-1">
                         {formatMoney(item.unit_price)}
                       </td>
-                      <td className="py-3 text-right font-bold text-foreground print:py-1.5">
+                      <td className="py-3 text-right font-bold text-foreground print:py-1">
                         {getLineTotal(item)}
                       </td>
                     </tr>
@@ -1088,7 +1088,7 @@ export default async function InvoicePage({
                 </tbody>
               </table>
 
-              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-4 print:max-w-[16rem] print:space-y-1.5 print:text-xs">
+              <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm print:mt-2 print:max-w-[15rem] print:space-y-1 print:text-[10px]">
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Subtotal</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
@@ -1103,7 +1103,7 @@ export default async function InvoicePage({
                   <span className="text-muted">Tax</span>
                   <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-2 print:text-sm">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
                   <span className="font-black text-primary">Total</span>
                   <span className="font-black text-primary">{formatMoney(invoice.total)}</span>
                 </div>
@@ -1113,38 +1113,38 @@ export default async function InvoicePage({
                     <span className="font-bold text-emerald-700">{formatMoney(paidAmount)}</span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-2 print:text-sm">
+                <div className="flex items-center justify-between border-t border-border pt-3 text-lg print:pt-1.5 print:text-xs">
                   <span className="font-black text-primary">Amount due</span>
                   <span className="font-black text-primary">{formatMoney(amountDue)}</span>
                 </div>
               </div>
 
               {hasPayments ? (
-                <div className="mt-8 print:mt-3">
+                <div className="mt-8 print:mt-2">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                     Payment History
                   </p>
-                  <table className="mt-3 w-full border-collapse text-sm print:mt-1 print:text-[10px]">
+                  <table className="mt-3 w-full border-collapse text-sm print:mt-1 print:text-[9px]">
                     <thead>
                       <tr className="border-b border-border text-left text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        <th className="py-3 pr-4 print:py-1.5">Date</th>
-                        <th className="py-3 pr-4 print:py-1.5">Method</th>
-                        <th className="py-3 text-right print:py-1.5">Amount</th>
+                        <th className="py-3 pr-4 print:py-1">Date</th>
+                        <th className="py-3 pr-4 print:py-1">Method</th>
+                        <th className="py-3 text-right print:py-1">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {payments.map((payment) => (
                         <tr key={payment.id} className="border-b border-border">
-                          <td className="py-3 pr-4 text-muted print:py-1.5">
+                          <td className="py-3 pr-4 text-muted print:py-1">
                             {formatShortDateTime(payment.payment_date)} ET
                           </td>
-                          <td className="py-3 pr-4 text-foreground print:py-1.5">
+                          <td className="py-3 pr-4 text-foreground print:py-1">
                             {formatPaymentMethod(payment.method)}
                             {payment.note ? (
                               <span className="mt-1 block text-xs text-muted">{payment.note}</span>
                             ) : null}
                           </td>
-                          <td className="py-3 text-right font-bold text-foreground print:py-1.5">
+                          <td className="py-3 text-right font-bold text-foreground print:py-1">
                             {formatMoney(payment.amount)}
                           </td>
                         </tr>
@@ -1155,15 +1155,15 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            <section className="border-t border-border px-5 py-5 print:px-0 print:py-4 sm:px-7">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[11px]">
+            <section className="border-t border-border px-5 py-4 print:px-0 print:py-3 sm:px-7">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                 Terms and warranty
               </p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-muted print:mt-2.5 print:grid print:grid-cols-2 print:gap-x-7 print:gap-y-2 print:space-y-0 print:text-[11px] print:leading-5">
+              <div className="mt-3 grid gap-x-6 gap-y-1.5 text-xs leading-5 text-muted sm:grid-cols-2 print:mt-2 print:gap-y-1.5 print:text-[9px] print:leading-4">
                 {INVOICE_TERMS.map((term) => (
                   <p key={term}>{term}</p>
                 ))}
-                <p className="print:col-span-2">
+                <p className="sm:col-span-2">
                   <span className="font-bold text-foreground">Note:</span> {INVOICE_TAX_NOTE}
                 </p>
               </div>
