@@ -1159,11 +1159,11 @@ export default async function InvoicePage({
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
                 Terms and warranty
               </p>
-              <div className="mt-3 text-xs leading-5 text-muted print:mt-2 print:text-[9px] print:leading-4">
-                <ul className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2 print:gap-y-1">
+              <div className="mt-3 text-xs leading-5 text-muted print:mt-2 print:text-[10px] print:leading-[1.45]">
+                <ul className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2 print:gap-y-1.5">
                   {INVOICE_TERMS.map((term) => (
                     <li key={term} className="flex gap-2">
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary/50 print:mt-1.5 print:h-0.5 print:w-0.5" />
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary/50 print:mt-1.5 print:h-1 print:w-1" />
                       <span>{term}</span>
                     </li>
                   ))}
