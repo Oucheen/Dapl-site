@@ -27,15 +27,25 @@ export async function GET(
     notFound();
   }
 
-  const businessEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
-  const pdfBuffer = await renderInvoicePdf(invoiceData, businessEmail);
-  const filename = `${getSafeFilename(invoiceData.invoice.invoice_number)}.pdf`;
+  try {
+    const businessEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
+    const pdfBuffer = await renderInvoicePdf(invoiceData, businessEmail);
+    const filename = `${getSafeFilename(invoiceData.invoice.invoice_number)}.pdf`;
 
-  return new Response(new Uint8Array(pdfBuffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
-    },
-  });
+    return new Response(new Uint8Array(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    console.error("Invoice PDF generation failed", {
+      invoiceId,
+      invoiceNumber: invoiceData.invoice.invoice_number,
+      error,
+    });
+
+    return new Response("Invoice PDF generation failed.", { status: 500 });
+  }
 }
