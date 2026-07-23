@@ -7,6 +7,7 @@ import {
   type InvoiceWithItems,
 } from "@/lib/supabase-invoices";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
+import { renderInvoicePdf } from "@/lib/invoice-pdf";
 
 type SendInvoiceEmailResult =
   | { ok: true; to: string }
@@ -74,6 +75,10 @@ function isPlaceholderCustomerEmail(value: string | null | undefined) {
 
 function getLineTotal(item: InvoiceItemRecord) {
   return formatMoney(Number(item.quantity ?? 0) * Number(item.unit_price ?? 0));
+}
+
+function getSafeFilename(value: string) {
+  return value.replace(/[^a-z0-9._-]+/gi, "-");
 }
 
 function buildItemsRows(items: InvoiceItemRecord[]) {
@@ -322,12 +327,28 @@ export async function sendInvoiceEmail(
 
   const resend = new Resend(apiKey);
   const replyToEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
+  let invoicePdf: Buffer;
+
+  try {
+    invoicePdf = await renderInvoicePdf(invoiceData, replyToEmail);
+  } catch (error) {
+    console.error("Invoice email PDF attachment generation error:", error);
+    return { ok: false, reason: "send_error" };
+  }
+
   const { error } = await resend.emails.send({
     from: process.env.CONTACT_FROM_EMAIL || "DAPL Website <onboarding@resend.dev>",
     to: [to],
     replyTo: replyToEmail,
     subject: `DAPL Appliance Repair invoice ${invoiceData.invoice.invoice_number}`,
     html: buildInvoiceEmailHtml(invoiceData, replyToEmail),
+    attachments: [
+      {
+        filename: `${getSafeFilename(invoiceData.invoice.invoice_number)}.pdf`,
+        content: invoicePdf,
+        contentType: "application/pdf",
+      },
+    ],
   });
 
   if (error) {
