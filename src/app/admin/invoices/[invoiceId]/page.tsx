@@ -781,7 +781,7 @@ export default async function InvoicePage({
                     alt="DAPL Appliance Repair logo"
                     width={76}
                     height={76}
-                    className="h-16 w-16 object-contain print:h-12 print:w-12"
+                    className="h-16 w-16 object-contain print:h-14 print:w-14"
                   />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70 print:text-[9px]">
