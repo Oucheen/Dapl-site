@@ -8,6 +8,7 @@ import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
+import { InvoiceEmailSubmitButton } from "./invoice-email-submit-button";
 import {
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
@@ -1617,13 +1618,10 @@ export default async function InvoicePage({
             </div>
             <form action={sendInvoiceEmailAction} className="mt-3">
               <input type="hidden" name="id" value={invoice.id} />
-              <button
-                type="submit"
+              <InvoiceEmailSubmitButton
                 disabled={!customerEmail}
-                className="w-full rounded-lg bg-accent px-3 py-3 text-xs font-bold text-accent-foreground transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-              >
-                {invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
-              </button>
+                label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
+              />
               {!customerEmail ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
                   Customer email is missing, so this invoice cannot be sent yet.
