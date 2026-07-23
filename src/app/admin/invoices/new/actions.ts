@@ -29,8 +29,14 @@ export async function createManualInvoiceAction(formData: FormData) {
     leadCreatedAt: canBackdateManualInvoices
       ? String(formData.get("leadCreatedAt") || "")
       : "",
+    leadCreatedTime: canBackdateManualInvoices
+      ? String(formData.get("leadCreatedTime") || "")
+      : "",
     invoiceCreatedAt: canBackdateManualInvoices
       ? String(formData.get("invoiceCreatedAt") || "")
+      : "",
+    invoiceCreatedTime: canBackdateManualInvoices
+      ? String(formData.get("invoiceCreatedTime") || "")
       : "",
   });
 

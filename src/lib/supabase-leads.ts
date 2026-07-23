@@ -68,7 +68,9 @@ export type ManualLeadInput = {
   assignedTechnician: string;
   notes: string;
   leadCreatedAt?: string;
+  leadCreatedTime?: string;
   invoiceCreatedAt?: string;
+  invoiceCreatedTime?: string;
 };
 
 type SaveLeadResult =
@@ -144,7 +146,51 @@ function toEstimatedPrice(value: string) {
   return estimatedPrice;
 }
 
-export function toManualRecordTimestamp(value: string | undefined) {
+function getTimeZoneOffsetMs(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+
+  return (
+    Date.UTC(
+      values.year,
+      values.month - 1,
+      values.day,
+      values.hour,
+      values.minute,
+      values.second,
+    ) - date.getTime()
+  );
+}
+
+function getCharlotteDateTimeIso(date: string, time: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  const localAsUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
+  const firstOffset = getTimeZoneOffsetMs(localAsUtc, "America/New_York");
+  const firstUtc = new Date(localAsUtc.getTime() - firstOffset);
+  const secondOffset = getTimeZoneOffsetMs(firstUtc, "America/New_York");
+
+  if (secondOffset !== firstOffset) {
+    return new Date(localAsUtc.getTime() - secondOffset).toISOString();
+  }
+
+  return firstUtc.toISOString();
+}
+
+export function toManualRecordTimestamp(value: string | undefined, timeValue?: string) {
   const date = value?.trim();
 
   if (!date) {
@@ -155,7 +201,17 @@ export function toManualRecordTimestamp(value: string | undefined) {
     throw new Error("Manual record date must use YYYY-MM-DD format.");
   }
 
-  return `${date}T12:00:00.000Z`;
+  const time = timeValue?.trim();
+
+  if (!time) {
+    return `${date}T12:00:00.000Z`;
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(time)) {
+    throw new Error("Manual record time must use HH:MM format.");
+  }
+
+  return getCharlotteDateTimeIso(date, time);
 }
 
 export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLeadResult> {
@@ -208,7 +264,7 @@ export async function createManualSupabaseLead(input: ManualLeadInput) {
   const name = input.name.trim();
   const phone = input.phone.trim();
   const address = input.address.trim();
-  const manualCreatedAt = toManualRecordTimestamp(input.leadCreatedAt);
+  const manualCreatedAt = toManualRecordTimestamp(input.leadCreatedAt, input.leadCreatedTime);
 
   if (!name) {
     throw new Error("Customer name is required.");

@@ -570,6 +570,7 @@ export async function getInvoiceIdForLead(leadId: string) {
 
 type CreateInvoiceFromLeadOptions = {
   invoiceCreatedAt?: string;
+  invoiceCreatedTime?: string;
 };
 
 export async function createInvoiceFromLead(
@@ -597,7 +598,10 @@ export async function createInvoiceFromLead(
   }
 
   const promoCode = normalizePromoCode(lead.promo_code);
-  const manualInvoiceCreatedAt = toManualRecordTimestamp(options.invoiceCreatedAt);
+  const manualInvoiceCreatedAt = toManualRecordTimestamp(
+    options.invoiceCreatedAt,
+    options.invoiceCreatedTime,
+  );
   const discountAmount = getPromoDiscountAmount(promoCode);
   const subtotal = toMoney(lead.estimated_price);
   const tax = 0;
@@ -671,6 +675,7 @@ export async function createManualInvoice(input: ManualLeadInput) {
   const leadId = await createManualSupabaseLead(input);
   const invoiceId = await createInvoiceFromLead(leadId, {
     invoiceCreatedAt: input.invoiceCreatedAt,
+    invoiceCreatedTime: input.invoiceCreatedTime,
   });
 
   return { leadId, invoiceId };
