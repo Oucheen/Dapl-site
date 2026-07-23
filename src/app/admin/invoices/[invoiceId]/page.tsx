@@ -1606,11 +1606,16 @@ export default async function InvoicePage({
             </div>
 
             <div className="mt-4">
+              <Link
+                href={`/admin/invoices/${invoice.id}/pdf`}
+                className="mb-2 inline-flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Download generated PDF
+              </Link>
               <PrintButton />
               <p className="mt-2 text-xs leading-5 text-muted">
-                For a clean invoice PDF, turn off browser headers and footers in the print
-                dialog. Browser headers use your computer date format and cannot be changed by
-                the site.
+                Generated PDF is the new test version. Print / save as PDF stays here as the
+                current backup while we compare layouts.
               </p>
             </div>
             <form action={sendInvoiceEmailAction} className="mt-3">
