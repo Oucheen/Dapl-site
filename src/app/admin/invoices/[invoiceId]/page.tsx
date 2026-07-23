@@ -38,7 +38,6 @@ import {
   updateInvoiceScheduleAction,
   updateInvoiceStatusAction,
 } from "./actions";
-import { PrintButton } from "./print-button";
 import {
   invoicePartsTableSql,
   listInvoiceParts,
@@ -1608,14 +1607,12 @@ export default async function InvoicePage({
             <div className="mt-4">
               <Link
                 href={`/admin/invoices/${invoice.id}/pdf`}
-                className="mb-2 inline-flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                className="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
               >
-                Download generated PDF
+                Download PDF
               </Link>
-              <PrintButton />
               <p className="mt-2 text-xs leading-5 text-muted">
-                Generated PDF is the new test version. Print / save as PDF stays here as the
-                current backup while we compare layouts.
+                Generates a clean invoice PDF directly from CRM data.
               </p>
             </div>
             <form action={sendInvoiceEmailAction} className="mt-3">
