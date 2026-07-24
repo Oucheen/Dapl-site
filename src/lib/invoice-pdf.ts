@@ -153,15 +153,15 @@ export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEm
 
   return createPdfBuffer((doc) => {
     if (existsSync(logoPath)) {
-      doc.image(logoPath, 48, 46, { fit: [38, 38] });
+      doc.image(logoPath, 48, 40, { fit: [58, 58] });
     }
 
-    doc.font("Helvetica-Bold").fontSize(7).fillColor(PRIMARY).text(BUSINESS_NAME, 96, 46, {
+    doc.font("Helvetica-Bold").fontSize(7).fillColor(PRIMARY).text(BUSINESS_NAME, 118, 46, {
       characterSpacing: 1.4,
     });
-    doc.font("Helvetica").fontSize(7).fillColor(MUTED).text(BUSINESS_ADDRESS, 96, 59);
-    doc.text(businessEmail, 96, 70);
-    doc.fontSize(6.5).text(BUSINESS_LEGAL, 96, 84, { width: 210, lineGap: 1 });
+    doc.font("Helvetica").fontSize(7).fillColor(MUTED).text(BUSINESS_ADDRESS, 118, 59);
+    doc.text(businessEmail, 118, 70);
+    doc.fontSize(6.5).text(BUSINESS_LEGAL, 118, 84, { width: 210, lineGap: 1 });
 
     drawLabel(doc, "Invoice", 430, 46);
     doc.font("Helvetica-Bold").fontSize(16).fillColor(PRIMARY).text(invoice.invoice_number, 330, 62, {

@@ -109,9 +109,9 @@ export default async function PublicInvoicePage({
               <Image
                 src="/logo.jpg"
                 alt="DAPL Appliance Repair logo"
-                width={72}
-                height={72}
-                className="h-16 w-16 object-contain"
+                width={96}
+                height={96}
+                className="h-20 w-20 object-contain"
               />
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary/70">
