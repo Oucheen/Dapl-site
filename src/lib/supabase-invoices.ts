@@ -145,8 +145,27 @@ export const INVOICE_PROMO_DISCOUNTS = {
   RETURN15: 15,
 } as const;
 
-export const SERVICE_CALL_DISCOUNT_CODE = "SERVICECALL";
-export const SERVICE_CALL_DISCOUNT_AMOUNT = 89;
+export const INVOICE_DISCOUNT_ADJUSTMENTS = {
+  service_call: {
+    label: "Service call discount",
+    description: "Service call discount",
+    amount: 89,
+  },
+  retirement: {
+    label: "Retirement discount",
+    description: "Retirement discount",
+    amount: 30,
+  },
+  military: {
+    label: "Military discount",
+    description: "Military discount",
+    amount: 30,
+  },
+} as const;
+
+export type InvoiceDiscountAdjustmentKey = keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS;
+
+const SERVICE_CALL_DISCOUNT_CODE = "SERVICECALL";
 
 const DEFAULT_LEADS_TABLE = "leads";
 const DEFAULT_INVOICES_TABLE = "invoices";
@@ -224,6 +243,16 @@ function toMoney(value: number | string | null | undefined) {
   return Math.round(amount * 100) / 100;
 }
 
+function toSignedMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+
+  if (!Number.isFinite(amount)) {
+    return 0;
+  }
+
+  return Math.round(amount * 100) / 100;
+}
+
 function normalizePromoCode(value: string | null | undefined) {
   const code = value?.trim().toUpperCase();
 
@@ -240,18 +269,18 @@ export function getPromoDiscountAmount(value: string | null | undefined) {
   return INVOICE_PROMO_DISCOUNTS[code as keyof typeof INVOICE_PROMO_DISCOUNTS] ?? 0;
 }
 
-function addDiscountCode(value: string | null | undefined, code: string) {
-  const normalizedCode = normalizePromoCode(code);
-  const existingCodes = (value ?? "")
+function getDiscountCodes(value: string | null | undefined) {
+  return (value ?? "")
     .split("+")
     .map((item) => normalizePromoCode(item))
     .filter((item): item is string => Boolean(item));
+}
 
-  if (!normalizedCode || existingCodes.includes(normalizedCode)) {
-    return existingCodes.join("+") || null;
-  }
+function removeDiscountCode(value: string | null | undefined, code: string) {
+  const normalizedCode = normalizePromoCode(code);
+  const remainingCodes = getDiscountCodes(value).filter((item) => item !== normalizedCode);
 
-  return [...existingCodes, normalizedCode].join("+");
+  return remainingCodes.join("+") || null;
 }
 
 function toQuantity(value: number | string | null | undefined) {
@@ -1029,13 +1058,13 @@ async function reconcileInvoicePaymentStatus(
   config: NonNullable<ReturnType<typeof getSupabaseConfig>>,
   invoiceId: string,
 ) {
-  const { invoice, amountDue } = await getInvoicePaymentState(config, invoiceId);
+  const { invoice, paidAmount, amountDue } = await getInvoicePaymentState(config, invoiceId);
 
   if (invoice.status === "void") {
-    return { leadId: invoice.lead_id, paidAmount: Number(invoice.total ?? 0) - amountDue, amountDue };
+    return { leadId: invoice.lead_id, paidAmount, amountDue };
   }
 
-  if (amountDue <= 0 && invoice.status !== "paid") {
+  if (amountDue <= 0 && paidAmount > 0 && invoice.status !== "paid") {
     return updateInvoiceStatus(invoiceId, "paid");
   }
 
@@ -1043,7 +1072,7 @@ async function reconcileInvoicePaymentStatus(
     return updateInvoiceStatus(invoiceId, "sent");
   }
 
-  return { leadId: invoice.lead_id, paidAmount: Number(invoice.total ?? 0) - amountDue, amountDue };
+  return { leadId: invoice.lead_id, paidAmount, amountDue };
 }
 
 export async function addInvoicePayment(invoiceId: string, input: InvoicePaymentInput) {
@@ -1206,8 +1235,8 @@ export async function updateInvoiceItems(invoiceId: string, items: InvoiceItemIn
 
     const description = item.description.trim();
     const quantity = toQuantity(item.quantity);
-    const unitPrice = toMoney(item.unitPrice);
-    const lineTotal = toMoney(quantity * unitPrice);
+    const unitPrice = toSignedMoney(item.unitPrice);
+    const lineTotal = toSignedMoney(quantity * unitPrice);
 
     if (!description) {
       throw new Error("Invoice item description is required.");
@@ -1320,8 +1349,17 @@ export async function addInvoiceItemFromTemplate(
   await updateInvoiceTotals(config, invoiceId);
 }
 
-export async function applyServiceCallDiscount(invoiceId: string) {
+export async function addInvoiceDiscountAdjustment(
+  invoiceId: string,
+  adjustmentKey: InvoiceDiscountAdjustmentKey,
+) {
   assertUuid(invoiceId);
+
+  const adjustment = INVOICE_DISCOUNT_ADJUSTMENTS[adjustmentKey];
+
+  if (!adjustment) {
+    throw new Error("Invalid invoice discount adjustment.");
+  }
 
   const config = getSupabaseConfig();
 
@@ -1330,6 +1368,54 @@ export async function applyServiceCallDiscount(invoiceId: string) {
   }
 
   await assertInvoiceLineItemsEditable(config, invoiceId);
+
+  const existingItemParams = new URLSearchParams({
+    select: "id",
+    invoice_id: `eq.${invoiceId}`,
+    description: `eq.${adjustment.description}`,
+    limit: "1",
+  });
+  const existingItemResponse = await fetch(
+    `${getTableUrl(config, config.invoiceItemsTable)}?${existingItemParams.toString()}`,
+    {
+      headers: headers(config),
+      cache: "no-store",
+    },
+  );
+
+  if (!existingItemResponse.ok) {
+    const details = await existingItemResponse.text();
+    throw new Error(`Supabase invoice discount item fetch failed: ${existingItemResponse.status} ${details}`);
+  }
+
+  const existingItems = (await existingItemResponse.json()) as Pick<InvoiceItemRecord, "id">[];
+
+  if (existingItems.length === 0) {
+    const itemResponse = await fetch(getTableUrl(config, config.invoiceItemsTable), {
+      method: "POST",
+      headers: {
+        ...headers(config),
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        invoice_id: invoiceId,
+        description: adjustment.description,
+        quantity: 1,
+        unit_price: -adjustment.amount,
+        line_total: -adjustment.amount,
+      }),
+    });
+
+    if (!itemResponse.ok) {
+      const details = await itemResponse.text();
+      throw new Error(`Supabase invoice discount item insert failed: ${itemResponse.status} ${details}`);
+    }
+  }
+
+  if (adjustmentKey !== "service_call") {
+    await updateInvoiceTotals(config, invoiceId);
+    return;
+  }
 
   const invoiceParams = new URLSearchParams({
     select: "discount_amount,promo_code",
@@ -1360,22 +1446,15 @@ export async function applyServiceCallDiscount(invoiceId: string) {
     throw new Error("Invoice not found.");
   }
 
-  const promoCode = addDiscountCode(invoice.promo_code, SERVICE_CALL_DISCOUNT_CODE);
-  const hasServiceCallDiscount = promoCode
-    ?.split("+")
-    .map((item) => normalizePromoCode(item))
-    .includes(SERVICE_CALL_DISCOUNT_CODE);
-  const previousHadServiceCallDiscount = (invoice.promo_code ?? "")
-    .split("+")
-    .map((item) => normalizePromoCode(item))
-    .includes(SERVICE_CALL_DISCOUNT_CODE);
-  const discountAmount = previousHadServiceCallDiscount
-    ? toMoney(invoice.discount_amount)
-    : toMoney(Number(invoice.discount_amount ?? 0) + SERVICE_CALL_DISCOUNT_AMOUNT);
+  const previousHadServiceCallDiscount = getDiscountCodes(invoice.promo_code).includes(SERVICE_CALL_DISCOUNT_CODE);
 
-  if (!hasServiceCallDiscount) {
-    throw new Error("Could not apply service call discount.");
+  if (!previousHadServiceCallDiscount) {
+    await updateInvoiceTotals(config, invoiceId);
+    return;
   }
+
+  const promoCode = removeDiscountCode(invoice.promo_code, SERVICE_CALL_DISCOUNT_CODE);
+  const discountAmount = toMoney(Number(invoice.discount_amount ?? 0) - adjustment.amount);
 
   const updateResponse = await fetch(`${getTableUrl(config, config.invoicesTable)}?id=eq.${invoiceId}`, {
     method: "PATCH",

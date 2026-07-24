@@ -13,12 +13,14 @@ import {
   addInvoiceItem,
   addInvoiceItemFromTemplate,
   addInvoicePayment,
-  applyServiceCallDiscount,
+  addInvoiceDiscountAdjustment,
   deleteInvoiceItem,
   deleteInvoicePayment,
   getInvoiceItemTemplate,
   getInvoiceById,
   getLeadIdForInvoice,
+  INVOICE_DISCOUNT_ADJUSTMENTS,
+  type InvoiceDiscountAdjustmentKey,
   type InvoiceItemInput,
   type InvoiceRecord,
   type InvoiceStatus,
@@ -41,6 +43,11 @@ import {
 
 const ALLOWED_INVOICE_STATUSES: InvoiceStatus[] = ["draft", "sent", "paid", "void"];
 const CLOSED_INVOICE_STATUSES = new Set<InvoiceStatus>(["paid", "void"]);
+const ALLOWED_DISCOUNT_ADJUSTMENTS = new Set<InvoiceDiscountAdjustmentKey>([
+  "service_call",
+  "retirement",
+  "military",
+]);
 const ALLOWED_PART_STATUSES: InvoicePartStatus[] = [
   "needed",
   "ordered",
@@ -344,26 +351,33 @@ export async function addInvoiceTemplateItemAction(formData: FormData) {
   redirect(`/admin/invoices/${invoiceId}?notice=template_added`);
 }
 
-export async function applyServiceCallDiscountAction(formData: FormData) {
+export async function addInvoiceDiscountAdjustmentAction(formData: FormData) {
   const permissions = await requireInvoiceAdmin();
 
   const invoiceId = String(formData.get("invoiceId") || "");
+  const adjustmentKey = String(formData.get("adjustmentKey") || "") as InvoiceDiscountAdjustmentKey;
 
   if (!(await canEditInvoiceLineItems(invoiceId, permissions))) {
     redirectPermissionDenied(invoiceId);
   }
 
-  await applyServiceCallDiscount(invoiceId);
+  if (!ALLOWED_DISCOUNT_ADJUSTMENTS.has(adjustmentKey)) {
+    throw new Error("Invalid discount adjustment.");
+  }
+
+  const adjustment = INVOICE_DISCOUNT_ADJUSTMENTS[adjustmentKey];
+
+  await addInvoiceDiscountAdjustment(invoiceId, adjustmentKey);
   await createLeadActivity({
     leadId: await getLeadIdForInvoice(invoiceId),
     invoiceId,
     eventType: "invoice_discount_added",
-    title: "Service call discount applied",
-    details: "The service call was waived because the customer approved the repair.",
+    title: `${adjustment.label} applied`,
+    details: `${adjustment.label} was added as a customer-facing invoice line.`,
   });
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/invoices/${invoiceId}`);
-  redirect(`/admin/invoices/${invoiceId}?notice=service_call_discount_added`);
+  redirect(`/admin/invoices/${invoiceId}?notice=discount_adjustment_added`);
 }
 
 export async function deleteInvoiceItemAction(formData: FormData) {

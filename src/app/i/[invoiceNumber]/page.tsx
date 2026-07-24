@@ -93,6 +93,9 @@ export default async function PublicInvoicePage({
   const { invoice, items, payments } = invoiceData;
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const discountAmount = Number(invoice.discount_amount ?? 0);
+  const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
+  const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
   const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
     ? null
     : invoice.customer_email;
@@ -193,6 +196,20 @@ export default async function PublicInvoicePage({
           </div>
 
           <div className="ml-auto mt-6 w-full max-w-xs space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Subtotal</span>
+              <span className="font-bold text-foreground">{formatMoney(invoice.subtotal)}</span>
+            </div>
+            {hasDiscount ? (
+              <div className="flex items-center justify-between">
+                <span className="text-muted">{discountLabel}</span>
+                <span className="font-bold text-accent">-{formatMoney(discountAmount)}</span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Tax</span>
+              <span className="font-bold text-foreground">{formatMoney(invoice.tax)}</span>
+            </div>
             <div className="flex items-center justify-between">
               <span className="text-muted">Total</span>
               <span className="font-black text-primary">{formatMoney(invoice.total)}</span>

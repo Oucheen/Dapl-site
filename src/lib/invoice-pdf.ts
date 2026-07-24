@@ -224,8 +224,12 @@ export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEm
 
     const totalsX = 382;
     y += 6;
+    const discountAmount = Number(invoice.discount_amount ?? 0);
+    const hasDiscount = Number.isFinite(discountAmount) && discountAmount > 0;
+    const discountLabel = invoice.promo_code ? `Discount (${invoice.promo_code})` : "Discount";
     const totalRows: Array<[string, string, boolean]> = [
       ["Subtotal", formatMoney(invoice.subtotal), false],
+      ...(hasDiscount ? [[discountLabel, `-${formatMoney(discountAmount)}`, false] as [string, string, boolean]] : []),
       ["Tax", formatMoney(invoice.tax), false],
       ["Total", formatMoney(invoice.total), true],
       ...(paidAmount > 0 ? [["Payments received", formatMoney(paidAmount), false] as [string, string, boolean]] : []),

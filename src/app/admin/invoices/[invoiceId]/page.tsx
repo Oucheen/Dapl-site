@@ -10,6 +10,7 @@ import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-a
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import { InvoiceEmailSubmitButton } from "./invoice-email-submit-button";
 import {
+  INVOICE_DISCOUNT_ADJUSTMENTS,
   INVOICE_ITEM_TEMPLATES,
   type InvoiceItemRecord,
   type InvoiceJobStatus,
@@ -26,7 +27,7 @@ import {
   addInvoicePartAction,
   addInvoicePaymentAction,
   addInvoiceTemplateItemAction,
-  applyServiceCallDiscountAction,
+  addInvoiceDiscountAdjustmentAction,
   deleteInvoiceItemAction,
   deleteInvoicePartAction,
   deleteInvoicePaymentAction,
@@ -505,11 +506,11 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
-  if (status === "service_call_discount_added") {
+  if (status === "discount_adjustment_added") {
     return {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
-      title: "Service call discount applied",
-      body: "The service call amount was added as an invoice discount.",
+      title: "Discount added",
+      body: "The discount was added as a customer-facing invoice line.",
     };
   }
 
@@ -1196,20 +1197,30 @@ export default async function InvoicePage({
                   </form>
                 </div>
 
-                <form action={applyServiceCallDiscountAction} className="mt-4">
-                  <input type="hidden" name="invoiceId" value={invoice.id} />
-                  <button
-                    type="submit"
-                    className="w-full rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-left text-sm transition hover:bg-accent/10"
-                  >
-                    <span className="block font-black text-accent">
-                      Apply service call discount
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 text-muted">
-                      Waives the $89 service call when the repair is approved.
-                    </span>
-                  </button>
-                </form>
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  {(Object.entries(INVOICE_DISCOUNT_ADJUSTMENTS) as Array<
+                    [keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS, (typeof INVOICE_DISCOUNT_ADJUSTMENTS)[keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS]]
+                  >).map(([key, adjustment]) => (
+                    <form key={key} action={addInvoiceDiscountAdjustmentAction}>
+                      <input type="hidden" name="invoiceId" value={invoice.id} />
+                      <input type="hidden" name="adjustmentKey" value={key} />
+                      <button
+                        type="submit"
+                        className="flex h-full w-full items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-left text-sm transition hover:bg-accent/10"
+                      >
+                        <span>
+                          <span className="block font-black text-accent">{adjustment.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-muted">
+                            Adds a visible invoice discount line.
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-sm font-black text-accent">
+                          -{formatMoney(adjustment.amount)}
+                        </span>
+                      </button>
+                    </form>
+                  ))}
+                </div>
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {INVOICE_ITEM_TEMPLATES.map((template) => (
