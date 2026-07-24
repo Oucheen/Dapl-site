@@ -153,15 +153,15 @@ export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEm
 
   return createPdfBuffer((doc) => {
     if (existsSync(logoPath)) {
-      doc.image(logoPath, 48, 40, { fit: [58, 58] });
+      doc.image(logoPath, 48, 34, { fit: [76, 76] });
     }
 
-    doc.font("Helvetica-Bold").fontSize(7).fillColor(PRIMARY).text(BUSINESS_NAME, 118, 46, {
-      characterSpacing: 1.4,
+    doc.font("Helvetica-Bold").fontSize(8.5).fillColor(PRIMARY).text(BUSINESS_NAME, 138, 45, {
+      characterSpacing: 1.6,
     });
-    doc.font("Helvetica").fontSize(7).fillColor(MUTED).text(BUSINESS_ADDRESS, 118, 59);
-    doc.text(businessEmail, 118, 70);
-    doc.fontSize(6.5).text(BUSINESS_LEGAL, 118, 84, { width: 210, lineGap: 1 });
+    doc.font("Helvetica").fontSize(7.5).fillColor(MUTED).text(BUSINESS_ADDRESS, 138, 61);
+    doc.text(businessEmail, 138, 73);
+    doc.fontSize(6.8).text(BUSINESS_LEGAL, 138, 89, { width: 210, lineGap: 1 });
 
     drawLabel(doc, "Invoice", 430, 46);
     doc.font("Helvetica-Bold").fontSize(16).fillColor(PRIMARY).text(invoice.invoice_number, 330, 62, {
@@ -177,29 +177,29 @@ export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEm
       align: "right",
     });
 
-    drawRule(doc, 122);
+    drawRule(doc, 130);
 
-    drawLabel(doc, "Bill to", 48, 138);
-    doc.font("Helvetica-Bold").fontSize(15).fillColor(PRIMARY).text(invoice.customer_name, 48, 156, { width: 210 });
+    drawLabel(doc, "Bill to", 48, 146);
+    doc.font("Helvetica-Bold").fontSize(15).fillColor(PRIMARY).text(invoice.customer_name, 48, 164, { width: 210 });
     if (invoice.customer_phone) {
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(PRIMARY).text(invoice.customer_phone, 48, 176, { width: 210 });
+      doc.font("Helvetica-Bold").fontSize(9).fillColor(PRIMARY).text(invoice.customer_phone, 48, 184, { width: 210 });
     }
     if (invoice.customer_email) {
-      doc.font("Helvetica").fontSize(8).fillColor(MUTED).text(invoice.customer_email, 48, 191, { width: 210 });
+      doc.font("Helvetica").fontSize(8).fillColor(MUTED).text(invoice.customer_email, 48, 199, { width: 210 });
     }
 
-    drawValue(doc, "Service address", invoice.service_address || "Not set", 300, 140, 128);
-    drawValue(doc, "Service date", formatDate(invoice.service_date), 450, 140, 110);
-    drawValue(doc, "Service time", getServiceScheduleLabel(invoice), 300, 180, 128);
-    drawValue(doc, "Appliance", invoice.appliance || "Not selected", 450, 180, 110);
-    drawValue(doc, "Technician", invoice.assigned_technician || "Not assigned", 300, 220, 128);
+    drawValue(doc, "Service address", invoice.service_address || "Not set", 300, 148, 128);
+    drawValue(doc, "Service date", formatDate(invoice.service_date), 450, 148, 110);
+    drawValue(doc, "Service time", getServiceScheduleLabel(invoice), 300, 188, 128);
+    drawValue(doc, "Appliance", invoice.appliance || "Not selected", 450, 188, 110);
+    drawValue(doc, "Technician", invoice.assigned_technician || "Not assigned", 300, 228, 128);
 
-    drawRule(doc, 258);
+    drawRule(doc, 266);
 
-    drawLabel(doc, "Line items", 48, 274);
-    doc.font("Helvetica-Bold").fontSize(12).fillColor(PRIMARY).text("Customer invoice charges", 48, 288);
+    drawLabel(doc, "Line items", 48, 282);
+    doc.font("Helvetica-Bold").fontSize(12).fillColor(PRIMARY).text("Customer invoice charges", 48, 296);
 
-    const tableTop = 322;
+    const tableTop = 330;
     drawLabel(doc, "Description", 48, tableTop);
     drawLabel(doc, "Qty", 360, tableTop);
     drawLabel(doc, "Unit", 440, tableTop);
