@@ -70,12 +70,14 @@ const sections = [
     body: [
       "When you submit a service request, the information may be sent to our business email and internal notification channels, including Telegram notifications used for lead response and scheduling workflow.",
       "We use this information only to review, respond to, and manage repair requests and customer communications.",
+      "If you provide your mobile phone number, we may use it to send service-related text messages about appliance repair requests, invoices, appointments, payment reminders, technician updates, and customer support. Message frequency varies based on your service activity. Message and data rates may apply. You can reply STOP to opt out or HELP for help.",
     ],
   },
   {
     title: "Sharing of information",
     body: [
       "We do not sell your personal information in the ordinary course of our business. We may share information with service providers that help us operate the website, send communications, measure analytics, or process customer inquiries.",
+      "Mobile phone numbers, text messaging opt-in data, and SMS consent information will not be shared, sold, rented, or transferred to third parties, affiliates, or lead generators for marketing or promotional purposes.",
       "If we use advertising or analytics providers, those providers may receive technical information such as browser, device, and interaction data in connection with website measurement and performance reporting.",
     ],
   },

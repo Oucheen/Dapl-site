@@ -105,6 +105,10 @@ export function Footer() {
             <Link href="/privacy-policy" className="font-semibold text-primary hover:underline">
               Privacy Policy
             </Link>
+            {" | "}
+            <Link href="/terms-and-conditions" className="font-semibold text-primary hover:underline">
+              Terms and Conditions
+            </Link>
           </p>
           <p className="mt-1">
             DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.
