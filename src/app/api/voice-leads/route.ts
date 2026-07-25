@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { saveLeadToSupabase } from "@/lib/supabase-leads";
 
@@ -40,6 +41,38 @@ function text(data: VoiceLeadPayload, key: string, max = 1000) {
   return value.trim().slice(0, max);
 }
 
+function flexibleText(value: unknown, max = 1000) {
+  if (typeof value === "string") {
+    return value.trim().slice(0, max);
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim().slice(0, max);
+  }
+
+  if (value && typeof value === "object") {
+    try {
+      return JSON.stringify(value).slice(0, max);
+    } catch {
+      return "";
+    }
+  }
+
+  return "";
+}
+
+function firstText(max: number, ...values: unknown[]) {
+  for (const value of values) {
+    const result = flexibleText(value, max);
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return "";
+}
+
 function getBearerToken(request: Request) {
   const authorization = request.headers.get("authorization") || "";
   const [scheme, token] = authorization.split(/\s+/, 2);
@@ -60,6 +93,39 @@ function isAuthorized(request: Request) {
 
   const token = getBearerToken(request) || request.headers.get("x-api-key")?.trim();
   return token === secret;
+}
+
+function verifyRetellSignature(rawBody: string, signature: string | null) {
+  const apiKey = process.env.RETELL_API_KEY;
+
+  if (!apiKey || !signature) {
+    return false;
+  }
+
+  const match = signature.match(/v=(\d+),d=([a-f0-9]+)/i);
+
+  if (!match) {
+    return false;
+  }
+
+  const [, timestamp, digest] = match;
+  const timestampMs = Number(timestamp);
+
+  if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > 5 * 60 * 1000) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", apiKey)
+    .update(rawBody + timestamp)
+    .digest();
+  const provided = Buffer.from(digest, "hex");
+
+  return expected.length === provided.length && crypto.timingSafeEqual(expected, provided);
+}
+
+function isNativeRetellPayload(body: VoiceLeadPayload) {
+  return typeof body.event === "string" && Boolean(objectValue(body, "call"));
 }
 
 function isValidEmail(email: string) {
@@ -173,6 +239,93 @@ function buildVoiceTelegramMessage(input: {
   return lines.filter(Boolean).join("\n");
 }
 
+function normalizeRetellPayload(body: VoiceLeadPayload) {
+  const call = objectValue(body, "call") || {};
+  const analysis = objectValue(call, "call_analysis") || {};
+  const custom =
+    objectValue(analysis, "custom_analysis_data") ||
+    objectValue(analysis, "custom") ||
+    objectValue(call, "custom_analysis_data") ||
+    {};
+  const dynamicVariables = objectValue(call, "retell_llm_dynamic_variables") || {};
+  const metadata = objectValue(call, "metadata") || {};
+  const phone = firstText(
+    MAX.phone,
+    call.from_number,
+    custom.phone,
+    custom.customer_phone,
+    dynamicVariables.phone,
+    metadata.phone,
+  );
+  const callSummary = firstText(
+    MAX.message,
+    analysis.call_summary,
+    analysis.summary,
+    custom.callSummary,
+    custom.call_summary,
+    custom.summary,
+  );
+  const transcript = firstText(
+    MAX.transcript,
+    call.transcript,
+    call.transcript_with_tool_calls,
+    call.transcript_object,
+  );
+  const issue = firstText(
+    MAX.message,
+    custom.issue,
+    custom.problem,
+    custom.service_issue,
+    custom.repair_issue,
+    callSummary,
+    transcript,
+    "Retell AI phone call received.",
+  );
+
+  return {
+    name:
+      firstText(
+        MAX.name,
+        custom.name,
+        custom.customer_name,
+        dynamicVariables.name,
+        dynamicVariables.customer_name,
+        metadata.name,
+        metadata.customer_name,
+      ) || `Voice caller ${phone || "unknown"}`.slice(0, MAX.name),
+    phone,
+    emailRaw: firstText(MAX.email, custom.email, custom.customer_email, dynamicVariables.email),
+    address:
+      firstText(
+        MAX.address,
+        custom.address,
+        custom.service_address,
+        dynamicVariables.address,
+        dynamicVariables.service_address,
+        metadata.address,
+      ) || "Address needed - Retell call",
+    appliance: firstText(
+      MAX.appliance,
+      custom.appliance,
+      custom.appliance_type,
+      dynamicVariables.appliance,
+      metadata.appliance,
+    ),
+    promoCode: firstText(MAX.promoCode, custom.promoCode, custom.promo_code),
+    preferredDate: firstText(
+      MAX.preferredDate,
+      custom.preferredDate,
+      custom.preferred_date,
+      dynamicVariables.preferredDate,
+    ),
+    issue,
+    callSummary,
+    transcript,
+    provider: "retell",
+    callId: firstText(MAX.callId, call.call_id, call.id),
+  };
+}
+
 async function sendTelegramNotification(input: {
   botToken: string;
   chatId: string;
@@ -208,13 +361,10 @@ async function sendTelegramNotification(input: {
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const rawBody = await request.text();
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -223,19 +373,42 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const data = getPayloadData(body as VoiceLeadPayload);
-  const name = text(data, "name", MAX.name);
-  const phone = text(data, "phone", MAX.phone);
-  const emailRaw = text(data, "email", MAX.email);
-  const address = text(data, "address", MAX.address);
-  const appliance = text(data, "appliance", MAX.appliance);
-  const promoCode = text(data, "promoCode", MAX.promoCode);
-  const preferredDate = text(data, "preferredDate", MAX.preferredDate);
-  const issue = text(data, "issue", MAX.message);
-  const callSummary = text(data, "callSummary", MAX.message);
-  const transcript = text(data, "transcript", MAX.transcript);
-  const provider = text(data, "provider", MAX.provider);
-  const callId = text(data, "callId", MAX.callId);
+  const payload = body as VoiceLeadPayload;
+  const isRetellWebhook = isNativeRetellPayload(payload);
+  const isLegacyAuthorized = isAuthorized(request);
+
+  if (isRetellWebhook) {
+    const isRetellAuthorized = verifyRetellSignature(
+      rawBody,
+      request.headers.get("x-retell-signature"),
+    );
+
+    if (!isRetellAuthorized && !isLegacyAuthorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (payload.event !== "call_analyzed") {
+      return NextResponse.json({ ok: true, ignored: payload.event });
+    }
+  } else if (!isLegacyAuthorized) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const data = isRetellWebhook ? null : getPayloadData(payload);
+  const normalized = isRetellWebhook ? normalizeRetellPayload(payload) : null;
+  const name = normalized?.name ?? text(data || {}, "name", MAX.name);
+  const phone = normalized?.phone ?? text(data || {}, "phone", MAX.phone);
+  const emailRaw = normalized?.emailRaw ?? text(data || {}, "email", MAX.email);
+  const address = normalized?.address ?? text(data || {}, "address", MAX.address);
+  const appliance = normalized?.appliance ?? text(data || {}, "appliance", MAX.appliance);
+  const promoCode = normalized?.promoCode ?? text(data || {}, "promoCode", MAX.promoCode);
+  const preferredDate =
+    normalized?.preferredDate ?? text(data || {}, "preferredDate", MAX.preferredDate);
+  const issue = normalized?.issue ?? text(data || {}, "issue", MAX.message);
+  const callSummary = normalized?.callSummary ?? text(data || {}, "callSummary", MAX.message);
+  const transcript = normalized?.transcript ?? text(data || {}, "transcript", MAX.transcript);
+  const provider = normalized?.provider ?? text(data || {}, "provider", MAX.provider);
+  const callId = normalized?.callId ?? text(data || {}, "callId", MAX.callId);
 
   if (!name) {
     return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
