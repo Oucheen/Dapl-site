@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
               </div>
 
               <div className="mt-10 rounded-2xl border border-primary/10 bg-primary/5 px-5 py-4 text-sm leading-7 text-foreground/85">
-                <p className="font-semibold text-primary">Last updated: April 29, 2026</p>
+                <p className="font-semibold text-primary">Last updated: July 25, 2026</p>
                 <p className="mt-1">
                   We may update this policy as the website, analytics setup, or communication
                   workflows change.
