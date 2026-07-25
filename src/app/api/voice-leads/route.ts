@@ -161,6 +161,14 @@ function validatePreferredDate(value: string) {
   return Date.UTC(year, month - 1, day) >= todayUtc;
 }
 
+function cleanOptionalEmail(value: string) {
+  return value && isValidEmail(value) ? value : "";
+}
+
+function cleanOptionalPreferredDate(value: string) {
+  return validatePreferredDate(value) ? value : "";
+}
+
 function fallbackEmail(phone: string) {
   const normalizedPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
   return `voice-${normalizedPhone || "caller"}@daplappliance.local`;
@@ -300,7 +308,9 @@ function normalizeRetellPayload(body: VoiceLeadPayload) {
         metadata.customer_name,
       ) || `Voice caller ${phone || "unknown"}`.slice(0, MAX.name),
     phone,
-    emailRaw: firstText(MAX.email, custom.email, custom.customer_email, dynamicVariables.email),
+    emailRaw: cleanOptionalEmail(
+      firstText(MAX.email, custom.email, custom.customer_email, dynamicVariables.email),
+    ),
     address:
       firstText(
         MAX.address,
@@ -318,11 +328,13 @@ function normalizeRetellPayload(body: VoiceLeadPayload) {
       metadata.appliance,
     ),
     promoCode: firstText(MAX.promoCode, custom.promoCode, custom.promo_code),
-    preferredDate: firstText(
-      MAX.preferredDate,
-      custom.preferredDate,
-      custom.preferred_date,
-      dynamicVariables.preferredDate,
+    preferredDate: cleanOptionalPreferredDate(
+      firstText(
+        MAX.preferredDate,
+        custom.preferredDate,
+        custom.preferred_date,
+        dynamicVariables.preferredDate,
+      ),
     ),
     issue,
     callSummary,
