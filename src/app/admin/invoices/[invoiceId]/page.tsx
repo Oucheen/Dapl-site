@@ -34,7 +34,6 @@ import {
   deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
   sendInvoiceEmailAction,
-  sendInvoiceSmsAction,
   updateInvoiceItemsAction,
   updateInvoiceCheckStatusAction,
   updateInvoicePartAction,
@@ -1640,8 +1639,7 @@ export default async function InvoicePage({
                 </p>
               ) : null}
             </form>
-            <form action={sendInvoiceSmsAction} className="mt-3">
-              <input type="hidden" name="id" value={invoice.id} />
+            <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
               <InvoiceSmsSubmitButton
                 disabled={!invoice.customer_phone}
                 label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
