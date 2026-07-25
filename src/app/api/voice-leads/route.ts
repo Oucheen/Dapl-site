@@ -19,24 +19,6 @@ const MAX = {
 
 type VoiceLeadPayload = Record<string, unknown>;
 
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-function twiml(body: string, status = 200) {
-  return new Response(`<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`, {
-    status,
-    headers: {
-      "Content-Type": "text/xml; charset=utf-8",
-    },
-  });
-}
-
 function objectValue(data: VoiceLeadPayload, key: string) {
   const value = data[key];
   return value && typeof value === "object" && !Array.isArray(value)
@@ -162,169 +144,6 @@ function getAdminInvoicesSearchUrl(request: Request, query: string) {
   return `${getRequestOrigin(request)}/admin/invoices?${params.toString()}`;
 }
 
-function getTwilioRecordingActionUrl(request: Request) {
-  const url = new URL("/api/voice-leads", getRequestOrigin(request));
-  url.searchParams.set("stage", "recording");
-  return url.toString();
-}
-
-function getFormText(formData: FormData, key: string, max = 1000) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim().slice(0, max);
-}
-
-function isTwilioVoiceRequest(request: Request) {
-  const contentType = request.headers.get("content-type") || "";
-  return (
-    contentType.includes("application/x-www-form-urlencoded") ||
-    contentType.includes("multipart/form-data")
-  );
-}
-
-function buildTwilioVoiceLeadMessage(input: {
-  phone: string;
-  callId: string;
-  recordingUrl: string;
-  recordingDuration: string;
-}) {
-  const recordingLine = input.recordingUrl
-    ? `Recording: ${input.recordingUrl}${input.recordingUrl.endsWith(".mp3") ? "" : ".mp3"}`
-    : "Recording: not available";
-
-  return [
-    "Phone call received from Twilio Voice.",
-    `Caller phone: ${input.phone || "Unknown"}`,
-    input.callId ? `Call ID: ${input.callId}` : "",
-    input.recordingDuration ? `Recording duration: ${input.recordingDuration} seconds` : "",
-    recordingLine,
-    "",
-    "Follow up with the customer to collect the service address, appliance type, and repair issue.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-async function handleTwilioVoiceWebhook(request: Request) {
-  const stage = new URL(request.url).searchParams.get("stage") || "start";
-
-  if (stage !== "recording") {
-    const actionUrl = getTwilioRecordingActionUrl(request);
-
-    return twiml(
-      [
-        "<Say voice=\"alice\" language=\"en-US\">Thank you for calling DAPL Appliance Repair. Please leave your name, service address, appliance type, and a short description of the issue after the tone. We will call you back as soon as possible.</Say>",
-        `<Record action="${escapeXml(actionUrl)}" method="POST" maxLength="180" playBeep="true" timeout="5" trim="trim-silence" />`,
-        "<Say voice=\"alice\" language=\"en-US\">We did not receive a message. Please call us again or visit dapl appliance dot com. Goodbye.</Say>",
-        "<Hangup />",
-      ].join(""),
-    );
-  }
-
-  const formData = await request.formData();
-  const phone = getFormText(formData, "From", MAX.phone) || "Unknown caller";
-  const callId = getFormText(formData, "CallSid", MAX.callId);
-  const recordingUrl = getFormText(formData, "RecordingUrl", MAX.message);
-  const recordingDuration = getFormText(formData, "RecordingDuration", 20);
-
-  if (!recordingUrl) {
-    return twiml(
-      "<Say voice=\"alice\" language=\"en-US\">We could not save your message. Please call us again. Goodbye.</Say><Hangup />",
-    );
-  }
-
-  const name = `Voice caller ${phone}`.slice(0, MAX.name);
-  const address = "Address needed - voice call";
-  const message = buildTwilioVoiceLeadMessage({
-    phone,
-    callId,
-    recordingUrl,
-    recordingDuration,
-  }).slice(0, MAX.message);
-
-  const leadStorageResult = await saveLeadToSupabase({
-    name,
-    phone,
-    email: fallbackEmail(phone),
-    address,
-    appliance: "",
-    promoCode: "",
-    leadSource: "twilio-voice",
-    preferredDate: "",
-    message,
-  });
-
-  if (!leadStorageResult.saved) {
-    const error = leadStorageResult.skipped
-      ? "Supabase is not configured."
-      : "Could not save Twilio voice lead.";
-
-    if (!leadStorageResult.skipped) {
-      console.error("Twilio voice lead storage error:", leadStorageResult.error);
-    } else {
-      console.warn("Twilio voice lead storage skipped:", error);
-    }
-  }
-
-  if (leadStorageResult.saved && leadStorageResult.id) {
-    await createLeadActivity({
-      leadId: leadStorageResult.id,
-      eventType: "voice_lead_received",
-      title: "Twilio voice lead received",
-      details: "Created from a Twilio phone call recording.",
-      metadata: {
-        provider: "twilio",
-        callId: callId || null,
-        recordingUrl: recordingUrl || null,
-      },
-    });
-  }
-
-  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (telegramBotToken && telegramChatId) {
-    try {
-      await sendTelegramNotification({
-        botToken: telegramBotToken,
-        chatId: telegramChatId,
-        text: buildVoiceTelegramMessage({
-          name,
-          phone,
-          address,
-          appliance: "",
-          issue: "Voice message left by caller.",
-          callSummary: recordingUrl ? `Recording: ${recordingUrl}.mp3` : "",
-          promoCode: "",
-          preferredDate: "",
-          provider: "twilio",
-          callId,
-        }),
-        buttons: [
-          {
-            text: "Open Lead",
-            url: getAdminLeadUrl(
-              request,
-              leadStorageResult.saved ? leadStorageResult.id : undefined,
-            ),
-          },
-          { text: "Invoices", url: getAdminInvoicesSearchUrl(request, phone) },
-        ],
-      });
-    } catch (error) {
-      console.error("Twilio voice Telegram error:", error);
-    }
-  }
-
-  return twiml(
-    "<Say voice=\"alice\" language=\"en-US\">Thank you. Your message was received. DAPL Appliance Repair will call you back as soon as possible. Goodbye.</Say><Hangup />",
-  );
-}
-
 function buildVoiceTelegramMessage(input: {
   name: string;
   phone: string;
@@ -389,10 +208,6 @@ async function sendTelegramNotification(input: {
 }
 
 export async function POST(request: Request) {
-  if (isTwilioVoiceRequest(request)) {
-    return handleTwilioVoiceWebhook(request);
-  }
-
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
