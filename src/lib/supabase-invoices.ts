@@ -6,6 +6,7 @@ import {
   toManualRecordTimestamp,
   updateSupabaseLeadStatus,
 } from "@/lib/supabase-leads";
+import { getShortInvoiceCode } from "@/lib/invoice-public-link";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "void";
 export type InvoiceJobStatus =
@@ -509,6 +510,40 @@ export async function getInvoiceByNumber(invoiceNumber: string): Promise<Invoice
   }
 
   return getInvoiceById(invoice.id);
+}
+
+export async function getInvoiceNumberByShortCode(code: string) {
+  const config = getSupabaseConfig();
+  const normalizedCode = code.trim().toUpperCase();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  if (!/^[A-Z0-9_-]{4,16}$/.test(normalizedCode)) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    select: "invoice_number",
+    order: "created_at.desc",
+    limit: "5000",
+  });
+
+  const response = await fetch(`${getTableUrl(config, config.invoicesTable)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase invoice short link fetch failed: ${response.status} ${details}`);
+  }
+
+  const invoices = (await response.json()) as Pick<InvoiceRecord, "invoice_number">[];
+  const match = invoices.find((invoice) => getShortInvoiceCode(invoice.invoice_number) === normalizedCode);
+
+  return match?.invoice_number ?? null;
 }
 
 export async function listInvoices(limit = 100): Promise<InvoiceRecord[]> {

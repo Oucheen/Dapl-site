@@ -29,6 +29,18 @@ export function getInvoiceAccessCode(invoiceNumber: string) {
   return base64Url(createHmac("sha256", secret).update(invoiceNumber).digest()).slice(0, 10);
 }
 
+export function getShortInvoiceCode(invoiceNumber: string) {
+  const secret = getSigningSecret();
+
+  if (!secret) {
+    return "";
+  }
+
+  return base64Url(createHmac("sha256", secret).update(`short:${invoiceNumber}`).digest())
+    .slice(0, 6)
+    .toUpperCase();
+}
+
 export function isValidInvoiceAccessCode(invoiceNumber: string, code: string) {
   const expected = getInvoiceAccessCode(invoiceNumber);
 
@@ -46,11 +58,24 @@ export function getPublicInvoicePath(invoiceNumber: string) {
   return `/i/${encodeURIComponent(invoiceNumber)}?${params.toString()}`;
 }
 
-export function getPublicInvoiceUrl(invoiceNumber: string) {
-  const baseUrl =
+export function getShortPublicInvoicePath(invoiceNumber: string) {
+  const code = getShortInvoiceCode(invoiceNumber);
+
+  return `/v/${encodeURIComponent(code)}`;
+}
+
+function getBaseUrl() {
+  return (
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : DEFAULT_SITE_URL);
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : DEFAULT_SITE_URL)
+  ).replace(/\/+$/g, "");
+}
 
-  return `${baseUrl.replace(/\/+$/g, "")}${getPublicInvoicePath(invoiceNumber)}`;
+export function getPublicInvoiceUrl(invoiceNumber: string) {
+  return `${getBaseUrl()}${getPublicInvoicePath(invoiceNumber)}`;
+}
+
+export function getShortPublicInvoiceUrl(invoiceNumber: string) {
+  return `${getBaseUrl()}${getShortPublicInvoicePath(invoiceNumber)}`;
 }

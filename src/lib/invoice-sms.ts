@@ -1,5 +1,8 @@
-import { getPublicInvoiceUrl } from "@/lib/invoice-public-link";
-import type { InvoiceWithItems } from "@/lib/supabase-invoices";
+import { getShortPublicInvoiceUrl } from "@/lib/invoice-public-link";
+import {
+  calculateInvoiceAmountDue,
+  type InvoiceWithItems,
+} from "@/lib/supabase-invoices";
 
 type SendInvoiceSmsResult =
   | { ok: true; to: string; messageSid: string }
@@ -29,8 +32,21 @@ function normalizePhone(value: string | null | undefined) {
   return trimmed;
 }
 
-export function buildInvoiceSmsText(invoiceNumber: string) {
-  return `DAPL Appliance Repair invoice: ${getPublicInvoiceUrl(invoiceNumber)} Questions? 704-266-0508`;
+function formatMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number.isFinite(amount) ? amount : 0);
+}
+
+export function buildInvoiceSmsText(invoiceData: InvoiceWithItems) {
+  const { invoice, payments } = invoiceData;
+  const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const invoiceUrl = getShortPublicInvoiceUrl(invoice.invoice_number);
+
+  return `DAPL invoice ${formatMoney(amountDue)} due: ${invoiceUrl} Reply/call 704-266-0508`;
 }
 
 export async function sendInvoiceSms(
@@ -38,10 +54,10 @@ export async function sendInvoiceSms(
 ): Promise<SendInvoiceSmsResult> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
   const to = normalizePhone(invoiceData.invoice.customer_phone);
 
-  if (!accountSid || !authToken || !from) {
+  if (!accountSid || !authToken || !messagingServiceSid) {
     return { ok: false, reason: "config" };
   }
 
@@ -58,9 +74,9 @@ export async function sendInvoiceSms(
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        From: from,
+        MessagingServiceSid: messagingServiceSid,
         To: to,
-        Body: buildInvoiceSmsText(invoiceData.invoice.invoice_number),
+        Body: buildInvoiceSmsText(invoiceData),
       }),
     },
   );

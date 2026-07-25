@@ -9,6 +9,7 @@ import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-form
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import { InvoiceEmailSubmitButton } from "./invoice-email-submit-button";
+import { InvoiceSmsSubmitButton } from "./invoice-sms-submit-button";
 import {
   INVOICE_DISCOUNT_ADJUSTMENTS,
   INVOICE_ITEM_TEMPLATES,
@@ -442,7 +443,7 @@ function getSmsNotice(status: string | undefined, customerPhone: string | null):
     return {
       className: "border-amber-500/20 bg-amber-50 text-amber-800",
       title: "Twilio is not configured",
-      body: "Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in Vercel before sending invoice SMS.",
+      body: "Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_MESSAGING_SERVICE_SID in Vercel before sending invoice SMS.",
     };
   }
 
@@ -1641,13 +1642,10 @@ export default async function InvoicePage({
             </form>
             <form action={sendInvoiceSmsAction} className="mt-3">
               <input type="hidden" name="id" value={invoice.id} />
-              <button
-                type="submit"
+              <InvoiceSmsSubmitButton
                 disabled={!invoice.customer_phone}
-                className="w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-              >
-                {invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
-              </button>
+                label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
+              />
               {!invoice.customer_phone ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
                   Customer phone is missing, so this invoice cannot be sent by SMS yet.
