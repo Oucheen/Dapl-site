@@ -128,6 +128,10 @@ function isNativeRetellPayload(body: VoiceLeadPayload) {
   return typeof body.event === "string" && Boolean(objectValue(body, "call"));
 }
 
+function isRetellStylePayload(body: VoiceLeadPayload) {
+  return typeof body.event === "string";
+}
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -252,11 +256,13 @@ function normalizeRetellPayload(body: VoiceLeadPayload) {
   const phone = firstText(
     MAX.phone,
     call.from_number,
+    call.from,
+    call.caller_number,
     custom.phone,
     custom.customer_phone,
     dynamicVariables.phone,
     metadata.phone,
-  );
+  ) || "Unknown caller";
   const callSummary = firstText(
     MAX.message,
     analysis.call_summary,
@@ -375,9 +381,10 @@ export async function POST(request: Request) {
 
   const payload = body as VoiceLeadPayload;
   const isRetellWebhook = isNativeRetellPayload(payload);
+  const isRetellStyleWebhook = isRetellStylePayload(payload);
   const isLegacyAuthorized = isAuthorized(request);
 
-  if (isRetellWebhook) {
+  if (isRetellStyleWebhook) {
     const isRetellAuthorized = verifyRetellSignature(
       rawBody,
       request.headers.get("x-retell-signature"),
@@ -385,6 +392,10 @@ export async function POST(request: Request) {
 
     if (!isRetellAuthorized && !isLegacyAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isRetellWebhook) {
+      return NextResponse.json({ ok: true, ignored: payload.event });
     }
 
     if (payload.event !== "call_analyzed") {
