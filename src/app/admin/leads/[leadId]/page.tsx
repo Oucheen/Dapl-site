@@ -72,15 +72,6 @@ function formatMoney(value: number | string | null | undefined) {
   }).format(Number.isFinite(amount) ? amount : 0);
 }
 
-function formatInputMoney(value: number | string | null | undefined) {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
-
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount.toFixed(2) : "";
-}
-
 function isTechnicianReportActivity(activity: LeadActivityRecord) {
   return (
     activity.event_type.startsWith("telegram_report_") ||
@@ -259,7 +250,7 @@ export default async function LeadDetailPage({
           <div className="mb-6 rounded-2xl border border-amber-500/20 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-800">
             <p className="font-black">Invoice controls this job now</p>
             <p className="mt-1">
-              Visit date, estimate, technician, line items, and email sending live inside the
+              Visit date, customer charges, technician, line items, and email sending live inside the
               invoice. This lead page only keeps status and admin notes editable.
             </p>
           </div>
@@ -429,6 +420,7 @@ export default async function LeadDetailPage({
             </p>
             <form action={updateLeadDetails} className="mt-5 grid gap-4">
               <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="estimatedPrice" value="" />
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Status
                 <select
@@ -455,24 +447,6 @@ export default async function LeadDetailPage({
                     hasInvoice
                       ? lockedFieldClass
                       : "rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                  }
-                />
-              </label>
-
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Estimate
-                <input
-                  type="number"
-                  name="estimatedPrice"
-                  defaultValue={formatInputMoney(lead.estimated_price)}
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  disabled={hasInvoice}
-                  className={
-                    hasInvoice
-                      ? lockedFieldClass
-                      : "rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                   }
                 />
               </label>

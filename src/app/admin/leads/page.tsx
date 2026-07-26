@@ -84,20 +84,6 @@ function countByStatus(leads: Awaited<ReturnType<typeof listSupabaseLeads>>) {
   );
 }
 
-function formatPrice(value: number | string | null | undefined) {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
-
-  const price = Number(value);
-
-  if (!Number.isFinite(price)) {
-    return "";
-  }
-
-  return price.toFixed(2);
-}
-
 function formatVisitTime(value?: string | null) {
   if (!value) {
     return "";
@@ -725,11 +711,12 @@ export default async function LeadsAdminPage({
                       <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-800">
                         <p className="font-black">Invoice created</p>
                         <p className="mt-1">
-                          Visit date, time, estimate, and technician now live inside the invoice.
+                          Visit date, time, customer charges, and technician now live inside the invoice.
                           This lead can stay invoiced or move to completed / cancelled from here.
                         </p>
                       </div>
                     ) : null}
+                    <input type="hidden" name="estimatedPrice" value="" />
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 min-[1320px]:grid-cols-2">
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Status
@@ -775,23 +762,6 @@ export default async function LeadsAdminPage({
                           />
                         </label>
                       ) : null}
-                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                        Estimate
-                        <input
-                          type="number"
-                          name="estimatedPrice"
-                          defaultValue={formatPrice(lead.estimated_price)}
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          disabled={hasInvoice}
-                          className={
-                            hasInvoice
-                              ? lockedFieldClass
-                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                          }
-                        />
-                      </label>
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Technician
                         <input
