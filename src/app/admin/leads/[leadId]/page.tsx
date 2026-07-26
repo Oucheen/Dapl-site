@@ -5,7 +5,11 @@ import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
-import { getActivityActorName, listActivitiesForLead } from "@/lib/supabase-activity";
+import {
+  getActivityActorName,
+  listActivitiesForLead,
+  type LeadActivityRecord,
+} from "@/lib/supabase-activity";
 import { getInvoiceById, getInvoiceIdForLead } from "@/lib/supabase-invoices";
 import {
   type LeadAdminStatus,
@@ -77,6 +81,33 @@ function formatInputMoney(value: number | string | null | undefined) {
   return Number.isFinite(amount) ? amount.toFixed(2) : "";
 }
 
+function isTechnicianReportActivity(activity: LeadActivityRecord) {
+  return (
+    activity.event_type.startsWith("telegram_report_") ||
+    activity.event_type.startsWith("telegram_visit_report_")
+  );
+}
+
+function getTelegramPhoto(activity: LeadActivityRecord) {
+  const photo = activity.metadata?.telegramPhoto;
+
+  if (!photo || typeof photo !== "object") {
+    return null;
+  }
+
+  const fileId = (photo as { fileId?: unknown }).fileId;
+  const caption = (photo as { caption?: unknown }).caption;
+
+  if (typeof fileId !== "string" || !fileId.trim()) {
+    return null;
+  }
+
+  return {
+    fileId,
+    caption: typeof caption === "string" ? caption : "",
+  };
+}
+
 function getNeedsAttention(lead: LeadRecord, hasInvoice: boolean) {
   if (lead.status === "new") {
     return "New request needs first contact.";
@@ -112,7 +143,7 @@ export default async function LeadDetailPage({
   const [lead, invoiceId, activity] = await Promise.all([
     getSupabaseLeadById(leadId),
     getInvoiceIdForLead(leadId),
-    listActivitiesForLead(leadId, 30),
+    listActivitiesForLead(leadId, 60),
   ]);
 
   if (!lead) {
@@ -134,6 +165,7 @@ export default async function LeadDetailPage({
   const hasInvoice = Boolean(invoice);
   const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
   const attention = getNeedsAttention(lead, hasInvoice);
+  const technicianReport = activity.filter(isTechnicianReportActivity);
   const lockedFieldClass =
     "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-sm font-semibold text-muted outline-none";
 
@@ -269,6 +301,63 @@ export default async function LeadDetailPage({
             </section>
 
             <CustomerHistoryCard items={customerHistory} />
+
+            <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Technician report
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-primary">
+                    Field notes and photos
+                  </h2>
+                </div>
+                <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
+                  {technicianReport.length} records
+                </span>
+              </div>
+
+              {technicianReport.length > 0 ? (
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  {technicianReport.map((item) => {
+                    const actorName = getActivityActorName(item);
+                    const photo = getTelegramPhoto(item);
+
+                    return (
+                      <article
+                        key={item.id}
+                        className="overflow-hidden rounded-xl border border-border bg-slate-50"
+                      >
+                        {photo ? (
+                          <img
+                            src={`/admin/telegram/photo/${encodeURIComponent(photo.fileId)}`}
+                            alt={photo.caption || item.title}
+                            className="aspect-[4/3] w-full bg-white object-cover"
+                            loading="lazy"
+                          />
+                        ) : null}
+                        <div className="p-4 text-sm leading-6">
+                          <p className="font-black text-foreground">{item.title}</p>
+                          {item.details ? (
+                            <p className="mt-1 whitespace-pre-wrap break-words text-muted">
+                              {item.details}
+                            </p>
+                          ) : null}
+                          <p className="mt-3 text-xs font-semibold text-muted">
+                            {formatDateTime(item.created_at)} ET
+                            {actorName ? ` by ${actorName}` : ""}
+                          </p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+                  No technician report has been added for this customer yet.
+                </p>
+              )}
+            </section>
 
             <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">

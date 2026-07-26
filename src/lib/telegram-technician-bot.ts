@@ -62,6 +62,30 @@ type TelegramTechnician = {
   role: "technician" | "dispatcher" | "owner";
 };
 
+type VisitReportStep =
+  | "unit_photo"
+  | "serial_photo"
+  | "work_note"
+  | "part_choice"
+  | "part_details"
+  | "receipt_photo";
+
+type VisitReportPayload = {
+  flow: "visit_report";
+  step: VisitReportStep;
+  photos?: {
+    unit?: boolean;
+    serial?: boolean;
+    receipt?: boolean;
+  };
+  workNote?: string;
+  ownPart?: {
+    name: string;
+    cost: number;
+    customerPrice: number;
+  };
+};
+
 type InlineButton = {
   text: string;
   url?: string;
@@ -90,6 +114,16 @@ const CALLBACK_HELP_MAP: Record<string, "part" | "photo"> = {
   addpart: "part",
   photo: "photo",
 };
+const TECH_REPORT_EVENT_TYPES = {
+  started: "telegram_visit_report_started",
+  unitPhoto: "telegram_report_unit_photo",
+  serialPhoto: "telegram_report_serial_photo",
+  workNote: "telegram_report_work_note",
+  ownPart: "telegram_report_own_part",
+  receiptPhoto: "telegram_report_receipt_photo",
+  completed: "telegram_visit_report_completed",
+  cancelled: "telegram_visit_report_cancelled",
+} as const;
 
 function getDateInput(dayOffset = 0) {
   const date = new Date();
@@ -117,6 +151,19 @@ function escapeHtml(value: string | number | null | undefined) {
 
 function normalizePhone(value: string | null | undefined) {
   return value?.replace(/[^\d+]/g, "") ?? "";
+}
+
+function normalizeMoneyInput(value: string) {
+  const amount = Number(value.replace(",", ".").replace(/[^\d.-]/g, ""));
+
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number.isFinite(value) ? value : 0);
 }
 
 function getSiteUrl() {
@@ -355,6 +402,7 @@ function buildJobButtons(invoice: InvoiceRecord) {
     [
       { text: "Add part", callback_data: `help:addpart:${invoice.id}` },
       { text: "Photo", callback_data: `help:photo:${invoice.id}` },
+      { text: "Report", callback_data: `report:start:${invoice.id}` },
     ],
   ];
 
@@ -524,12 +572,15 @@ async function setBotSession(
   technician: TelegramTechnician,
   invoice: InvoiceRecord,
   mode: "add_part" | "add_photo",
+  payload: Record<string, unknown> = {},
+  ttlMinutes = 15,
 ) {
   const result = await upsertTelegramBotSession({
     telegramUserId: technician.telegramUserId,
     mode,
     invoiceId: invoice.id,
-    ttlMinutes: 15,
+    ttlMinutes,
+    payload,
   });
 
   if (result.ready) {
@@ -544,11 +595,452 @@ async function setBotSession(
   return false;
 }
 
+function getVisitReportPayload(payload: Record<string, unknown> | null | undefined): VisitReportPayload | null {
+  if (!payload || payload.flow !== "visit_report") {
+    return null;
+  }
+
+  const step = payload.step;
+
+  if (
+    step !== "unit_photo" &&
+    step !== "serial_photo" &&
+    step !== "work_note" &&
+    step !== "part_choice" &&
+    step !== "part_details" &&
+    step !== "receipt_photo"
+  ) {
+    return null;
+  }
+
+  return payload as VisitReportPayload;
+}
+
+function getPhotoMetadata(message: TelegramMessage, caption: string) {
+  const photo = message.photo?.at(-1);
+
+  if (!photo) {
+    return null;
+  }
+
+  return {
+    fileId: photo.file_id,
+    fileUniqueId: photo.file_unique_id,
+    width: photo.width,
+    height: photo.height,
+    fileSize: photo.file_size ?? null,
+    caption,
+  };
+}
+
+async function saveVisitReportSession(
+  technician: TelegramTechnician,
+  invoice: InvoiceRecord,
+  payload: VisitReportPayload,
+) {
+  return upsertTelegramBotSession({
+    telegramUserId: technician.telegramUserId,
+    mode: "add_photo",
+    invoiceId: invoice.id,
+    ttlMinutes: 30,
+    payload,
+  });
+}
+
+async function startVisitReport(chatId: number, user: TelegramUser | undefined, technician: TelegramTechnician, invoice: InvoiceRecord) {
+  const payload: VisitReportPayload = {
+    flow: "visit_report",
+    step: "unit_photo",
+    photos: {},
+  };
+  const result = await saveVisitReportSession(technician, invoice, payload);
+
+  if (!result.ready) {
+    await sendTelegram({
+      chatId,
+      text: "Session storage is not ready yet. Report cannot be started.",
+    });
+    return false;
+  }
+
+  await createLeadActivity({
+    leadId: invoice.lead_id,
+    invoiceId: invoice.id,
+    eventType: TECH_REPORT_EVENT_TYPES.started,
+    title: "Technician report started",
+    details: `Report started from Telegram for ${invoice.customer_name}.`,
+    metadata: getActivityActor(user, technician),
+  });
+
+  await sendTelegram({
+    chatId,
+    text:
+      `<b>Technician report</b>\n` +
+      `${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}\n\n` +
+      `1/5 Send a photo of the appliance/unit.`,
+    replyMarkup: {
+      inline_keyboard: [[{ text: "Cancel report", callback_data: `report:cancel:${invoice.id}` }]],
+    },
+  });
+
+  return true;
+}
+
+async function logVisitReportPhoto(input: {
+  chatId: number;
+  user: TelegramUser | undefined;
+  technician: TelegramTechnician;
+  invoice: InvoiceRecord;
+  message: TelegramMessage;
+  payload: VisitReportPayload;
+}) {
+  const caption = input.message.caption?.trim() ?? "";
+  const telegramPhoto = getPhotoMetadata(input.message, caption);
+
+  if (!telegramPhoto) {
+    return;
+  }
+
+  if (input.payload.step === "unit_photo") {
+    const nextPayload: VisitReportPayload = {
+      ...input.payload,
+      step: "serial_photo",
+      photos: {
+        ...(input.payload.photos ?? {}),
+        unit: true,
+      },
+    };
+
+    await createLeadActivity({
+      leadId: input.invoice.lead_id,
+      invoiceId: input.invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.unitPhoto,
+      title: "Unit photo added",
+      details: caption || "Technician added a photo of the appliance/unit.",
+      metadata: {
+        ...getActivityActor(input.user, input.technician),
+        telegramPhoto,
+        reportStep: "unit_photo",
+      },
+    });
+
+    await saveVisitReportSession(input.technician, input.invoice, nextPayload);
+    await sendTelegram({
+      chatId: input.chatId,
+      text: "2/5 Send a model/serial photo. If there is no label, press Skip.",
+      replyMarkup: {
+        inline_keyboard: [
+          [{ text: "Skip model photo", callback_data: `report:skip_serial:${input.invoice.id}` }],
+          [{ text: "Cancel report", callback_data: `report:cancel:${input.invoice.id}` }],
+        ],
+      },
+    });
+    return;
+  }
+
+  if (input.payload.step === "serial_photo") {
+    const nextPayload: VisitReportPayload = {
+      ...input.payload,
+      step: "work_note",
+      photos: {
+        ...(input.payload.photos ?? {}),
+        serial: true,
+      },
+    };
+
+    await createLeadActivity({
+      leadId: input.invoice.lead_id,
+      invoiceId: input.invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.serialPhoto,
+      title: "Model/serial photo added",
+      details: caption || "Technician added a model or serial label photo.",
+      metadata: {
+        ...getActivityActor(input.user, input.technician),
+        telegramPhoto,
+        reportStep: "serial_photo",
+      },
+    });
+
+    await saveVisitReportSession(input.technician, input.invoice, nextPayload);
+    await sendTelegram({
+      chatId: input.chatId,
+      text: "3/5 Write a short note: what was found or done.",
+      replyMarkup: {
+        inline_keyboard: [[{ text: "Cancel report", callback_data: `report:cancel:${input.invoice.id}` }]],
+      },
+    });
+    return;
+  }
+
+  if (input.payload.step === "receipt_photo") {
+    const nextPayload: VisitReportPayload = {
+      ...input.payload,
+      photos: {
+        ...(input.payload.photos ?? {}),
+        receipt: true,
+      },
+    };
+
+    await createLeadActivity({
+      leadId: input.invoice.lead_id,
+      invoiceId: input.invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.receiptPhoto,
+      title: "Part receipt photo added",
+      details: caption || "Technician added a receipt/photo for own part.",
+      metadata: {
+        ...getActivityActor(input.user, input.technician),
+        telegramPhoto,
+        reportStep: "receipt_photo",
+      },
+    });
+
+    await finishVisitReport(input.chatId, input.user, input.technician, input.invoice, nextPayload);
+    return;
+  }
+
+  await sendTelegram({
+    chatId: input.chatId,
+    text: "Photo received, but the report is waiting for text right now.",
+  });
+}
+
+async function finishVisitReport(
+  chatId: number,
+  user: TelegramUser | undefined,
+  technician: TelegramTechnician,
+  invoice: InvoiceRecord,
+  payload: VisitReportPayload,
+) {
+  const ownPart = payload.ownPart
+    ? ` Own part: ${payload.ownPart.name}, tech cost ${formatMoney(payload.ownPart.cost)}, customer price ${formatMoney(payload.ownPart.customerPrice)}.`
+    : " No own part used.";
+
+  await createLeadActivity({
+    leadId: invoice.lead_id,
+    invoiceId: invoice.id,
+    eventType: TECH_REPORT_EVENT_TYPES.completed,
+    title: "Technician report completed",
+    details: `${payload.workNote ? `Work note: ${payload.workNote}.` : "No work note."}${ownPart}`,
+    metadata: {
+      ...getActivityActor(user, technician),
+      reportSummary: payload,
+    },
+  });
+
+  await clearTelegramBotSession(technician.telegramUserId);
+
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${invoice.lead_id}`);
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${invoice.id}`);
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/technician");
+
+  await sendTelegram({
+    chatId,
+    text: `<b>Report saved</b>\n${escapeHtml(invoice.customer_name)} / ${escapeHtml(invoice.invoice_number)}`,
+  });
+}
+
+async function handleVisitReportText(input: {
+  chatId: number;
+  user: TelegramUser | undefined;
+  technician: TelegramTechnician;
+  invoice: InvoiceRecord;
+  payload: VisitReportPayload;
+  text: string;
+}) {
+  const text = input.text.trim();
+
+  if (!text) {
+    return;
+  }
+
+  if (input.payload.step === "work_note") {
+    const nextPayload: VisitReportPayload = {
+      ...input.payload,
+      step: "part_choice",
+      workNote: text,
+    };
+
+    await createLeadActivity({
+      leadId: input.invoice.lead_id,
+      invoiceId: input.invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.workNote,
+      title: "Technician work note",
+      details: text,
+      metadata: getActivityActor(input.user, input.technician),
+    });
+
+    await saveVisitReportSession(input.technician, input.invoice, nextPayload);
+    await sendTelegram({
+      chatId: input.chatId,
+      text: "4/5 Did you use your own part for this job?",
+      replyMarkup: {
+        inline_keyboard: [
+          [
+            { text: "Yes, own part", callback_data: `report:yes_part:${input.invoice.id}` },
+            { text: "No part", callback_data: `report:no_part:${input.invoice.id}` },
+          ],
+          [{ text: "Cancel report", callback_data: `report:cancel:${input.invoice.id}` }],
+        ],
+      },
+    });
+    return;
+  }
+
+  if (input.payload.step === "part_details") {
+    const [name = "", costText = "", customerPriceText = ""] = text.split("|").map((part) => part.trim());
+    const cost = normalizeMoneyInput(costText);
+    const customerPrice = normalizeMoneyInput(customerPriceText);
+
+    if (!name || !costText || !customerPriceText) {
+      await sendTelegram({
+        chatId: input.chatId,
+        text: "Send part like: <code>gas valve | 40 | 120</code>",
+      });
+      return;
+    }
+
+    const nextPayload: VisitReportPayload = {
+      ...input.payload,
+      step: "receipt_photo",
+      ownPart: {
+        name,
+        cost,
+        customerPrice,
+      },
+    };
+
+    await createLeadActivity({
+      leadId: input.invoice.lead_id,
+      invoiceId: input.invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.ownPart,
+      title: "Technician own part used",
+      details: `${name} / tech cost ${formatMoney(cost)} / customer price ${formatMoney(customerPrice)}`,
+      metadata: {
+        ...getActivityActor(input.user, input.technician),
+        ownPart: nextPayload.ownPart,
+      },
+    });
+
+    await saveVisitReportSession(input.technician, input.invoice, nextPayload);
+    await sendTelegram({
+      chatId: input.chatId,
+      text: "5/5 Send a receipt/photo for this part, or press Skip.",
+      replyMarkup: {
+        inline_keyboard: [
+          [{ text: "Skip receipt", callback_data: `report:skip_receipt:${input.invoice.id}` }],
+          [{ text: "Cancel report", callback_data: `report:cancel:${input.invoice.id}` }],
+        ],
+      },
+    });
+    return;
+  }
+
+  await sendTelegram({
+    chatId: input.chatId,
+    text: "The report is waiting for a photo or button choice right now.",
+  });
+}
+
+async function handleReportCallback(callbackQuery: TelegramCallbackQuery, technician: TelegramTechnician) {
+  const data = callbackQuery.data ?? "";
+  const [, action, invoiceId] = data.split(":");
+  const chatId = callbackQuery.message?.chat.id;
+
+  if (!chatId || !invoiceId) {
+    await answerCallbackQuery(callbackQuery.id, "Invalid report action.");
+    return true;
+  }
+
+  const invoices = await listInvoices(500);
+  const invoice = invoices.find((item) => item.id === invoiceId);
+
+  if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+    await answerCallbackQuery(callbackQuery.id, "Access denied for this job.");
+    return true;
+  }
+
+  if (action === "start") {
+    const started = await startVisitReport(chatId, callbackQuery.from, technician, invoice);
+    await answerCallbackQuery(callbackQuery.id, started ? "Report started." : "Report not started.");
+    return true;
+  }
+
+  const sessionData = await getTelegramBotSession(technician.telegramUserId);
+  const payload = getVisitReportPayload(sessionData.session?.payload);
+
+  if (!payload || sessionData.session?.invoice_id !== invoice.id) {
+    await answerCallbackQuery(callbackQuery.id, "Report session expired.");
+    await sendTelegram({ chatId, text: "Report session expired. Press Report under the job again." });
+    return true;
+  }
+
+  if (action === "cancel") {
+    await createLeadActivity({
+      leadId: invoice.lead_id,
+      invoiceId: invoice.id,
+      eventType: TECH_REPORT_EVENT_TYPES.cancelled,
+      title: "Technician report cancelled",
+      details: "Report session was cancelled from Telegram.",
+      metadata: getActivityActor(callbackQuery.from, technician),
+    });
+    await clearTelegramBotSession(technician.telegramUserId);
+    await answerCallbackQuery(callbackQuery.id, "Report cancelled.");
+    await sendTelegram({ chatId, text: "Report cancelled." });
+    return true;
+  }
+
+  if (action === "skip_serial" && payload.step === "serial_photo") {
+    await saveVisitReportSession(technician, invoice, {
+      ...payload,
+      step: "work_note",
+    });
+    await answerCallbackQuery(callbackQuery.id, "Skipped.");
+    await sendTelegram({ chatId, text: "3/5 Write a short note: what was found or done." });
+    return true;
+  }
+
+  if (action === "no_part" && payload.step === "part_choice") {
+    await answerCallbackQuery(callbackQuery.id, "No part used.");
+    await finishVisitReport(chatId, callbackQuery.from, technician, invoice, payload);
+    return true;
+  }
+
+  if (action === "yes_part" && payload.step === "part_choice") {
+    await saveVisitReportSession(technician, invoice, {
+      ...payload,
+      step: "part_details",
+    });
+    await answerCallbackQuery(callbackQuery.id, "Add part details.");
+    await sendTelegram({
+      chatId,
+      text: "Send part like: <code>gas valve | 40 | 120</code>\nName | your cost | customer price",
+    });
+    return true;
+  }
+
+  if (action === "skip_receipt" && payload.step === "receipt_photo") {
+    await answerCallbackQuery(callbackQuery.id, "Receipt skipped.");
+    await finishVisitReport(chatId, callbackQuery.from, technician, invoice, payload);
+    return true;
+  }
+
+  await answerCallbackQuery(callbackQuery.id, "This report step is not ready for that action.");
+  return true;
+}
+
 async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, technician: TelegramTechnician) {
   const data = callbackQuery.data ?? "";
   const [, action, invoiceId] = data.split(":");
   const jobStatus = CALLBACK_STATUS_MAP[action];
   const chatId = callbackQuery.message?.chat.id;
+
+  if (data.startsWith("report:")) {
+    await handleReportCallback(callbackQuery, technician);
+    return;
+  }
 
   if (CALLBACK_DAY_MAP[action] && chatId) {
     await answerCallbackQuery(callbackQuery.id, CALLBACK_DAY_MAP[action] === "today" ? "Today jobs" : "Tomorrow jobs");
@@ -759,10 +1251,23 @@ async function handlePhotoMessage(chatId: number, user: TelegramUser | undefined
 
   if (!reference && sessionData.session?.mode === "add_photo") {
     const sessionInvoice = getInvoiceByReference(invoices, sessionData.session.invoice_id);
+    const visitReportPayload = getVisitReportPayload(sessionData.session.payload);
 
     if (!sessionInvoice || !technicianCanSeeInvoice(technician, sessionInvoice)) {
       await clearTelegramBotSession(technician.telegramUserId);
       await sendTelegram({ chatId, text: "Saved photo session expired or access was denied. Press Photo under the job again." });
+      return;
+    }
+
+    if (visitReportPayload) {
+      await logVisitReportPhoto({
+        chatId,
+        user,
+        technician,
+        invoice: sessionInvoice,
+        message,
+        payload: visitReportPayload,
+      });
       return;
     }
 
@@ -797,7 +1302,8 @@ async function sendHelp(chatId: number) {
       `<b>DAPL technician bot</b>\n` +
       `/today - show today's jobs\n` +
       `/tomorrow - show tomorrow's jobs\n` +
-      `Use Add part or Photo under a job for field updates.\n` +
+      `Use Report under a job for customer visit reports.\n` +
+      `Use Add part or Photo for quick field updates.\n` +
       `/start - show this help`,
     replyMarkup: {
       inline_keyboard: [
@@ -849,6 +1355,45 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
     return;
   }
 
+  if (text === "/cancel" || text === "cancel") {
+    await clearTelegramBotSession(technician.telegramUserId);
+    await sendTelegram({ chatId, text: "Current bot action cancelled." });
+    return;
+  }
+
+  if (text === "/skip" || text === "skip") {
+    const sessionData = await getTelegramBotSession(technician.telegramUserId);
+    const visitReportPayload = getVisitReportPayload(sessionData.session?.payload);
+
+    if (visitReportPayload && sessionData.session?.mode === "add_photo") {
+      const invoices = await listInvoices(500);
+      const invoice = getInvoiceByReference(invoices, sessionData.session.invoice_id);
+
+      if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+        await clearTelegramBotSession(technician.telegramUserId);
+        await sendTelegram({ chatId, text: "Saved report session expired or access was denied. Press Report under the job again." });
+        return;
+      }
+
+      if (visitReportPayload.step === "serial_photo") {
+        await saveVisitReportSession(technician, invoice, {
+          ...visitReportPayload,
+          step: "work_note",
+        });
+        await sendTelegram({ chatId, text: "3/5 Write a short note: what was found or done." });
+        return;
+      }
+
+      if (visitReportPayload.step === "receipt_photo") {
+        await finishVisitReport(chatId, user, technician, invoice, visitReportPayload);
+        return;
+      }
+    }
+
+    await sendTelegram({ chatId, text: "Nothing can be skipped right now." });
+    return;
+  }
+
   if (/^\/?part\s+/i.test(rawText)) {
     await handlePartCommand(chatId, user, technician, rawText);
     return;
@@ -877,6 +1422,29 @@ export async function handleTelegramTechnicianUpdate(update: TelegramUpdate) {
     }
 
     if (sessionData.session?.mode === "add_photo") {
+      const visitReportPayload = getVisitReportPayload(sessionData.session.payload);
+
+      if (visitReportPayload) {
+        const invoices = await listInvoices(500);
+        const invoice = getInvoiceByReference(invoices, sessionData.session.invoice_id);
+
+        if (!invoice || !technicianCanSeeInvoice(technician, invoice)) {
+          await clearTelegramBotSession(technician.telegramUserId);
+          await sendTelegram({ chatId, text: "Saved report session expired or access was denied. Press Report under the job again." });
+          return;
+        }
+
+        await handleVisitReportText({
+          chatId,
+          user,
+          technician,
+          invoice,
+          payload: visitReportPayload,
+          text: rawText,
+        });
+        return;
+      }
+
       await sendTelegram({
         chatId,
         text: "Send a photo now, or press Today/Tomorrow to choose another job.",
