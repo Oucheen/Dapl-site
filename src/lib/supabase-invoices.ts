@@ -643,6 +643,8 @@ type CreateInvoiceFromLeadOptions = {
   serviceTime?: string | null;
   serviceWindow?: string | null;
   invoiceItemDescription?: string | null;
+  invoiceItemQuantity?: string | null;
+  invoiceItemUnitPrice?: string | null;
 };
 
 export async function createInvoiceFromLead(
@@ -675,7 +677,12 @@ export async function createInvoiceFromLead(
     options.invoiceCreatedTime,
   );
   const discountAmount = getPromoDiscountAmount(promoCode);
-  const subtotal = toMoney(lead.estimated_price);
+  const hasManualLinePrice = Boolean(options.invoiceItemUnitPrice?.trim());
+  const itemQuantity = hasManualLinePrice ? toQuantity(options.invoiceItemQuantity) : 1;
+  const itemUnitPrice = hasManualLinePrice
+    ? toMoney(options.invoiceItemUnitPrice)
+    : toMoney(lead.estimated_price);
+  const subtotal = toMoney(itemQuantity * itemUnitPrice);
   const tax = 0;
   const total = calculateInvoiceTotal(subtotal, discountAmount, tax);
   const serviceTime = normalizeScheduleTime(options.serviceTime);
@@ -732,8 +739,8 @@ export async function createInvoiceFromLead(
     body: JSON.stringify({
       invoice_id: invoice.id,
       description: getInvoiceItemDescription(lead, options.invoiceItemDescription),
-      quantity: 1,
-      unit_price: subtotal,
+      quantity: itemQuantity,
+      unit_price: itemUnitPrice,
       line_total: subtotal,
     }),
   });
@@ -756,6 +763,8 @@ export async function createManualInvoice(input: ManualLeadInput) {
     serviceTime: input.serviceTime,
     serviceWindow: input.serviceWindow,
     invoiceItemDescription: input.invoiceItemDescription,
+    invoiceItemQuantity: input.invoiceItemQuantity,
+    invoiceItemUnitPrice: input.invoiceItemUnitPrice,
   });
 
   const discountAdjustments = Array.from(new Set(input.discountAdjustments ?? []));

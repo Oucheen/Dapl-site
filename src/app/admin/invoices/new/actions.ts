@@ -44,6 +44,8 @@ export async function createManualInvoiceAction(formData: FormData) {
     serviceWindow: String(formData.get("serviceWindow") || ""),
     estimatedPrice: String(formData.get("estimatedPrice") || ""),
     invoiceItemDescription: String(formData.get("invoiceItemDescription") || ""),
+    invoiceItemQuantity: String(formData.get("invoiceItemQuantity") || ""),
+    invoiceItemUnitPrice: String(formData.get("invoiceItemUnitPrice") || ""),
     discountAdjustments,
     assignedTechnician: String(formData.get("assignedTechnician") || ""),
     notes: String(formData.get("notes") || ""),

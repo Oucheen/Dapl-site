@@ -68,6 +68,8 @@ export type ManualLeadInput = {
   serviceWindow?: string;
   estimatedPrice: string;
   invoiceItemDescription?: string;
+  invoiceItemQuantity?: string;
+  invoiceItemUnitPrice?: string;
   discountAdjustments?: string[];
   assignedTechnician: string;
   notes: string;
@@ -148,6 +150,29 @@ function toEstimatedPrice(value: string) {
   }
 
   return estimatedPrice;
+}
+
+function getManualEstimatedPrice(input: ManualLeadInput) {
+  const explicitEstimate = input.estimatedPrice.trim();
+
+  if (explicitEstimate) {
+    return toEstimatedPrice(explicitEstimate);
+  }
+
+  const unitPriceText = input.invoiceItemUnitPrice?.trim() ?? "";
+
+  if (!unitPriceText) {
+    return null;
+  }
+
+  const quantity = Number(input.invoiceItemQuantity?.trim() || "1");
+  const unitPrice = Number(unitPriceText);
+
+  if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(unitPrice) || unitPrice < 0) {
+    throw new Error("Invalid manual invoice charge.");
+  }
+
+  return Math.round(quantity * unitPrice * 100) / 100;
 }
 
 function getTimeZoneOffsetMs(date: Date, timeZone: string) {
@@ -302,7 +327,7 @@ export async function createManualSupabaseLead(input: ManualLeadInput) {
       message: input.notes.trim() || "Manual invoice created from the admin dashboard.",
       admin_notes: toOptionalText(input.notes),
       scheduled_date: input.serviceDate || null,
-      estimated_price: toEstimatedPrice(input.estimatedPrice),
+      estimated_price: getManualEstimatedPrice(input),
       assigned_technician: toOptionalText(input.assignedTechnician),
     }),
   });

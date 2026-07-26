@@ -148,40 +148,54 @@ export default async function NewInvoicePage() {
                   />
                 </label>
                 <ManualScheduleFields />
-                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                  Estimate
-                  <input
-                    type="number"
-                    name="estimatedPrice"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
-                  />
-                </label>
-                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                  Promo code optional
-                  <select
-                    name="promoCode"
-                    className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                  >
-                    <option value="">No promo code</option>
-                    <option value="WEB25">WEB25 - $25 off first repair</option>
-                    <option value="RETURN15">RETURN15 - $15 off returning customer</option>
-                  </select>
-                </label>
-                <details className="rounded-2xl border border-primary/10 bg-primary/5 p-4 sm:col-span-2">
+                <details open className="rounded-2xl border border-primary/10 bg-primary/5 p-4 sm:col-span-2">
                   <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.16em] text-primary">
                     Charges and discounts
                   </summary>
                   <div className="mt-4 grid gap-4">
+                    <input type="hidden" name="estimatedPrice" value="" />
+                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_120px_180px]">
+                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Customer charge
+                        <input
+                          name="invoiceItemDescription"
+                          placeholder="Refrigerator repair service"
+                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Qty
+                        <input
+                          type="number"
+                          name="invoiceItemQuantity"
+                          min="0.01"
+                          step="0.01"
+                          defaultValue="1"
+                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Unit price
+                        <input
+                          type="number"
+                          name="invoiceItemUnitPrice"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                        />
+                      </label>
+                    </div>
                     <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                      Invoice charge name optional
-                      <input
-                        name="invoiceItemDescription"
-                        placeholder="Refrigerator repair service"
-                        className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
-                      />
+                      Promo code optional
+                      <select
+                        name="promoCode"
+                        className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                      >
+                        <option value="">No promo code</option>
+                        <option value="WEB25">WEB25 - $25 off first repair</option>
+                        <option value="RETURN15">RETURN15 - $15 off returning customer</option>
+                      </select>
                     </label>
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
