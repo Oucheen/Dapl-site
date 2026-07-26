@@ -1631,7 +1631,10 @@ export default async function InvoicePage({
               <input type="hidden" name="id" value={invoice.id} />
               <InvoiceEmailSubmitButton
                 disabled={!customerEmail}
+                invoiceStatus={invoice.status}
+                invoiceTotal={invoice.total}
                 label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
+                recipient={customerEmail || ""}
               />
               {!customerEmail ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
@@ -1642,7 +1645,10 @@ export default async function InvoicePage({
             <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
               <InvoiceSmsSubmitButton
                 disabled={!invoice.customer_phone}
+                invoiceStatus={invoice.status}
+                invoiceTotal={invoice.total}
                 label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
+                recipient={invoice.customer_phone || ""}
               />
               {!invoice.customer_phone ? (
                 <p className="mt-2 text-xs leading-5 text-muted">
