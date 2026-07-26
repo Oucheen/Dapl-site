@@ -169,11 +169,6 @@ function cleanOptionalPreferredDate(value: string) {
   return validatePreferredDate(value) ? value : "";
 }
 
-function fallbackEmail(phone: string) {
-  const normalizedPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
-  return `voice-${normalizedPhone || "caller"}@daplappliance.local`;
-}
-
 function buildVoiceMessage(input: {
   issue: string;
   callSummary: string;
@@ -477,7 +472,7 @@ export async function POST(request: Request) {
   const leadStorageResult = await saveLeadToSupabase({
     name,
     phone,
-    email: emailRaw || fallbackEmail(phone),
+    email: emailRaw,
     address,
     appliance,
     promoCode,

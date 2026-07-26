@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
+import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
@@ -147,9 +148,10 @@ export default async function LeadDetailPage({
     lead.assigned_technician,
     invoice?.assigned_technician,
   ]);
+  const customerEmail = getDisplayCustomerEmail(lead.email);
   const customerHistory = await listCustomerHistory({
     phone: lead.phone,
-    email: lead.email,
+    email: customerEmail,
     excludeLeadId: lead.id,
     excludeInvoiceId: invoice?.id,
   });
@@ -277,12 +279,16 @@ export default async function LeadDetailPage({
                   >
                     {lead.phone}
                   </a>
-                  <a
-                    href={`mailto:${lead.email}`}
-                    className="block break-words text-muted hover:text-primary"
-                  >
-                    {lead.email}
-                  </a>
+                  {customerEmail ? (
+                    <a
+                      href={`mailto:${customerEmail}`}
+                      className="block break-words text-muted hover:text-primary"
+                    >
+                      {customerEmail}
+                    </a>
+                  ) : (
+                    <p className="break-words text-muted">No email provided</p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-sm font-bold text-foreground">Service address</p>

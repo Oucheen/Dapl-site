@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
+import { isPlaceholderCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
@@ -270,10 +271,6 @@ function getQueryValue(value: string | string[] | undefined) {
   }
 
   return value;
-}
-
-function isPlaceholderCustomerEmail(value: string | null | undefined) {
-  return Boolean(value?.trim().toLowerCase().endsWith("@daplappliance.local"));
 }
 
 function getJobStatus(invoice: InvoiceRecord): InvoiceJobStatus {

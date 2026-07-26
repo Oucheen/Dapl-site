@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
+import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { getActivityActorName, listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
@@ -200,7 +201,7 @@ function leadMatchesQuery(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[nu
   const haystack = [
     lead.name,
     lead.phone,
-    lead.email,
+    getDisplayCustomerEmail(lead.email),
     lead.service_address,
     lead.appliance,
     lead.lead_source,
@@ -537,6 +538,7 @@ export default async function LeadsAdminPage({
                 const attention = getNeedsAttention(lead, hasInvoice);
                 const activities = activityByLeadId.get(lead.id) ?? [];
                 const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
+                const customerEmail = getDisplayCustomerEmail(lead.email);
                 const lockedFieldClass =
                   "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-xs font-semibold normal-case tracking-normal text-muted outline-none";
 
@@ -603,12 +605,16 @@ export default async function LeadsAdminPage({
                         >
                           {lead.phone}
                         </a>
-                        <a
-                          href={`mailto:${lead.email}`}
-                          className="block break-words text-muted hover:text-primary"
-                        >
-                          {lead.email}
-                        </a>
+                        {customerEmail ? (
+                          <a
+                            href={`mailto:${customerEmail}`}
+                            className="block break-words text-muted hover:text-primary"
+                          >
+                            {customerEmail}
+                          </a>
+                        ) : (
+                          <p className="break-words text-muted">No email provided</p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
