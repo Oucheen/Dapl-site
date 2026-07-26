@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
-import { INVOICE_DISCOUNT_ADJUSTMENTS } from "@/lib/supabase-invoices";
+import { listSupabaseLeads } from "@/lib/supabase-leads";
+import { INVOICE_DISCOUNT_ADJUSTMENTS, listInvoices } from "@/lib/supabase-invoices";
 import { createManualInvoiceAction } from "./actions";
+import { ManualChargeFields } from "./manual-charge-fields";
 import { ManualScheduleFields } from "./manual-schedule-fields";
 
 const APPLIANCE_OPTIONS = [
@@ -21,6 +23,26 @@ const APPLIANCE_OPTIONS = [
   "Other / not sure",
 ];
 
+async function getKnownServiceAddresses() {
+  try {
+    const [leads, invoices] = await Promise.all([listSupabaseLeads(300), listInvoices(300)]);
+    const addresses = [
+      ...leads.map((lead) => lead.service_address),
+      ...invoices.map((invoice) => invoice.service_address),
+    ];
+
+    return Array.from(
+      new Set(
+        addresses
+          .map((address) => address?.trim())
+          .filter((address): address is string => Boolean(address)),
+      ),
+    ).slice(0, 300);
+  } catch {
+    return [];
+  }
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
@@ -31,7 +53,10 @@ export default async function NewInvoicePage() {
   }
 
   const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
-  const technicians = await getCrmTechnicianNames();
+  const [technicians, knownAddresses] = await Promise.all([
+    getCrmTechnicianNames(),
+    getKnownServiceAddresses(),
+  ]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -114,6 +139,7 @@ export default async function NewInvoicePage() {
                   <input
                     name="address"
                     required
+                    list="known-service-addresses"
                     placeholder="Street address, city, ZIP"
                     className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                   />
@@ -154,38 +180,7 @@ export default async function NewInvoicePage() {
                   </summary>
                   <div className="mt-4 grid gap-4">
                     <input type="hidden" name="estimatedPrice" value="" />
-                    <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_120px] xl:grid-cols-[minmax(0,1fr)_110px_160px]">
-                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Service / charge
-                        <input
-                          name="invoiceItemDescription"
-                          placeholder="Refrigerator repair service"
-                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Qty
-                        <input
-                          type="number"
-                          name="invoiceItemQuantity"
-                          min="0.01"
-                          step="0.01"
-                          defaultValue="1"
-                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2 xl:col-span-1">
-                        Unit price
-                        <input
-                          type="number"
-                          name="invoiceItemUnitPrice"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
-                        />
-                      </label>
-                    </div>
+                    <ManualChargeFields />
                     <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                       Promo code optional
                       <select
@@ -251,6 +246,11 @@ export default async function NewInvoicePage() {
             <datalist id="crm-technicians">
               {technicians.map((technician) => (
                 <option key={technician} value={technician} />
+              ))}
+            </datalist>
+            <datalist id="known-service-addresses">
+              {knownAddresses.map((address) => (
+                <option key={address} value={address} />
               ))}
             </datalist>
 
