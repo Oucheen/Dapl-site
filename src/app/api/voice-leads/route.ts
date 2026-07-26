@@ -211,17 +211,6 @@ function getAdminLeadUrl(request: Request, leadId: string | undefined) {
   return `${getRequestOrigin(request)}/admin/leads/${leadId}`;
 }
 
-function getAdminInvoicesSearchUrl(request: Request, query: string) {
-  const trimmedQuery = query.trim();
-
-  if (!trimmedQuery) {
-    return "";
-  }
-
-  const params = new URLSearchParams({ q: trimmedQuery, view: "all" });
-  return `${getRequestOrigin(request)}/admin/invoices?${params.toString()}`;
-}
-
 function buildVoiceTelegramMessage(input: {
   name: string;
   phone: string;
@@ -532,8 +521,7 @@ export async function POST(request: Request) {
           callId,
         }),
         buttons: [
-          { text: "Open Lead", url: getAdminLeadUrl(request, leadStorageResult.id) },
-          { text: "Invoices", url: getAdminInvoicesSearchUrl(request, phone) },
+          { text: "Open lead", url: getAdminLeadUrl(request, leadStorageResult.id) },
         ],
       });
     } catch (error) {

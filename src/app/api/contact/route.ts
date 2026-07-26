@@ -152,15 +152,15 @@ function getAdminLeadUrl(request: Request, leadId: string | undefined) {
   return `${getRequestOrigin(request)}/admin/leads/${leadId}`;
 }
 
-function getAdminInvoicesSearchUrl(request: Request, query: string) {
+function getAdminLeadsSearchUrl(request: Request, query: string) {
   const trimmedQuery = query.trim();
 
   if (!trimmedQuery) {
-    return "";
+    return `${getRequestOrigin(request)}/admin/leads`;
   }
 
   const params = new URLSearchParams({ q: trimmedQuery, view: "all" });
-  return `${getRequestOrigin(request)}/admin/invoices?${params.toString()}`;
+  return `${getRequestOrigin(request)}/admin/leads?${params.toString()}`;
 }
 
 async function sendEmailNotification(input: {
@@ -351,7 +351,7 @@ export async function POST(request: Request) {
     request,
     leadStorageResult.saved ? leadStorageResult.id : undefined,
   );
-  const adminInvoicesUrl = getAdminInvoicesSearchUrl(request, phone);
+  const adminLeadsFallbackUrl = getAdminLeadsSearchUrl(request, phone);
   const telegramText = buildTelegramMessage({
     name,
     phone,
@@ -390,8 +390,7 @@ export async function POST(request: Request) {
         chatId: telegramChatId,
         text: telegramText,
         buttons: [
-          { text: "Open Lead", url: adminLeadUrl },
-          { text: "Invoices", url: adminInvoicesUrl },
+          { text: "Open lead", url: adminLeadUrl || adminLeadsFallbackUrl },
         ],
       });
       delivered = true;

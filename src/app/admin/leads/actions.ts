@@ -47,6 +47,16 @@ function getLeadRedirectTarget(value: FormDataEntryValue | null, fallback = "/ad
   return fallback;
 }
 
+function getAdminRedirectTarget(value: FormDataEntryValue | string | null, fallback = "/admin") {
+  const target = typeof value === "string" ? value.trim() : "";
+
+  if (target.startsWith("/admin") && !target.startsWith("//")) {
+    return target;
+  }
+
+  return fallback;
+}
+
 function withNotice(path: string, notice: string) {
   const separator = path.includes("?") ? "&" : "?";
   return `${path}${separator}notice=${encodeURIComponent(notice)}`;
@@ -54,14 +64,21 @@ function withNotice(path: string, notice: string) {
 
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
+  const returnTo = getAdminRedirectTarget(formData.get("returnTo"));
   const user = await verifyAdminLogin(password);
 
   if (!user) {
-    redirect("/admin/leads/login?error=1");
+    const params = new URLSearchParams({ error: "1" });
+
+    if (returnTo !== "/admin") {
+      params.set("returnTo", returnTo);
+    }
+
+    redirect(`/admin/leads/login?${params.toString()}`);
   }
 
   await setAdminSession(user);
-  redirect("/admin");
+  redirect(returnTo);
 }
 
 export async function logoutAdmin() {

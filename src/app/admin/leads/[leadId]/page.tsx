@@ -101,12 +101,12 @@ export default async function LeadDetailPage({
   searchParams?: Promise<{ notice?: string | string[] }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
+  const { leadId } = await params;
 
   if (!permissions.user) {
-    redirect("/admin/leads/login");
+    redirect(`/admin/leads/login?returnTo=${encodeURIComponent(`/admin/leads/${leadId}`)}`);
   }
 
-  const { leadId } = await params;
   const query = await searchParams;
   const notice = Array.isArray(query?.notice) ? query?.notice[0] : query?.notice;
   const [lead, invoiceId, activity] = await Promise.all([

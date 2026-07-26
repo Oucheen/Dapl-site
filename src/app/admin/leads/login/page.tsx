@@ -7,17 +7,30 @@ import { loginAdmin } from "../actions";
 type LoginPageProps = {
   searchParams?: Promise<{
     error?: string;
+    returnTo?: string;
   }>;
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
-  if (await isAdminAuthenticated()) {
-    redirect("/admin/leads");
+function getReturnTo(value: string | undefined) {
+  const target = value?.trim() ?? "";
+
+  if (target.startsWith("/admin") && !target.startsWith("//")) {
+    return target;
   }
 
+  return "/admin";
+}
+
+export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
+  const returnTo = getReturnTo(params?.returnTo);
+
+  if (await isAdminAuthenticated()) {
+    redirect(returnTo);
+  }
+
   const hasError = params?.error === "1";
   const configured = await isAdminConfigured();
 
@@ -48,6 +61,7 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
             </div>
           ) : (
             <form action={loginAdmin} className="mt-7 space-y-5">
+              <input type="hidden" name="returnTo" value={returnTo} />
               <div>
                 <label htmlFor="password" className="text-sm font-semibold text-foreground">
                   Password
