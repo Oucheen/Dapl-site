@@ -43,6 +43,8 @@ export type LeadRecord = {
   assigned_technician?: string | null;
 };
 
+type RecentVoiceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "message">;
+
 export type LeadAdminUpdateInput = {
   status: LeadAdminStatus;
   adminNotes: string;
@@ -134,6 +136,16 @@ function headers(config: NonNullable<ReturnType<typeof getSupabaseConfig>>) {
 
 function toOptionalText(value: string) {
   return value.trim() || null;
+}
+
+function normalizePhoneForDedupe(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return digits.slice(1);
+  }
+
+  return digits;
 }
 
 function toEstimatedPrice(value: string) {
@@ -280,6 +292,61 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
     return { saved: true, id: rows[0]?.id };
   } catch (error) {
     return { saved: false, skipped: false, error };
+  }
+}
+
+export async function findRecentVoiceLeadDuplicate(input: {
+  phone: string;
+  callId?: string;
+  windowMinutes?: number;
+}) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  const normalizedPhone = normalizePhoneForDedupe(input.phone);
+  const callId = input.callId?.trim() ?? "";
+  const since = new Date(Date.now() - (input.windowMinutes ?? 15) * 60_000).toISOString();
+  const params = new URLSearchParams({
+    select: "id,created_at,phone,message",
+    lead_source: "eq.voice-agent",
+    created_at: `gte.${since}`,
+    order: "created_at.desc",
+    limit: "50",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase recent voice lead fetch failed: ${response.status} ${details}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as RecentVoiceLeadRecord[];
+
+    if (callId) {
+      const byCallId = rows.find((row) => row.message?.includes(`Call ID: ${callId}`));
+
+      if (byCallId) {
+        return byCallId;
+      }
+    }
+
+    if (!normalizedPhone) {
+      return null;
+    }
+
+    return rows.find((row) => normalizePhoneForDedupe(row.phone) === normalizedPhone) ?? null;
+  } catch (error) {
+    console.error("Supabase recent voice lead fetch error:", error);
+    return null;
   }
 }
 

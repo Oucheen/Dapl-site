@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { createLeadActivity } from "@/lib/supabase-activity";
-import { saveLeadToSupabase } from "@/lib/supabase-leads";
+import { findRecentVoiceLeadDuplicate, saveLeadToSupabase } from "@/lib/supabase-leads";
 
 const MAX = {
   name: 120,
@@ -459,6 +459,20 @@ export async function POST(request: Request) {
     provider,
     callId,
   });
+
+  const duplicateLead = await findRecentVoiceLeadDuplicate({
+    phone,
+    callId,
+    windowMinutes: 15,
+  });
+
+  if (duplicateLead) {
+    return NextResponse.json({
+      ok: true,
+      duplicate: true,
+      leadId: duplicateLead.id,
+    });
+  }
 
   const leadStorageResult = await saveLeadToSupabase({
     name,
