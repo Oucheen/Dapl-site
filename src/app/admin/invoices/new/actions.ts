@@ -4,8 +4,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
-import { createManualInvoice, getInvoiceById } from "@/lib/supabase-invoices";
+import {
+  createManualInvoice,
+  getInvoiceById,
+  INVOICE_DISCOUNT_ADJUSTMENTS,
+  type InvoiceDiscountAdjustmentKey,
+} from "@/lib/supabase-invoices";
 import { notifyTechnicianJobAssigned } from "@/lib/telegram-job-notifications";
+
+const ALLOWED_DISCOUNT_ADJUSTMENTS = new Set<InvoiceDiscountAdjustmentKey>([
+  "service_call",
+  "retirement",
+  "military",
+]);
 
 export async function createManualInvoiceAction(formData: FormData) {
   const permissions = await getCurrentAdminPermissions();
@@ -15,6 +26,12 @@ export async function createManualInvoiceAction(formData: FormData) {
   }
 
   const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
+  const discountAdjustments = formData
+    .getAll("discountAdjustment")
+    .map(String)
+    .filter((value): value is InvoiceDiscountAdjustmentKey =>
+      ALLOWED_DISCOUNT_ADJUSTMENTS.has(value as InvoiceDiscountAdjustmentKey),
+    );
   const { leadId, invoiceId } = await createManualInvoice({
     name: String(formData.get("name") || ""),
     phone: String(formData.get("phone") || ""),
@@ -26,6 +43,8 @@ export async function createManualInvoiceAction(formData: FormData) {
     serviceTime: String(formData.get("serviceTime") || ""),
     serviceWindow: String(formData.get("serviceWindow") || ""),
     estimatedPrice: String(formData.get("estimatedPrice") || ""),
+    invoiceItemDescription: String(formData.get("invoiceItemDescription") || ""),
+    discountAdjustments,
     assignedTechnician: String(formData.get("assignedTechnician") || ""),
     notes: String(formData.get("notes") || ""),
     leadCreatedAt: canBackdateManualInvoices
@@ -47,9 +66,18 @@ export async function createManualInvoiceAction(formData: FormData) {
     invoiceId,
     eventType: "manual_invoice_created",
     title: "Manual invoice created",
-    details: canBackdateManualInvoices
-      ? `Created from the admin dashboard for a non-website lead by ${permissions.user.name}. Historical dates may have been applied.`
-      : `Created from the admin dashboard for a non-website lead by ${permissions.user.name}.`,
+    details: [
+      canBackdateManualInvoices
+        ? `Created from the admin dashboard for a non-website lead by ${permissions.user.name}. Historical dates may have been applied.`
+        : `Created from the admin dashboard for a non-website lead by ${permissions.user.name}.`,
+      discountAdjustments.length
+        ? `Starting discounts: ${discountAdjustments
+            .map((key) => INVOICE_DISCOUNT_ADJUSTMENTS[key].label)
+            .join(", ")}.`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
   });
 
   try {

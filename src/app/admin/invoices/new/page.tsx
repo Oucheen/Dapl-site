@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
+import { INVOICE_DISCOUNT_ADJUSTMENTS } from "@/lib/supabase-invoices";
 import { createManualInvoiceAction } from "./actions";
 import { ManualScheduleFields } from "./manual-schedule-fields";
 
@@ -169,6 +170,58 @@ export default async function NewInvoicePage() {
                     <option value="RETURN15">RETURN15 - $15 off returning customer</option>
                   </select>
                 </label>
+                <details className="rounded-2xl border border-primary/10 bg-primary/5 p-4 sm:col-span-2">
+                  <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                    Charges and discounts
+                  </summary>
+                  <div className="mt-4 grid gap-4">
+                    <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      Invoice charge name optional
+                      <input
+                        name="invoiceItemDescription"
+                        placeholder="Refrigerator repair service"
+                        className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                      />
+                    </label>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Customer-facing discounts
+                      </p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                        {(Object.entries(INVOICE_DISCOUNT_ADJUSTMENTS) as Array<
+                          [
+                            keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS,
+                            (typeof INVOICE_DISCOUNT_ADJUSTMENTS)[keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS],
+                          ]
+                        >).map(([key, adjustment]) => (
+                          <label
+                            key={key}
+                            className="flex cursor-pointer items-start gap-3 rounded-xl border border-accent/20 bg-white px-4 py-3 text-sm transition hover:bg-accent/5"
+                          >
+                            <input
+                              type="checkbox"
+                              name="discountAdjustment"
+                              value={key}
+                              className="mt-1 h-4 w-4 rounded border-border text-accent"
+                            />
+                            <span>
+                              <span className="block font-black text-accent">
+                                {adjustment.label}
+                              </span>
+                              <span className="mt-1 block text-xs font-bold text-muted">
+                                -${adjustment.amount.toFixed(2)}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs leading-5 text-muted">
+                        These discounts become visible invoice lines. Promo codes stay separate
+                        for first repair or returning customer offers.
+                      </p>
+                    </div>
+                  </div>
+                </details>
                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Technician
                   <input
@@ -255,6 +308,7 @@ export default async function NewInvoicePage() {
             <ul className="mt-4 space-y-3 text-sm leading-6 text-muted">
               <li>A manual lead is created with source `manual-admin`.</li>
               <li>A draft invoice is created from these details.</li>
+              <li>Starting charges and selected discounts are added as invoice lines.</li>
               <li>The lead is moved to `invoiced` automatically.</li>
               <li>You can edit line items on the next screen.</li>
               {canBackdateManualInvoices ? (

@@ -67,6 +67,8 @@ export type ManualLeadInput = {
   serviceTime?: string;
   serviceWindow?: string;
   estimatedPrice: string;
+  invoiceItemDescription?: string;
+  discountAdjustments?: string[];
   assignedTechnician: string;
   notes: string;
   leadCreatedAt?: string;

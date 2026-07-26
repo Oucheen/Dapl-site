@@ -372,6 +372,11 @@ function getServiceDescription(lead: LeadRecord) {
   return `${appliance} repair service`;
 }
 
+function getInvoiceItemDescription(lead: LeadRecord, value?: string | null) {
+  const description = value?.trim();
+  return description || getServiceDescription(lead);
+}
+
 export function getInvoiceItemTemplate(templateKey: string) {
   return INVOICE_ITEM_TEMPLATES.find((template) => template.key === templateKey) ?? null;
 }
@@ -637,6 +642,7 @@ type CreateInvoiceFromLeadOptions = {
   invoiceCreatedTime?: string;
   serviceTime?: string | null;
   serviceWindow?: string | null;
+  invoiceItemDescription?: string | null;
 };
 
 export async function createInvoiceFromLead(
@@ -725,7 +731,7 @@ export async function createInvoiceFromLead(
     },
     body: JSON.stringify({
       invoice_id: invoice.id,
-      description: getServiceDescription(lead),
+      description: getInvoiceItemDescription(lead, options.invoiceItemDescription),
       quantity: 1,
       unit_price: subtotal,
       line_total: subtotal,
@@ -749,7 +755,16 @@ export async function createManualInvoice(input: ManualLeadInput) {
     invoiceCreatedTime: input.invoiceCreatedTime,
     serviceTime: input.serviceTime,
     serviceWindow: input.serviceWindow,
+    invoiceItemDescription: input.invoiceItemDescription,
   });
+
+  const discountAdjustments = Array.from(new Set(input.discountAdjustments ?? []));
+
+  for (const adjustmentKey of discountAdjustments) {
+    if (adjustmentKey in INVOICE_DISCOUNT_ADJUSTMENTS) {
+      await addInvoiceDiscountAdjustment(invoiceId, adjustmentKey as InvoiceDiscountAdjustmentKey);
+    }
+  }
 
   return { leadId, invoiceId };
 }
