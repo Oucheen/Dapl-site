@@ -154,16 +154,16 @@ export default async function NewInvoicePage() {
                   </summary>
                   <div className="mt-4 grid gap-4">
                     <input type="hidden" name="estimatedPrice" value="" />
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_120px_180px]">
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                        Customer charge
+                    <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_120px] xl:grid-cols-[minmax(0,1fr)_110px_160px]">
+                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        Service / charge
                         <input
                           name="invoiceItemDescription"
                           placeholder="Refrigerator repair service"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                         Qty
                         <input
                           type="number"
@@ -171,10 +171,10 @@ export default async function NewInvoicePage() {
                           min="0.01"
                           step="0.01"
                           defaultValue="1"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
                         />
                       </label>
-                      <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      <label className="grid min-w-0 gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted sm:col-span-2 xl:col-span-1">
                         Unit price
                         <input
                           type="number"
@@ -182,7 +182,7 @@ export default async function NewInvoicePage() {
                           min="0"
                           step="0.01"
                           placeholder="0.00"
-                          className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
+                          className="w-full min-w-0 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                         />
                       </label>
                     </div>
