@@ -120,6 +120,28 @@ function getStoragePhoto(activity: LeadActivityRecord) {
   };
 }
 
+function getFailedPhotoReasons(activity: LeadActivityRecord) {
+  const reasons = activity.metadata?.failedPhotoReasons;
+
+  if (Array.isArray(reasons)) {
+    return reasons.filter(
+      (reason): reason is string => typeof reason === "string" && Boolean(reason.trim()),
+    );
+  }
+
+  if (
+    activity.event_type === "telegram_report_photo_upload_failed" &&
+    typeof activity.details === "string"
+  ) {
+    return activity.details
+      .split("\n")
+      .map((reason) => reason.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 function getNeedsAttention(lead: LeadRecord, hasInvoice: boolean) {
   if (lead.status === "new") {
     return "New request needs first contact.";
@@ -340,6 +362,8 @@ export default async function LeadDetailPage({
                     const actorName = getActivityActorName(item);
                     const photo = getTelegramPhoto(item);
                     const storagePhoto = getStoragePhoto(item);
+                    const failedPhotoReasons = getFailedPhotoReasons(item);
+                    const hasPhotoUploadIssue = failedPhotoReasons.length > 0;
                     const photoSrc = photo
                       ? `/admin/telegram/photo/${encodeURIComponent(photo.fileId)}`
                       : storagePhoto
@@ -353,7 +377,11 @@ export default async function LeadDetailPage({
                     return (
                       <article
                         key={item.id}
-                        className="overflow-hidden rounded-xl border border-border bg-slate-50"
+                        className={`overflow-hidden rounded-xl border ${
+                          hasPhotoUploadIssue
+                            ? "border-amber-500/30 bg-amber-50"
+                            : "border-border bg-slate-50"
+                        }`}
                       >
                         {photoSrc ? (
                           <img
@@ -368,6 +396,21 @@ export default async function LeadDetailPage({
                           {item.details ? (
                             <p className="mt-1 whitespace-pre-wrap break-words text-muted">
                               {item.details}
+                            </p>
+                          ) : null}
+                          {hasPhotoUploadIssue ? (
+                            <div className="mt-3 rounded-lg border border-amber-500/25 bg-white/70 p-3 text-xs leading-5 text-amber-900">
+                              <p className="font-black">Photo upload issue</p>
+                              <ul className="mt-1 list-disc space-y-1 pl-4">
+                                {failedPhotoReasons.map((reason) => (
+                                  <li key={reason}>{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                          {storagePhoto ? (
+                            <p className="mt-3 text-xs font-semibold text-emerald-700">
+                              Saved in private technician photo storage.
                             </p>
                           ) : null}
                           <p className="mt-3 text-xs font-semibold text-muted">
