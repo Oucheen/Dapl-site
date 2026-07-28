@@ -12,6 +12,7 @@ import {
 import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import { verifyTechnicianReportToken } from "@/lib/technician-report-links";
 import { submitTechnicianReport } from "./actions";
+import { ReportSavedActions } from "./report-saved-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -231,6 +232,10 @@ export default async function TechnicianReportPage({
   );
   const defaultPartNote = getMetadataText(latestPartActivity?.metadata, "partNote");
   const hasPreviousReport = Boolean(latestReportActivity);
+  const invoiceHref = `/admin/invoices/${invoice.id}`;
+  const editReportHref = `/tech/report/${invoice.id}?${new URLSearchParams({
+    t: token,
+  }).toString()}`;
 
   if (!leadId) {
     return <ReportUnavailable message="This invoice is not linked to a customer card." />;
@@ -242,9 +247,11 @@ export default async function TechnicianReportPage({
     <main className="min-h-screen bg-slate-50 px-3 py-4 text-foreground sm:px-6">
       <div className="mx-auto grid max-w-2xl gap-4">
         {saved === "1" ? (
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
-            Report saved. Thank you.
-          </div>
+          <ReportSavedActions
+            autoRedirect={!warning}
+            editHref={editReportHref}
+            invoiceHref={invoiceHref}
+          />
         ) : null}
         {warning ? (
           <div className="rounded-xl border border-amber-500/25 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
