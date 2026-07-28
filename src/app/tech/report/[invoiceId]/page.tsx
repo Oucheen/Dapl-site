@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
   getInvoiceById,
@@ -32,6 +31,25 @@ const ERROR_MESSAGES: Record<string, string> = {
 const WARNING_MESSAGES: Record<string, string> = {
   photo_upload_failed: "Report was saved, but one or more photos could not upload. Please try smaller JPG/PNG photos or send them in Telegram.",
 };
+
+function ReportUnavailable({ message }: { message: string }) {
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-5 text-foreground sm:px-6">
+      <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center">
+        <section className="rounded-2xl border border-red-500/20 bg-white p-6 text-center shadow-sm">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">
+            Report unavailable
+          </p>
+          <h1 className="mt-3 text-3xl font-black text-primary">This report link cannot be opened.</h1>
+          <p className="mt-3 text-sm font-semibold leading-6 text-muted">{message}</p>
+          <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+            Ask the office to resend the job from Telegram, then open the latest Report page button.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -103,23 +121,40 @@ export default async function TechnicianReportPage({
   const telegramUserId = verifyTechnicianReportToken(invoiceId, token);
 
   if (!telegramUserId) {
-    notFound();
+    return <ReportUnavailable message="The link is invalid or expired." />;
   }
 
-  const [invoiceResult, telegramUser] = await Promise.all([
-    getInvoiceById(invoiceId),
-    getTelegramUserByTelegramId(telegramUserId),
-  ]);
+  let invoiceResult: Awaited<ReturnType<typeof getInvoiceById>> = null;
+  let telegramUser: Awaited<ReturnType<typeof getTelegramUserByTelegramId>> = {
+    error: "",
+    ready: false,
+    user: null,
+  };
+
+  try {
+    [invoiceResult, telegramUser] = await Promise.all([
+      getInvoiceById(invoiceId),
+      getTelegramUserByTelegramId(telegramUserId),
+    ]);
+  } catch (reportError) {
+    console.error("Technician report page failed to load", {
+      invoiceId,
+      telegramUserId,
+      reportError,
+    });
+
+    return <ReportUnavailable message="The report data could not be loaded right now." />;
+  }
 
   if (!invoiceResult || !telegramUser.user || !token) {
-    notFound();
+    return <ReportUnavailable message="The invoice or technician access is no longer available." />;
   }
 
   const invoice = invoiceResult.invoice;
   const leadId = invoice.lead_id;
 
   if (!leadId) {
-    notFound();
+    return <ReportUnavailable message="This invoice is not linked to a customer card." />;
   }
 
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
