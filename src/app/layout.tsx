@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import { housecallProBookingScriptUrl } from "@/components/ui/housecall-pro-config";
-import { ChatLeadWidget } from "@/components/ui/chat-lead-widget";
-import { ContactWidget } from "@/components/ui/contact-widget";
 import { CookieConsent } from "@/components/ui/cookie-consent";
+import { GlobalWidgets } from "@/components/ui/global-widgets";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -112,8 +112,9 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         {children}
-        <ChatLeadWidget />
-        <ContactWidget />
+        <Suspense fallback={null}>
+          <GlobalWidgets />
+        </Suspense>
         <CookieConsent />
       </body>
     </html>
