@@ -248,8 +248,8 @@ export default async function TechnicianReportPage({
       <div className="mx-auto grid max-w-2xl gap-4">
         {saved === "1" ? (
           <ReportSavedActions
-            autoRedirect={!warning}
             editHref={editReportHref}
+            hasWarning={Boolean(warning)}
             invoiceHref={invoiceHref}
           />
         ) : null}

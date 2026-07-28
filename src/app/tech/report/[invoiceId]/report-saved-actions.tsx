@@ -1,41 +1,23 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 type ReportSavedActionsProps = {
-  autoRedirect: boolean;
   editHref: string;
   invoiceHref: string;
+  hasWarning: boolean;
 };
 
 export function ReportSavedActions({
-  autoRedirect,
   editHref,
+  hasWarning,
   invoiceHref,
 }: ReportSavedActionsProps) {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!autoRedirect) {
-      return;
-    }
-
-    const timerId = window.setTimeout(() => {
-      router.push(invoiceHref);
-    }, 2000);
-
-    return () => window.clearTimeout(timerId);
-  }, [autoRedirect, invoiceHref, router]);
-
   return (
     <div className="rounded-xl border border-emerald-500/20 bg-emerald-50 p-3 text-emerald-900 sm:p-4">
       <p className="text-sm font-black">Report saved. Thank you.</p>
       <p className="mt-1 text-xs font-semibold leading-5">
-        {autoRedirect
-          ? "Opening the invoice in a moment."
-          : "Review the warning above before opening the invoice."}
+        {hasWarning
+          ? "Review the warning above, then open the invoice when ready."
+          : "Open the invoice when you are ready."}
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
         <Link
