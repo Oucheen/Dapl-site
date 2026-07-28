@@ -69,6 +69,10 @@ function hasPhotoFile(input: (typeof PHOTO_FIELDS)[number] & { file: File | null
   return Boolean(input.file);
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export async function submitTechnicianReport(formData: FormData) {
   const invoiceId = getOptionalText(formData, "invoiceId");
   const token = getOptionalText(formData, "token");
@@ -122,6 +126,7 @@ export async function submitTechnicianReport(formData: FormData) {
 
     const uploadedPhotos = [];
     const failedPhotoLabels: string[] = [];
+    const failedPhotoReasons: string[] = [];
 
     for (const photoFile of photoFiles) {
       try {
@@ -136,7 +141,10 @@ export async function submitTechnicianReport(formData: FormData) {
           }),
         );
       } catch (error) {
+        const reason = getErrorMessage(error);
+
         failedPhotoLabels.push(photoFile.label);
+        failedPhotoReasons.push(`${photoFile.label}: ${reason}`);
         console.error("Technician report photo upload failed", {
           invoiceId,
           leadId,
@@ -174,8 +182,29 @@ export async function submitTechnicianReport(formData: FormData) {
         unitModelSerial: unitModelSerial || null,
         photoCount: uploadedPhotos.length,
         failedPhotoLabels,
+        failedPhotoReasons,
       },
     });
+
+    if (failedPhotoReasons.length) {
+      await createLeadActivity({
+        leadId,
+        invoiceId,
+        eventType: "telegram_report_photo_upload_failed",
+        title: "Technician report photo upload failed",
+        details: failedPhotoReasons.join("\n"),
+        metadata: {
+          source: "technician_report_page",
+          technician: {
+            telegramUserId,
+            name: telegramUser.user.technician_name,
+            role: telegramUser.user.role,
+          },
+          failedPhotoLabels,
+          failedPhotoReasons,
+        },
+      });
+    }
 
     for (const photo of uploadedPhotos) {
       await createLeadActivity({

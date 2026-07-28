@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   experimental: {
     serverActions: {
-      bodySizeLimit: "25mb",
+      bodySizeLimit: "40mb",
     },
   },
   async redirects() {

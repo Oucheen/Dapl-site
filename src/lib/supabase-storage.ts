@@ -1,8 +1,24 @@
 import { randomUUID } from "crypto";
 
 const DEFAULT_TECH_REPORT_BUCKET = "technician-report-photos";
-const MAX_REPORT_PHOTO_BYTES = 8 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+const MAX_REPORT_PHOTO_BYTES = 12 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/heic",
+  "image/heif",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+const IMAGE_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
+  heic: "image/heic",
+  heif: "image/heif",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+const FALLBACK_IMAGE_TYPES = new Set(["", "application/octet-stream"]);
 
 export type ReportPhotoUpload = {
   field: string;
@@ -63,6 +79,23 @@ function getExtension(file: File) {
   }
 
   return "jpg";
+}
+
+function getContentType(file: File) {
+  const contentType = file.type.trim().toLowerCase();
+
+  if (ALLOWED_IMAGE_TYPES.has(contentType)) {
+    return contentType === "image/jpg" ? "image/jpeg" : contentType;
+  }
+
+  const extension = getExtension(file);
+  const extensionContentType = IMAGE_CONTENT_TYPES_BY_EXTENSION[extension];
+
+  if (extensionContentType && FALLBACK_IMAGE_TYPES.has(contentType)) {
+    return extensionContentType;
+  }
+
+  return "";
 }
 
 function getReportPhotoPath(input: {
@@ -135,12 +168,16 @@ export async function uploadTechnicianReportPhoto(input: {
     throw new Error("Supabase storage is not configured.");
   }
 
-  if (!ALLOWED_IMAGE_TYPES.has(input.file.type)) {
-    throw new Error(`${input.label} must be a JPG, PNG, WebP, HEIC, or HEIF image.`);
+  const contentType = getContentType(input.file);
+
+  if (!contentType) {
+    throw new Error(
+      `${input.label} must be a JPG, PNG, WebP, HEIC, or HEIF image. Received ${input.file.type || "unknown type"} from ${input.file.name || "unnamed file"}.`,
+    );
   }
 
   if (input.file.size > MAX_REPORT_PHOTO_BYTES) {
-    throw new Error(`${input.label} is too large. Maximum size is 8 MB.`);
+    throw new Error(`${input.label} is too large. Maximum size is 12 MB.`);
   }
 
   await ensureBucket(config);
@@ -155,7 +192,7 @@ export async function uploadTechnicianReportPhoto(input: {
       method: "POST",
       headers: {
         ...headers(config),
-        "Content-Type": input.file.type || "application/octet-stream",
+        "Content-Type": contentType,
         "x-upsert": "false",
       },
       body: Buffer.from(await input.file.arrayBuffer()),
