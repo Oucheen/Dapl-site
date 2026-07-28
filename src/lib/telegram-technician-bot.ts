@@ -402,11 +402,6 @@ function buildJobButtons(invoice: InvoiceRecord, technician: TelegramTechnician)
       { text: "Invoice", url: invoiceUrl },
     ],
     [
-      { text: "Add part", callback_data: `help:addpart:${invoice.id}` },
-      { text: "Photo", callback_data: `help:photo:${invoice.id}` },
-      { text: "Report", callback_data: `report:start:${invoice.id}` },
-    ],
-    [
       ...(reportUrl ? [{ text: "Report page", url: reportUrl }] : []),
     ],
   ];
@@ -1307,8 +1302,7 @@ async function sendHelp(chatId: number) {
       `<b>DAPL technician bot</b>\n` +
       `/today - show today's jobs\n` +
       `/tomorrow - show tomorrow's jobs\n` +
-      `Use Report under a job for customer visit reports.\n` +
-      `Use Add part or Photo for quick field updates.\n` +
+      `Open Report page under a job to add notes, photos, parts, and receipts.\n` +
       `/start - show this help`,
     replyMarkup: {
       inline_keyboard: [
