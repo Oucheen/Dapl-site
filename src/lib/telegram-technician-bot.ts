@@ -15,6 +15,7 @@ import {
   type InvoiceJobStatus,
   type InvoiceRecord,
 } from "@/lib/supabase-invoices";
+import { buildTechnicianReportUrl } from "@/lib/technician-report-links";
 
 type TelegramUser = {
   id: number;
@@ -382,10 +383,11 @@ function buildJobMessage(invoice: InvoiceRecord) {
     .join("\n");
 }
 
-function buildJobButtons(invoice: InvoiceRecord) {
+function buildJobButtons(invoice: InvoiceRecord, technician: TelegramTechnician) {
   const siteUrl = getSiteUrl();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const reportUrl = buildTechnicianReportUrl(invoice.id, technician.telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
     [
       { text: "On the way", callback_data: `job:way:${invoice.id}` },
@@ -403,6 +405,9 @@ function buildJobButtons(invoice: InvoiceRecord) {
       { text: "Add part", callback_data: `help:addpart:${invoice.id}` },
       { text: "Photo", callback_data: `help:photo:${invoice.id}` },
       { text: "Report", callback_data: `report:start:${invoice.id}` },
+    ],
+    [
+      ...(reportUrl ? [{ text: "Report page", url: reportUrl }] : []),
     ],
   ];
 
@@ -493,7 +498,7 @@ async function sendJobsForDate(
     await sendTelegram({
       chatId,
       text: buildJobMessage(invoice),
-      replyMarkup: buildJobButtons(invoice),
+      replyMarkup: buildJobButtons(invoice, technician),
     });
   }
 

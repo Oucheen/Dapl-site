@@ -1,5 +1,6 @@
 import { getTelegramUserByTechnicianName } from "@/lib/supabase-telegram-users";
 import type { InvoiceJobStatus, InvoiceRecord } from "@/lib/supabase-invoices";
+import { buildTechnicianReportUrl } from "@/lib/technician-report-links";
 
 const DEFAULT_SITE_URL = "https://www.daplappliance.com";
 
@@ -100,10 +101,11 @@ function buildJobNotificationMessage(invoice: InvoiceRecord) {
     .join("\n");
 }
 
-function buildJobNotificationButtons(invoice: InvoiceRecord) {
+function buildJobNotificationButtons(invoice: InvoiceRecord, telegramUserId: string) {
   const siteUrl = getSiteUrl();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const reportUrl = buildTechnicianReportUrl(invoice.id, telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
     [
       ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
@@ -112,6 +114,9 @@ function buildJobNotificationButtons(invoice: InvoiceRecord) {
     [
       { text: "On the way", callback_data: `job:way:${invoice.id}` },
       { text: "In progress", callback_data: `job:progress:${invoice.id}` },
+    ],
+    [
+      ...(reportUrl ? [{ text: "Report page", url: reportUrl }] : []),
     ],
   ];
 
@@ -208,7 +213,7 @@ export async function notifyTechnicianJobAssigned(invoice: InvoiceRecord) {
   return sendTelegram({
     chatId: telegramUser.user.telegram_user_id,
     text: buildJobNotificationMessage(invoice),
-    replyMarkup: buildJobNotificationButtons(invoice),
+    replyMarkup: buildJobNotificationButtons(invoice, telegramUser.user.telegram_user_id),
   });
 }
 
