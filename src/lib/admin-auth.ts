@@ -267,6 +267,7 @@ export async function getCurrentAdminPermissions() {
     canDeleteInvoicePayments: hasElevatedAccess,
     canVoidInvoices: hasElevatedAccess,
     canBackdateManualInvoices: hasElevatedAccess,
+    canSendInvoices: hasElevatedAccess,
     canDeleteLeads: hasOwnerAccess,
   };
 }

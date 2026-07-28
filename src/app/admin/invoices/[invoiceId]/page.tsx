@@ -34,6 +34,7 @@ import {
   deleteInvoicePartAction,
   deleteInvoicePaymentAction,
   markInvoiceCompletedAction,
+  requestInvoiceSendAction,
   sendInvoiceEmailAction,
   updateInvoiceItemsAction,
   updateInvoiceCheckStatusAction,
@@ -596,6 +597,14 @@ function getActionNotice(status: string | undefined): PageNotice | null {
       className: "border-amber-500/20 bg-amber-50 text-amber-800",
       title: "Part already expensed",
       body: "This part is already linked to an accounting expense.",
+    };
+  }
+
+  if (status === "invoice_send_requested") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Invoice marked ready",
+      body: "The office can review this invoice and send it to the customer.",
     };
   }
 
@@ -1624,35 +1633,55 @@ export default async function InvoicePage({
                 Generates a clean invoice PDF directly from CRM data.
               </p>
             </div>
-            <form action={sendInvoiceEmailAction} className="mt-3">
-              <input type="hidden" name="id" value={invoice.id} />
-              <InvoiceEmailSubmitButton
-                disabled={!customerEmail}
-                invoiceStatus={invoice.status}
-                invoiceTotal={invoice.total}
-                label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
-                recipient={customerEmail || ""}
-              />
-              {!customerEmail ? (
-                <p className="mt-2 text-xs leading-5 text-muted">
-                  Customer email is missing, so this invoice cannot be sent yet.
+            {permissions.canSendInvoices ? (
+              <>
+                <form action={sendInvoiceEmailAction} className="mt-3">
+                  <input type="hidden" name="id" value={invoice.id} />
+                  <InvoiceEmailSubmitButton
+                    disabled={!customerEmail}
+                    invoiceStatus={invoice.status}
+                    invoiceTotal={invoice.total}
+                    label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
+                    recipient={customerEmail || ""}
+                  />
+                  {!customerEmail ? (
+                    <p className="mt-2 text-xs leading-5 text-muted">
+                      Customer email is missing, so this invoice cannot be sent yet.
+                    </p>
+                  ) : null}
+                </form>
+                <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
+                  <InvoiceSmsSubmitButton
+                    disabled={!invoice.customer_phone}
+                    invoiceStatus={invoice.status}
+                    invoiceTotal={invoice.total}
+                    label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
+                    recipient={invoice.customer_phone || ""}
+                  />
+                  {!invoice.customer_phone ? (
+                    <p className="mt-2 text-xs leading-5 text-muted">
+                      Customer phone is missing, so this invoice cannot be sent by SMS yet.
+                    </p>
+                  ) : null}
+                </form>
+              </>
+            ) : (
+              <form
+                action={requestInvoiceSendAction}
+                className="mt-3 rounded-xl border border-amber-500/25 bg-amber-50 p-3"
+              >
+                <input type="hidden" name="id" value={invoice.id} />
+                <p className="text-xs font-bold leading-5 text-amber-900">
+                  Customer sending is handled by the office after review.
                 </p>
-              ) : null}
-            </form>
-            <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
-              <InvoiceSmsSubmitButton
-                disabled={!invoice.customer_phone}
-                invoiceStatus={invoice.status}
-                invoiceTotal={invoice.total}
-                label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
-                recipient={invoice.customer_phone || ""}
-              />
-              {!invoice.customer_phone ? (
-                <p className="mt-2 text-xs leading-5 text-muted">
-                  Customer phone is missing, so this invoice cannot be sent by SMS yet.
-                </p>
-              ) : null}
-            </form>
+                <button
+                  type="submit"
+                  className="mt-3 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Ready to send
+                </button>
+              </form>
+            )}
             {amountDue <= 0 && invoice.status !== "paid" && invoice.status !== "void" ? (
               <form action={markInvoiceCompletedAction} className="mt-3">
                 <input type="hidden" name="id" value={invoice.id} />

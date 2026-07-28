@@ -15,6 +15,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ in
   }
 
   const { invoiceId } = await params;
+
+  if (!permissions.canSendInvoices) {
+    redirect(`/admin/invoices/${invoiceId}?notice=permission_denied`);
+  }
+
   const invoiceData = await getInvoiceById(invoiceId);
 
   if (!invoiceData) {

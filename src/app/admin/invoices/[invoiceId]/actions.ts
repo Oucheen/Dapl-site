@@ -196,9 +196,14 @@ export async function updateInvoiceScheduleAction(formData: FormData) {
 }
 
 export async function sendInvoiceEmailAction(formData: FormData) {
-  await requireInvoiceAdmin();
+  const permissions = await requireInvoiceAdmin();
 
   const id = String(formData.get("id") || "");
+
+  if (!permissions.canSendInvoices) {
+    redirectPermissionDenied(id);
+  }
+
   const invoiceData = await getInvoiceById(id);
 
   if (!invoiceData) {
@@ -232,9 +237,14 @@ export async function sendInvoiceEmailAction(formData: FormData) {
 }
 
 export async function sendInvoiceSmsAction(formData: FormData) {
-  await requireInvoiceAdmin();
+  const permissions = await requireInvoiceAdmin();
 
   const id = String(formData.get("id") || "");
+
+  if (!permissions.canSendInvoices) {
+    redirectPermissionDenied(id);
+  }
+
   const invoiceData = await getInvoiceById(id);
 
   if (!invoiceData) {
@@ -265,6 +275,38 @@ export async function sendInvoiceSmsAction(formData: FormData) {
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/invoices/${id}`);
   redirect(`/admin/invoices/${id}?sms=sent`);
+}
+
+export async function requestInvoiceSendAction(formData: FormData) {
+  const permissions = await requireInvoiceAdmin();
+  const id = String(formData.get("id") || "");
+  const invoiceData = await getInvoiceById(id);
+
+  if (!invoiceData) {
+    redirect("/admin/invoices?notice=missing");
+  }
+
+  await createLeadActivity({
+    leadId: invoiceData.invoice.lead_id,
+    invoiceId: id,
+    eventType: "invoice_send_requested",
+    title: "Invoice ready to send",
+    details: `${permissions.user?.name || "Staff"} marked this invoice ready for office review and customer send.`,
+    metadata: {
+      requestedBy: permissions.user
+        ? {
+            id: permissions.user.id,
+            name: permissions.user.name,
+            role: permissions.user.role,
+          }
+        : null,
+    },
+  });
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  redirect(`/admin/invoices/${id}?notice=invoice_send_requested`);
 }
 
 export async function updateInvoiceItemsAction(formData: FormData) {
