@@ -270,27 +270,39 @@ export default async function TechnicianReportPage({
                 Photos
               </p>
               <label className="grid gap-2 text-sm font-bold text-foreground">
-                Unit photo / file
+                Unit photo
                 <input
                   type="file"
                   name="unitPhoto"
-                  accept="image/*,application/pdf,.pdf"
+                  accept="image/*"
                   className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
                 />
                 <span className="text-xs font-semibold text-muted">
-                  Take a photo, choose an existing image, or upload a PDF.
+                  Take a photo or choose an existing image from the phone library.
                 </span>
               </label>
               <label className="grid gap-2 text-sm font-bold text-foreground">
-                Model / serial photo / file
+                Model / serial photo
                 <input
                   type="file"
                   name="serialPhoto"
-                  accept="image/*,application/pdf,.pdf"
+                  accept="image/*"
                   className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
                 />
                 <span className="text-xs font-semibold text-muted">
-                  Take a photo of the model sticker, choose an existing image, or upload a PDF.
+                  Take a photo of the model sticker or choose one from the phone library.
+                </span>
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-foreground">
+                Part photo
+                <input
+                  type="file"
+                  name="partPhoto"
+                  accept="image/*"
+                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
+                />
+                <span className="text-xs font-semibold text-muted">
+                  Take a photo of the part or choose one from the phone library.
                 </span>
               </label>
               <label className="grid gap-2 text-sm font-bold text-foreground">

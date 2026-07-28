@@ -22,8 +22,9 @@ const ALLOWED_JOB_STATUSES = new Set<InvoiceJobStatus>([
   "canceled",
 ]);
 const PHOTO_FIELDS = [
-  { field: "unitPhoto", label: "Unit photo / file", title: "Unit file added" },
-  { field: "serialPhoto", label: "Model/serial photo / file", title: "Model/serial file added" },
+  { field: "unitPhoto", label: "Unit photo", title: "Unit photo added" },
+  { field: "serialPhoto", label: "Model/serial photo", title: "Model/serial photo added" },
+  { field: "partPhoto", label: "Part photo", title: "Part photo added" },
   { field: "receiptPhoto", label: "Receipt / part invoice file", title: "Receipt file added" },
 ];
 
