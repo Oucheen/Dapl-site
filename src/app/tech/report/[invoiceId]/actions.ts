@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createLeadActivity } from "@/lib/supabase-activity";
+import {
+  createLeadActivity,
+  deleteTechnicianReportPageActivities,
+} from "@/lib/supabase-activity";
 import {
   updateInvoiceJobStatus,
   type InvoiceJobStatus,
@@ -155,6 +158,7 @@ export async function submitTechnicianReport(formData: FormData) {
     }
 
     await updateInvoiceJobStatus(invoiceId, jobStatus);
+    await deleteTechnicianReportPageActivities({ leadId, invoiceId });
 
     const reportDetails = [
       `Status: ${jobStatus.replaceAll("_", " ")}`,

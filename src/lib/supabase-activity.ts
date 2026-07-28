@@ -123,6 +123,42 @@ export async function createLeadActivity(input: LeadActivityInput) {
   }
 }
 
+export async function deleteTechnicianReportPageActivities(input: {
+  leadId: string;
+  invoiceId: string;
+}) {
+  const config = getSupabaseConfig();
+
+  if (!config || !isUuid(input.leadId) || !isUuid(input.invoiceId)) {
+    return;
+  }
+
+  const params = new URLSearchParams({
+    lead_id: `eq.${input.leadId}`,
+    invoice_id: `eq.${input.invoiceId}`,
+    "metadata->>source": "eq.technician_report_page",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      method: "DELETE",
+      headers: {
+        ...headers(config),
+        Prefer: "return=minimal",
+      },
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(
+        `Supabase technician report activity delete failed: ${response.status} ${details}`,
+      );
+    }
+  } catch (error) {
+    console.error("Supabase technician report activity delete error:", error);
+  }
+}
+
 export function getActivityActorName(activity: LeadActivityRecord) {
   const actor = activity.metadata?.actor;
 
