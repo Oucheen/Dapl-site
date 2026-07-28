@@ -404,7 +404,7 @@ export default async function LeadDetailPage({
                               target="_blank"
                               className="mt-3 inline-flex rounded-lg border border-primary/20 bg-white px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/5"
                             >
-                              Open PDF receipt
+                              Open PDF file
                             </Link>
                           ) : null}
                           {item.details ? (
