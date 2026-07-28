@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import {
+  listActivitiesForInvoice,
+  type LeadActivityRecord,
+} from "@/lib/supabase-activity";
+import {
   getInvoiceById,
   type InvoiceJobStatus,
   type InvoiceRecord,
@@ -100,6 +104,55 @@ function getMapsSearchUrl(address: string | null | undefined) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`;
 }
 
+function isTechnicianReportPageActivity(activity: LeadActivityRecord) {
+  return activity.metadata?.source === "technician_report_page";
+}
+
+function getMetadataText(
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+) {
+  const value = metadata?.[key];
+
+  return typeof value === "string" ? value : "";
+}
+
+function getDetailsValue(details: string | null | undefined, label: string) {
+  if (!details) {
+    return "";
+  }
+
+  const prefix = `${label}:`;
+  const line = details.split("\n").find((detailLine) => detailLine.startsWith(prefix));
+
+  return line ? line.slice(prefix.length).trim() : "";
+}
+
+function getReportJobStatus(
+  invoiceStatus: InvoiceRecord["job_status"],
+  reportActivity: LeadActivityRecord | undefined,
+) {
+  const reportStatus = getMetadataText(reportActivity?.metadata, "jobStatus");
+
+  if (JOB_STATUSES.some((status) => status.value === reportStatus)) {
+    return reportStatus as InvoiceJobStatus;
+  }
+
+  if (invoiceStatus && JOB_STATUSES.some((status) => status.value === invoiceStatus)) {
+    return invoiceStatus;
+  }
+
+  return "in_progress";
+}
+
+function getMoneyPrefill(value: unknown) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value === 0) {
+    return "";
+  }
+
+  return value.toFixed(2);
+}
+
 export default async function TechnicianReportPage({
   params,
   searchParams,
@@ -130,11 +183,13 @@ export default async function TechnicianReportPage({
     ready: false,
     user: null,
   };
+  let invoiceActivities: LeadActivityRecord[] = [];
 
   try {
-    [invoiceResult, telegramUser] = await Promise.all([
+    [invoiceResult, telegramUser, invoiceActivities] = await Promise.all([
       getInvoiceById(invoiceId),
       getTelegramUserByTelegramId(telegramUserId),
+      listActivitiesForInvoice(invoiceId, 80),
     ]);
   } catch (reportError) {
     console.error("Technician report page failed to load", {
@@ -152,6 +207,30 @@ export default async function TechnicianReportPage({
 
   const invoice = invoiceResult.invoice;
   const leadId = invoice.lead_id;
+  const latestReportActivity = invoiceActivities.find(
+    (activity) =>
+      activity.event_type === "telegram_visit_report_completed" &&
+      isTechnicianReportPageActivity(activity),
+  );
+  const latestPartActivity = invoiceActivities.find(
+    (activity) =>
+      activity.event_type === "telegram_report_own_part" &&
+      isTechnicianReportPageActivity(activity),
+  );
+  const defaultJobStatus = getReportJobStatus(invoice.job_status, latestReportActivity);
+  const defaultWorkNote =
+    getMetadataText(latestReportActivity?.metadata, "workNote") ||
+    getDetailsValue(latestReportActivity?.details, "Work note");
+  const defaultUnitModelSerial =
+    getMetadataText(latestReportActivity?.metadata, "unitModelSerial") ||
+    getDetailsValue(latestReportActivity?.details, "Model/serial");
+  const defaultPartName = getMetadataText(latestPartActivity?.metadata, "partName");
+  const defaultPartCost = getMoneyPrefill(latestPartActivity?.metadata?.partCost);
+  const defaultCustomerCharge = getMoneyPrefill(
+    latestPartActivity?.metadata?.suggestedCustomerCharge,
+  );
+  const defaultPartNote = getMetadataText(latestPartActivity?.metadata, "partNote");
+  const hasPreviousReport = Boolean(latestReportActivity);
 
   if (!leadId) {
     return <ReportUnavailable message="This invoice is not linked to a customer card." />;
@@ -233,7 +312,7 @@ export default async function TechnicianReportPage({
               Job result
               <select
                 name="jobStatus"
-                defaultValue={invoice.job_status ?? "in_progress"}
+                defaultValue={defaultJobStatus}
                 className="rounded-xl border border-border bg-white px-3 py-3 text-base font-bold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
               >
                 {JOB_STATUSES.map((status) => (
@@ -250,6 +329,7 @@ export default async function TechnicianReportPage({
                 name="workNote"
                 rows={6}
                 required
+                defaultValue={defaultWorkNote}
                 placeholder="What was found, what was done, customer decision..."
                 className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case leading-6 tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
               />
@@ -260,6 +340,7 @@ export default async function TechnicianReportPage({
               <input
                 type="text"
                 name="unitModelSerial"
+                defaultValue={defaultUnitModelSerial}
                 placeholder="Optional"
                 className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
               />
@@ -269,6 +350,11 @@ export default async function TechnicianReportPage({
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
                 Photos
               </p>
+              {hasPreviousReport ? (
+                <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold leading-5 text-muted">
+                  Existing photos stay attached. Upload a new file only if you want to replace that photo.
+                </p>
+              ) : null}
               <label className="grid gap-2 text-sm font-bold text-foreground">
                 Unit photo
                 <input
@@ -326,7 +412,13 @@ export default async function TechnicianReportPage({
             </summary>
             <div className="mt-4 grid gap-4">
               <label className="flex items-center gap-3 text-sm font-bold text-amber-950">
-                <input type="checkbox" name="partUsed" value="yes" className="h-5 w-5" />
+                <input
+                  type="checkbox"
+                  name="partUsed"
+                  value="yes"
+                  defaultChecked={Boolean(latestPartActivity)}
+                  className="h-5 w-5"
+                />
                 I used my own part
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -335,6 +427,7 @@ export default async function TechnicianReportPage({
                   <input
                     type="text"
                     name="partName"
+                    defaultValue={defaultPartName}
                     placeholder="Gas valve, board, igniter..."
                     className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                   />
@@ -345,6 +438,7 @@ export default async function TechnicianReportPage({
                     type="text"
                     inputMode="decimal"
                     name="partCost"
+                    defaultValue={defaultPartCost}
                     placeholder="0.00"
                     className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                   />
@@ -355,6 +449,7 @@ export default async function TechnicianReportPage({
                     type="text"
                     inputMode="decimal"
                     name="customerCharge"
+                    defaultValue={defaultCustomerCharge}
                     placeholder="Optional"
                     className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                   />
@@ -364,6 +459,7 @@ export default async function TechnicianReportPage({
                   <textarea
                     name="partNote"
                     rows={3}
+                    defaultValue={defaultPartNote}
                     placeholder="Receipt, warranty, customer approval..."
                     className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case leading-6 tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                   />

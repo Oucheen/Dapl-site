@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import {
   createLeadActivity,
   deleteTechnicianReportPageActivities,
+  listActivitiesForInvoice,
+  type LeadActivityRecord,
 } from "@/lib/supabase-activity";
 import {
   updateInvoiceJobStatus,
@@ -77,6 +79,44 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+function getStoredPhotoField(activity: LeadActivityRecord) {
+  if (
+    activity.event_type !== "telegram_report_photo" ||
+    activity.metadata?.source !== "technician_report_page"
+  ) {
+    return null;
+  }
+
+  const storagePhoto = activity.metadata.storagePhoto;
+
+  if (!storagePhoto || typeof storagePhoto !== "object") {
+    return null;
+  }
+
+  const field = (storagePhoto as { field?: unknown }).field;
+
+  return typeof field === "string" && field.trim() ? field.trim() : null;
+}
+
+function getRetainedPhotoActivities(
+  activities: LeadActivityRecord[],
+  replacedPhotoFields: Set<string>,
+) {
+  const retainedByField = new Map<string, LeadActivityRecord>();
+
+  for (const activity of activities) {
+    const field = getStoredPhotoField(activity);
+
+    if (!field || replacedPhotoFields.has(field) || retainedByField.has(field)) {
+      continue;
+    }
+
+    retainedByField.set(field, activity);
+  }
+
+  return [...retainedByField.values()];
+}
+
 export async function submitTechnicianReport(formData: FormData) {
   const invoiceId = getOptionalText(formData, "invoiceId");
   const token = getOptionalText(formData, "token");
@@ -128,6 +168,7 @@ export async function submitTechnicianReport(formData: FormData) {
       failReportSubmit("part_name_required");
     }
 
+    const previousReportActivities = await listActivitiesForInvoice(invoiceId, 120);
     const uploadedPhotos = [];
     const failedPhotoLabels: string[] = [];
     const failedPhotoReasons: string[] = [];
@@ -159,6 +200,12 @@ export async function submitTechnicianReport(formData: FormData) {
     }
 
     await updateInvoiceJobStatus(invoiceId, jobStatus);
+    const replacedPhotoFields = new Set(uploadedPhotos.map((photo) => photo.field));
+    const retainedPhotoActivities = getRetainedPhotoActivities(
+      previousReportActivities,
+      replacedPhotoFields,
+    );
+
     await deleteTechnicianReportPageActivities({ leadId, invoiceId });
 
     const reportDetails = [
@@ -184,8 +231,9 @@ export async function submitTechnicianReport(formData: FormData) {
           name: telegramUser.user.technician_name,
           role: telegramUser.user.role,
         },
+        workNote,
         unitModelSerial: unitModelSerial || null,
-        photoCount: uploadedPhotos.length,
+        photoCount: uploadedPhotos.length + retainedPhotoActivities.length,
         failedPhotoLabels,
         failedPhotoReasons,
       },
@@ -234,6 +282,17 @@ export async function submitTechnicianReport(formData: FormData) {
             size: photo.size,
           },
         },
+      });
+    }
+
+    for (const activity of retainedPhotoActivities) {
+      await createLeadActivity({
+        leadId,
+        invoiceId,
+        eventType: activity.event_type,
+        title: activity.title,
+        details: activity.details ?? undefined,
+        metadata: activity.metadata,
       });
     }
 
