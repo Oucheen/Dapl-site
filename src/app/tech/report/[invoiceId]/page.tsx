@@ -154,7 +154,11 @@ export default async function TechnicianReportPage({
           </div>
         </section>
 
-        <form action={submitTechnicianReport} className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+        <form
+          action={submitTechnicianReport}
+          encType="multipart/form-data"
+          className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+        >
           <input type="hidden" name="invoiceId" value={invoice.id} />
           <input type="hidden" name="leadId" value={leadId} />
           <input type="hidden" name="token" value={token} />
@@ -195,6 +199,39 @@ export default async function TechnicianReportPage({
                 className="rounded-xl border border-border bg-white px-3 py-3 text-base font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
               />
             </label>
+
+            <div className="grid gap-3 rounded-xl border border-primary/10 bg-primary/5 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
+                Photos
+              </p>
+              <label className="grid gap-2 text-sm font-bold text-foreground">
+                Unit photo
+                <input
+                  type="file"
+                  name="unitPhoto"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-foreground">
+                Model / serial photo
+                <input
+                  type="file"
+                  name="serialPhoto"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-bold text-foreground">
+                Receipt / part invoice photo
+                <input
+                  type="file"
+                  name="receiptPhoto"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
+                />
+              </label>
+            </div>
           </div>
 
           <details className="mt-5 rounded-xl border border-amber-500/20 bg-amber-50 p-4">
@@ -250,7 +287,7 @@ export default async function TechnicianReportPage({
           </details>
 
           <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
-            Photos still stay in the Telegram report flow. This page saves the visit result and part notes to the customer card.
+            Report notes and photos are saved to the internal customer card. Customer invoice totals are not changed automatically.
           </p>
 
           <button

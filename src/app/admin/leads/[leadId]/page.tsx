@@ -100,6 +100,26 @@ function getTelegramPhoto(activity: LeadActivityRecord) {
   };
 }
 
+function getStoragePhoto(activity: LeadActivityRecord) {
+  const photo = activity.metadata?.storagePhoto;
+
+  if (!photo || typeof photo !== "object") {
+    return null;
+  }
+
+  const path = (photo as { path?: unknown }).path;
+  const label = (photo as { label?: unknown }).label;
+
+  if (typeof path !== "string" || !path.trim()) {
+    return null;
+  }
+
+  return {
+    path,
+    label: typeof label === "string" ? label : "",
+  };
+}
+
 function getNeedsAttention(lead: LeadRecord, hasInvoice: boolean) {
   if (lead.status === "new") {
     return "New request needs first contact.";
@@ -319,16 +339,26 @@ export default async function LeadDetailPage({
                   {technicianReport.map((item) => {
                     const actorName = getActivityActorName(item);
                     const photo = getTelegramPhoto(item);
+                    const storagePhoto = getStoragePhoto(item);
+                    const photoSrc = photo
+                      ? `/admin/telegram/photo/${encodeURIComponent(photo.fileId)}`
+                      : storagePhoto
+                        ? `/admin/tech-report/photo/${storagePhoto.path
+                            .split("/")
+                            .map(encodeURIComponent)
+                            .join("/")}`
+                        : "";
+                    const photoAlt = photo?.caption || storagePhoto?.label || item.title;
 
                     return (
                       <article
                         key={item.id}
                         className="overflow-hidden rounded-xl border border-border bg-slate-50"
                       >
-                        {photo ? (
+                        {photoSrc ? (
                           <img
-                            src={`/admin/telegram/photo/${encodeURIComponent(photo.fileId)}`}
-                            alt={photo.caption || item.title}
+                            src={photoSrc}
+                            alt={photoAlt}
                             className="aspect-[4/3] w-full bg-white object-cover"
                             loading="lazy"
                           />
