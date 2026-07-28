@@ -460,21 +460,31 @@ export default async function LeadDetailPage({
             </section>
 
             <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                Timeline
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  Timeline
+                </p>
+                <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
+                  {activity.length} records
+                </span>
+              </div>
               {activity.length > 0 ? (
-                <ul className="mt-5 space-y-5">
+                <ul className="mt-5 max-h-[440px] space-y-4 overflow-y-auto pr-2">
                   {activity.map((item) => {
                     const actorName = getActivityActorName(item);
 
                     return (
-                      <li key={item.id} className="flex gap-4 text-sm leading-6">
+                      <li
+                        key={item.id}
+                        className="flex gap-3 rounded-xl border border-border bg-slate-50 p-3 text-sm leading-6"
+                      >
                         <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-accent" />
-                        <span>
+                        <span className="min-w-0">
                           <span className="block font-black text-foreground">{item.title}</span>
                           {item.details ? (
-                            <span className="block text-muted">{item.details}</span>
+                            <span className="block whitespace-pre-wrap break-words text-muted">
+                              {item.details}
+                            </span>
                           ) : null}
                           <span className="mt-1 block text-xs font-semibold text-muted">
                             {formatDateTime(item.created_at)} ET
