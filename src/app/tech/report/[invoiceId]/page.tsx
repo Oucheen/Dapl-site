@@ -239,8 +239,8 @@ export default async function TechnicianReportPage({
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-5 text-foreground sm:px-6">
-      <div className="mx-auto grid max-w-3xl gap-5">
+    <main className="min-h-screen bg-slate-50 px-3 py-4 text-foreground sm:px-6">
+      <div className="mx-auto grid max-w-2xl gap-4">
         {saved === "1" ? (
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
             Report saved. Thank you.
@@ -257,33 +257,35 @@ export default async function TechnicianReportPage({
           </div>
         ) : null}
 
-        <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
             DAPL technician report
           </p>
-          <h1 className="mt-2 text-3xl font-black text-primary">{invoice.customer_name}</h1>
-          <p className="mt-1 text-sm font-semibold text-muted">
+          <h1 className="mt-1 text-2xl font-black leading-tight text-primary sm:text-3xl">
+            {invoice.customer_name}
+          </h1>
+          <p className="mt-1 break-words text-xs font-semibold text-muted sm:text-sm">
             {invoice.invoice_number} / {telegramUser.user.technician_name}
           </p>
 
-          <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-            <div className="rounded-xl bg-slate-50 p-4">
+          <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2 sm:gap-3">
+            <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Phone</p>
               <p className="mt-1 font-bold">{invoice.customer_phone || "Not set"}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Appliance</p>
               <p className="mt-1 font-bold">{invoice.appliance || "Not selected"}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Date</p>
               <p className="mt-1 font-bold">{formatDate(invoice.service_date)}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Time</p>
               <p className="mt-1 font-bold">{getServiceScheduleLabel(invoice)}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+            <div className="rounded-xl bg-slate-50 p-3 sm:col-span-2">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Address</p>
               <p className="mt-1 font-bold">{invoice.service_address || "Not set"}</p>
               {mapsUrl ? (
@@ -301,7 +303,7 @@ export default async function TechnicianReportPage({
         <form
           action={submitTechnicianReport}
           encType="multipart/form-data"
-          className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+          className="rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5"
         >
           <input type="hidden" name="invoiceId" value={invoice.id} />
           <input type="hidden" name="leadId" value={leadId} />
@@ -327,7 +329,7 @@ export default async function TechnicianReportPage({
               Work note
               <textarea
                 name="workNote"
-                rows={6}
+                rows={4}
                 required
                 defaultValue={defaultWorkNote}
                 placeholder="What was found, what was done, customer decision..."
@@ -346,67 +348,62 @@ export default async function TechnicianReportPage({
               />
             </label>
 
-            <div className="grid gap-3 rounded-xl border border-primary/10 bg-primary/5 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
-                Photos
-              </p>
+            <div className="grid gap-3 rounded-xl border border-primary/10 bg-primary/5 p-3 sm:p-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
+                  Photos
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                  Take a new photo or choose one from the phone library.
+                </p>
+              </div>
               {hasPreviousReport ? (
                 <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold leading-5 text-muted">
                   Existing photos stay attached. Upload a new file only if you want to replace that photo.
                 </p>
               ) : null}
-              <label className="grid gap-2 text-sm font-bold text-foreground">
-                Unit photo
-                <input
-                  type="file"
-                  name="unitPhoto"
-                  accept="image/*"
-                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
-                />
-                <span className="text-xs font-semibold text-muted">
-                  Take a photo or choose an existing image from the phone library.
-                </span>
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-foreground">
-                Model / serial photo
-                <input
-                  type="file"
-                  name="serialPhoto"
-                  accept="image/*"
-                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
-                />
-                <span className="text-xs font-semibold text-muted">
-                  Take a photo of the model sticker or choose one from the phone library.
-                </span>
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-foreground">
-                Part photo
-                <input
-                  type="file"
-                  name="partPhoto"
-                  accept="image/*"
-                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
-                />
-                <span className="text-xs font-semibold text-muted">
-                  Take a photo of the part or choose one from the phone library.
-                </span>
-              </label>
-              <label className="grid gap-2 text-sm font-bold text-foreground">
-                Receipt / part invoice file
-                <input
-                  type="file"
-                  name="receiptPhoto"
-                  accept="image/*,application/pdf,.pdf"
-                  className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
-                />
-                <span className="text-xs font-semibold text-muted">
-                  Upload a receipt photo, screenshot, or PDF invoice.
-                </span>
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
+                  Unit photo
+                  <input
+                    type="file"
+                    name="unitPhoto"
+                    accept="image/*"
+                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+                  />
+                </label>
+                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
+                  Model / serial photo
+                  <input
+                    type="file"
+                    name="serialPhoto"
+                    accept="image/*"
+                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+                  />
+                </label>
+                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
+                  Part photo
+                  <input
+                    type="file"
+                    name="partPhoto"
+                    accept="image/*"
+                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+                  />
+                </label>
+                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
+                  Receipt / invoice
+                  <input
+                    type="file"
+                    name="receiptPhoto"
+                    accept="image/*,application/pdf,.pdf"
+                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
-          <details className="mt-5 rounded-xl border border-amber-500/20 bg-amber-50 p-4">
+          <details className="mt-4 rounded-xl border border-amber-500/20 bg-amber-50 p-3 sm:p-4">
             <summary className="cursor-pointer text-sm font-black text-amber-900">
               Technician-owned part used
             </summary>
@@ -468,13 +465,13 @@ export default async function TechnicianReportPage({
             </div>
           </details>
 
-          <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-muted">
+          <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs font-semibold leading-5 text-muted sm:text-sm sm:leading-6">
             Report notes and photos are saved to the internal customer card. Customer invoice totals are not changed automatically.
           </p>
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-xl bg-primary px-5 py-4 text-base font-black text-primary-foreground transition hover:bg-primary/90"
+            className="mt-4 w-full rounded-xl bg-primary px-5 py-4 text-base font-black text-primary-foreground transition hover:bg-primary/90"
           >
             Save technician report
           </button>
