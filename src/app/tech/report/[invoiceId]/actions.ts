@@ -24,7 +24,7 @@ const ALLOWED_JOB_STATUSES = new Set<InvoiceJobStatus>([
 const PHOTO_FIELDS = [
   { field: "unitPhoto", label: "Unit photo", title: "Unit photo added" },
   { field: "serialPhoto", label: "Model/serial photo", title: "Model/serial photo added" },
-  { field: "receiptPhoto", label: "Receipt / part invoice photo", title: "Receipt photo added" },
+  { field: "receiptPhoto", label: "Receipt / part invoice file", title: "Receipt file added" },
 ];
 
 type PhotoFieldWithFile = (typeof PHOTO_FIELDS)[number] & { file: File };

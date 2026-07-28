@@ -109,6 +109,8 @@ function getStoragePhoto(activity: LeadActivityRecord) {
 
   const path = (photo as { path?: unknown }).path;
   const label = (photo as { label?: unknown }).label;
+  const contentType = (photo as { contentType?: unknown }).contentType;
+  const originalName = (photo as { originalName?: unknown }).originalName;
 
   if (typeof path !== "string" || !path.trim()) {
     return null;
@@ -117,6 +119,8 @@ function getStoragePhoto(activity: LeadActivityRecord) {
   return {
     path,
     label: typeof label === "string" ? label : "",
+    contentType: typeof contentType === "string" ? contentType : "",
+    originalName: typeof originalName === "string" ? originalName : "",
   };
 }
 
@@ -364,6 +368,7 @@ export default async function LeadDetailPage({
                     const storagePhoto = getStoragePhoto(item);
                     const failedPhotoReasons = getFailedPhotoReasons(item);
                     const hasPhotoUploadIssue = failedPhotoReasons.length > 0;
+                    const isStoragePdf = storagePhoto?.contentType === "application/pdf";
                     const photoSrc = photo
                       ? `/admin/telegram/photo/${encodeURIComponent(photo.fileId)}`
                       : storagePhoto
@@ -383,7 +388,7 @@ export default async function LeadDetailPage({
                             : "border-border bg-slate-50"
                         }`}
                       >
-                        {photoSrc ? (
+                        {photoSrc && !isStoragePdf ? (
                           <img
                             src={photoSrc}
                             alt={photoAlt}
@@ -393,6 +398,15 @@ export default async function LeadDetailPage({
                         ) : null}
                         <div className="p-4 text-sm leading-6">
                           <p className="font-black text-foreground">{item.title}</p>
+                          {photoSrc && isStoragePdf ? (
+                            <Link
+                              href={photoSrc}
+                              target="_blank"
+                              className="mt-3 inline-flex rounded-lg border border-primary/20 bg-white px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/5"
+                            >
+                              Open PDF receipt
+                            </Link>
+                          ) : null}
                           {item.details ? (
                             <p className="mt-1 whitespace-pre-wrap break-words text-muted">
                               {item.details}

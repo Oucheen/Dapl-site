@@ -10,6 +10,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
   "image/png",
   "image/webp",
 ]);
+const ALLOWED_DOCUMENT_TYPES = new Set(["application/pdf"]);
 const IMAGE_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   heic: "image/heic",
   heif: "image/heif",
@@ -17,6 +18,9 @@ const IMAGE_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
+};
+const DOCUMENT_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
 };
 const FALLBACK_IMAGE_TYPES = new Set(["", "application/octet-stream"]);
 
@@ -78,6 +82,10 @@ function getExtension(file: File) {
     return "heif";
   }
 
+  if (file.type === "application/pdf") {
+    return "pdf";
+  }
+
   return "jpg";
 }
 
@@ -88,11 +96,21 @@ function getContentType(file: File) {
     return contentType === "image/jpg" ? "image/jpeg" : contentType;
   }
 
+  if (ALLOWED_DOCUMENT_TYPES.has(contentType)) {
+    return contentType;
+  }
+
   const extension = getExtension(file);
   const extensionContentType = IMAGE_CONTENT_TYPES_BY_EXTENSION[extension];
 
   if (extensionContentType && FALLBACK_IMAGE_TYPES.has(contentType)) {
     return extensionContentType;
+  }
+
+  const documentContentType = DOCUMENT_CONTENT_TYPES_BY_EXTENSION[extension];
+
+  if (documentContentType && FALLBACK_IMAGE_TYPES.has(contentType)) {
+    return documentContentType;
   }
 
   return "";
@@ -172,7 +190,7 @@ export async function uploadTechnicianReportPhoto(input: {
 
   if (!contentType) {
     throw new Error(
-      `${input.label} must be a JPG, PNG, WebP, HEIC, or HEIF image. Received ${input.file.type || "unknown type"} from ${input.file.name || "unnamed file"}.`,
+      `${input.label} must be a JPG, PNG, WebP, HEIC, HEIF, or PDF file. Received ${input.file.type || "unknown type"} from ${input.file.name || "unnamed file"}.`,
     );
   }
 
@@ -209,7 +227,7 @@ export async function uploadTechnicianReportPhoto(input: {
     label: input.label,
     path,
     originalName: input.file.name,
-    contentType: input.file.type,
+    contentType,
     size: input.file.size,
   };
 }

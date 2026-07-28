@@ -274,27 +274,38 @@ export default async function TechnicianReportPage({
                 <input
                   type="file"
                   name="unitPhoto"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  accept="image/*"
+                  capture="environment"
                   className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
                 />
+                <span className="text-xs font-semibold text-muted">
+                  Take a photo with the phone camera or choose an existing image.
+                </span>
               </label>
               <label className="grid gap-2 text-sm font-bold text-foreground">
                 Model / serial photo
                 <input
                   type="file"
                   name="serialPhoto"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  accept="image/*"
+                  capture="environment"
                   className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
                 />
+                <span className="text-xs font-semibold text-muted">
+                  Take a photo of the model sticker or choose an existing image.
+                </span>
               </label>
               <label className="grid gap-2 text-sm font-bold text-foreground">
-                Receipt / part invoice photo
+                Receipt / part invoice file
                 <input
                   type="file"
                   name="receiptPhoto"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  accept="image/*,application/pdf,.pdf"
                   className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-black file:text-primary-foreground"
                 />
+                <span className="text-xs font-semibold text-muted">
+                  Upload a receipt photo, screenshot, or PDF invoice.
+                </span>
               </label>
             </div>
           </div>
