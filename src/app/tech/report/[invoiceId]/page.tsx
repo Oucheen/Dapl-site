@@ -20,6 +20,19 @@ const JOB_STATUSES: { value: InvoiceJobStatus; label: string }[] = [
   { value: "canceled", label: "Customer canceled" },
 ];
 
+const ERROR_MESSAGES: Record<string, string> = {
+  access_denied: "Technician access is not active.",
+  invalid_link: "This report link is invalid. Open the latest link from Telegram.",
+  invalid_status: "Please choose a valid job result.",
+  part_name_required: "Add the part name or turn off the technician-owned part checkbox.",
+  save_failed: "Report could not be saved. Please try again or send the details in Telegram.",
+  work_note_required: "Work note is required before saving the report.",
+};
+
+const WARNING_MESSAGES: Record<string, string> = {
+  photo_upload_failed: "Report was saved, but one or more photos could not upload. Please try smaller JPG/PNG photos or send them in Telegram.",
+};
+
 function formatDate(value: string | null) {
   if (!value) {
     return "Not set";
@@ -74,12 +87,19 @@ export default async function TechnicianReportPage({
   searchParams,
 }: {
   params: Promise<{ invoiceId: string }>;
-  searchParams?: Promise<{ t?: string | string[]; saved?: string | string[] }>;
+  searchParams?: Promise<{
+    error?: string | string[];
+    saved?: string | string[];
+    t?: string | string[];
+    warning?: string | string[];
+  }>;
 }) {
   const { invoiceId } = await params;
   const query = await searchParams;
+  const error = Array.isArray(query?.error) ? query?.error[0] : query?.error;
   const token = Array.isArray(query?.t) ? query?.t[0] : query?.t;
   const saved = Array.isArray(query?.saved) ? query?.saved[0] : query?.saved;
+  const warning = Array.isArray(query?.warning) ? query?.warning[0] : query?.warning;
   const telegramUserId = verifyTechnicianReportToken(invoiceId, token);
 
   if (!telegramUserId) {
@@ -110,6 +130,16 @@ export default async function TechnicianReportPage({
         {saved === "1" ? (
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
             Report saved. Thank you.
+          </div>
+        ) : null}
+        {warning ? (
+          <div className="rounded-xl border border-amber-500/25 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
+            {WARNING_MESSAGES[warning] ?? "Report saved with a warning."}
+          </div>
+        ) : null}
+        {error ? (
+          <div className="rounded-xl border border-red-500/25 bg-red-50 px-4 py-3 text-sm font-bold text-red-800">
+            {ERROR_MESSAGES[error] ?? ERROR_MESSAGES.save_failed}
           </div>
         ) : null}
 
