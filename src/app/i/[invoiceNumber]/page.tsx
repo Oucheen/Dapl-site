@@ -83,11 +83,15 @@ export default async function PublicInvoicePage({
   searchParams,
 }: {
   params: Promise<{ invoiceNumber: string }>;
-  searchParams: Promise<{ c?: string | string[] | undefined }>;
+  searchParams: Promise<{
+    c?: string | string[] | undefined;
+    signature?: string | string[] | undefined;
+  }>;
 }) {
   const { invoiceNumber } = await params;
   const query = await searchParams;
   const accessCode = Array.isArray(query.c) ? query.c[0] : query.c;
+  const signatureStatus = Array.isArray(query.signature) ? query.signature[0] : query.signature;
   const decodedInvoiceNumber = decodeURIComponent(invoiceNumber);
 
   if (!isValidInvoiceAccessCode(decodedInvoiceNumber, accessCode || "")) {
@@ -143,6 +147,12 @@ export default async function PublicInvoicePage({
             </div>
           </div>
         </div>
+
+        {signatureStatus === "saved" ? (
+          <div className="border-b border-emerald-500/20 bg-emerald-50 px-6 py-4 text-sm font-bold text-emerald-800 sm:px-8">
+            Signature saved. Thank you.
+          </div>
+        ) : null}
 
         <div className="grid gap-6 border-b border-slate-200 px-6 py-6 sm:grid-cols-2 sm:px-8">
           <section>

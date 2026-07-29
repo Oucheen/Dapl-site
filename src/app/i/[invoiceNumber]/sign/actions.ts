@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { isValidInvoiceAccessCode } from "@/lib/invoice-public-link";
+import { getPublicInvoicePath, isValidInvoiceAccessCode } from "@/lib/invoice-public-link";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { getInvoiceByNumber } from "@/lib/supabase-invoices";
 import { saveInvoiceSignature } from "@/lib/supabase-invoice-signatures";
@@ -11,6 +11,13 @@ function getSignatureRedirect(invoiceNumber: string, accessCode: string, status:
   const params = new URLSearchParams({ c: accessCode, signature: status });
 
   return `/i/${encodeURIComponent(invoiceNumber)}/sign?${params.toString()}`;
+}
+
+function getSignedInvoiceRedirect(invoiceNumber: string) {
+  const path = getPublicInvoicePath(invoiceNumber);
+  const separator = path.includes("?") ? "&" : "?";
+
+  return `${path}${separator}signature=saved`;
 }
 
 export async function savePublicInvoiceSignatureAction(formData: FormData) {
@@ -60,5 +67,5 @@ export async function savePublicInvoiceSignatureAction(formData: FormData) {
   revalidatePath(`/i/${invoiceNumber}`);
   revalidatePath(`/i/${invoiceNumber}/sign`);
 
-  redirect(getSignatureRedirect(invoiceNumber, accessCode, "saved"));
+  redirect(getSignedInvoiceRedirect(invoiceNumber));
 }
