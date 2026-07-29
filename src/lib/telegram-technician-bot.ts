@@ -15,7 +15,7 @@ import {
   type InvoiceJobStatus,
   type InvoiceRecord,
 } from "@/lib/supabase-invoices";
-import { buildTechnicianReportUrl } from "@/lib/technician-report-links";
+import { buildTechnicianInvoiceUrl, buildTechnicianReportUrl } from "@/lib/technician-report-links";
 
 type TelegramUser = {
   id: number;
@@ -386,7 +386,7 @@ function buildJobMessage(invoice: InvoiceRecord) {
 function buildJobButtons(invoice: InvoiceRecord, technician: TelegramTechnician) {
   const siteUrl = getSiteUrl();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
-  const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, technician.telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
   const reportUrl = buildTechnicianReportUrl(invoice.id, technician.telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
     [

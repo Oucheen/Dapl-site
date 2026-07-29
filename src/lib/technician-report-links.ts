@@ -42,6 +42,17 @@ export function buildTechnicianReportUrl(invoiceId: string, telegramUserId: stri
   return `${siteUrl}/tech/report/${invoiceId}?t=${encodeURIComponent(token)}`;
 }
 
+export function buildTechnicianInvoiceUrl(invoiceId: string, telegramUserId: string, siteUrl = getSiteUrl()) {
+  const signature = sign(invoiceId, telegramUserId);
+
+  if (!signature) {
+    return "";
+  }
+
+  const token = `${telegramUserId}.${signature}`;
+  return `${siteUrl}/tech/invoice/${invoiceId}?t=${encodeURIComponent(token)}`;
+}
+
 export function verifyTechnicianReportToken(invoiceId: string, token: string | null | undefined) {
   const [telegramUserId, signature] = (token ?? "").split(".");
 

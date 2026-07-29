@@ -21,7 +21,7 @@ function getSignedInvoiceRedirect(invoiceNumber: string) {
 }
 
 function getSafeReturnTo(value: string) {
-  if (!value.startsWith("/admin/invoices/")) {
+  if (!value.startsWith("/admin/invoices/") && !value.startsWith("/tech/invoice/")) {
     return null;
   }
 
@@ -90,6 +90,9 @@ export async function savePublicInvoiceSignatureAction(formData: FormData) {
   revalidatePath(`/admin/invoices/${invoiceData.invoice.id}/pdf`);
   revalidatePath(`/i/${invoiceNumber}`);
   revalidatePath(`/i/${invoiceNumber}/sign`);
+  if (returnTo?.startsWith("/tech/invoice/")) {
+    revalidatePath(returnTo.split("?")[0] ?? returnTo);
+  }
 
   redirect(returnTo ? appendSignatureNotice(returnTo) : getSignedInvoiceRedirect(invoiceNumber));
 }

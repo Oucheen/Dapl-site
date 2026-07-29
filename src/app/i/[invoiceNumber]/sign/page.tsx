@@ -79,7 +79,7 @@ function getServiceScheduleLabel(invoice: { service_time?: string | null; servic
 }
 
 function getSafeReturnTo(value: string | undefined) {
-  if (!value?.startsWith("/admin/invoices/")) {
+  if (!value?.startsWith("/admin/invoices/") && !value?.startsWith("/tech/invoice/")) {
     return null;
   }
 

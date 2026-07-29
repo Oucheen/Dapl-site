@@ -10,7 +10,7 @@ import {
   type InvoiceRecord,
 } from "@/lib/supabase-invoices";
 import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
-import { verifyTechnicianReportToken } from "@/lib/technician-report-links";
+import { buildTechnicianInvoiceUrl, verifyTechnicianReportToken } from "@/lib/technician-report-links";
 import { submitTechnicianReport } from "./actions";
 import { ReportSavedActions } from "./report-saved-actions";
 import { SaveReportButton } from "./save-report-button";
@@ -374,7 +374,9 @@ export default async function TechnicianReportPage({
   const hasPreviousReport = Boolean(latestReportActivity);
   const storedPhotosByField = getStoredPhotosByField(invoiceActivities);
   const storedPhotoCount = storedPhotosByField.size;
-  const invoiceHref = `/admin/invoices/${invoice.id}`;
+  const invoiceHref =
+    buildTechnicianInvoiceUrl(invoice.id, telegramUserId, "") ||
+    `/tech/invoice/${invoice.id}?${new URLSearchParams({ t: token ?? "" }).toString()}`;
   const editReportHref = `/tech/report/${invoice.id}?${new URLSearchParams({
     t: token,
   }).toString()}`;

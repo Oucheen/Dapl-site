@@ -1,6 +1,6 @@
 import { getTelegramUserByTechnicianName } from "@/lib/supabase-telegram-users";
 import type { InvoiceJobStatus, InvoiceRecord } from "@/lib/supabase-invoices";
-import { buildTechnicianReportUrl } from "@/lib/technician-report-links";
+import { buildTechnicianInvoiceUrl, buildTechnicianReportUrl } from "@/lib/technician-report-links";
 
 const DEFAULT_SITE_URL = "https://www.daplappliance.com";
 
@@ -104,7 +104,7 @@ function buildJobNotificationMessage(invoice: InvoiceRecord) {
 function buildJobNotificationButtons(invoice: InvoiceRecord, telegramUserId: string) {
   const siteUrl = getSiteUrl();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
-  const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
   const reportUrl = buildTechnicianReportUrl(invoice.id, telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
     [
@@ -151,10 +151,10 @@ function buildJobStatusNotificationMessage(invoice: InvoiceRecord, jobStatus: In
     .join("\n");
 }
 
-function buildJobStatusNotificationButtons(invoice: InvoiceRecord) {
+function buildJobStatusNotificationButtons(invoice: InvoiceRecord, telegramUserId: string) {
   const siteUrl = getSiteUrl();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
-  const invoiceUrl = `${siteUrl}/admin/invoices/${invoice.id}`;
+  const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
   const buttons: InlineButton[][] = [
     [
       ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
@@ -233,6 +233,6 @@ export async function notifyTechnicianJobStatusChanged(invoice: InvoiceRecord, j
   return sendTelegram({
     chatId: telegramUser.user.telegram_user_id,
     text: buildJobStatusNotificationMessage(invoice, jobStatus),
-    replyMarkup: buildJobStatusNotificationButtons(invoice),
+    replyMarkup: buildJobStatusNotificationButtons(invoice, telegramUser.user.telegram_user_id),
   });
 }
