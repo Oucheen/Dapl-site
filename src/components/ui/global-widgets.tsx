@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { ChatLeadWidget } from "@/components/ui/chat-lead-widget";
 import { ContactWidget } from "@/components/ui/contact-widget";
 
-const HIDDEN_WIDGET_PATHS = ["/tech/report"];
+const HIDDEN_WIDGET_PATHS = ["/admin", "/i", "/tech/report", "/v"];
 
 export function GlobalWidgets() {
   const pathname = usePathname();
