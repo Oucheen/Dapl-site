@@ -7,6 +7,7 @@ import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { isPlaceholderCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
+import { getPublicInvoicePath } from "@/lib/invoice-public-link";
 import { getActivityActorName, listActivitiesForInvoice } from "@/lib/supabase-activity";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 import { InvoiceEmailSubmitButton } from "./invoice-email-submit-button";
@@ -22,6 +23,7 @@ import {
   calculateInvoicePaidAmount,
   getInvoiceById,
 } from "@/lib/supabase-invoices";
+import { getLatestInvoiceSignature } from "@/lib/supabase-invoice-signatures";
 import {
   addInvoiceItemAction,
   addInvoiceCheckAction,
@@ -648,7 +650,7 @@ export default async function InvoicePage({
   const customerEmail = isPlaceholderCustomerEmail(invoice.customer_email)
     ? null
     : invoice.customer_email;
-  const [activity, customerHistory, invoiceLead, partsData, checksData] = await Promise.all([
+  const [activity, customerHistory, invoiceLead, partsData, checksData, signature] = await Promise.all([
     listActivitiesForInvoice(invoice.id, 8),
     listCustomerHistory({
       phone: invoice.customer_phone,
@@ -658,6 +660,7 @@ export default async function InvoicePage({
     invoice.lead_id ? getSupabaseLeadById(invoice.lead_id) : Promise.resolve(null),
     listInvoiceParts(invoice.id),
     listInvoiceChecks(invoice.id),
+    getLatestInvoiceSignature(invoice.id),
   ]);
   const technicians = await getCrmTechnicianNames([invoice.assigned_technician]);
   const invoiceParts = partsData.parts;
@@ -704,6 +707,8 @@ export default async function InvoicePage({
   const technicianDayHref = invoice.service_date
     ? `/admin/technician?date=${encodeURIComponent(invoice.service_date)}${invoice.assigned_technician ? `&tech=${encodeURIComponent(invoice.assigned_technician)}` : ""}`
     : "/admin/technician";
+  const publicInvoicePath = getPublicInvoicePath(invoice.invoice_number);
+  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${publicInvoicePath.split("?")[1] ?? ""}`;
   const nextAction = getNextAction({
     invoice,
     amountDue,
@@ -1181,6 +1186,49 @@ export default async function InvoicePage({
               </div>
             </section>
 
+            {signature ? (
+              <section className="border-t border-border px-5 py-4 print:px-0 print:py-3 sm:px-7">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted print:text-[9px]">
+                      Customer acceptance
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-foreground print:text-[10px]">
+                      Signed by {signature.signer_name}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted print:text-[9px]">
+                      {formatDateTime(signature.signed_at)} ET. Customer accepted invoice details
+                      and terms electronically.
+                    </p>
+                  </div>
+                  <img
+                    src={signature.signature_data_url}
+                    alt="Customer signature"
+                    className="max-h-24 w-full max-w-xs rounded-xl border border-border bg-white object-contain p-2 print:max-h-16 print:max-w-[220px] print:p-1"
+                  />
+                </div>
+              </section>
+            ) : (
+              <section className="border-t border-border px-5 py-4 print:hidden sm:px-7">
+                <div className="rounded-xl border border-amber-500/25 bg-amber-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-800">
+                    Customer signature
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-amber-900">
+                    No customer signature is saved yet.
+                  </p>
+                  <Link
+                    href={signatureHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex rounded-lg bg-white px-4 py-2 text-xs font-bold text-primary transition hover:bg-slate-50"
+                  >
+                    Open signing page
+                  </Link>
+                </div>
+              </section>
+            )}
+
             {canManageInvoiceCharges ? (
               <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -1631,6 +1679,24 @@ export default async function InvoicePage({
               </Link>
               <p className="mt-2 text-xs leading-5 text-muted">
                 Generates a clean invoice PDF directly from CRM data.
+              </p>
+            </div>
+            <div className="mt-3">
+              <Link
+                href={signatureHref}
+                target="_blank"
+                rel="noreferrer"
+                className={`inline-flex w-full justify-center rounded-lg px-3 py-3 text-xs font-bold transition ${
+                  signature
+                    ? "border border-emerald-500/25 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                    : "border border-primary/15 bg-white text-primary hover:bg-primary/5"
+                }`}
+              >
+                {signature ? "Update customer signature" : "Get customer signature"}
+              </Link>
+              <p className="mt-2 text-xs leading-5 text-muted">
+                Opens a customer-friendly signing page. Signature does not change payment or invoice
+                status.
               </p>
             </div>
             {permissions.canSendInvoices ? (

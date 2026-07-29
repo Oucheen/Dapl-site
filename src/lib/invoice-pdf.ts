@@ -8,6 +8,7 @@ import {
   type InvoiceRecord,
   type InvoiceWithItems,
 } from "@/lib/supabase-invoices";
+import type { InvoiceSignatureRecord } from "@/lib/supabase-invoice-signatures";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 
 const BUSINESS_NAME = "DAPL Appliance Repair";
@@ -145,11 +146,30 @@ function createPdfBuffer(build: (doc: PDFKit.PDFDocument) => void) {
   });
 }
 
-export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEmail: string) {
+function getSignatureImageBuffer(signature: InvoiceSignatureRecord | null | undefined) {
+  const dataUrl = signature?.signature_data_url;
+
+  if (!dataUrl?.startsWith("data:image/png;base64,")) {
+    return null;
+  }
+
+  try {
+    return Buffer.from(dataUrl.slice("data:image/png;base64,".length), "base64");
+  } catch {
+    return null;
+  }
+}
+
+export async function renderInvoicePdf(
+  invoiceData: InvoiceWithItems,
+  businessEmail: string,
+  signature?: InvoiceSignatureRecord | null,
+) {
   const { invoice, items, payments } = invoiceData;
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
   const logoPath = path.join(process.cwd(), "public", "logo.jpg");
+  const signatureImage = getSignatureImageBuffer(signature);
 
   return createPdfBuffer((doc) => {
     if (existsSync(logoPath)) {
@@ -287,5 +307,30 @@ export async function renderInvoicePdf(invoiceData: InvoiceWithItems, businessEm
     y += 8;
     doc.font("Helvetica-Bold").fontSize(7.5).fillColor(PRIMARY).text("Note:", 48, y, { continued: true });
     doc.font("Helvetica").fillColor(MUTED).text(` ${INVOICE_TAX_NOTE}`, { width: 516 });
+
+    if (signature && signatureImage) {
+      y += doc.heightOfString(` ${INVOICE_TAX_NOTE}`, { width: 516 }) + 14;
+      drawRule(doc, y);
+      y += 14;
+      drawLabel(doc, "Customer acceptance", 48, y);
+      doc
+        .font("Helvetica")
+        .fontSize(7.5)
+        .fillColor(MUTED)
+        .text(`Signed by ${signature.signer_name} on ${formatDateTime(signature.signed_at)} ET`, 310, y, {
+          width: 254,
+          align: "right",
+        });
+      y += 16;
+      doc.image(signatureImage, 48, y, { fit: [185, 54] });
+      doc
+        .font("Helvetica")
+        .fontSize(7.5)
+        .fillColor(MUTED)
+        .text("Customer accepted invoice details and terms electronically.", 310, y + 14, {
+          width: 254,
+          align: "right",
+        });
+    }
   });
 }

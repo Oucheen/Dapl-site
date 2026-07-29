@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { getInvoiceById } from "@/lib/supabase-invoices";
+import { getLatestInvoiceSignature } from "@/lib/supabase-invoice-signatures";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,7 +30,8 @@ export async function GET(
 
   try {
     const businessEmail = process.env.CONTACT_TO_EMAIL || "dapl.appliance.repair@gmail.com";
-    const pdfBuffer = await renderInvoicePdf(invoiceData, businessEmail);
+    const signature = await getLatestInvoiceSignature(invoiceData.invoice.id);
+    const pdfBuffer = await renderInvoicePdf(invoiceData, businessEmail, signature);
     const filename = `${getSafeFilename(invoiceData.invoice.invoice_number)}.pdf`;
 
     return new Response(new Uint8Array(pdfBuffer), {

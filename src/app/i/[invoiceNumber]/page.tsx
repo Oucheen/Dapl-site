@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isValidInvoiceAccessCode } from "@/lib/invoice-public-link";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
@@ -8,6 +9,7 @@ import {
   getInvoiceByNumber,
   type InvoiceItemRecord,
 } from "@/lib/supabase-invoices";
+import { getLatestInvoiceSignature } from "@/lib/supabase-invoice-signatures";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,14 @@ function formatDate(value: string | null) {
     dateStyle: "medium",
     timeZone: CHARLOTTE_TIME_ZONE,
   }).format(getDateForCharlotteDisplay(value));
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(new Date(value));
 }
 
 function formatMoney(value: number | string | null | undefined) {
@@ -91,6 +101,7 @@ export default async function PublicInvoicePage({
   }
 
   const { invoice, items, payments } = invoiceData;
+  const signature = await getLatestInvoiceSignature(invoice.id);
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
   const discountAmount = Number(invoice.discount_amount ?? 0);
@@ -224,6 +235,41 @@ export default async function PublicInvoicePage({
               <span className="font-black text-primary">Amount due</span>
               <span className="font-black text-primary">{formatMoney(amountDue)}</span>
             </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            {signature ? (
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
+                  Customer signed
+                </p>
+                <img
+                  src={signature.signature_data_url}
+                  alt="Customer signature"
+                  className="mt-3 max-h-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
+                />
+                <p className="mt-3 text-sm font-semibold text-slate-700">
+                  Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Customer signature
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Review the invoice and sign after service is complete.
+                  </p>
+                </div>
+                <Link
+                  href={`/i/${encodeURIComponent(decodedInvoiceNumber)}/sign?c=${encodeURIComponent(accessCode || "")}`}
+                  className="inline-flex justify-center rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Review and sign
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 

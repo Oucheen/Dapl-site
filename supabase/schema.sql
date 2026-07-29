@@ -68,6 +68,16 @@ create table if not exists public.invoice_payments (
   note text
 );
 
+create table if not exists public.invoice_signatures (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  signed_at timestamptz not null default now(),
+  signer_name text not null,
+  signature_data_url text not null,
+  accepted_terms boolean not null default true
+);
+
 create table if not exists public.invoice_checks (
   id uuid primary key default gen_random_uuid(),
   invoice_id uuid not null references public.invoices(id) on delete cascade,
@@ -180,6 +190,8 @@ create index if not exists invoices_status_idx on public.invoices (status);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items (invoice_id);
 create index if not exists invoice_payments_invoice_id_payment_date_idx
   on public.invoice_payments (invoice_id, payment_date asc);
+create index if not exists invoice_signatures_invoice_id_signed_at_idx
+  on public.invoice_signatures (invoice_id, signed_at desc);
 create index if not exists invoice_checks_invoice_id_idx on public.invoice_checks (invoice_id);
 create index if not exists invoice_checks_status_received_at_idx
   on public.invoice_checks (status, received_at desc);
@@ -267,6 +279,7 @@ alter table public.leads enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.invoice_payments enable row level security;
+alter table public.invoice_signatures enable row level security;
 alter table public.invoice_checks enable row level security;
 alter table public.warehouse_parts enable row level security;
 alter table public.lead_activity enable row level security;
@@ -280,6 +293,7 @@ grant select, insert, update, delete on public.leads to service_role;
 grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
+grant select, insert, delete on public.invoice_signatures to service_role;
 grant select, insert, update, delete on public.invoice_checks to service_role;
 grant select, insert, update, delete on public.warehouse_parts to service_role;
 grant select, insert on public.lead_activity to service_role;

@@ -8,6 +8,7 @@ import {
 } from "@/lib/supabase-invoices";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
+import { getLatestInvoiceSignature } from "@/lib/supabase-invoice-signatures";
 
 type SendInvoiceEmailResult =
   | { ok: true; to: string }
@@ -231,7 +232,8 @@ export async function sendInvoiceEmail(
   let invoicePdf: Buffer;
 
   try {
-    invoicePdf = await renderInvoicePdf(invoiceData, replyToEmail);
+    const signature = await getLatestInvoiceSignature(invoiceData.invoice.id);
+    invoicePdf = await renderInvoicePdf(invoiceData, replyToEmail, signature);
   } catch (error) {
     console.error("Invoice email PDF attachment generation error:", error);
     return { ok: false, reason: "send_error" };
