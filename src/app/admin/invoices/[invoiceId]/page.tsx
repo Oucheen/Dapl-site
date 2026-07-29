@@ -1744,6 +1744,30 @@ export default async function InvoicePage({
 
                 <div className="grid gap-2 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div>
+                    <p className="font-bold text-foreground">Tech report</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Field notes, unit photos, model, and parts proof.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        hasTechnicianReport,
+                      )}`}
+                    >
+                      {hasTechnicianReport ? "Submitted" : "Missing"}
+                    </span>
+                    <Link
+                      href={technicianReportHref}
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Report page
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
                     <p className="font-bold text-foreground">Signature</p>
                     <p className="text-xs leading-5 text-muted">
                       Customer accepts the invoice and service terms.
@@ -1766,7 +1790,7 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="grid gap-2 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div>
                     <p className="font-bold text-foreground">Send invoice</p>
                     <p className="text-xs leading-5 text-muted">
@@ -1787,30 +1811,6 @@ export default async function InvoicePage({
                     >
                       Send
                     </a>
-                  </div>
-                </div>
-
-                <div className="grid gap-2 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <div>
-                    <p className="font-bold text-foreground">Tech report</p>
-                    <p className="text-xs leading-5 text-muted">
-                      Field notes, unit photos, model, and parts proof.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 sm:justify-end">
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
-                        hasTechnicianReport,
-                      )}`}
-                    >
-                      {hasTechnicianReport ? "Submitted" : "Missing"}
-                    </span>
-                    <Link
-                      href={technicianReportHref}
-                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
-                    >
-                      Report page
-                    </Link>
                   </div>
                 </div>
 
