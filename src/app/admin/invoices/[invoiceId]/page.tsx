@@ -24,6 +24,8 @@ import {
   getInvoiceById,
 } from "@/lib/supabase-invoices";
 import { getLatestInvoiceSignature } from "@/lib/supabase-invoice-signatures";
+import { getTelegramUserByTechnicianName } from "@/lib/supabase-telegram-users";
+import { buildTechnicianReportUrl } from "@/lib/technician-report-links";
 import {
   addInvoiceItemAction,
   addInvoiceCheckAction,
@@ -738,6 +740,13 @@ export default async function InvoicePage({
   const technicianDayHref = invoice.service_date
     ? `/admin/technician?date=${encodeURIComponent(invoice.service_date)}${invoice.assigned_technician ? `&tech=${encodeURIComponent(invoice.assigned_technician)}` : ""}`
     : "/admin/technician";
+  const telegramTechnician = invoice.assigned_technician
+    ? await getTelegramUserByTechnicianName(invoice.assigned_technician)
+    : null;
+  const directTechnicianReportHref = telegramTechnician?.user
+    ? buildTechnicianReportUrl(invoice.id, telegramTechnician.user.telegram_user_id, "")
+    : "";
+  const technicianReportHref = directTechnicianReportHref || technicianDayHref;
   const publicInvoicePath = getPublicInvoicePath(invoice.invoice_number);
   const signatureParams = new URLSearchParams(publicInvoicePath.split("?")[1] ?? "");
   signatureParams.set("returnTo", `/admin/invoices/${invoice.id}`);
@@ -1781,10 +1790,10 @@ export default async function InvoicePage({
                       {hasTechnicianReport ? "Submitted" : "Missing"}
                     </span>
                     <Link
-                      href={technicianDayHref}
+                      href={technicianReportHref}
                       className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
                     >
-                      Tech day
+                      Report page
                     </Link>
                   </div>
                 </div>
