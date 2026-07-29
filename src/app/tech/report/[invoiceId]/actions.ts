@@ -117,6 +117,14 @@ function getRetainedPhotoActivities(
   return [...retainedByField.values()];
 }
 
+async function requireActivityCreated(input: Parameters<typeof createLeadActivity>[0]) {
+  const created = await createLeadActivity(input);
+
+  if (!created) {
+    throw new Error(`Activity could not be saved: ${input.eventType}`);
+  }
+}
+
 export async function submitTechnicianReport(formData: FormData) {
   const invoiceId = getOptionalText(formData, "invoiceId");
   const token = getOptionalText(formData, "token");
@@ -205,8 +213,7 @@ export async function submitTechnicianReport(formData: FormData) {
       previousReportActivities,
       replacedPhotoFields,
     );
-
-    await deleteTechnicianReportPageActivities({ leadId, invoiceId });
+    const replacementStartedAt = new Date().toISOString();
 
     const reportDetails = [
       `Status: ${jobStatus.replaceAll("_", " ")}`,
@@ -217,7 +224,7 @@ export async function submitTechnicianReport(formData: FormData) {
       .filter(Boolean)
       .join("\n");
 
-    await createLeadActivity({
+    await requireActivityCreated({
       leadId,
       invoiceId,
       eventType: "telegram_visit_report_completed",
@@ -240,7 +247,7 @@ export async function submitTechnicianReport(formData: FormData) {
     });
 
     if (failedPhotoReasons.length) {
-      await createLeadActivity({
+      await requireActivityCreated({
         leadId,
         invoiceId,
         eventType: "telegram_report_photo_upload_failed",
@@ -260,7 +267,7 @@ export async function submitTechnicianReport(formData: FormData) {
     }
 
     for (const photo of uploadedPhotos) {
-      await createLeadActivity({
+      await requireActivityCreated({
         leadId,
         invoiceId,
         eventType: "telegram_report_photo",
@@ -286,7 +293,7 @@ export async function submitTechnicianReport(formData: FormData) {
     }
 
     for (const activity of retainedPhotoActivities) {
-      await createLeadActivity({
+      await requireActivityCreated({
         leadId,
         invoiceId,
         eventType: activity.event_type,
@@ -297,7 +304,7 @@ export async function submitTechnicianReport(formData: FormData) {
     }
 
     if (partUsed) {
-      await createLeadActivity({
+      await requireActivityCreated({
         leadId,
         invoiceId,
         eventType: "telegram_report_own_part",
@@ -324,6 +331,12 @@ export async function submitTechnicianReport(formData: FormData) {
         },
       });
     }
+
+    await deleteTechnicianReportPageActivities({
+      leadId,
+      invoiceId,
+      createdBefore: replacementStartedAt,
+    });
 
     revalidatePath(`/admin/leads/${leadId}`);
     revalidatePath(`/admin/invoices/${invoiceId}`);

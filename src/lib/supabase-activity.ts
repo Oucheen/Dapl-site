@@ -78,7 +78,7 @@ export async function createLeadActivity(input: LeadActivityInput) {
   const config = getSupabaseConfig();
 
   if (!config || !isUuid(input.leadId)) {
-    return;
+    return false;
   }
 
   try {
@@ -117,20 +117,25 @@ export async function createLeadActivity(input: LeadActivityInput) {
       console.error(
         `Supabase activity insert failed: ${response.status} ${details}`,
       );
+      return false;
     }
+
+    return true;
   } catch (error) {
     console.error("Supabase activity insert error:", error);
+    return false;
   }
 }
 
 export async function deleteTechnicianReportPageActivities(input: {
+  createdBefore?: string;
   leadId: string;
   invoiceId: string;
 }) {
   const config = getSupabaseConfig();
 
   if (!config || !isUuid(input.leadId) || !isUuid(input.invoiceId)) {
-    return;
+    return false;
   }
 
   const params = new URLSearchParams({
@@ -138,6 +143,10 @@ export async function deleteTechnicianReportPageActivities(input: {
     invoice_id: `eq.${input.invoiceId}`,
     "metadata->>source": "eq.technician_report_page",
   });
+
+  if (input.createdBefore) {
+    params.set("created_at", `lt.${input.createdBefore}`);
+  }
 
   try {
     const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
@@ -153,9 +162,13 @@ export async function deleteTechnicianReportPageActivities(input: {
       console.error(
         `Supabase technician report activity delete failed: ${response.status} ${details}`,
       );
+      return false;
     }
+
+    return true;
   } catch (error) {
     console.error("Supabase technician report activity delete error:", error);
+    return false;
   }
 }
 
