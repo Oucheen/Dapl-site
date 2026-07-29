@@ -45,6 +45,20 @@ export function SignaturePadFields({
       context.lineWidth = 2.4;
       context.strokeStyle = "#0b1d3a";
     }
+
+    const preventCanvasTouchScroll = (event: TouchEvent) => {
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    };
+
+    canvas.addEventListener("touchstart", preventCanvasTouchScroll, { passive: false });
+    canvas.addEventListener("touchmove", preventCanvasTouchScroll, { passive: false });
+
+    return () => {
+      canvas.removeEventListener("touchstart", preventCanvasTouchScroll);
+      canvas.removeEventListener("touchmove", preventCanvasTouchScroll);
+    };
   }, []);
 
   function getPoint(event: React.PointerEvent<HTMLCanvasElement>) {
@@ -62,6 +76,8 @@ export function SignaturePadFields({
   }
 
   function startDrawing(event: React.PointerEvent<HTMLCanvasElement>) {
+    event.preventDefault();
+
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
 
@@ -81,6 +97,8 @@ export function SignaturePadFields({
     if (!isDrawing) {
       return;
     }
+
+    event.preventDefault();
 
     const context = canvasRef.current?.getContext("2d");
 
