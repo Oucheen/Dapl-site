@@ -304,10 +304,10 @@ export default async function TechnicianInvoicePage({
   const reportUrl = buildTechnicianReportUrl(invoice.id, telegramUser.user.telegram_user_id, "");
   const publicInvoicePath = getPublicInvoicePath(invoice.invoice_number);
   const publicInvoiceShortPath = getShortPublicInvoicePath(invoice.invoice_number);
-  const returnTo = `/tech/invoice/${invoice.id}?${new URLSearchParams({ t: token ?? "" }).toString()}`;
+  const returnTo = `/tech/invoice/${invoice.id}?${new URLSearchParams({ t: token ?? "" }).toString()}#signature`;
   const signatureParams = new URLSearchParams(publicInvoicePath.split("?")[1] ?? "");
   signatureParams.set("returnTo", returnTo);
-  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${signatureParams.toString()}`;
+  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${signatureParams.toString()}#signature-form`;
 
   return (
     <main className="min-h-screen bg-slate-50 px-3 py-4 pb-28 text-foreground sm:px-6">
@@ -757,7 +757,7 @@ export default async function TechnicianInvoicePage({
         </section>
 
         {signature ? (
-          <section className="rounded-2xl border border-emerald-500/20 bg-emerald-50 p-4 shadow-sm">
+          <section id="signature" className="scroll-mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-50 p-4 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Customer signed</p>
             <p className="mt-2 text-sm font-bold text-emerald-950">
               Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET for {formatMoney(invoice.total)}.

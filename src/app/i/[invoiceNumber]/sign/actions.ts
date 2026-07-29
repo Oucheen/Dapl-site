@@ -29,9 +29,10 @@ function getSafeReturnTo(value: string) {
 }
 
 function appendSignatureNotice(path: string) {
-  const separator = path.includes("?") ? "&" : "?";
+  const [pathWithoutHash, hash] = path.split("#", 2);
+  const separator = pathWithoutHash.includes("?") ? "&" : "?";
 
-  return `${path}${separator}notice=signature_saved`;
+  return `${pathWithoutHash}${separator}notice=signature_saved${hash ? `#${hash}` : ""}`;
 }
 
 function formatMoney(value: number | string | null | undefined) {

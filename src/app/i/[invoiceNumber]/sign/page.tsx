@@ -211,14 +211,16 @@ export default async function PublicInvoiceSignaturePage({
             signature does not mark the invoice paid or change the invoice status automatically.
           </div>
 
-          <SignaturePadFields
-            action={savePublicInvoiceSignatureAction}
-            defaultSignerName={invoice.customer_name}
-            invoiceNumber={decodedInvoiceNumber}
-            invoiceTotalLabel={invoiceTotalLabel}
-            accessCode={accessCode || ""}
-            returnTo={returnTo ?? undefined}
-          />
+          <div id="signature-form" className="scroll-mt-4">
+            <SignaturePadFields
+              action={savePublicInvoiceSignatureAction}
+              defaultSignerName={invoice.customer_name}
+              invoiceNumber={decodedInvoiceNumber}
+              invoiceTotalLabel={invoiceTotalLabel}
+              accessCode={accessCode || ""}
+              returnTo={returnTo ?? undefined}
+            />
+          </div>
 
           <Link
             href={returnTo ?? getPublicInvoicePath(decodedInvoiceNumber)}
