@@ -97,10 +97,6 @@ export async function listCustomerHistory({
   }
 
   const [leads, invoices] = await Promise.all([listSupabaseLeads(200), listInvoices(200)]);
-  const matchedLeads = leads
-    .filter((lead) => lead.id !== excludeLeadId)
-    .filter((lead) => hasCustomerMatch({ phone: lead.phone, email: lead.email }, phoneKey, emailKey))
-    .map(leadToHistoryItem);
   const matchedInvoices = invoices
     .filter((invoice) => invoice.id !== excludeInvoiceId)
     .filter((invoice) =>
@@ -113,9 +109,19 @@ export async function listCustomerHistory({
         emailKey,
       ),
     )
-    .map(invoiceToHistoryItem);
+  const invoiceLeadIds = new Set(
+    matchedInvoices
+      .map((invoice) => invoice.lead_id)
+      .filter((leadId): leadId is string => Boolean(leadId)),
+  );
+  const matchedLeads = leads
+    .filter((lead) => lead.id !== excludeLeadId)
+    .filter((lead) => !invoiceLeadIds.has(lead.id))
+    .filter((lead) => hasCustomerMatch({ phone: lead.phone, email: lead.email }, phoneKey, emailKey))
+    .map(leadToHistoryItem);
+  const matchedInvoiceItems = matchedInvoices.map(invoiceToHistoryItem);
 
-  return [...matchedLeads, ...matchedInvoices]
+  return [...matchedLeads, ...matchedInvoiceItems]
     .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
     .slice(0, limit);
 }
