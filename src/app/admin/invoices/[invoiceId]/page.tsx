@@ -488,6 +488,14 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "signature_saved") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Customer signature saved",
+      body: "The customer signed the invoice and service terms.",
+    };
+  }
+
   if (status === "items_saved") {
     return {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
@@ -731,7 +739,9 @@ export default async function InvoicePage({
     ? `/admin/technician?date=${encodeURIComponent(invoice.service_date)}${invoice.assigned_technician ? `&tech=${encodeURIComponent(invoice.assigned_technician)}` : ""}`
     : "/admin/technician";
   const publicInvoicePath = getPublicInvoicePath(invoice.invoice_number);
-  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${publicInvoicePath.split("?")[1] ?? ""}`;
+  const signatureParams = new URLSearchParams(publicInvoicePath.split("?")[1] ?? "");
+  signatureParams.set("returnTo", `/admin/invoices/${invoice.id}`);
+  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${signatureParams.toString()}`;
   const nextAction = getNextAction({
     invoice,
     amountDue,

@@ -78,6 +78,14 @@ function getServiceScheduleLabel(invoice: { service_time?: string | null; servic
   return serviceTime || invoice.service_window || "Not set";
 }
 
+function getSafeReturnTo(value: string | undefined) {
+  if (!value?.startsWith("/admin/invoices/")) {
+    return null;
+  }
+
+  return value;
+}
+
 export default async function PublicInvoiceSignaturePage({
   params,
   searchParams,
@@ -86,12 +94,14 @@ export default async function PublicInvoiceSignaturePage({
   searchParams: Promise<{
     c?: string | string[] | undefined;
     signature?: string | string[] | undefined;
+    returnTo?: string | string[] | undefined;
   }>;
 }) {
   const { invoiceNumber } = await params;
   const query = await searchParams;
   const accessCode = Array.isArray(query.c) ? query.c[0] : query.c;
   const signatureStatus = Array.isArray(query.signature) ? query.signature[0] : query.signature;
+  const returnTo = getSafeReturnTo(Array.isArray(query.returnTo) ? query.returnTo[0] : query.returnTo);
   const decodedInvoiceNumber = decodeURIComponent(invoiceNumber);
 
   if (!isValidInvoiceAccessCode(decodedInvoiceNumber, accessCode || "")) {
@@ -201,10 +211,11 @@ export default async function PublicInvoiceSignaturePage({
             defaultSignerName={invoice.customer_name}
             invoiceNumber={decodedInvoiceNumber}
             accessCode={accessCode || ""}
+            returnTo={returnTo ?? undefined}
           />
 
           <Link
-            href={getPublicInvoicePath(decodedInvoiceNumber)}
+            href={returnTo ?? getPublicInvoicePath(decodedInvoiceNumber)}
             className="mt-4 inline-flex w-full justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-primary transition hover:bg-slate-50"
           >
             Back to invoice

@@ -20,9 +20,24 @@ function getSignedInvoiceRedirect(invoiceNumber: string) {
   return `${path}${separator}signature=saved`;
 }
 
+function getSafeReturnTo(value: string) {
+  if (!value.startsWith("/admin/invoices/")) {
+    return null;
+  }
+
+  return value;
+}
+
+function appendSignatureNotice(path: string) {
+  const separator = path.includes("?") ? "&" : "?";
+
+  return `${path}${separator}notice=signature_saved`;
+}
+
 export async function savePublicInvoiceSignatureAction(formData: FormData) {
   const invoiceNumber = String(formData.get("invoiceNumber") || "").trim();
   const accessCode = String(formData.get("accessCode") || "").trim();
+  const returnTo = getSafeReturnTo(String(formData.get("returnTo") || "").trim());
   const signerName = String(formData.get("signerName") || "").trim();
   const signatureDataUrl = String(formData.get("signatureDataUrl") || "").trim();
   const acceptedTerms = String(formData.get("acceptedTerms") || "") === "yes";
@@ -67,5 +82,5 @@ export async function savePublicInvoiceSignatureAction(formData: FormData) {
   revalidatePath(`/i/${invoiceNumber}`);
   revalidatePath(`/i/${invoiceNumber}/sign`);
 
-  redirect(getSignedInvoiceRedirect(invoiceNumber));
+  redirect(returnTo ? appendSignatureNotice(returnTo) : getSignedInvoiceRedirect(invoiceNumber));
 }

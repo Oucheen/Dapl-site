@@ -7,6 +7,7 @@ type SignaturePadFieldsProps = {
   defaultSignerName: string;
   invoiceNumber: string;
   accessCode: string;
+  returnTo?: string;
 };
 
 export function SignaturePadFields({
@@ -14,6 +15,7 @@ export function SignaturePadFields({
   defaultSignerName,
   invoiceNumber,
   accessCode,
+  returnTo,
 }: SignaturePadFieldsProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -132,6 +134,7 @@ export function SignaturePadFields({
     <form action={action} onSubmit={prepareSubmit} className="grid gap-5">
       <input type="hidden" name="invoiceNumber" value={invoiceNumber} />
       <input type="hidden" name="accessCode" value={accessCode} />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       <input type="hidden" name="signatureDataUrl" />
       <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
         Customer name
