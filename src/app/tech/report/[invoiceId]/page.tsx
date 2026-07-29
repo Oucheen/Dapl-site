@@ -36,6 +36,24 @@ const ERROR_MESSAGES: Record<string, string> = {
 const WARNING_MESSAGES: Record<string, string> = {
   photo_upload_failed: "Report was saved, but one or more photos could not upload. Please try smaller JPG/PNG photos or send them in Telegram.",
 };
+const PHOTO_UPLOAD_FIELDS = [
+  { name: "unitPhoto", label: "Unit photo", accept: "image/*" },
+  { name: "serialPhoto", label: "Model / serial photo", accept: "image/*" },
+  { name: "partPhoto", label: "Part photo", accept: "image/*" },
+  {
+    name: "receiptPhoto",
+    label: "Receipt / invoice",
+    accept: "image/*,application/pdf,.pdf",
+  },
+];
+
+type StoredReportPhoto = {
+  contentType: string;
+  field: string;
+  label: string;
+  originalName: string;
+  path: string;
+};
 
 function ReportUnavailable({ message }: { message: string }) {
   return (
@@ -146,6 +164,127 @@ function getReportJobStatus(
   return "in_progress";
 }
 
+function getStorageReportPhoto(activity: LeadActivityRecord) {
+  if (
+    activity.event_type !== "telegram_report_photo" ||
+    activity.metadata?.source !== "technician_report_page"
+  ) {
+    return null;
+  }
+
+  const photo = activity.metadata.storagePhoto;
+
+  if (!photo || typeof photo !== "object") {
+    return null;
+  }
+
+  const path = (photo as { path?: unknown }).path;
+  const field = (photo as { field?: unknown }).field;
+  const label = (photo as { label?: unknown }).label;
+  const contentType = (photo as { contentType?: unknown }).contentType;
+  const originalName = (photo as { originalName?: unknown }).originalName;
+
+  if (
+    typeof path !== "string" ||
+    !path.trim() ||
+    typeof field !== "string" ||
+    !field.trim()
+  ) {
+    return null;
+  }
+
+  return {
+    path,
+    field,
+    label: typeof label === "string" ? label : field,
+    contentType: typeof contentType === "string" ? contentType : "",
+    originalName: typeof originalName === "string" ? originalName : "",
+  };
+}
+
+function getStoredPhotosByField(activities: LeadActivityRecord[]) {
+  const photosByField = new Map<string, StoredReportPhoto>();
+
+  for (const activity of activities) {
+    const photo = getStorageReportPhoto(activity);
+
+    if (!photo || photosByField.has(photo.field)) {
+      continue;
+    }
+
+    photosByField.set(photo.field, photo);
+  }
+
+  return photosByField;
+}
+
+function getTechnicianPhotoHref(invoiceId: string, token: string, path: string) {
+  return `/tech/report/${invoiceId}/photo/${path
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}?t=${encodeURIComponent(token)}`;
+}
+
+function ReportPhotoInput({
+  accept,
+  currentPhoto,
+  invoiceId,
+  label,
+  name,
+  token,
+}: {
+  accept: string;
+  currentPhoto?: StoredReportPhoto;
+  invoiceId: string;
+  label: string;
+  name: string;
+  token: string;
+}) {
+  const photoHref = currentPhoto
+    ? getTechnicianPhotoHref(invoiceId, token, currentPhoto.path)
+    : "";
+  const isPdf = currentPhoto?.contentType === "application/pdf";
+
+  return (
+    <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
+      {label}
+      {currentPhoto ? (
+        <div className="overflow-hidden rounded-lg border border-emerald-600/20 bg-emerald-50">
+          {photoHref && !isPdf ? (
+            <img
+              src={photoHref}
+              alt={currentPhoto.label}
+              className="aspect-[4/3] w-full bg-white object-cover"
+              loading="lazy"
+            />
+          ) : null}
+          <div className="p-3 text-xs leading-5">
+            <p className="font-black text-emerald-900">Current file saved</p>
+            <p className="mt-1 break-words font-semibold text-emerald-800">
+              {currentPhoto.originalName || currentPhoto.label}
+            </p>
+            {photoHref ? (
+              <Link
+                href={photoHref}
+                target="_blank"
+                className="mt-2 inline-flex rounded-lg border border-emerald-700/20 bg-white px-3 py-2 font-black text-emerald-900 transition hover:bg-emerald-100"
+              >
+                Open current file
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      <input
+        type="file"
+        name={name}
+        accept={accept}
+        className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+      />
+    </label>
+  );
+}
+
 function getMoneyPrefill(value: unknown) {
   if (typeof value !== "number" || !Number.isFinite(value) || value === 0) {
     return "";
@@ -232,6 +371,7 @@ export default async function TechnicianReportPage({
   );
   const defaultPartNote = getMetadataText(latestPartActivity?.metadata, "partNote");
   const hasPreviousReport = Boolean(latestReportActivity);
+  const storedPhotosByField = getStoredPhotosByField(invoiceActivities);
   const invoiceHref = `/admin/invoices/${invoice.id}`;
   const editReportHref = `/tech/report/${invoice.id}?${new URLSearchParams({
     t: token,
@@ -370,42 +510,17 @@ export default async function TechnicianReportPage({
                 </p>
               ) : null}
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
-                  Unit photo
-                  <input
-                    type="file"
-                    name="unitPhoto"
-                    accept="image/*"
-                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
+                {PHOTO_UPLOAD_FIELDS.map((photoField) => (
+                  <ReportPhotoInput
+                    key={photoField.name}
+                    accept={photoField.accept}
+                    currentPhoto={storedPhotosByField.get(photoField.name)}
+                    invoiceId={invoice.id}
+                    label={photoField.label}
+                    name={photoField.name}
+                    token={token}
                   />
-                </label>
-                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
-                  Model / serial photo
-                  <input
-                    type="file"
-                    name="serialPhoto"
-                    accept="image/*"
-                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
-                  />
-                </label>
-                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
-                  Part photo
-                  <input
-                    type="file"
-                    name="partPhoto"
-                    accept="image/*"
-                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
-                  />
-                </label>
-                <label className="grid gap-2 rounded-xl bg-white p-3 text-sm font-bold text-foreground">
-                  Receipt / invoice
-                  <input
-                    type="file"
-                    name="receiptPhoto"
-                    accept="image/*,application/pdf,.pdf"
-                    className="w-full rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-2 file:text-xs file:font-black file:text-primary-foreground"
-                  />
-                </label>
+                ))}
               </div>
             </div>
           </div>
