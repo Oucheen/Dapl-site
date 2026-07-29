@@ -12,8 +12,8 @@ const DEFAULT_REVIEW_URL =
 
 export const FALLBACK_REVIEW_SUMMARY: ReviewSummary = {
   rating: "5.0",
-  reviewCount: "120+",
-  reviewCountValue: 120,
+  reviewCount: "138+",
+  reviewCountValue: 138,
   reviewUrl: DEFAULT_REVIEW_URL,
   source: "fallback",
 };
