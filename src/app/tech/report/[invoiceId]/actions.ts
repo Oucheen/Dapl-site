@@ -340,10 +340,9 @@ export async function submitTechnicianReport(formData: FormData) {
 
     revalidatePath(`/admin/leads/${leadId}`);
     revalidatePath(`/admin/invoices/${invoiceId}`);
-    redirectTo = buildReportRedirect(invoiceId, token, {
-      saved: "1",
-      ...(failedPhotoLabels.length ? { warning: "photo_upload_failed" } : {}),
-    });
+    redirectTo = `/admin/invoices/${invoiceId}?notice=${
+      failedPhotoLabels.length ? "tech_report_saved_photo_warning" : "tech_report_saved"
+    }`;
   } catch (error) {
     if (error instanceof ReportSubmitError) {
       redirectTo = buildReportRedirect(invoiceId, token, {

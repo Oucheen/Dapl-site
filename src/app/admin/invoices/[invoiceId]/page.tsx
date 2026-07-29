@@ -618,6 +618,22 @@ function getActionNotice(status: string | undefined): PageNotice | null {
     };
   }
 
+  if (status === "tech_report_saved") {
+    return {
+      className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
+      title: "Technician report saved",
+      body: "Field notes, photos, and technician updates were saved to this customer record.",
+    };
+  }
+
+  if (status === "tech_report_saved_photo_warning") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "Technician report saved",
+      body: "The report was saved, but one or more photos could not upload. Try smaller JPG/PNG photos if anything is missing.",
+    };
+  }
+
   if (status === "invoice_send_requested") {
     return {
       className: "border-emerald-500/20 bg-emerald-50 text-emerald-800",
