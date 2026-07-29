@@ -381,6 +381,12 @@ function getNextAction(input: {
   };
 }
 
+function getWorkflowStatusClass(isComplete: boolean) {
+  return isComplete
+    ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
+    : "border-amber-500/25 bg-amber-50 text-amber-800";
+}
+
 function getEmailNotice(status: string | undefined, customerEmail: string | null): PageNotice | null {
   if (status === "sent") {
     return {
@@ -651,7 +657,7 @@ export default async function InvoicePage({
     ? null
     : invoice.customer_email;
   const [activity, customerHistory, invoiceLead, partsData, checksData, signature] = await Promise.all([
-    listActivitiesForInvoice(invoice.id, 8),
+    listActivitiesForInvoice(invoice.id, 30),
     listCustomerHistory({
       phone: invoice.customer_phone,
       email: customerEmail,
@@ -694,6 +700,23 @@ export default async function InvoicePage({
   const estimatedJobProfit = paidAmount - knownPartsCost;
   const hasPayments = payments.length > 0;
   const isInvoiceClosed = CLOSED_INVOICE_STATUSES.has(invoice.status);
+  const jobStatus = getJobStatus(invoice);
+  const hasCustomerChargeAmount = items.some((item) => getLineTotalAmount(item) > 0);
+  const hasTechnicianReport = activity.some(
+    (item) =>
+      item.event_type === "telegram_visit_report_completed" ||
+      item.event_type === "telegram_report_own_part" ||
+      item.event_type === "telegram_report_photo" ||
+      item.metadata?.source === "technician_report_page",
+  );
+  const hasInvoiceBeenSent =
+    invoice.status === "sent" ||
+    invoice.status === "paid" ||
+    activity.some(
+      (item) => item.event_type === "invoice_email_sent" || item.event_type === "invoice_sms_sent",
+    );
+  const isJobDone = jobStatus === "done" || invoice.status === "paid";
+  const isBalanceCollected = amountDue <= 0;
   const isManualInvoice = invoiceLead?.lead_source === "manual-admin";
   const canEditOpenManualInvoice = isManualInvoice && !isInvoiceClosed;
   const canManageInvoiceCharges =
@@ -896,7 +919,7 @@ export default async function InvoicePage({
             </div>
 
             {!canManageInvoiceCharges ? (
-              <section className="px-5 py-5 print:hidden sm:px-7">
+              <section id="invoice-line-items" className="px-5 py-5 print:hidden sm:px-7">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
@@ -961,7 +984,11 @@ export default async function InvoicePage({
                 </div>
               </section>
             ) : (
-              <form action={updateInvoiceItemsAction} className="px-5 py-5 print:hidden sm:px-7">
+              <form
+                id="invoice-line-items"
+                action={updateInvoiceItemsAction}
+                className="px-5 py-5 print:hidden sm:px-7"
+              >
                 <input type="hidden" name="invoiceId" value={invoice.id} />
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -1634,6 +1661,153 @@ export default async function InvoicePage({
               >
                 {nextAction.cta}
               </a>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-border bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Technician workflow
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    Field checklist before closing this job.
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${
+                    isJobDone
+                      ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
+                      : "border-slate-300 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  {isJobDone ? "Done" : "Open"}
+                </span>
+              </div>
+
+              <div className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border">
+                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="font-bold text-foreground">Charges</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Customer-facing service lines and prices.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        hasCustomerChargeAmount,
+                      )}`}
+                    >
+                      {hasCustomerChargeAmount ? "Ready" : "Needs price"}
+                    </span>
+                    <a
+                      href="#invoice-line-items"
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Edit
+                    </a>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="font-bold text-foreground">Signature</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Customer accepts the invoice and service terms.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        Boolean(signature),
+                      )}`}
+                    >
+                      {signature ? "Signed" : "Missing"}
+                    </span>
+                    <Link
+                      href={signatureHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Open
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="font-bold text-foreground">Send invoice</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Email or SMS was sent from this invoice.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        hasInvoiceBeenSent,
+                      )}`}
+                    >
+                      {hasInvoiceBeenSent ? "Sent" : "Not sent"}
+                    </span>
+                    <a
+                      href="#invoice-controls"
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Send
+                    </a>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="font-bold text-foreground">Tech report</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Field notes, unit photos, model, and parts proof.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        hasTechnicianReport,
+                      )}`}
+                    >
+                      {hasTechnicianReport ? "Submitted" : "Missing"}
+                    </span>
+                    <Link
+                      href={technicianDayHref}
+                      className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Tech day
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div>
+                    <p className="font-bold text-foreground">Payment / close</p>
+                    <p className="text-xs leading-5 text-muted">
+                      Balance collected, then job can be completed.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        isBalanceCollected,
+                      )}`}
+                    >
+                      {isBalanceCollected ? "Paid" : "Due"}
+                    </span>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
+                        isJobDone,
+                      )}`}
+                    >
+                      {isJobDone ? "Closed" : "Open"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 rounded-xl border border-border bg-slate-50 p-4">
