@@ -161,12 +161,17 @@ create table if not exists public.admin_users (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   name text not null,
-  role text not null default 'staff' check (role in ('staff', 'manager', 'admin', 'boss', 'owner')),
+  role text not null default 'staff',
   password_hash text not null,
   password_salt text not null,
   is_active boolean not null default true,
   note text
 );
+
+alter table public.admin_users drop constraint if exists admin_users_role_check;
+alter table public.admin_users
+  add constraint admin_users_role_check
+  check (role in ('staff', 'technician', 'manager', 'admin', 'boss', 'owner'));
 
 alter table public.leads
   add column if not exists admin_notes text,

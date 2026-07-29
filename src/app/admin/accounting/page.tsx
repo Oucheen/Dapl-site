@@ -146,6 +146,10 @@ export default async function AccountingAdminPage({
     redirect("/admin/leads/login");
   }
 
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
+
   const params = await searchParams;
   const monthRange = getMonthRange(getQueryValue(params?.month));
   const notice = getNotice(params?.notice);

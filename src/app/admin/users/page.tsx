@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 const ROLES: { value: CrmUserRole; label: string; description: string }[] = [
   { value: "staff", label: "Staff", description: "Operational access with protected billing limits" },
+  { value: "technician", label: "Technician", description: "Field access: invoices, reports, signatures, and sending" },
   { value: "manager", label: "Manager", description: "Elevated invoice and accounting access" },
   { value: "admin", label: "Admin", description: "Elevated invoice and accounting access" },
   { value: "boss", label: "Boss", description: "Elevated invoice and accounting access" },
@@ -21,6 +22,7 @@ const ROLES: { value: CrmUserRole; label: string; description: string }[] = [
 
 const roleClasses: Record<CrmUserRole, string> = {
   staff: "border-slate-300 bg-slate-100 text-slate-700",
+  technician: "border-cyan-500/25 bg-cyan-50 text-cyan-800",
   manager: "border-sky-500/25 bg-sky-50 text-sky-800",
   admin: "border-indigo-500/25 bg-indigo-50 text-indigo-800",
   boss: "border-amber-500/25 bg-amber-50 text-amber-800",

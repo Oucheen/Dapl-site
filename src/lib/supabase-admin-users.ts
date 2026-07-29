@@ -1,6 +1,6 @@
 import { pbkdf2Sync, randomBytes, timingSafeEqual } from "crypto";
 
-export type CrmUserRole = "staff" | "manager" | "admin" | "boss" | "owner";
+export type CrmUserRole = "staff" | "technician" | "manager" | "admin" | "boss" | "owner";
 
 export type CrmUserRecord = {
   id: string;
@@ -23,7 +23,7 @@ export type CrmUserInput = {
 };
 
 const DEFAULT_ADMIN_USERS_TABLE = "admin_users";
-const ALLOWED_ROLES: CrmUserRole[] = ["staff", "manager", "admin", "boss", "owner"];
+const ALLOWED_ROLES: CrmUserRole[] = ["staff", "technician", "manager", "admin", "boss", "owner"];
 const PASSWORD_ITERATIONS = 120_000;
 const PASSWORD_KEY_LENGTH = 32;
 const PASSWORD_DIGEST = "sha256";
@@ -141,7 +141,7 @@ export const adminUsersTableSql = `create table if not exists public.admin_users
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   name text not null,
-  role text not null default 'staff' check (role in ('staff', 'manager', 'admin', 'boss', 'owner')),
+  role text not null default 'staff',
   password_hash text not null,
   password_salt text not null,
   is_active boolean not null default true,
@@ -150,6 +150,11 @@ export const adminUsersTableSql = `create table if not exists public.admin_users
 
 create index if not exists admin_users_active_idx on public.admin_users (is_active);
 create index if not exists admin_users_role_idx on public.admin_users (role);
+
+alter table public.admin_users drop constraint if exists admin_users_role_check;
+alter table public.admin_users
+  add constraint admin_users_role_check
+  check (role in ('staff', 'technician', 'manager', 'admin', 'boss', 'owner'));
 
 drop trigger if exists set_admin_users_updated_at on public.admin_users;
 

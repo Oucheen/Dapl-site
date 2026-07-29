@@ -86,6 +86,10 @@ export default async function ChecksPage({
     redirect("/admin/leads/login");
   }
 
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
+
   const params = await searchParams;
   const selectedStatus = getStatusFilter(params?.status);
   let checksData: Awaited<ReturnType<typeof listInvoiceChecksWithInvoices>> = {

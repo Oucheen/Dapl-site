@@ -10,7 +10,7 @@ import {
   type CrmUserRole,
 } from "@/lib/supabase-admin-users";
 
-const ALLOWED_ROLES: CrmUserRole[] = ["staff", "manager", "admin", "boss", "owner"];
+const ALLOWED_ROLES: CrmUserRole[] = ["staff", "technician", "manager", "admin", "boss", "owner"];
 
 async function requireUsersAdmin() {
   const permissions = await getCurrentAdminPermissions();

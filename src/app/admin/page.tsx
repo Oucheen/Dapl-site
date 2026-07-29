@@ -90,6 +90,12 @@ const adminLinks = [
 ];
 
 const adminLinkGroups = ["Operations", "Money", "Settings"];
+const TECHNICIAN_ADMIN_LINKS = new Set([
+  "/admin/search",
+  "/admin/schedule",
+  "/admin/technician",
+  "/admin/invoices",
+]);
 
 export const dynamic = "force-dynamic";
 
@@ -230,7 +236,11 @@ export default async function AdminPage() {
     .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
   const reminders = getCrmReminders({ invoices, payments, parts: invoiceParts, today }).slice(0, 8);
   const visibleAdminLinks =
-    permissions.user.role === "owner" ? adminLinks : adminLinks.filter((item) => item.group !== "Settings");
+    permissions.user.role === "owner"
+      ? adminLinks
+      : permissions.hasTechnicianAccess
+        ? adminLinks.filter((item) => TECHNICIAN_ADMIN_LINKS.has(item.href))
+        : adminLinks.filter((item) => item.group !== "Settings");
   const visibleAdminLinkGroups = adminLinkGroups.filter((group) =>
     visibleAdminLinks.some((item) => item.group === group),
   );
@@ -266,6 +276,9 @@ export default async function AdminPage() {
       href: "/admin/accounting",
     },
   ];
+  const visibleTodayDashboardCards = permissions.hasTechnicianAccess
+    ? todayDashboardCards.filter((card) => card.href !== "/admin/accounting" && card.href !== "/admin/parts")
+    : todayDashboardCards;
 
   return (
     <main className="min-h-screen bg-slate-50 text-foreground">
@@ -328,17 +341,19 @@ export default async function AdminPage() {
               >
                 Open today
               </Link>
-              <Link
-                href="/admin/invoices/new"
-                className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
-              >
-                New invoice
-              </Link>
+              {permissions.hasTechnicianAccess ? null : (
+                <Link
+                  href="/admin/invoices/new"
+                  className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+                >
+                  New invoice
+                </Link>
+              )}
             </div>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-5">
-            {todayDashboardCards.map((card) => (
+            {visibleTodayDashboardCards.map((card) => (
               <Link
                 key={card.label}
                 href={card.href}
@@ -503,12 +518,14 @@ export default async function AdminPage() {
               >
                 Schedule
               </Link>
-              <Link
-                href="/admin/accounting"
-                className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
-              >
-                Accounting
-              </Link>
+              {permissions.hasTechnicianAccess ? null : (
+                <Link
+                  href="/admin/accounting"
+                  className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
+                >
+                  Accounting
+                </Link>
+              )}
             </div>
           </div>
 

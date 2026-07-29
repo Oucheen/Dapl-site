@@ -13,6 +13,10 @@ async function requireAdmin() {
   if (!permissions.user) {
     redirect("/admin/leads/login");
   }
+
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
 }
 
 export async function updateCheckStatusFromList(formData: FormData) {

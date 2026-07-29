@@ -259,15 +259,18 @@ export async function getCurrentAdminPermissions() {
   const normalizedRole = user ? normalizeRole(user.role) : null;
   const hasElevatedAccess = isElevatedAdminRole(normalizedRole);
   const hasOwnerAccess = normalizedRole === "owner";
+  const hasTechnicianAccess = normalizedRole === "technician";
+  const hasFieldInvoiceAccess = hasElevatedAccess || hasTechnicianAccess;
 
   return {
     user,
     hasElevatedAccess,
-    canManageInvoiceCharges: hasElevatedAccess,
+    hasTechnicianAccess,
+    canManageInvoiceCharges: hasFieldInvoiceAccess,
     canDeleteInvoicePayments: hasElevatedAccess,
     canVoidInvoices: hasElevatedAccess,
     canBackdateManualInvoices: hasElevatedAccess,
-    canSendInvoices: hasElevatedAccess,
+    canSendInvoices: hasFieldInvoiceAccess,
     canDeleteLeads: hasOwnerAccess,
   };
 }

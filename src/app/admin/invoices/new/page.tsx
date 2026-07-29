@@ -51,6 +51,10 @@ export default async function NewInvoicePage() {
     redirect("/admin/leads/login");
   }
 
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
+
   const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
   const [technicians, knownAddresses] = await Promise.all([
     getCrmTechnicianNames(),

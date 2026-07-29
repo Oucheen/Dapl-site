@@ -149,6 +149,10 @@ export default async function PartsInventoryPage({
     redirect("/admin/leads/login");
   }
 
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
+
   const params = await searchParams;
   const notice = getNotice(params?.notice);
   let partsData: Awaited<ReturnType<typeof listAllInvoiceParts>> = {

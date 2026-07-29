@@ -25,6 +25,10 @@ export async function createManualInvoiceAction(formData: FormData) {
     redirect("/admin/leads/login");
   }
 
+  if (permissions.hasTechnicianAccess) {
+    redirect("/admin?notice=permission_denied");
+  }
+
   const canBackdateManualInvoices = permissions.canBackdateManualInvoices;
   const discountAdjustments = formData
     .getAll("discountAdjustment")
