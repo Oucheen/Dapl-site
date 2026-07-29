@@ -647,12 +647,12 @@ export default async function InvoicePage({
   }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
+  const { invoiceId } = await params;
 
   if (!permissions.user) {
-    redirect("/admin/leads/login");
+    redirect(`/admin/leads/login?returnTo=${encodeURIComponent(`/admin/invoices/${invoiceId}`)}`);
   }
 
-  const { invoiceId } = await params;
   const query = await searchParams;
   const invoiceData = await getInvoiceById(invoiceId);
 
