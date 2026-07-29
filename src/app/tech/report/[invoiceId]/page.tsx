@@ -13,6 +13,7 @@ import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import { verifyTechnicianReportToken } from "@/lib/technician-report-links";
 import { submitTechnicianReport } from "./actions";
 import { ReportSavedActions } from "./report-saved-actions";
+import { SaveReportButton } from "./save-report-button";
 
 export const dynamic = "force-dynamic";
 
@@ -372,6 +373,7 @@ export default async function TechnicianReportPage({
   const defaultPartNote = getMetadataText(latestPartActivity?.metadata, "partNote");
   const hasPreviousReport = Boolean(latestReportActivity);
   const storedPhotosByField = getStoredPhotosByField(invoiceActivities);
+  const storedPhotoCount = storedPhotosByField.size;
   const invoiceHref = `/admin/invoices/${invoice.id}`;
   const editReportHref = `/tech/report/${invoice.id}?${new URLSearchParams({
     t: token,
@@ -591,12 +593,10 @@ export default async function TechnicianReportPage({
             Report notes and photos are saved to the internal customer card. Customer invoice totals are not changed automatically.
           </p>
 
-          <button
-            type="submit"
-            className="mt-4 w-full rounded-xl bg-primary px-5 py-4 text-base font-black text-primary-foreground transition hover:bg-primary/90"
-          >
-            Save technician report
-          </button>
+          <SaveReportButton
+            hasPreviousReport={hasPreviousReport}
+            storedPhotoCount={storedPhotoCount}
+          />
         </form>
       </div>
     </main>

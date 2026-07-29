@@ -111,6 +111,7 @@ function getStoragePhoto(activity: LeadActivityRecord) {
   const label = (photo as { label?: unknown }).label;
   const contentType = (photo as { contentType?: unknown }).contentType;
   const originalName = (photo as { originalName?: unknown }).originalName;
+  const field = (photo as { field?: unknown }).field;
 
   if (typeof path !== "string" || !path.trim()) {
     return null;
@@ -118,6 +119,7 @@ function getStoragePhoto(activity: LeadActivityRecord) {
 
   return {
     path,
+    field: typeof field === "string" ? field : "",
     label: typeof label === "string" ? label : "",
     contentType: typeof contentType === "string" ? contentType : "",
     originalName: typeof originalName === "string" ? originalName : "",
@@ -144,6 +146,54 @@ function getFailedPhotoReasons(activity: LeadActivityRecord) {
   }
 
   return [];
+}
+
+function isTechnicianReportPageActivity(activity: LeadActivityRecord) {
+  return activity.metadata?.source === "technician_report_page";
+}
+
+function getDisplayTechnicianReportItems(activities: LeadActivityRecord[]) {
+  const items: LeadActivityRecord[] = [];
+  const seenPageEvents = new Set<string>();
+  const seenPhotoFields = new Set<string>();
+
+  for (const activity of activities) {
+    if (!isTechnicianReportPageActivity(activity)) {
+      items.push(activity);
+      continue;
+    }
+
+    if (activity.event_type === "telegram_report_photo") {
+      const photo = getStoragePhoto(activity);
+      const fieldKey = photo?.field || photo?.label || activity.title;
+
+      if (!fieldKey || seenPhotoFields.has(fieldKey)) {
+        continue;
+      }
+
+      seenPhotoFields.add(fieldKey);
+      items.push(activity);
+      continue;
+    }
+
+    if (
+      activity.event_type === "telegram_visit_report_completed" ||
+      activity.event_type === "telegram_report_own_part" ||
+      activity.event_type === "telegram_report_photo_upload_failed"
+    ) {
+      if (seenPageEvents.has(activity.event_type)) {
+        continue;
+      }
+
+      seenPageEvents.add(activity.event_type);
+      items.push(activity);
+      continue;
+    }
+
+    items.push(activity);
+  }
+
+  return items;
 }
 
 function getNeedsAttention(lead: LeadRecord, hasInvoice: boolean) {
@@ -205,6 +255,7 @@ export default async function LeadDetailPage({
   const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
   const attention = getNeedsAttention(lead, hasInvoice);
   const technicianReport = activity.filter(isTechnicianReportActivity);
+  const displayTechnicianReport = getDisplayTechnicianReportItems(technicianReport);
   const lockedFieldClass =
     "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-sm font-semibold text-muted outline-none";
 
@@ -354,15 +405,20 @@ export default async function LeadDetailPage({
                   <h2 className="mt-2 text-2xl font-black tracking-tight text-primary">
                     Field notes and photos
                   </h2>
+                  {technicianReport.length > displayTechnicianReport.length ? (
+                    <p className="mt-1 text-sm font-semibold leading-6 text-muted">
+                      Showing the current report. Older saves stay in the timeline below.
+                    </p>
+                  ) : null}
                 </div>
                 <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
-                  {technicianReport.length} records
+                  {displayTechnicianReport.length} current
                 </span>
               </div>
 
-              {technicianReport.length > 0 ? (
+              {displayTechnicianReport.length > 0 ? (
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  {technicianReport.map((item) => {
+                  {displayTechnicianReport.map((item) => {
                     const actorName = getActivityActorName(item);
                     const photo = getTelegramPhoto(item);
                     const storagePhoto = getStoragePhoto(item);
