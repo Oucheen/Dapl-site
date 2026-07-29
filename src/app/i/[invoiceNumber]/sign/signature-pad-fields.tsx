@@ -6,6 +6,7 @@ type SignaturePadFieldsProps = {
   action: (formData: FormData) => void | Promise<void>;
   defaultSignerName: string;
   invoiceNumber: string;
+  invoiceTotalLabel: string;
   accessCode: string;
   returnTo?: string;
 };
@@ -14,6 +15,7 @@ export function SignaturePadFields({
   action,
   defaultSignerName,
   invoiceNumber,
+  invoiceTotalLabel,
   accessCode,
   returnTo,
 }: SignaturePadFieldsProps) {
@@ -183,8 +185,8 @@ export function SignaturePadFields({
           className="mt-1 h-4 w-4 shrink-0"
         />
         <span>
-          I confirm the invoice, service details, and terms were reviewed, and I accept this
-          electronic signature.
+          I confirm invoice {invoiceNumber} for {invoiceTotalLabel}, the service details, and the
+          terms were reviewed, and I accept this electronic signature.
         </span>
       </label>
 

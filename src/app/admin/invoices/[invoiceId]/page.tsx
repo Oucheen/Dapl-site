@@ -1234,8 +1234,8 @@ export default async function InvoicePage({
                       Signed by {signature.signer_name}
                     </p>
                     <p className="mt-1 text-xs leading-5 text-muted print:text-[9px]">
-                      {formatDateTime(signature.signed_at)} ET. Customer accepted invoice details
-                      and terms electronically.
+                      Signed on {formatDateTime(signature.signed_at)} ET for {formatMoney(invoice.total)}.
+                      Invoice {invoice.invoice_number} was accepted electronically.
                     </p>
                   </div>
                   <img

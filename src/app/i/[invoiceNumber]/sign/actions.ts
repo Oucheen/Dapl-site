@@ -34,6 +34,15 @@ function appendSignatureNotice(path: string) {
   return `${path}${separator}notice=signature_saved`;
 }
 
+function formatMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number.isFinite(amount) ? amount : 0);
+}
+
 export async function savePublicInvoiceSignatureAction(formData: FormData) {
   const invoiceNumber = String(formData.get("invoiceNumber") || "").trim();
   const accessCode = String(formData.get("accessCode") || "").trim();
@@ -74,7 +83,7 @@ export async function savePublicInvoiceSignatureAction(formData: FormData) {
     invoiceId: invoiceData.invoice.id,
     eventType: "invoice_customer_signed",
     title: "Customer signature saved",
-    details: `${signerName} accepted and signed the invoice.`,
+    details: `${signerName} accepted invoice ${invoiceData.invoice.invoice_number} for ${formatMoney(invoiceData.invoice.total)}.`,
   });
 
   revalidatePath(`/admin/invoices/${invoiceData.invoice.id}`);

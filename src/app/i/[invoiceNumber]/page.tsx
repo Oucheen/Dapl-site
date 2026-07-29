@@ -259,7 +259,11 @@ export default async function PublicInvoicePage({
                   className="mt-3 max-h-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
                 />
                 <p className="mt-3 text-sm font-semibold text-slate-700">
-                  Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET.
+                  Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET for{" "}
+                  {formatMoney(invoice.total)}.
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Invoice {invoice.invoice_number} was accepted electronically.
                 </p>
               </div>
             ) : (

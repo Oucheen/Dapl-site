@@ -118,6 +118,7 @@ export default async function PublicInvoiceSignaturePage({
   const signature = await getLatestInvoiceSignature(invoice.id);
   const paidAmount = calculateInvoicePaidAmount(payments);
   const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const invoiceTotalLabel = formatMoney(invoice.total);
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950">
@@ -193,7 +194,11 @@ export default async function PublicInvoiceSignaturePage({
                 className="mt-3 max-h-28 rounded-xl border border-emerald-500/20 bg-white object-contain"
               />
               <p className="mt-3 text-sm font-semibold text-emerald-900">
-                Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET.
+                Signed by {signature.signer_name} on {formatDateTime(signature.signed_at)} ET for{" "}
+                {invoiceTotalLabel}.
+              </p>
+              <p className="mt-1 text-xs leading-5 text-emerald-800">
+                Invoice {invoice.invoice_number} was accepted electronically.
               </p>
               <p className="mt-1 text-xs leading-5 text-emerald-800">
                 Saving again will replace the visible signature with the newest one.
@@ -210,6 +215,7 @@ export default async function PublicInvoiceSignaturePage({
             action={savePublicInvoiceSignatureAction}
             defaultSignerName={invoice.customer_name}
             invoiceNumber={decodedInvoiceNumber}
+            invoiceTotalLabel={invoiceTotalLabel}
             accessCode={accessCode || ""}
             returnTo={returnTo ?? undefined}
           />

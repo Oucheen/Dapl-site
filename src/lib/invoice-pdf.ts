@@ -317,17 +317,22 @@ export async function renderInvoicePdf(
         .font("Helvetica")
         .fontSize(7.5)
         .fillColor(MUTED)
-        .text(`Signed by ${signature.signer_name} on ${formatDateTime(signature.signed_at)} ET`, 310, y, {
-          width: 254,
-          align: "right",
-        });
+        .text(
+          `Signed by ${signature.signer_name} on ${formatDateTime(signature.signed_at)} ET for ${formatMoney(invoice.total)}`,
+          310,
+          y,
+          {
+            width: 254,
+            align: "right",
+          },
+        );
       y += 16;
       doc.image(signatureImage, 48, y, { fit: [185, 54] });
       doc
         .font("Helvetica")
         .fontSize(7.5)
         .fillColor(MUTED)
-        .text("Customer accepted invoice details and terms electronically.", 310, y + 14, {
+        .text(`Invoice ${invoice.invoice_number} was accepted electronically.`, 310, y + 14, {
           width: 254,
           align: "right",
         });
