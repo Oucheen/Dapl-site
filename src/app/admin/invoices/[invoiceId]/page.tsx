@@ -1256,8 +1256,6 @@ export default async function InvoicePage({
                   </p>
                   <Link
                     href={signatureHref}
-                    target="_blank"
-                    rel="noreferrer"
                     className="mt-3 inline-flex rounded-lg bg-white px-4 py-2 text-xs font-bold text-primary transition hover:bg-slate-50"
                   >
                     Open signing page
@@ -1655,7 +1653,7 @@ export default async function InvoicePage({
             </section>
           </article>
 
-          <aside id="invoice-controls" className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
+          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Invoice controls
             </p>
@@ -1736,8 +1734,6 @@ export default async function InvoicePage({
                     </span>
                     <Link
                       href={signatureHref}
-                      target="_blank"
-                      rel="noreferrer"
                       className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
                     >
                       Open
@@ -1868,8 +1864,6 @@ export default async function InvoicePage({
             <div className="mt-3">
               <Link
                 href={signatureHref}
-                target="_blank"
-                rel="noreferrer"
                 className={`inline-flex w-full justify-center rounded-lg px-3 py-3 text-xs font-bold transition ${
                   signature
                     ? "border border-emerald-500/25 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
@@ -1883,55 +1877,57 @@ export default async function InvoicePage({
                 status.
               </p>
             </div>
-            {permissions.canSendInvoices ? (
-              <>
-                <form action={sendInvoiceEmailAction} className="mt-3">
-                  <input type="hidden" name="id" value={invoice.id} />
-                  <InvoiceEmailSubmitButton
-                    disabled={!customerEmail}
-                    invoiceStatus={invoice.status}
-                    invoiceTotal={invoice.total}
-                    label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
-                    recipient={customerEmail || ""}
-                  />
-                  {!customerEmail ? (
-                    <p className="mt-2 text-xs leading-5 text-muted">
-                      Customer email is missing, so this invoice cannot be sent yet.
-                    </p>
-                  ) : null}
-                </form>
-                <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
-                  <InvoiceSmsSubmitButton
-                    disabled={!invoice.customer_phone}
-                    invoiceStatus={invoice.status}
-                    invoiceTotal={invoice.total}
-                    label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
-                    recipient={invoice.customer_phone || ""}
-                  />
-                  {!invoice.customer_phone ? (
-                    <p className="mt-2 text-xs leading-5 text-muted">
-                      Customer phone is missing, so this invoice cannot be sent by SMS yet.
-                    </p>
-                  ) : null}
-                </form>
-              </>
-            ) : (
-              <form
-                action={requestInvoiceSendAction}
-                className="mt-3 rounded-xl border border-amber-500/25 bg-amber-50 p-3"
-              >
-                <input type="hidden" name="id" value={invoice.id} />
-                <p className="text-xs font-bold leading-5 text-amber-900">
-                  Customer sending is handled by the office after review.
-                </p>
-                <button
-                  type="submit"
-                  className="mt-3 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+            <div id="invoice-controls" className="scroll-mt-24">
+              {permissions.canSendInvoices ? (
+                <>
+                  <form action={sendInvoiceEmailAction} className="mt-3">
+                    <input type="hidden" name="id" value={invoice.id} />
+                    <InvoiceEmailSubmitButton
+                      disabled={!customerEmail}
+                      invoiceStatus={invoice.status}
+                      invoiceTotal={invoice.total}
+                      label={invoice.status === "sent" ? "Re-send invoice email" : "Send invoice email"}
+                      recipient={customerEmail || ""}
+                    />
+                    {!customerEmail ? (
+                      <p className="mt-2 text-xs leading-5 text-muted">
+                        Customer email is missing, so this invoice cannot be sent yet.
+                      </p>
+                    ) : null}
+                  </form>
+                  <form action={`/admin/invoices/${invoice.id}/sms`} method="post" className="mt-3">
+                    <InvoiceSmsSubmitButton
+                      disabled={!invoice.customer_phone}
+                      invoiceStatus={invoice.status}
+                      invoiceTotal={invoice.total}
+                      label={invoice.status === "sent" ? "Re-send invoice SMS" : "Send invoice by SMS"}
+                      recipient={invoice.customer_phone || ""}
+                    />
+                    {!invoice.customer_phone ? (
+                      <p className="mt-2 text-xs leading-5 text-muted">
+                        Customer phone is missing, so this invoice cannot be sent by SMS yet.
+                      </p>
+                    ) : null}
+                  </form>
+                </>
+              ) : (
+                <form
+                  action={requestInvoiceSendAction}
+                  className="mt-3 rounded-xl border border-amber-500/25 bg-amber-50 p-3"
                 >
-                  Ready to send
-                </button>
-              </form>
-            )}
+                  <input type="hidden" name="id" value={invoice.id} />
+                  <p className="text-xs font-bold leading-5 text-amber-900">
+                    Customer sending is handled by the office after review.
+                  </p>
+                  <button
+                    type="submit"
+                    className="mt-3 w-full rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                  >
+                    Ready to send
+                  </button>
+                </form>
+              )}
+            </div>
             {amountDue <= 0 && invoice.status !== "paid" && invoice.status !== "void" ? (
               <form action={markInvoiceCompletedAction} className="mt-3">
                 <input type="hidden" name="id" value={invoice.id} />
