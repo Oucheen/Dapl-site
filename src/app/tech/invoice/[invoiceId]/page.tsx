@@ -771,20 +771,23 @@ export default async function TechnicianInvoicePage({
         ) : null}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-white/95 p-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur">
-        <div className="mx-auto grid max-w-3xl grid-cols-4 gap-2">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-white/95 p-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:p-3">
+        <div className="mx-auto grid max-w-3xl grid-cols-5 gap-1.5 sm:gap-2">
           <a href="#charges" className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-xs font-black text-primary">
             Charges
           </a>
-          <a href="#send-invoice" className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-xs font-black text-primary">
-            Send
-          </a>
-          <Link href={signatureHref} className="rounded-xl border border-primary/15 bg-white px-3 py-3 text-center text-sm font-black text-primary">
-            Sign
-          </Link>
           <Link href={reportUrl} className="rounded-xl bg-primary px-2 py-3 text-center text-xs font-black text-primary-foreground">
             Report
           </Link>
+          <Link href={signatureHref} className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-xs font-black text-primary">
+            Sign
+          </Link>
+          <a href="#send-invoice" className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-xs font-black text-primary">
+            Send
+          </a>
+          <a href="#payment-close" className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-xs font-black text-primary">
+            Pay
+          </a>
         </div>
       </div>
     </main>

@@ -1375,8 +1375,12 @@ export default async function InvoicePage({
               </div>
             ) : null}
 
-            <section id="internal-parts" className="scroll-mt-6 border-t border-border px-5 py-5 print:hidden sm:px-7">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <details
+              id="internal-parts"
+              open={invoiceParts.length > 0 || openPartsCount > 0}
+              className="scroll-mt-6 border-t border-border px-5 py-5 print:hidden sm:px-7"
+            >
+              <summary className="flex cursor-pointer list-none flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-primary/5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                     Internal parts
@@ -1390,7 +1394,7 @@ export default async function InvoicePage({
                 <span className="w-fit rounded-full border border-amber-500/25 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
                   {openPartsCount} open
                 </span>
-              </div>
+              </summary>
 
               {!partsReady ? (
                 <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
@@ -1676,7 +1680,7 @@ export default async function InvoicePage({
                   </form>
                 </>
               )}
-            </section>
+            </details>
           </article>
 
           <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
@@ -2106,8 +2110,12 @@ export default async function InvoicePage({
               ) : null}
             </div>
 
-            <div id="check-deposits" className="mt-6 scroll-mt-6 border-t border-border pt-5">
-              <div className="flex items-start justify-between gap-3">
+            <details
+              id="check-deposits"
+              open={openChecks.length > 0}
+              className="mt-6 scroll-mt-6 border-t border-border pt-5"
+            >
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 transition hover:bg-primary/5">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                     Check deposits
@@ -2121,7 +2129,7 @@ export default async function InvoicePage({
                     {openChecks.length} pending
                   </span>
                 ) : null}
-              </div>
+              </summary>
 
               {!checksReady ? (
                 <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-50 p-4 text-xs leading-6 text-amber-900">
@@ -2304,7 +2312,7 @@ export default async function InvoicePage({
                   )}
                 </>
               )}
-            </div>
+            </details>
 
             <div id="payment-history" className="mt-6 scroll-mt-6 border-t border-border pt-5">
               <div className="flex items-start justify-between gap-3">
@@ -2438,10 +2446,15 @@ export default async function InvoicePage({
               handled by the payment history once the amount due reaches zero.
             </div>
 
-            <div className="mt-6 border-t border-border pt-5">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                Activity
-              </p>
+            <details className="mt-6 border-t border-border pt-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 transition hover:bg-primary/5">
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  Activity
+                </span>
+                <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-bold text-muted">
+                  {activity.length} records
+                </span>
+              </summary>
               {activity.length > 0 ? (
                 <ul className="mt-4 max-h-80 space-y-4 overflow-y-auto pr-2">
                   {activity.map((item) => {
@@ -2469,7 +2482,7 @@ export default async function InvoicePage({
                   No invoice activity recorded yet.
                 </p>
               )}
-            </div>
+            </details>
           </aside>
         </div>
 
