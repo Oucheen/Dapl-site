@@ -199,18 +199,24 @@ export default async function NewInvoicePage() {
             </datalist>
 
             {canBackdateManualInvoices ? (
-              <section className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                    Historical import
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    Optional leadership-only dates for adding older customers and matching old
-                    invoice records. Service date controls the job date shown on the invoice;
-                    invoice created date and time control the invoice number prefix and Created
-                    timestamp. Use this for phone calls, business-card calls, and older records.
-                  </p>
-                </div>
+              <details className="group rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                      Historical import
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      Optional dates for older records. Leave closed for normal phone-call invoices.
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-primary/15 bg-white px-3 py-1 text-xs font-bold text-primary">
+                    Advanced
+                  </span>
+                </summary>
+                <p className="mt-4 text-sm leading-6 text-muted">
+                  Service date controls the job date shown on the invoice; invoice created date and
+                  time control the invoice number prefix and Created timestamp.
+                </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                     Lead created date optional
@@ -245,7 +251,7 @@ export default async function NewInvoicePage() {
                     />
                   </label>
                 </div>
-              </section>
+              </details>
             ) : null}
 
             <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
@@ -266,7 +272,7 @@ export default async function NewInvoicePage() {
             <ul className="mt-4 space-y-3 text-sm leading-6 text-muted">
               <li>A manual lead is created with source `manual-admin`.</li>
               <li>A draft invoice is created from these details.</li>
-              <li>Starting charges and selected discounts are added as invoice lines.</li>
+              <li>A starter service line is created; prices can be edited on the invoice.</li>
               <li>The lead is moved to `invoiced` automatically.</li>
               <li>You can edit line items on the next screen.</li>
               {canBackdateManualInvoices ? (

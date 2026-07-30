@@ -412,7 +412,7 @@ export default async function LeadDetailPage({
               </div>
 
               {displayTechnicianReport.length > 0 ? (
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="mt-5 grid max-h-[720px] gap-4 overflow-y-auto pr-2 md:grid-cols-2">
                   {displayTechnicianReport.map((item) => {
                     const actorName = getActivityActorName(item);
                     const photo = getTelegramPhoto(item);
@@ -658,45 +658,49 @@ export default async function LeadDetailPage({
             </form>
 
             {permissions.canDeleteLeads ? (
-              hasInvoice ? (
-                <form
-                  action={deleteLead}
-                  className="mt-4 rounded-xl border border-accent/20 bg-white p-4"
-                >
-                  <input type="hidden" name="id" value={lead.id} />
-                  <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
-                  <p className="text-sm font-black text-accent">Delete lead and invoice</p>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    Type DELETE INVOICE to remove this lead, invoice, line items, and payments.
-                  </p>
-                  <input
-                    type="text"
-                    name="deleteConfirmation"
-                    placeholder="DELETE INVOICE"
-                    required
-                    pattern="DELETE INVOICE"
-                    title='Type "DELETE INVOICE" to delete this lead and invoice.'
-                    className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-accent/20 placeholder:text-muted focus:border-accent focus:ring-2"
-                  />
-                  <button
-                    type="submit"
-                    className="mt-3 w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
-                  >
-                    Delete lead + invoice
-                  </button>
-                </form>
-              ) : (
-                <form action={deleteLead} className="mt-4">
-                  <input type="hidden" name="id" value={lead.id} />
-                  <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
-                  <button
-                    type="submit"
-                    className="w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
-                  >
-                    Delete lead
-                  </button>
-                </form>
-              )
+              <details className="mt-4 rounded-xl border border-accent/20 bg-white p-3">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-accent">
+                  <span>{hasInvoice ? "Delete lead and invoice" : "Delete lead"}</span>
+                  <span className="rounded-full border border-accent/20 px-3 py-1 text-xs">
+                    Danger
+                  </span>
+                </summary>
+                {hasInvoice ? (
+                  <form action={deleteLead} className="mt-3">
+                    <input type="hidden" name="id" value={lead.id} />
+                    <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
+                    <p className="text-sm leading-6 text-muted">
+                      Type DELETE INVOICE to remove this lead, invoice, line items, and payments.
+                    </p>
+                    <input
+                      type="text"
+                      name="deleteConfirmation"
+                      placeholder="DELETE INVOICE"
+                      required
+                      pattern="DELETE INVOICE"
+                      title='Type "DELETE INVOICE" to delete this lead and invoice.'
+                      className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground outline-none ring-accent/20 placeholder:text-muted focus:border-accent focus:ring-2"
+                    />
+                    <button
+                      type="submit"
+                      className="mt-3 w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
+                    >
+                      Delete lead + invoice
+                    </button>
+                  </form>
+                ) : (
+                  <form action={deleteLead} className="mt-3">
+                    <input type="hidden" name="id" value={lead.id} />
+                    <input type="hidden" name="returnTo" value={`/admin/leads/${lead.id}`} />
+                    <button
+                      type="submit"
+                      className="w-full rounded-lg border border-accent/20 bg-white px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent/5"
+                    >
+                      Delete lead
+                    </button>
+                  </form>
+                )}
+              </details>
             ) : null}
 
             {invoice ? (

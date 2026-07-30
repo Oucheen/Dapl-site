@@ -1719,14 +1719,14 @@ export default async function InvoicePage({
               </div>
 
               <div className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border">
-                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm">
-                  <div>
-                    <p className="font-bold text-foreground">Charges</p>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="whitespace-nowrap font-bold text-foreground">Charges</p>
                     <p className="text-xs leading-5 text-muted">
                       Customer-facing service lines and prices.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         hasCustomerChargeAmount,
@@ -1743,14 +1743,14 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid gap-2 px-3 py-3 text-sm">
-                  <div>
-                    <p className="font-bold text-foreground">Tech report</p>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="whitespace-nowrap font-bold text-foreground">Tech report</p>
                     <p className="text-xs leading-5 text-muted">
                       Field notes, unit photos, model, and parts proof.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         hasTechnicianReport,
@@ -1767,14 +1767,14 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm">
-                  <div>
-                    <p className="font-bold text-foreground">Signature</p>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="whitespace-nowrap font-bold text-foreground">Signature</p>
                     <p className="text-xs leading-5 text-muted">
                       Customer accepts the invoice and service terms.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         Boolean(signature),
@@ -1791,14 +1791,14 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid gap-2 px-3 py-3 text-sm">
-                  <div>
-                    <p className="font-bold text-foreground">Send invoice</p>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="whitespace-nowrap font-bold text-foreground">Send invoice</p>
                     <p className="text-xs leading-5 text-muted">
                       Email or SMS was sent from this invoice.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         hasInvoiceBeenSent,
@@ -1815,14 +1815,14 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid gap-2 bg-slate-50 px-3 py-3 text-sm">
-                  <div>
-                    <p className="font-bold text-foreground">Payment / close</p>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="whitespace-nowrap font-bold text-foreground">Payment / close</p>
                     <p className="text-xs leading-5 text-muted">
                       Balance collected, then job can be completed.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         isBalanceCollected,
