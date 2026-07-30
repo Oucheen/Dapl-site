@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getCrmReminders, type CrmReminder } from "@/lib/crm-reminders";
@@ -622,12 +623,6 @@ export default async function ScheduleAdminPage({
             <p className="mt-2 break-words">{error}</p>
           </div>
         ) : null}
-        <datalist id="schedule-technicians">
-          {technicians.map((technician) => (
-            <option key={technician} value={technician} />
-          ))}
-        </datalist>
-
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -1246,11 +1241,11 @@ export default async function ScheduleAdminPage({
                                 </label>
                                 <label className="grid gap-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
                                   Technician
-                                  <input
-                                    type="text"
+                                  <TechnicianSelect
                                     name="assignedTechnician"
+                                    technicians={technicians}
                                     defaultValue={invoice.assigned_technician ?? ""}
-                                    list="schedule-technicians"
+                                    placeholder="Tech"
                                     className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                                   />
                                 </label>
@@ -1481,11 +1476,10 @@ export default async function ScheduleAdminPage({
                           defaultValue={invoice.service_time ?? ""}
                           className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                         />
-                        <input
-                          type="text"
+                        <TechnicianSelect
                           name="assignedTechnician"
+                          technicians={technicians}
                           defaultValue={invoice.assigned_technician ?? ""}
-                          list="schedule-technicians"
                           placeholder="Tech"
                           className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />
@@ -1598,11 +1592,10 @@ export default async function ScheduleAdminPage({
                           defaultValue={invoice.service_time ?? ""}
                           className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
                         />
-                        <input
-                          type="text"
+                        <TechnicianSelect
                           name="assignedTechnician"
+                          technicians={technicians}
                           defaultValue={invoice.assigned_technician ?? ""}
-                          list="schedule-technicians"
                           placeholder="Tech"
                           className="min-w-0 rounded-lg border border-border bg-white px-2 py-2 text-xs font-semibold text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                         />

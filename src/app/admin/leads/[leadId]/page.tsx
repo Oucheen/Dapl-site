@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
@@ -261,12 +262,6 @@ export default async function LeadDetailPage({
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <datalist id="crm-technicians">
-        {technicians.map((technician) => (
-          <option key={technician} value={technician} />
-        ))}
-      </datalist>
-
       <header className="border-b border-border bg-white">
         <div className="container-shell flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -612,10 +607,9 @@ export default async function LeadDetailPage({
 
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Technician
-                <input
-                  type="text"
+                <TechnicianSelect
                   name="assignedTechnician"
-                  list="crm-technicians"
+                  technicians={technicians}
                   defaultValue={lead.assigned_technician ?? ""}
                   placeholder="Name"
                   disabled={hasInvoice}

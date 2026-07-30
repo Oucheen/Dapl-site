@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { isPlaceholderCustomerEmail } from "@/lib/customer-email";
@@ -2052,20 +2053,14 @@ export default async function InvoicePage({
               </label>
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Technician
-                <input
-                  type="text"
+                <TechnicianSelect
                   name="assignedTechnician"
-                  list="crm-technicians"
+                  technicians={technicians}
                   defaultValue={invoice.assigned_technician ?? ""}
                   placeholder="Name"
                   className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
                 />
               </label>
-              <datalist id="crm-technicians">
-                {technicians.map((technician) => (
-                  <option key={technician} value={technician} />
-                ))}
-              </datalist>
               <button
                 type="submit"
                 className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"

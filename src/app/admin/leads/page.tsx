@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
@@ -368,12 +369,6 @@ export default async function LeadsAdminPage({
       </header>
 
       <section className="container-shell py-8">
-        <datalist id="crm-technicians">
-          {technicians.map((technician) => (
-            <option key={technician} value={technician} />
-          ))}
-        </datalist>
-
         <div className="mb-5 grid gap-3 lg:grid-cols-3">
           {LEAD_VIEWS.map((view) => {
             const isActive = selectedView === view.value;
@@ -770,10 +765,9 @@ export default async function LeadsAdminPage({
                       ) : null}
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Technician
-                        <input
-                          type="text"
+                        <TechnicianSelect
                           name="assignedTechnician"
-                          list="crm-technicians"
+                          technicians={technicians}
                           defaultValue={lead.assigned_technician ?? ""}
                           placeholder="Name"
                           disabled={hasInvoice}

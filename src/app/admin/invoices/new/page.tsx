@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listSupabaseLeads } from "@/lib/supabase-leads";
@@ -181,9 +182,9 @@ export default async function NewInvoicePage() {
                 <input type="hidden" name="promoCode" value="" />
                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                   Technician
-                  <input
+                  <TechnicianSelect
                     name="assignedTechnician"
-                    list="crm-technicians"
+                    technicians={technicians}
                     placeholder="Name"
                     className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                   />
@@ -191,11 +192,6 @@ export default async function NewInvoicePage() {
               </div>
             </section>
 
-            <datalist id="crm-technicians">
-              {technicians.map((technician) => (
-                <option key={technician} value={technician} />
-              ))}
-            </datalist>
             <datalist id="known-service-addresses">
               {knownAddresses.map((address) => (
                 <option key={address} value={address} />
