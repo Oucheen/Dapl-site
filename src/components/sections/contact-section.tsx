@@ -71,7 +71,12 @@ export function ContactSection({
       promoCode: String(fd.get("promoCode") ?? "").trim(),
       leadSource: String(fd.get("leadSource") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
-      message: String(fd.get("message") ?? "").trim(),
+      message: [
+        String(fd.get("message") ?? "").trim(),
+        String(fd.get("smsConsent") ?? "") === "yes"
+          ? "SMS consent: Customer checked the service SMS consent box on the website form."
+          : "SMS consent: Not checked on the website form.",
+      ].filter(Boolean).join("\n\n"),
       company: String(fd.get("company") ?? "").trim(),
     };
 
@@ -251,6 +256,32 @@ export function ContactSection({
                 />
               </div>
             </div>
+
+            <label className="mt-5 flex gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-xs leading-5 text-muted">
+              <input
+                type="checkbox"
+                name="smsConsent"
+                value="yes"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary"
+              />
+              <span>
+                I agree to receive service-related SMS messages from DAPL Appliance Repair about my
+                request, appointment updates, invoice links, payment reminders, and customer support.
+                Message frequency varies. Message and data rates may apply. Reply STOP to opt out or
+                HELP for help. See our{" "}
+                <a href="/privacy-policy" className="font-semibold text-primary hover:underline">
+                  Privacy Policy
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/terms-and-conditions"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Terms
+                </a>
+                .
+              </span>
+            </label>
 
             {status === "success" ? (
               <p

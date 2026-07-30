@@ -70,7 +70,7 @@ const sections = [
     body: [
       "When you submit a service request, the information may be sent to our business email and internal notification channels, including Telegram notifications used for lead response and scheduling workflow.",
       "We use this information only to review, respond to, and manage repair requests and customer communications.",
-      "If you provide your mobile phone number, we may use it to send service-related text messages about appliance repair requests, invoices, appointments, payment reminders, technician updates, and customer support. Message frequency varies based on your service activity. Message and data rates may apply. You can reply STOP to opt out or HELP for help.",
+      "If you opt in to service-related SMS messages by checking the SMS consent box on our website form or chat widget, or by otherwise requesting service-related text communication, we may use your mobile phone number to send messages about appliance repair requests, invoices, appointments, payment reminders, technician updates, and customer support. Message frequency varies based on your service activity. Message and data rates may apply. You can reply STOP to opt out or HELP for help.",
     ],
   },
   {

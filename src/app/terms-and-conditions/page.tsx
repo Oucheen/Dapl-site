@@ -55,7 +55,7 @@ const sections = [
   {
     title: "SMS service messages",
     body: [
-      "By providing your mobile phone number to DAPL Appliance Repair in connection with an appliance repair request, you agree that DAPL Appliance Repair may send service-related text messages to that number. These messages may include invoice links, appointment updates, payment reminders, technician updates, and repair visit notifications.",
+      "When you opt in to service-related SMS messages by checking the SMS consent box on our website form or chat widget, or by otherwise requesting service-related text communication from DAPL Appliance Repair, you agree that DAPL Appliance Repair may send service-related text messages to that mobile phone number. These messages may include invoice links, appointment updates, payment reminders, technician updates, and repair visit notifications.",
       "Message frequency varies based on your service activity. Message and data rates may apply. Message delivery is not guaranteed and carriers are not liable for delayed or undelivered messages.",
     ],
   },

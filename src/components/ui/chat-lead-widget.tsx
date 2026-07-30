@@ -26,6 +26,7 @@ type LeadDraft = {
   email: string;
   address: string;
   preferredDate: string;
+  smsConsent: boolean;
 };
 
 const initialDraft: LeadDraft = {
@@ -36,6 +37,7 @@ const initialDraft: LeadDraft = {
   email: "",
   address: "",
   preferredDate: "",
+  smsConsent: false,
 };
 
 const chatInviteStorageKey = "dapl_chat_invite_dismissed";
@@ -319,8 +321,11 @@ export function ChatLeadWidget() {
     setErrorMessage("");
   };
 
-  const setDraftValue = (key: keyof LeadDraft, value: string) => {
-    setDraft((current) => ({ ...current, [key]: value.trim() }));
+  const setDraftValue = <Key extends keyof LeadDraft>(key: Key, value: LeadDraft[Key]) => {
+    setDraft((current) => ({
+      ...current,
+      [key]: typeof value === "string" ? value.trim() : value,
+    }));
   };
 
   const goToStep = (nextStep: ChatStep, nextInput = "") => {
@@ -411,6 +416,9 @@ export function ChatLeadWidget() {
       `Chat request for ${draft.appliance || "appliance service"}.`,
       `Issue: ${draft.issue}`,
       draft.email ? "" : "Email was not provided by the customer.",
+      draft.smsConsent
+        ? "SMS consent: Customer checked the service SMS consent box in the website chat widget."
+        : "SMS consent: Not checked in the website chat widget.",
       "Submitted through the website chat widget.",
     ].filter(Boolean).join("\n");
 
@@ -640,6 +648,31 @@ export function ChatLeadWidget() {
                     </p>
                   ) : null}
                 </div>
+                <label className="flex gap-2 rounded-xl border border-border bg-white px-3 py-3 text-xs leading-5 text-muted">
+                  <input
+                    type="checkbox"
+                    checked={draft.smsConsent}
+                    onChange={(event) => setDraftValue("smsConsent", event.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span>
+                    I agree to receive service-related SMS messages from DAPL Appliance Repair about
+                    this request, appointments, invoice links, payment reminders, and customer support.
+                    Message frequency varies. Message and data rates may apply. Reply STOP to opt out
+                    or HELP for help. See{" "}
+                    <a href="/privacy-policy" className="font-semibold text-primary hover:underline">
+                      Privacy Policy
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/terms-and-conditions"
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      Terms
+                    </a>
+                    .
+                  </span>
+                </label>
                 <button
                   type="button"
                   onClick={submitLead}
