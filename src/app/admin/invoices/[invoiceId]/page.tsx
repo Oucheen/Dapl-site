@@ -843,6 +843,7 @@ export default async function InvoicePage({
         ))}
 
         <div className="grid items-start gap-6 print:block xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid gap-6">
           <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm print:overflow-visible print:rounded-none print:border-0 print:text-[11px] print:shadow-none">
             <div className="border-b border-border bg-slate-50/80 px-5 py-5 print:bg-white print:px-0 print:py-3 sm:px-7">
               <div className="flex flex-col gap-5 print:gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1683,6 +1684,11 @@ export default async function InvoicePage({
             </details>
           </article>
 
+          <div className="print:hidden">
+            <CustomerHistoryCard items={customerHistory} />
+          </div>
+          </div>
+
           <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Invoice controls
@@ -2484,10 +2490,6 @@ export default async function InvoicePage({
               )}
             </details>
           </aside>
-        </div>
-
-        <div className="mt-6 print:hidden">
-          <CustomerHistoryCard items={customerHistory} />
         </div>
       </section>
     </main>
