@@ -14,7 +14,7 @@ import {
 } from "@/lib/supabase-invoices";
 import { getTelegramUserByTelegramId } from "@/lib/supabase-telegram-users";
 import { getReportPhotoFile, uploadTechnicianReportPhoto } from "@/lib/supabase-storage";
-import { buildTechnicianInvoiceUrl, verifyTechnicianReportToken } from "@/lib/technician-report-links";
+import { verifyTechnicianReportToken } from "@/lib/technician-report-links";
 
 const ALLOWED_JOB_STATUSES = new Set<InvoiceJobStatus>([
   "in_progress",
@@ -341,9 +341,12 @@ export async function submitTechnicianReport(formData: FormData) {
     revalidatePath(`/admin/leads/${leadId}`);
     revalidatePath(`/admin/invoices/${invoiceId}`);
     revalidatePath(`/tech/invoice/${invoiceId}`);
-    redirectTo = `${buildTechnicianInvoiceUrl(invoiceId, telegramUserId, "") || `/tech/invoice/${invoiceId}?t=${encodeURIComponent(token)}`}&notice=${
-      failedPhotoLabels.length ? "tech_report_saved_photo_warning" : "tech_report_saved"
-    }`;
+    redirectTo = `/tech/invoice/${invoiceId}?${new URLSearchParams({
+      t: token,
+      notice: failedPhotoLabels.length
+        ? "tech_report_saved_photo_warning"
+        : "tech_report_saved",
+    }).toString()}`;
   } catch (error) {
     if (error instanceof ReportSubmitError) {
       redirectTo = buildReportRedirect(invoiceId, token, {
