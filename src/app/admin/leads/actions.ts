@@ -148,9 +148,6 @@ export async function updateLeadDetails(formData: FormData) {
   await updateSupabaseLead(id, {
     status,
     adminNotes: String(formData.get("adminNotes") || ""),
-    scheduledDate: String(formData.get("scheduledDate") || ""),
-    estimatedPrice: String(formData.get("estimatedPrice") || ""),
-    assignedTechnician: String(formData.get("assignedTechnician") || ""),
   });
   await createLeadActivity({
     leadId: id,
@@ -176,9 +173,6 @@ export async function createInvoiceForLead(formData: FormData) {
     await updateSupabaseLead(id, {
       status,
       adminNotes: String(formData.get("adminNotes") || ""),
-      scheduledDate: String(formData.get("scheduledDate") || ""),
-      estimatedPrice: String(formData.get("estimatedPrice") || ""),
-      assignedTechnician: String(formData.get("assignedTechnician") || ""),
     });
   }
 

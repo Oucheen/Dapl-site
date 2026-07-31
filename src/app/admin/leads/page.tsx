@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
-import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
-import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
+import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getActivityActorName, listActivitiesForLeads } from "@/lib/supabase-activity";
 import { listInvoices } from "@/lib/supabase-invoices";
 import { type LeadAdminStatus, listSupabaseLeads } from "@/lib/supabase-leads";
@@ -68,6 +67,17 @@ function formatDate(value: string) {
     timeStyle: "short",
     timeZone: "America/New_York",
   }).format(new Date(value));
+}
+
+function formatLeadDate(value: string | null | undefined) {
+  if (!value) {
+    return "Not set";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: CHARLOTTE_TIME_ZONE,
+  }).format(getDateForCharlotteDisplay(value));
 }
 
 function countByStatus(leads: Awaited<ReturnType<typeof listSupabaseLeads>>) {
@@ -285,10 +295,6 @@ export default async function LeadsAdminPage({
       .filter((invoice) => invoice.lead_id)
       .map((invoice) => [invoice.lead_id as string, invoice]),
   );
-  const technicians = await getCrmTechnicianNames([
-    ...invoices.map((invoice) => invoice.assigned_technician),
-    ...leads.map((lead) => lead.assigned_technician),
-  ]);
   const visibleLeads =
     selectedStatus === "all"
       ? viewLeads
@@ -532,8 +538,6 @@ export default async function LeadsAdminPage({
                 const activities = activityByLeadId.get(lead.id) ?? [];
                 const statusOptions = hasInvoice ? POST_INVOICE_STATUSES : STATUSES;
                 const customerEmail = getDisplayCustomerEmail(lead.email);
-                const lockedFieldClass =
-                  "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-xs font-semibold normal-case tracking-normal text-muted outline-none";
 
                 return (
                   <form
@@ -715,7 +719,6 @@ export default async function LeadsAdminPage({
                         </p>
                       </div>
                     ) : null}
-                    <input type="hidden" name="estimatedPrice" value="" />
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 min-[1320px]:grid-cols-2">
                       <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
                         Status
@@ -731,51 +734,30 @@ export default async function LeadsAdminPage({
                           ))}
                         </select>
                       </label>
-                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                        Visit date
-                        <input
-                          type="date"
-                          name="scheduledDate"
-                          defaultValue={
-                            hasInvoice
-                              ? (invoice?.service_date ?? lead.scheduled_date ?? "")
-                              : (lead.scheduled_date ?? "")
-                          }
-                          disabled={hasInvoice}
-                          className={
-                            hasInvoice
-                              ? lockedFieldClass
-                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                          }
-                        />
-                      </label>
+                      <div className="rounded-lg border border-border bg-white px-3 py-2">
+                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                          Preferred date
+                        </p>
+                        <p className="mt-1 text-xs font-bold text-foreground">
+                          {formatLeadDate(lead.preferred_date)}
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-muted">
+                          Schedule date, time, and technician inside the invoice or dispatch calendar.
+                        </p>
+                      </div>
                       {hasInvoice ? (
-                        <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                          Visit time
-                          <input
-                            type="text"
-                            value={getInvoiceVisitTime(invoice)}
-                            disabled
-                            readOnly
-                            className={lockedFieldClass}
-                          />
-                        </label>
+                        <div className="rounded-lg border border-border bg-white px-3 py-2">
+                          <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
+                            Scheduled
+                          </p>
+                          <p className="mt-1 text-xs font-bold text-foreground">
+                            {formatLeadDate(invoice?.service_date)}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-muted">
+                            {getInvoiceVisitTime(invoice) || "Time not set"}
+                          </p>
+                        </div>
                       ) : null}
-                      <label className="grid gap-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted">
-                        Technician
-                        <TechnicianSelect
-                          name="assignedTechnician"
-                          technicians={technicians}
-                          defaultValue={lead.assigned_technician ?? ""}
-                          placeholder="Name"
-                          disabled={hasInvoice}
-                          className={
-                            hasInvoice
-                              ? lockedFieldClass
-                              : "min-w-0 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                          }
-                        />
-                      </label>
                     </div>
                     <button
                       type="submit"
@@ -799,6 +781,12 @@ export default async function LeadsAdminPage({
                         Create invoice
                       </button>
                     )}
+                    <Link
+                      href="/admin/schedule"
+                      className="mt-2 flex w-full items-center justify-center rounded-lg border border-primary/20 bg-white px-3 py-3 text-xs font-bold text-primary transition hover:bg-primary/5"
+                    >
+                      Open schedule
+                    </Link>
                     {permissions.canDeleteLeads ? (
                       invoice ? (
                         <div className="mt-3 rounded-lg border border-accent/20 bg-white px-3 py-3">

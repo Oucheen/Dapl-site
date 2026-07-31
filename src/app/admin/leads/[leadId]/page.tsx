@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
-import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
-import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
@@ -241,10 +239,6 @@ export default async function LeadDetailPage({
 
   const invoiceData = invoiceId ? await getInvoiceById(invoiceId) : null;
   const invoice = invoiceData?.invoice ?? null;
-  const technicians = await getCrmTechnicianNames([
-    lead.assigned_technician,
-    invoice?.assigned_technician,
-  ]);
   const customerEmail = getDisplayCustomerEmail(lead.email);
   const customerHistory = await listCustomerHistory({
     phone: lead.phone,
@@ -257,8 +251,6 @@ export default async function LeadDetailPage({
   const attention = getNeedsAttention(lead, hasInvoice);
   const technicianReport = activity.filter(isTechnicianReportActivity);
   const displayTechnicianReport = getDisplayTechnicianReportItems(technicianReport);
-  const lockedFieldClass =
-    "min-w-0 rounded-lg border border-border bg-slate-100 px-3 py-2 text-sm font-semibold text-muted outline-none";
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -574,7 +566,6 @@ export default async function LeadDetailPage({
             </p>
             <form action={updateLeadDetails} className="mt-5 grid gap-4">
               <input type="hidden" name="id" value={lead.id} />
-              <input type="hidden" name="estimatedPrice" value="" />
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Status
                 <select
@@ -591,34 +582,15 @@ export default async function LeadDetailPage({
               </label>
 
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Visit date
-                <input
-                  type="date"
-                  name="scheduledDate"
-                  defaultValue={lead.scheduled_date ?? ""}
-                  disabled={hasInvoice}
-                  className={
-                    hasInvoice
-                      ? lockedFieldClass
-                      : "rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                  }
-                />
-              </label>
-
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Technician
-                <TechnicianSelect
-                  name="assignedTechnician"
-                  technicians={technicians}
-                  defaultValue={lead.assigned_technician ?? ""}
-                  placeholder="Name"
-                  disabled={hasInvoice}
-                  className={
-                    hasInvoice
-                      ? lockedFieldClass
-                      : "rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                  }
-                />
+                Preferred date
+                <div className="rounded-lg border border-border bg-white px-3 py-2">
+                  <p className="text-sm font-bold normal-case tracking-normal text-foreground">
+                    {formatDate(lead.preferred_date)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium normal-case leading-5 tracking-normal text-muted">
+                    Schedule date, time, and technician inside the invoice or dispatch calendar.
+                  </p>
+                </div>
               </label>
 
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
@@ -655,6 +627,13 @@ export default async function LeadDetailPage({
                   Create invoice
                 </button>
               )}
+
+              <Link
+                href="/admin/schedule"
+                className="flex items-center justify-center rounded-lg border border-primary/20 bg-white px-4 py-3 text-sm font-bold text-primary transition hover:bg-primary/5"
+              >
+                Open schedule
+              </Link>
             </form>
 
             {permissions.canDeleteLeads ? (

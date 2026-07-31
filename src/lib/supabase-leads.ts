@@ -48,9 +48,9 @@ type RecentVoiceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "m
 export type LeadAdminUpdateInput = {
   status: LeadAdminStatus;
   adminNotes: string;
-  scheduledDate: string;
-  estimatedPrice: string;
-  assignedTechnician: string;
+  scheduledDate?: string;
+  estimatedPrice?: string;
+  assignedTechnician?: string;
 };
 
 export type LeadPostInvoiceUpdateInput = {
@@ -502,7 +502,22 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   assertUuid(id);
 
-  const estimatedPrice = toEstimatedPrice(input.estimatedPrice);
+  const payload: Record<string, string | number | null> = {
+    status: input.status,
+    admin_notes: input.adminNotes.trim() || null,
+  };
+
+  if (input.scheduledDate !== undefined) {
+    payload.scheduled_date = input.scheduledDate || null;
+  }
+
+  if (input.estimatedPrice !== undefined) {
+    payload.estimated_price = toEstimatedPrice(input.estimatedPrice);
+  }
+
+  if (input.assignedTechnician !== undefined) {
+    payload.assigned_technician = input.assignedTechnician.trim() || null;
+  }
 
   const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
     method: "PATCH",
@@ -510,13 +525,7 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
       ...headers(config),
       Prefer: "return=minimal",
     },
-    body: JSON.stringify({
-      status: input.status,
-      admin_notes: input.adminNotes.trim() || null,
-      scheduled_date: input.scheduledDate || null,
-      estimated_price: estimatedPrice,
-      assigned_technician: input.assignedTechnician.trim() || null,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
