@@ -105,6 +105,27 @@ function getTodayDateInput() {
   }).format(new Date());
 }
 
+function getCharlotteNow() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CHARLOTTE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const hour = Number(getPart("hour"));
+  const minute = Number(getPart("minute"));
+
+  return {
+    date: `${getPart("year")}-${getPart("month")}-${getPart("day")}`,
+    minutes: (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0),
+  };
+}
+
 function getSelectedDate(value: string | string[] | undefined) {
   const selectedDate = Array.isArray(value) ? value[0] : value;
 
@@ -379,35 +400,53 @@ function getScheduleCandidateTechnicians(technicians: string[], selectedTechnici
   return technicians.length ? technicians : [DEFAULT_UNASSIGNED_TECHNICIAN];
 }
 
+function isBookableSlot(
+  date: string,
+  window: (typeof SERVICE_WINDOWS)[number],
+  currentCharlotte: ReturnType<typeof getCharlotteNow>,
+) {
+  if (date < currentCharlotte.date) {
+    return false;
+  }
+
+  if (date > currentCharlotte.date) {
+    return true;
+  }
+
+  return window.start * 60 > currentCharlotte.minutes;
+}
+
 function getRecommendedSlots(
   invoices: InvoiceRecord[],
   dates: string[],
   technicians: string[],
   selectedTechnician: string,
+  currentCharlotte: ReturnType<typeof getCharlotteNow>,
 ) {
   const candidateTechnicians = getScheduleCandidateTechnicians(technicians, selectedTechnician);
 
   return dates
     .flatMap((date, dateIndex) =>
-      SERVICE_WINDOWS.flatMap((window, windowIndex) =>
-        candidateTechnicians.map((technician) => {
-          const assignedTechnician = technician === DEFAULT_UNASSIGNED_TECHNICIAN ? "" : technician;
-          const jobsInSlot = getSlotInvoices(invoices, date, window, assignedTechnician).length;
-          const score = jobsInSlot * 100 + dateIndex * 10 + windowIndex;
+      SERVICE_WINDOWS.filter((window) => isBookableSlot(date, window, currentCharlotte)).flatMap(
+        (window, windowIndex) =>
+          candidateTechnicians.map((technician) => {
+            const assignedTechnician = technician === DEFAULT_UNASSIGNED_TECHNICIAN ? "" : technician;
+            const jobsInSlot = getSlotInvoices(invoices, date, window, assignedTechnician).length;
+            const score = jobsInSlot * 100 + dateIndex * 10 + windowIndex;
 
-          return {
-            key: `${date}-${window.label}-${technician}`,
-            date,
-            dateLabel: formatWeekDay(date),
-            window,
-            time: getSlotTime(window),
-            technician,
-            assignedTechnician,
-            jobsInSlot,
-            remainingCapacity: Math.max(0, MAX_JOBS_PER_TECH_WINDOW - jobsInSlot),
-            score,
-          };
-        }),
+            return {
+              key: `${date}-${window.label}-${technician}`,
+              date,
+              dateLabel: formatWeekDay(date),
+              window,
+              time: getSlotTime(window),
+              technician,
+              assignedTechnician,
+              jobsInSlot,
+              remainingCapacity: Math.max(0, MAX_JOBS_PER_TECH_WINDOW - jobsInSlot),
+              score,
+            };
+          }),
       ),
     )
     .filter((slot) => slot.jobsInSlot < MAX_JOBS_PER_TECH_WINDOW)
@@ -463,6 +502,7 @@ export default async function ScheduleAdminPage({
   const selectedDate = getSelectedDate(params?.date);
   const selectedTechnician = getSelectedTechnician(params?.tech);
   const selectedView = getSelectedView(params?.view);
+  const currentCharlotte = getCharlotteNow();
   let invoices: Awaited<ReturnType<typeof listInvoices>> = [];
   let error = "";
 
@@ -515,7 +555,13 @@ export default async function ScheduleAdminPage({
     .filter((invoice) => !invoice.service_date && invoice.status !== "paid" && invoice.status !== "void")
     .filter((invoice) => !selectedTechnician || invoice.assigned_technician === selectedTechnician)
     .slice(0, 20);
-  const recommendedSlots = getRecommendedSlots(invoices, weekDates, technicians, selectedTechnician);
+  const recommendedSlots = getRecommendedSlots(
+    invoices,
+    weekDates,
+    technicians,
+    selectedTechnician,
+    currentCharlotte,
+  );
   const selectedDateRecommendedSlots = recommendedSlots.filter((slot) => slot.date === selectedDate);
   const selectedDayLoadTechnicians = selectedTechnician ? [selectedTechnician] : technicians;
   const technicianDayLoads = getTechnicianDayLoads(scheduledInvoices, selectedDayLoadTechnicians);
