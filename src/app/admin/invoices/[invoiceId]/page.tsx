@@ -783,7 +783,7 @@ export default async function InvoicePage({
   );
 
   return (
-    <main className="min-h-screen bg-background text-foreground print:bg-white print:text-slate-950">
+    <main className="min-h-screen bg-background pb-24 text-foreground print:bg-white print:pb-0 print:text-slate-950">
       <header className="border-b border-border bg-white print:hidden">
         <div className="container-shell flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1292,8 +1292,8 @@ export default async function InvoicePage({
             )}
 
             {canManageInvoiceCharges ? (
-              <section className="border-t border-border px-5 py-5 print:hidden sm:px-7">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <details className="border-t border-border px-5 py-4 print:hidden sm:px-7">
+                <summary className="flex cursor-pointer list-none flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-primary/5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
                       Quick templates
@@ -1302,6 +1302,15 @@ export default async function InvoicePage({
                       Add a customer-facing charge, then edit the description or price above if needed.
                     </p>
                   </div>
+                  <span className="w-fit rounded-full border border-border bg-white px-3 py-1 text-xs font-bold text-muted">
+                    Open
+                  </span>
+                </summary>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <p className="text-sm leading-6 text-muted">
+                    Use these only when you need to add a new customer-facing charge or discount.
+                  </p>
                   <form action={addInvoiceItemAction}>
                     <input type="hidden" name="invoiceId" value={invoice.id} />
                     <button
@@ -1362,7 +1371,7 @@ export default async function InvoicePage({
                     </form>
                   ))}
                 </div>
-              </section>
+              </details>
             ) : null}
 
             {invoice.notes ? (
@@ -2492,6 +2501,47 @@ export default async function InvoicePage({
           </aside>
         </div>
       </section>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 p-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur print:hidden">
+        <div className="mx-auto grid max-w-5xl grid-cols-6 gap-1.5 sm:gap-2">
+          <a
+            href="#invoice-line-items"
+            className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-[0.7rem] font-black text-primary transition hover:bg-primary/5 sm:text-xs"
+          >
+            Charges
+          </a>
+          <a
+            href="#internal-parts"
+            className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-[0.7rem] font-black text-primary transition hover:bg-primary/5 sm:text-xs"
+          >
+            Parts
+          </a>
+          <Link
+            href={technicianReportHref}
+            className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-[0.7rem] font-black text-primary transition hover:bg-primary/5 sm:text-xs"
+          >
+            Report
+          </Link>
+          <Link
+            href={signatureHref}
+            className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-[0.7rem] font-black text-primary transition hover:bg-primary/5 sm:text-xs"
+          >
+            Sign
+          </Link>
+          <a
+            href="#invoice-controls"
+            className="rounded-xl bg-primary px-2 py-3 text-center text-[0.7rem] font-black text-primary-foreground transition hover:bg-primary/90 sm:text-xs"
+          >
+            Send
+          </a>
+          <a
+            href="#payment-history"
+            className="rounded-xl border border-primary/15 bg-white px-2 py-3 text-center text-[0.7rem] font-black text-primary transition hover:bg-primary/5 sm:text-xs"
+          >
+            Pay
+          </a>
+        </div>
+      </nav>
     </main>
   );
 }
