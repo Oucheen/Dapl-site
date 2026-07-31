@@ -14,6 +14,7 @@ const MAX = {
   promoCode: 40,
   leadSource: 120,
   preferredDate: 10,
+  preferredWindow: 40,
 };
 
 function validatePreferredDate(s: string): { ok: true; iso: string; label: string } | { ok: false } {
@@ -249,6 +250,8 @@ export async function POST(request: Request) {
   const leadSource = typeof data.leadSource === "string" ? data.leadSource.trim() : "";
   const preferredDateRaw =
     typeof data.preferredDate === "string" ? data.preferredDate.trim() : "";
+  const preferredWindow =
+    typeof data.preferredWindow === "string" ? data.preferredWindow.trim() : "";
   const message = typeof data.message === "string" ? data.message.trim() : "";
   const smsConsent = data.smsConsent === true;
 
@@ -275,6 +278,9 @@ export async function POST(request: Request) {
   }
   if (leadSource.length > MAX.leadSource) {
     return NextResponse.json({ error: "Lead source is too long." }, { status: 400 });
+  }
+  if (preferredWindow.length > MAX.preferredWindow) {
+    return NextResponse.json({ error: "Preferred time window is too long." }, { status: 400 });
   }
 
   const preferred = validatePreferredDate(preferredDateRaw);

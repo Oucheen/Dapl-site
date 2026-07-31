@@ -21,6 +21,17 @@ const applianceOptions = [
   "Other / not sure",
 ];
 
+const preferredTimeWindows = [
+  "",
+  "8:00 AM - 10:00 AM",
+  "10:00 AM - 12:00 PM",
+  "12:00 PM - 2:00 PM",
+  "2:00 PM - 4:00 PM",
+  "4:00 PM - 6:00 PM",
+  "6:00 PM - 8:00 PM",
+  "Any time",
+];
+
 type FormStatus = "idle" | "submitting" | "success" | "error";
 
 type ContactSectionProps = {
@@ -71,9 +82,13 @@ export function ContactSection({
       promoCode: String(fd.get("promoCode") ?? "").trim(),
       leadSource: String(fd.get("leadSource") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
+      preferredWindow: String(fd.get("preferredWindow") ?? "").trim(),
       smsConsent: String(fd.get("smsConsent") ?? "") === "yes",
       message: [
         String(fd.get("message") ?? "").trim(),
+        String(fd.get("preferredWindow") ?? "").trim()
+          ? `Preferred time window: ${String(fd.get("preferredWindow") ?? "").trim()}`
+          : "",
         String(fd.get("smsConsent") ?? "") === "yes"
           ? "SMS consent: Customer checked the service SMS consent box on the website form."
           : "SMS consent: Not checked on the website form.",
@@ -242,6 +257,29 @@ export function ContactSection({
                 <p className="mt-1.5 text-xs text-muted">
                   We will confirm availability. Same-day and emergency visits when possible.
                 </p>
+              </div>
+              <div className="min-w-0 sm:max-w-xs">
+                <label htmlFor="contact-preferred-window" className="text-sm font-semibold text-foreground">
+                  Preferred time window (optional)
+                </label>
+                <select
+                  id="contact-preferred-window"
+                  name="preferredWindow"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 transition focus:border-primary focus:ring-2"
+                  defaultValue=""
+                >
+                  {preferredTimeWindows.map((window) =>
+                    window === "" ? (
+                      <option key="empty" value="">
+                        Select window
+                      </option>
+                    ) : (
+                      <option key={window} value={window}>
+                        {window}
+                      </option>
+                    ),
+                  )}
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="contact-message" className="text-sm font-semibold text-foreground">

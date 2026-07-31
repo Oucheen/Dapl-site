@@ -16,6 +16,7 @@ type ChatStep =
   | "email"
   | "address"
   | "date"
+  | "time"
   | "confirm";
 
 type LeadDraft = {
@@ -26,6 +27,7 @@ type LeadDraft = {
   email: string;
   address: string;
   preferredDate: string;
+  preferredWindow: string;
   smsConsent: boolean;
 };
 
@@ -37,6 +39,7 @@ const initialDraft: LeadDraft = {
   email: "",
   address: "",
   preferredDate: "",
+  preferredWindow: "",
   smsConsent: false,
 };
 
@@ -58,6 +61,16 @@ const applianceOptions = [
   "Wine Cooler",
   "Commercial Refrigerator",
   "Not sure",
+];
+
+const preferredTimeWindows = [
+  "8:00 AM - 10:00 AM",
+  "10:00 AM - 12:00 PM",
+  "12:00 PM - 2:00 PM",
+  "2:00 PM - 4:00 PM",
+  "4:00 PM - 6:00 PM",
+  "6:00 PM - 8:00 PM",
+  "Any time",
 ];
 
 const defaultIssueOptions = [
@@ -404,6 +417,12 @@ export function ChatLeadWidget() {
 
     if (step === "date") {
       setDraftValue("preferredDate", value);
+      goToStep("time");
+      return;
+    }
+
+    if (step === "time") {
+      setDraftValue("preferredWindow", value);
       goToStep("confirm");
     }
   };
@@ -416,6 +435,7 @@ export function ChatLeadWidget() {
       `Chat request for ${draft.appliance || "appliance service"}.`,
       `Issue: ${draft.issue}`,
       draft.email ? "" : "Email was not provided by the customer.",
+      draft.preferredWindow ? `Preferred time window: ${draft.preferredWindow}` : "",
       draft.smsConsent
         ? "SMS consent: Customer checked the service SMS consent box in the website chat widget."
         : "SMS consent: Not checked in the website chat widget.",
@@ -435,6 +455,7 @@ export function ChatLeadWidget() {
           promoCode: "",
           leadSource: "chat-widget",
           preferredDate: draft.preferredDate,
+          preferredWindow: draft.preferredWindow,
           smsConsent: draft.smsConsent,
           message,
           company: "",
@@ -472,6 +493,7 @@ export function ChatLeadWidget() {
     email: "What email should we use? You can skip this.",
     address: "What is the service address?",
     date: "Preferred service date? You can skip this.",
+    time: "Preferred time window? You can skip this.",
     confirm: "Ready to send this request?",
   }[step];
 
@@ -547,6 +569,31 @@ export function ChatLeadWidget() {
               </div>
             ) : null}
 
+            {step === "time" ? (
+              <div className="grid grid-cols-1 gap-2">
+                {preferredTimeWindows.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleOption("preferredWindow", option, "confirm")}
+                    className="min-h-11 rounded-xl border border-border bg-white px-3 py-2 text-left text-xs font-semibold leading-snug text-primary transition hover:border-primary/30 hover:bg-primary/5 sm:text-sm"
+                  >
+                    {option}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraftValue("preferredWindow", "");
+                    goToStep("confirm");
+                  }}
+                  className="w-full rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
+                >
+                  Skip time
+                </button>
+              </div>
+            ) : null}
+
             {showTextInput ? (
               <div className="space-y-2">
                 {step === "issue" ? (
@@ -610,6 +657,7 @@ export function ChatLeadWidget() {
                     type="button"
                     onClick={() => {
                       setDraftValue("preferredDate", "");
+                      setDraftValue("preferredWindow", "");
                       goToStep("confirm");
                     }}
                     className="w-full rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
@@ -646,6 +694,11 @@ export function ChatLeadWidget() {
                   {draft.preferredDate ? (
                     <p>
                       <strong className="text-foreground">Date:</strong> {draft.preferredDate}
+                    </p>
+                  ) : null}
+                  {draft.preferredWindow ? (
+                    <p>
+                      <strong className="text-foreground">Time:</strong> {draft.preferredWindow}
                     </p>
                   ) : null}
                 </div>
