@@ -435,6 +435,7 @@ export function ChatLeadWidget() {
           promoCode: "",
           leadSource: "chat-widget",
           preferredDate: draft.preferredDate,
+          smsConsent: draft.smsConsent,
           message,
           company: "",
         }),

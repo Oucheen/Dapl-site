@@ -71,6 +71,7 @@ export function ContactSection({
       promoCode: String(fd.get("promoCode") ?? "").trim(),
       leadSource: String(fd.get("leadSource") ?? "").trim(),
       preferredDate: String(fd.get("preferredDate") ?? "").trim(),
+      smsConsent: String(fd.get("smsConsent") ?? "") === "yes",
       message: [
         String(fd.get("message") ?? "").trim(),
         String(fd.get("smsConsent") ?? "") === "yes"

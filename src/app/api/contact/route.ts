@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { sendSmsOptInConfirmation } from "@/lib/customer-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { saveLeadToSupabase } from "@/lib/supabase-leads";
 
@@ -249,6 +250,7 @@ export async function POST(request: Request) {
   const preferredDateRaw =
     typeof data.preferredDate === "string" ? data.preferredDate.trim() : "";
   const message = typeof data.message === "string" ? data.message.trim() : "";
+  const smsConsent = data.smsConsent === true;
 
   if (!name || name.length > MAX.name) {
     return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
@@ -333,6 +335,31 @@ export async function POST(request: Request) {
       title: "New lead received",
       details: leadSource ? `Submitted from ${leadSource}.` : "Submitted from the website.",
     });
+
+    if (smsConsent) {
+      const optInSmsResult = await sendSmsOptInConfirmation(phone);
+
+      if (optInSmsResult.ok) {
+        await createLeadActivity({
+          leadId: leadStorageResult.id,
+          eventType: "sms_opt_in_confirmation_sent",
+          title: "SMS opt-in confirmation sent",
+          details: `Sent to ${optInSmsResult.to}.`,
+          metadata: { messageSid: optInSmsResult.messageSid },
+        });
+      } else {
+        console.error("SMS opt-in confirmation failed:", optInSmsResult);
+        await createLeadActivity({
+          leadId: leadStorageResult.id,
+          eventType: "sms_opt_in_confirmation_failed",
+          title: "SMS opt-in confirmation failed",
+          details:
+            optInSmsResult.details ||
+            `Could not send opt-in confirmation (${optInSmsResult.reason}).`,
+          metadata: { reason: optInSmsResult.reason },
+        });
+      }
+    }
   }
 
   const html = buildInquiryHtml({
