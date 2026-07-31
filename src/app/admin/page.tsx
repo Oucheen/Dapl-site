@@ -14,6 +14,7 @@ import {
   type InvoiceRecord,
   type InvoicePaymentRecord,
 } from "@/lib/supabase-invoices";
+import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
 import { logoutAdmin } from "./leads/actions";
 
 const adminLinks = [
@@ -182,19 +183,22 @@ export default async function AdminPage() {
   let invoices: InvoiceRecord[] = [];
   let payments: InvoicePaymentRecord[] = [];
   let invoiceParts: InvoicePartRecord[] = [];
+  let leads: LeadRecord[] = [];
   let openPartsCount = 0;
   let dataError = "";
 
   try {
-    const [invoiceRows, accountingData, partsData] = await Promise.all([
+    const [invoiceRows, accountingData, partsData, leadRows] = await Promise.all([
       listInvoices(500),
       listAccountingData({ start: monthRange.start, end: monthRange.end }),
       listAllInvoiceParts(500),
+      listSupabaseLeads(100),
     ]);
 
     invoices = invoiceRows;
     payments = accountingData.payments;
     invoiceParts = partsData.parts;
+    leads = leadRows;
     openPartsCount = partsData.parts.filter(
       (part) => part.status !== "installed" && part.status !== "returned" && part.status !== "canceled",
     ).length;
@@ -235,12 +239,15 @@ export default async function AdminPage() {
     .filter((payment) => getCharlotteDateFromTimestamp(payment.payment_date) === today)
     .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
   const reminders = getCrmReminders({ invoices, payments, parts: invoiceParts, today }).slice(0, 8);
+  const newLeadCount = leads.filter((lead) => lead.status === "new").length;
+  const newLeadsHref = "/admin/leads?status=new";
   const visibleAdminLinks =
     permissions.user.role === "owner"
       ? adminLinks
       : permissions.hasTechnicianAccess
         ? adminLinks.filter((item) => TECHNICIAN_ADMIN_LINKS.has(item.href))
         : adminLinks.filter((item) => item.group !== "Settings");
+  const canOpenLeads = visibleAdminLinks.some((item) => item.href === "/admin/leads");
   const visibleAdminLinkGroups = adminLinkGroups.filter((group) =>
     visibleAdminLinks.some((item) => item.group === group),
   );
@@ -335,6 +342,18 @@ export default async function AdminPage() {
               <h2 className="mt-1 text-2xl font-black text-primary">{formatShortDate(today)}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
+              {canOpenLeads && newLeadCount > 0 ? (
+                <Link
+                  href={newLeadsHref}
+                  className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-600 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-red-700"
+                >
+                  <span className="h-2.5 w-2.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
+                  New leads
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-black text-red-700">
+                    {newLeadCount}
+                  </span>
+                </Link>
+              ) : null}
               <Link
                 href={`/admin/schedule?date=${today}`}
                 className="inline-flex rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
@@ -539,14 +558,24 @@ export default async function AdminPage() {
                     .map((item) => (
                       <Link
                         key={item.href}
-                        href={item.href}
-                        className="group rounded-lg border border-border bg-white p-3 transition hover:border-primary/30 hover:bg-primary/5"
+                        href={item.href === "/admin/leads" && newLeadCount > 0 ? newLeadsHref : item.href}
+                        className={`group rounded-lg border p-3 transition hover:-translate-y-0.5 hover:shadow-sm ${
+                          item.href === "/admin/leads" && newLeadCount > 0
+                            ? "border-red-500/25 bg-red-50 hover:border-red-500/35 hover:bg-red-50"
+                            : "border-border bg-white hover:border-primary/30 hover:bg-primary/5"
+                        }`}
                       >
                         <span className="flex items-center justify-between gap-3">
-                          <span className="font-black text-primary">{item.title}</span>
-                          <span className="text-xs font-black text-primary transition group-hover:translate-x-0.5">
-                            Open
+                          <span className="flex items-center gap-2 font-black text-primary">
+                            {item.title}
+                            {item.href === "/admin/leads" && newLeadCount > 0 ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[0.65rem] font-black text-white">
+                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
+                                {newLeadCount}
+                              </span>
+                            ) : null}
                           </span>
+                          <span className="text-xs font-black text-primary transition group-hover:translate-x-0.5">Open</span>
                         </span>
                         <span className="mt-1 block text-xs leading-5 text-muted">{item.description}</span>
                       </Link>
