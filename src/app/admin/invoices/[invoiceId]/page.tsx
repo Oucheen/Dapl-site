@@ -482,6 +482,14 @@ function getSmsNotice(status: string | undefined, customerPhone: string | null):
     };
   }
 
+  if (status === "non_us_phone") {
+    return {
+      className: "border-amber-500/20 bg-amber-50 text-amber-800",
+      title: "SMS is limited to US numbers",
+      body: "Customer SMS is configured for US phone numbers only. Use email or call this customer directly.",
+    };
+  }
+
   if (status === "config") {
     return {
       className: "border-amber-500/20 bg-amber-50 text-amber-800",

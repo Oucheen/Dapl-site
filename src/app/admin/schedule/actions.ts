@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { notifyCustomerScheduleSms } from "@/lib/customer-schedule-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   getInvoiceById,
@@ -166,6 +167,7 @@ export async function updateDispatchScheduleAction(formData: FormData) {
     jobStatus,
   });
   await notifyTechnicianScheduleChange(previousInvoiceData?.invoice ?? null, invoiceId);
+  await notifyCustomerScheduleSms(previousInvoiceData?.invoice ?? null, invoiceId);
   if (jobStatus) {
     await notifyTechnicianStatusChange(previousInvoiceData?.invoice ?? null, invoiceId, jobStatus);
   }
@@ -209,6 +211,7 @@ export async function moveDispatchScheduleAction(formData: FormData) {
     jobStatus: "scheduled",
   });
   await notifyTechnicianScheduleChange(invoiceData.invoice, invoiceId);
+  await notifyCustomerScheduleSms(invoiceData.invoice, invoiceId);
 
   await createLeadActivity({
     leadId,
@@ -241,6 +244,7 @@ export async function updateDispatchJobStatusAction(formData: FormData) {
   const previousInvoiceData = await getInvoiceById(invoiceId);
   const { leadId } = await updateInvoiceJobStatus(invoiceId, jobStatus);
   await notifyTechnicianStatusChange(previousInvoiceData?.invoice ?? null, invoiceId, jobStatus);
+  await notifyCustomerScheduleSms(previousInvoiceData?.invoice ?? null, invoiceId);
   await createLeadActivity({
     leadId,
     invoiceId,

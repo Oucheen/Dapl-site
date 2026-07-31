@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { notifyCustomerScheduleSms } from "@/lib/customer-schedule-sms";
 import { sendInvoiceEmail } from "@/lib/invoice-email";
 import { sendInvoiceSms } from "@/lib/invoice-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
@@ -180,6 +181,7 @@ export async function updateInvoiceScheduleAction(formData: FormData) {
     assignedTechnician,
   });
   await notifyTechnicianScheduleChange(previousInvoiceData?.invoice ?? null, id);
+  await notifyCustomerScheduleSms(previousInvoiceData?.invoice ?? null, id);
   await createLeadActivity({
     leadId,
     invoiceId: id,

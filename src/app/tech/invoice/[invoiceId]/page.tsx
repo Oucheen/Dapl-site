@@ -69,6 +69,7 @@ const errorNoticeMessages: Record<string, string> = {
   email_config: "Invoice email is not configured.",
   email_send_error: "Invoice email was not sent. Check delivery settings.",
   sms_missing_phone: "Customer phone is missing.",
+  sms_non_us_phone: "Customer SMS is limited to US phone numbers only.",
   sms_config: "Twilio SMS is not configured.",
   sms_send_error: "Invoice SMS was not sent. Check Twilio logs.",
 };

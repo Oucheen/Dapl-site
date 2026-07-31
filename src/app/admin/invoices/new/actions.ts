@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { notifyCustomerScheduleSms } from "@/lib/customer-schedule-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   createManualInvoice,
@@ -92,8 +93,10 @@ export async function createManualInvoiceAction(formData: FormData) {
     if (invoiceData?.invoice.assigned_technician) {
       await notifyTechnicianJobAssigned(invoiceData.invoice);
     }
+
+    await notifyCustomerScheduleSms(null, invoiceId);
   } catch {
-    // Telegram notifications should not block manual invoice creation.
+    // Notifications should not block manual invoice creation.
   }
 
   revalidatePath("/admin/leads");

@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { notifyCustomerScheduleSms } from "@/lib/customer-schedule-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   clearTelegramBotSession,
@@ -1077,7 +1078,9 @@ async function handleStatusCallback(callbackQuery: TelegramCallbackQuery, techni
     return;
   }
 
+  const previousInvoice = invoice;
   const { leadId } = await updateInvoiceJobStatus(invoiceId, jobStatus);
+  await notifyCustomerScheduleSms(previousInvoice, invoiceId);
 
   await createLeadActivity({
     leadId,
