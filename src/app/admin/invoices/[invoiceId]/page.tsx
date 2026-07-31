@@ -1689,7 +1689,7 @@ export default async function InvoicePage({
           </div>
           </div>
 
-          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden">
+          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm print:hidden xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Invoice controls
             </p>
