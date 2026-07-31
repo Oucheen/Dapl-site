@@ -34,13 +34,6 @@ function normalizePhone(value: string | null | undefined) {
   return value?.replace(/[^\d+]/g, "") ?? "";
 }
 
-function getMapsSearchUrl(address: string | null | undefined) {
-  const normalizedAddress = address?.trim();
-  return normalizedAddress
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`
-    : "";
-}
-
 function formatServiceTime(value?: string | null) {
   if (!value) {
     return "";
@@ -103,20 +96,19 @@ function buildJobNotificationMessage(invoice: InvoiceRecord) {
 
 function buildJobNotificationButtons(invoice: InvoiceRecord, telegramUserId: string) {
   const siteUrl = getSiteUrl();
-  const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
   const reportUrl = buildTechnicianReportUrl(invoice.id, telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
-    [
-      ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
-      { text: "Invoice", url: invoiceUrl },
-    ],
     [
       { text: "On the way", callback_data: `job:way:${invoice.id}` },
       { text: "In progress", callback_data: `job:progress:${invoice.id}` },
     ],
     [
-      ...(reportUrl ? [{ text: "Report page", url: reportUrl }] : []),
+      ...(reportUrl ? [{ text: "Report", url: reportUrl }] : []),
+      { text: "Invoice", url: invoiceUrl },
+    ],
+    [
+      { text: "Done", callback_data: `job:done:${invoice.id}` },
     ],
   ];
 
@@ -153,11 +145,11 @@ function buildJobStatusNotificationMessage(invoice: InvoiceRecord, jobStatus: In
 
 function buildJobStatusNotificationButtons(invoice: InvoiceRecord, telegramUserId: string) {
   const siteUrl = getSiteUrl();
-  const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
+  const reportUrl = buildTechnicianReportUrl(invoice.id, telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
     [
-      ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
+      ...(reportUrl ? [{ text: "Report", url: reportUrl }] : []),
       { text: "Invoice", url: invoiceUrl },
     ],
   ];

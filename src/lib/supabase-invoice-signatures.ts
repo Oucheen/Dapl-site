@@ -129,6 +129,48 @@ export async function getLatestInvoiceSignature(invoiceId: string) {
   return signatures[0] ?? null;
 }
 
+export async function listLatestInvoiceSignatures(invoiceIds: string[]) {
+  const uniqueInvoiceIds = [...new Set(invoiceIds.filter(isUuid))];
+  const grouped = new Map<string, InvoiceSignatureRecord | null>(
+    uniqueInvoiceIds.map((invoiceId) => [invoiceId, null]),
+  );
+  const config = getSupabaseConfig();
+
+  if (!config || uniqueInvoiceIds.length === 0) {
+    return grouped;
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    invoice_id: `in.(${uniqueInvoiceIds.join(",")})`,
+    order: "signed_at.desc,created_at.desc",
+    limit: String(Math.min(500, uniqueInvoiceIds.length * 3)),
+  });
+
+  const response = await fetch(`${getTableUrl(config)}?${params.toString()}`, {
+    headers: headers(config),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    console.error(`Supabase invoice signatures fetch failed: ${response.status} ${details}`);
+    return grouped;
+  }
+
+  const signatures = (await response.json()) as InvoiceSignatureRecord[];
+
+  for (const signature of signatures) {
+    if (grouped.get(signature.invoice_id)) {
+      continue;
+    }
+
+    grouped.set(signature.invoice_id, signature);
+  }
+
+  return grouped;
+}
+
 export async function saveInvoiceSignature(input: SaveInvoiceSignatureInput) {
   if (!isUuid(input.invoiceId)) {
     throw new Error("Invalid invoice id.");

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { TechnicianSelect } from "@/components/admin/technician-select";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
@@ -290,6 +291,10 @@ function getNextAction(input: {
   unexpensedPartsCount: number;
   customerEmail: string | null;
   scheduleHref: string;
+  signatureHref: string;
+  technicianReportHref: string;
+  hasSignature: boolean;
+  hasTechnicianReportPhoto: boolean;
 }) {
   const jobStatus = getJobStatus(input.invoice);
 
@@ -300,6 +305,16 @@ function getNextAction(input: {
       href: "/admin/invoices",
       cta: "Open invoices",
       className: "border-slate-300 bg-slate-50 text-slate-700",
+    };
+  }
+
+  if (input.invoice.status === "paid" && jobStatus !== "done") {
+    return {
+      title: "Close job",
+      body: "Payment is recorded. Mark the job completed so it leaves the open workflow.",
+      href: "#invoice-controls",
+      cta: "Close job",
+      className: "border-emerald-500/25 bg-emerald-50 text-emerald-900",
     };
   }
 
@@ -352,6 +367,26 @@ function getNextAction(input: {
       href: "#internal-parts",
       cta: "Review parts",
       className: "border-orange-500/25 bg-orange-50 text-orange-900",
+    };
+  }
+
+  if (!input.hasTechnicianReportPhoto) {
+    return {
+      title: "Get technician report",
+      body: "Ask the technician to add field notes and at least one job photo before final approval.",
+      href: input.technicianReportHref,
+      cta: "Open report",
+      className: "border-amber-500/25 bg-amber-50 text-amber-900",
+    };
+  }
+
+  if (Number(input.invoice.total ?? 0) > 0 && !input.hasSignature) {
+    return {
+      title: "Get signature",
+      body: "Customer approval is missing. Have the customer sign the invoice terms before sending or closing.",
+      href: input.signatureHref,
+      cta: "Open signature",
+      className: "border-amber-500/25 bg-amber-50 text-amber-900",
     };
   }
 
@@ -736,6 +771,11 @@ export default async function InvoicePage({
       item.event_type === "telegram_report_photo" ||
       item.metadata?.source === "technician_report_page",
   );
+  const hasTechnicianReportPhoto = activity.some(
+    (item) =>
+      item.event_type === "telegram_report_photo" &&
+      item.metadata?.source === "technician_report_page",
+  );
   const hasInvoiceBeenSent =
     invoice.status === "sent" ||
     invoice.status === "paid" ||
@@ -785,6 +825,10 @@ export default async function InvoicePage({
     unexpensedPartsCount: unexpensedParts.length,
     customerEmail,
     scheduleHref,
+    signatureHref,
+    technicianReportHref,
+    hasSignature: Boolean(signature),
+    hasTechnicianReportPhoto,
   });
   const availableInvoiceStatuses = INVOICE_STATUSES.filter(
     (status) =>
@@ -808,17 +852,14 @@ export default async function InvoicePage({
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="w-full min-w-[18rem] sm:w-auto">
+              <AdminGlobalSearch compact />
+            </div>
             <Link
               href="/admin"
               className="inline-flex w-fit rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
             >
               Dashboard
-            </Link>
-            <Link
-              href="/admin/search"
-              className="inline-flex w-fit rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
-            >
-              Search
             </Link>
             <Link
               href={scheduleHref}
@@ -1748,14 +1789,14 @@ export default async function InvoicePage({
               </div>
 
               <div className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                <div className="grid gap-3 bg-slate-50 px-3 py-3 text-sm">
                   <div className="min-w-0">
                     <p className="whitespace-nowrap font-bold text-foreground">Charges</p>
                     <p className="text-xs leading-5 text-muted">
                       Customer-facing service lines and prices.
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center justify-end gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         hasCustomerChargeAmount,
@@ -1772,38 +1813,38 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-sm">
+                <div className="grid gap-3 px-3 py-3 text-sm">
                   <div className="min-w-0">
-                    <p className="whitespace-nowrap font-bold text-foreground">Tech report</p>
+                    <p className="font-bold text-foreground">Tech report</p>
                     <p className="text-xs leading-5 text-muted">
                       Field notes, unit photos, model, and parts proof.
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center justify-end gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
-                        hasTechnicianReport,
+                        hasTechnicianReport && hasTechnicianReportPhoto,
                       )}`}
                     >
-                      {hasTechnicianReport ? "Submitted" : "Missing"}
+                      {hasTechnicianReportPhoto ? "With photo" : hasTechnicianReport ? "Need photo" : "Missing"}
                     </span>
                     <Link
                       href={technicianReportHref}
                       className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
                     >
-                      Report page
+                      Report
                     </Link>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                <div className="grid gap-3 bg-slate-50 px-3 py-3 text-sm">
                   <div className="min-w-0">
                     <p className="whitespace-nowrap font-bold text-foreground">Signature</p>
                     <p className="text-xs leading-5 text-muted">
                       Customer accepts the invoice and service terms.
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center justify-end gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         Boolean(signature),
@@ -1815,19 +1856,19 @@ export default async function InvoicePage({
                       href={signatureHref}
                       className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
                     >
-                      Open
+                      {signature ? "Open" : "Get signature"}
                     </Link>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-sm">
+                <div className="grid gap-3 px-3 py-3 text-sm">
                   <div className="min-w-0">
                     <p className="whitespace-nowrap font-bold text-foreground">Send invoice</p>
                     <p className="text-xs leading-5 text-muted">
                       Email or SMS was sent from this invoice.
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center justify-end gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         hasInvoiceBeenSent,
@@ -1844,14 +1885,14 @@ export default async function InvoicePage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-slate-50 px-3 py-3 text-sm">
+                <div className="grid gap-3 bg-slate-50 px-3 py-3 text-sm">
                   <div className="min-w-0">
                     <p className="whitespace-nowrap font-bold text-foreground">Payment / close</p>
                     <p className="text-xs leading-5 text-muted">
                       Balance collected, then job can be completed.
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getWorkflowStatusClass(
                         isBalanceCollected,
@@ -1866,6 +1907,14 @@ export default async function InvoicePage({
                     >
                       {isJobDone ? "Closed" : "Open"}
                     </span>
+                    {isBalanceCollected && !isJobDone ? (
+                      <a
+                        href="#invoice-controls"
+                        className="rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5"
+                      >
+                        Close
+                      </a>
+                    ) : null}
                   </div>
                 </div>
               </div>

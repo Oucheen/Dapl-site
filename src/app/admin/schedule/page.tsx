@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { TechnicianSelect } from "@/components/admin/technician-select";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
@@ -576,17 +577,14 @@ export default async function ScheduleAdminPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div className="w-full min-w-[18rem] sm:w-auto">
+              <AdminGlobalSearch compact />
+            </div>
             <Link
               href="/admin"
               className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
             >
               Dashboard
-            </Link>
-            <Link
-              href="/admin/search"
-              className="inline-flex w-fit items-center justify-center rounded-full border border-primary/15 bg-white px-5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/5"
-            >
-              Search
             </Link>
             <Link
               href="/admin/invoices"

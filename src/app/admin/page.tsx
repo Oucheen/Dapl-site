@@ -15,6 +15,11 @@ import {
   type InvoicePaymentRecord,
 } from "@/lib/supabase-invoices";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
+import { listActivitiesForLeads, type LeadActivityRecord } from "@/lib/supabase-activity";
+import {
+  listLatestInvoiceSignatures,
+  type InvoiceSignatureRecord,
+} from "@/lib/supabase-invoice-signatures";
 import { logoutAdmin } from "./leads/actions";
 
 const adminLinks = [
@@ -184,6 +189,8 @@ export default async function AdminPage() {
   let payments: InvoicePaymentRecord[] = [];
   let invoiceParts: InvoicePartRecord[] = [];
   let leads: LeadRecord[] = [];
+  let activitiesByLead = new Map<string, LeadActivityRecord[]>();
+  let signaturesByInvoice = new Map<string, InvoiceSignatureRecord | null>();
   let openPartsCount = 0;
   let dataError = "";
 
@@ -199,6 +206,16 @@ export default async function AdminPage() {
     payments = accountingData.payments;
     invoiceParts = partsData.parts;
     leads = leadRows;
+    const leadIds = invoiceRows.map((invoice) => invoice.lead_id).filter(Boolean) as string[];
+    const signatureInvoiceIds = invoiceRows
+      .filter((invoice) => invoice.status !== "void")
+      .slice(0, 200)
+      .map((invoice) => invoice.id);
+
+    [activitiesByLead, signaturesByInvoice] = await Promise.all([
+      listActivitiesForLeads(leadIds, 12),
+      listLatestInvoiceSignatures(signatureInvoiceIds),
+    ]);
     openPartsCount = partsData.parts.filter(
       (part) => part.status !== "installed" && part.status !== "returned" && part.status !== "canceled",
     ).length;
@@ -241,6 +258,78 @@ export default async function AdminPage() {
   const reminders = getCrmReminders({ invoices, payments, parts: invoiceParts, today }).slice(0, 8);
   const newLeadCount = leads.filter((lead) => lead.status === "new").length;
   const newLeadsHref = "/admin/leads?status=new";
+  const openInvoiceRows = invoices.filter((invoice) => invoice.status !== "void");
+  const unsentInvoices = openInvoiceRows.filter(
+    (invoice) => invoice.status === "draft" && Number(invoice.total ?? 0) > 0,
+  );
+  const noSignatureInvoices = openInvoiceRows.filter(
+    (invoice) => Number(invoice.total ?? 0) > 0 && !signaturesByInvoice.get(invoice.id),
+  );
+  const needsReportInvoices = openInvoiceRows.filter((invoice) => {
+    if (!invoice.lead_id || !invoice.assigned_technician || !invoice.service_date) {
+      return false;
+    }
+
+    const jobStatus = getJobStatus(invoice);
+
+    if (jobStatus === "canceled") {
+      return false;
+    }
+
+    const hasReport = (activitiesByLead.get(invoice.lead_id) ?? []).some(
+      (activity) =>
+        activity.invoice_id === invoice.id &&
+        activity.metadata?.source === "technician_report_page",
+    );
+
+    return !hasReport && invoice.service_date <= today;
+  });
+  const pastJobsOpen = openInvoiceRows.filter((invoice) => {
+    if (!invoice.service_date || invoice.service_date >= today) {
+      return false;
+    }
+
+    const jobStatus = getJobStatus(invoice);
+
+    return jobStatus !== "done" && jobStatus !== "canceled" && invoice.status !== "paid";
+  });
+  const actionQueueCards = [
+    {
+      label: "Unsent invoices",
+      value: unsentInvoices.length,
+      note: "Draft invoices with customer balance",
+      href: "/admin/invoices?status=draft",
+      urgent: unsentInvoices.length > 0,
+    },
+    {
+      label: "No signature",
+      value: noSignatureInvoices.length,
+      note: "Customer approval is missing",
+      href: "/admin/invoices",
+      urgent: noSignatureInvoices.length > 0,
+    },
+    {
+      label: "Need payment",
+      value: unpaidInvoices.length,
+      note: formatMoney(unpaidInvoices.reduce((sum, item) => sum + item.amountDue, 0)),
+      href: "/admin/accounting",
+      urgent: unpaidInvoices.length > 0,
+    },
+    {
+      label: "Need report",
+      value: needsReportInvoices.length,
+      note: "Visited jobs without tech report",
+      href: "/admin/invoices",
+      urgent: needsReportInvoices.length > 0,
+    },
+    {
+      label: "Past jobs open",
+      value: pastJobsOpen.length,
+      note: "Scheduled before today, not closed",
+      href: "/admin/schedule",
+      urgent: pastJobsOpen.length > 0,
+    },
+  ];
   const visibleAdminLinks =
     permissions.user.role === "owner"
       ? adminLinks
@@ -386,6 +475,48 @@ export default async function AdminPage() {
               </Link>
             ))}
           </div>
+
+          {!permissions.hasTechnicianAccess ? (
+            <div className="mt-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                    Action queue
+                  </p>
+                  <h3 className="mt-1 font-black text-primary">What needs work now</h3>
+                </div>
+                {newLeadCount > 0 ? (
+                  <Link href={newLeadsHref} className="text-xs font-bold text-red-700">
+                    Open new leads
+                  </Link>
+                ) : null}
+              </div>
+              <div className="grid gap-3 md:grid-cols-5">
+                {actionQueueCards.map((card) => (
+                  <Link
+                    key={card.label}
+                    href={card.href}
+                    className={`rounded-xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm ${
+                      card.urgent
+                        ? "border-amber-500/30 bg-amber-50 text-amber-900 hover:bg-white"
+                        : "border-border bg-slate-50 text-slate-600 hover:bg-white"
+                    }`}
+                  >
+                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.14em]">
+                      {card.label}
+                    </span>
+                    <span className="mt-2 flex items-center gap-2 text-2xl font-black">
+                      {card.urgent ? (
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+                      ) : null}
+                      {card.value}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5">{card.note}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-5 rounded-xl border border-border bg-white p-4">
             <div className="flex items-center justify-between gap-3">

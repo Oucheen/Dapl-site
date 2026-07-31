@@ -175,13 +175,6 @@ function getSiteUrl() {
   ).replace(/\/+$/, "");
 }
 
-function getMapsSearchUrl(address: string | null | undefined) {
-  const normalizedAddress = address?.trim();
-  return normalizedAddress
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizedAddress)}`
-    : "";
-}
-
 function formatServiceTime(value?: string | null) {
   if (!value) {
     return "";
@@ -385,7 +378,6 @@ function buildJobMessage(invoice: InvoiceRecord) {
 
 function buildJobButtons(invoice: InvoiceRecord, technician: TelegramTechnician) {
   const siteUrl = getSiteUrl();
-  const mapsUrl = getMapsSearchUrl(invoice.service_address);
   const invoiceUrl = buildTechnicianInvoiceUrl(invoice.id, technician.telegramUserId, siteUrl) || `${siteUrl}/admin/invoices/${invoice.id}`;
   const reportUrl = buildTechnicianReportUrl(invoice.id, technician.telegramUserId, siteUrl);
   const buttons: InlineButton[][] = [
@@ -394,15 +386,11 @@ function buildJobButtons(invoice: InvoiceRecord, technician: TelegramTechnician)
       { text: "In progress", callback_data: `job:progress:${invoice.id}` },
     ],
     [
-      { text: "Need parts", callback_data: `job:parts:${invoice.id}` },
-      { text: "Done", callback_data: `job:done:${invoice.id}` },
-    ],
-    [
-      ...(mapsUrl ? [{ text: "Maps", url: mapsUrl }] : []),
+      ...(reportUrl ? [{ text: "Report", url: reportUrl }] : []),
       { text: "Invoice", url: invoiceUrl },
     ],
     [
-      ...(reportUrl ? [{ text: "Report page", url: reportUrl }] : []),
+      { text: "Done", callback_data: `job:done:${invoice.id}` },
     ],
   ];
 
