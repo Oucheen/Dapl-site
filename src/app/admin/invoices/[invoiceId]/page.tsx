@@ -761,7 +761,17 @@ export default async function InvoicePage({
     ? await getTelegramUserByTechnicianName(invoice.assigned_technician)
     : null;
   const directTechnicianReportHref = telegramTechnician?.user
-    ? buildTechnicianReportUrl(invoice.id, telegramTechnician.user.telegram_user_id, "")
+    ? (() => {
+        const reportHref = buildTechnicianReportUrl(
+          invoice.id,
+          telegramTechnician.user.telegram_user_id,
+          "",
+        );
+
+        return reportHref
+          ? `${reportHref}&${new URLSearchParams({ returnTo: `/admin/invoices/${invoice.id}` }).toString()}`
+          : "";
+      })()
     : "";
   const technicianReportHref = directTechnicianReportHref || technicianDayHref;
   const publicInvoicePath = getPublicInvoicePath(invoice.invoice_number);

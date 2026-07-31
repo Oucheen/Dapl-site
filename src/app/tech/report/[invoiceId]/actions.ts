@@ -47,6 +47,30 @@ function buildReportRedirect(invoiceId: string, token: string, params: Record<st
   return `/tech/report/${invoiceId}?${searchParams.toString()}`;
 }
 
+function getSafeReturnTo(value: string) {
+  const returnTo = value.trim();
+
+  if (!returnTo.startsWith("/admin/invoices/") && !returnTo.startsWith("/tech/invoice/")) {
+    return "";
+  }
+
+  return returnTo;
+}
+
+function appendParams(path: string, params: Record<string, string>) {
+  const [baseWithQuery, hash = ""] = path.split("#", 2);
+  const [base, existingQuery = ""] = baseWithQuery.split("?", 2);
+  const searchParams = new URLSearchParams(existingQuery);
+
+  Object.entries(params).forEach(([key, value]) => {
+    searchParams.set(key, value);
+  });
+
+  const queryString = searchParams.toString();
+
+  return `${base}${queryString ? `?${queryString}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
 function failReportSubmit(code: string): never {
   throw new ReportSubmitError(code);
 }
@@ -128,6 +152,7 @@ async function requireActivityCreated(input: Parameters<typeof createLeadActivit
 export async function submitTechnicianReport(formData: FormData) {
   const invoiceId = getOptionalText(formData, "invoiceId");
   const token = getOptionalText(formData, "token");
+  const returnTo = getSafeReturnTo(getOptionalText(formData, "returnTo"));
 
   if (!invoiceId || !token) {
     throw new Error("Report form is missing required fields.");
@@ -135,6 +160,7 @@ export async function submitTechnicianReport(formData: FormData) {
 
   let redirectTo = buildReportRedirect(invoiceId, token, {
     error: "save_failed",
+    ...(returnTo ? { returnTo } : {}),
   });
 
   try {
@@ -341,16 +367,16 @@ export async function submitTechnicianReport(formData: FormData) {
     revalidatePath(`/admin/leads/${leadId}`);
     revalidatePath(`/admin/invoices/${invoiceId}`);
     revalidatePath(`/tech/invoice/${invoiceId}`);
-    redirectTo = `/tech/invoice/${invoiceId}?${new URLSearchParams({
-      t: token,
+    redirectTo = appendParams(returnTo || `/tech/invoice/${invoiceId}?${new URLSearchParams({ t: token }).toString()}`, {
       notice: failedPhotoLabels.length
         ? "tech_report_saved_photo_warning"
         : "tech_report_saved",
-    }).toString()}`;
+    });
   } catch (error) {
     if (error instanceof ReportSubmitError) {
       redirectTo = buildReportRedirect(invoiceId, token, {
         error: error.code,
+        ...(returnTo ? { returnTo } : {}),
       });
     }
 

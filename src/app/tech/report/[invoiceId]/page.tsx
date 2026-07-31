@@ -37,6 +37,26 @@ const ERROR_MESSAGES: Record<string, string> = {
 const WARNING_MESSAGES: Record<string, string> = {
   photo_upload_failed: "Report was saved, but one or more photos could not upload. Please try smaller JPG/PNG photos or send them in Telegram.",
 };
+
+function getSafeReturnTo(value: string | string[] | undefined) {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const returnTo = String(rawValue ?? "").trim();
+
+  if (!returnTo.startsWith("/admin/invoices/") && !returnTo.startsWith("/tech/invoice/")) {
+    return "";
+  }
+
+  return returnTo;
+}
+
+function appendReturnTo(path: string, returnTo: string) {
+  if (!returnTo) {
+    return path;
+  }
+
+  return `${path}${path.includes("?") ? "&" : "?"}${new URLSearchParams({ returnTo }).toString()}`;
+}
+
 const PHOTO_UPLOAD_FIELDS = [
   { name: "unitPhoto", label: "Unit photo", accept: "image/*" },
   { name: "serialPhoto", label: "Model / serial photo", accept: "image/*" },
@@ -301,6 +321,7 @@ export default async function TechnicianReportPage({
   params: Promise<{ invoiceId: string }>;
   searchParams?: Promise<{
     error?: string | string[];
+    returnTo?: string | string[];
     saved?: string | string[];
     t?: string | string[];
     warning?: string | string[];
@@ -312,6 +333,7 @@ export default async function TechnicianReportPage({
   const token = Array.isArray(query?.t) ? query?.t[0] : query?.t;
   const saved = Array.isArray(query?.saved) ? query?.saved[0] : query?.saved;
   const warning = Array.isArray(query?.warning) ? query?.warning[0] : query?.warning;
+  const returnTo = getSafeReturnTo(query?.returnTo);
   const telegramUserId = verifyTechnicianReportToken(invoiceId, token);
 
   if (!telegramUserId) {
@@ -374,12 +396,13 @@ export default async function TechnicianReportPage({
   const hasPreviousReport = Boolean(latestReportActivity);
   const storedPhotosByField = getStoredPhotosByField(invoiceActivities);
   const storedPhotoCount = storedPhotosByField.size;
-  const invoiceHref = `/tech/invoice/${invoiceId}?${new URLSearchParams({
+  const defaultInvoiceHref = `/tech/invoice/${invoiceId}?${new URLSearchParams({
     t: token,
   }).toString()}`;
-  const editReportHref = `/tech/report/${invoice.id}?${new URLSearchParams({
+  const invoiceHref = returnTo || defaultInvoiceHref;
+  const editReportHref = appendReturnTo(`/tech/report/${invoice.id}?${new URLSearchParams({
     t: token,
-  }).toString()}`;
+  }).toString()}`, returnTo);
 
   if (!leadId) {
     return <ReportUnavailable message="This invoice is not linked to a customer card." />;
@@ -469,6 +492,7 @@ export default async function TechnicianReportPage({
           <input type="hidden" name="invoiceId" value={invoice.id} />
           <input type="hidden" name="leadId" value={leadId} />
           <input type="hidden" name="token" value={token} />
+          {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
 
           <div className="grid gap-4">
             <label className="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted">
