@@ -1,8 +1,5 @@
 import { getShortPublicInvoiceUrl } from "@/lib/invoice-public-link";
-import {
-  calculateInvoiceAmountDue,
-  type InvoiceWithItems,
-} from "@/lib/supabase-invoices";
+import { type InvoiceWithItems } from "@/lib/supabase-invoices";
 
 type SendInvoiceSmsResult =
   | { ok: true; to: string; messageSid: string }
@@ -32,21 +29,11 @@ function normalizePhone(value: string | null | undefined) {
   return trimmed;
 }
 
-function formatMoney(value: number | string | null | undefined) {
-  const amount = Number(value ?? 0);
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number.isFinite(amount) ? amount : 0);
-}
-
 export function buildInvoiceSmsText(invoiceData: InvoiceWithItems) {
-  const { invoice, payments } = invoiceData;
-  const amountDue = calculateInvoiceAmountDue(invoice, payments);
+  const { invoice } = invoiceData;
   const invoiceUrl = getShortPublicInvoiceUrl(invoice.invoice_number);
 
-  return `DAPL invoice ${formatMoney(amountDue)} due: ${invoiceUrl} Reply/call 704-266-0508`;
+  return `Invoice due from DAPL Appliance Repair: ${invoiceUrl} Reply STOP to opt out.`;
 }
 
 export async function sendInvoiceSms(
