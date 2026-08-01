@@ -96,30 +96,30 @@ export type InvoiceScheduleInput = {
 
 export const INVOICE_ITEM_TEMPLATES = [
   {
-    key: "diagnostic",
-    label: "Diagnostic",
-    description: "Diagnostic / service call",
+    key: "service-call",
+    label: "Service call",
+    description: "Diagnosis and service visit",
     quantity: 1,
     unitPrice: 89,
   },
   {
     key: "labor",
     label: "Labor",
-    description: "Labor",
+    description: "Labor charge",
     quantity: 1,
     unitPrice: 125,
   },
   {
-    key: "parts",
-    label: "Customer parts charge",
-    description: "Parts charge billed to customer",
+    key: "repair-service",
+    label: "Repair",
+    description: "Appliance repair service",
     quantity: 1,
-    unitPrice: 0,
+    unitPrice: 150,
   },
   {
-    key: "repair-service",
-    label: "Repair service",
-    description: "Appliance repair service",
+    key: "installation",
+    label: "Installation",
+    description: "Installation / setup service",
     quantity: 1,
     unitPrice: 150,
   },
@@ -131,11 +131,11 @@ export const INVOICE_ITEM_TEMPLATES = [
     unitPrice: 120,
   },
   {
-    key: "installation",
-    label: "Installation",
-    description: "Installation / setup service",
+    key: "parts",
+    label: "Customer parts charge",
+    description: "Parts billed to customer",
     quantity: 1,
-    unitPrice: 150,
+    unitPrice: 0,
   },
 ] as const;
 

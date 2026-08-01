@@ -162,7 +162,13 @@ export async function notifyCustomerScheduleSms(
       return;
     }
 
-    const result = await sendCustomerSms(nextInvoice.customer_phone, intent.body);
+    const customerPhone = nextInvoice.customer_phone?.trim();
+
+    if (!customerPhone) {
+      return;
+    }
+
+    const result = await sendCustomerSms(customerPhone, intent.body);
 
     if (!result.ok) {
       if (result.reason === "config" || result.reason === "send_error") {

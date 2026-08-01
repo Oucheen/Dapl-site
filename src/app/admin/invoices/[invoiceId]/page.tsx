@@ -799,6 +799,11 @@ export default async function InvoicePage({
   const lineItemsLockedByRole = !canManageInvoiceCharges && !isInvoiceClosed;
   const paymentInputDefaults = getCharlotteDateTimeInputValues();
   const mapsUrl = getMapsSearchUrl(invoice.service_address);
+  const isVisitScheduleLocked = Boolean(
+    invoice.service_date &&
+      (invoice.service_time || invoice.service_window) &&
+      invoice.assigned_technician?.trim(),
+  );
   const scheduleHref = invoice.service_date
     ? `/admin/schedule?date=${encodeURIComponent(invoice.service_date)}`
     : "/admin/schedule";
@@ -2104,55 +2109,67 @@ export default async function InvoicePage({
                   </Link>
                 </div>
               </div>
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Visit date
-                <input
-                  type="date"
-                  name="serviceDate"
-                  defaultValue={invoice.service_date ?? ""}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Exact time
-                <input
-                  type="time"
-                  name="serviceTime"
-                  defaultValue={invoice.service_time ?? ""}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Time window
-                <select
-                  name="serviceWindow"
-                  defaultValue={invoice.service_window ?? ""}
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
-                >
-                  <option value="">Not selected</option>
-                  {SERVICE_WINDOWS.map((window) => (
-                    <option key={window} value={window}>
-                      {window}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                Technician
-                <TechnicianSelect
-                  name="assignedTechnician"
-                  technicians={technicians}
-                  defaultValue={invoice.assigned_technician ?? ""}
-                  placeholder="Name"
-                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
-                />
-              </label>
-              <button
-                type="submit"
-                className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-              >
-                Save visit schedule
-              </button>
+              {isVisitScheduleLocked ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
+                  <p className="font-black">Visit is scheduled.</p>
+                  <p className="mt-1">
+                    Date, time, and technician are locked here. Use the dispatch schedule to
+                    reschedule or assign a different technician.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Visit date
+                    <input
+                      type="date"
+                      name="serviceDate"
+                      defaultValue={invoice.service_date ?? ""}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Exact time
+                    <input
+                      type="time"
+                      name="serviceTime"
+                      defaultValue={invoice.service_time ?? ""}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Time window
+                    <select
+                      name="serviceWindow"
+                      defaultValue={invoice.service_window ?? ""}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                    >
+                      <option value="">Not selected</option>
+                      {SERVICE_WINDOWS.map((window) => (
+                        <option key={window} value={window}>
+                          {window}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                    Technician
+                    <TechnicianSelect
+                      name="assignedTechnician"
+                      technicians={technicians}
+                      defaultValue={invoice.assigned_technician ?? ""}
+                      placeholder="Name"
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 placeholder:text-muted focus:border-primary focus:ring-2"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-primary px-3 py-3 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                  >
+                    Save visit schedule
+                  </button>
+                </>
+              )}
             </form>
 
             <div className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
