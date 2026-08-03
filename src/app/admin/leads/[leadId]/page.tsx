@@ -560,7 +560,7 @@ export default async function LeadDetailPage({
             </section>
           </div>
 
-          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <aside className="self-start rounded-2xl border border-border bg-white p-5 shadow-sm xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
               Manage lead
             </p>

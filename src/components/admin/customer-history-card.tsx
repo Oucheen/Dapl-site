@@ -31,6 +31,8 @@ function formatMoney(value: number | string | null | undefined) {
 }
 
 export function CustomerHistoryCard({ items }: CustomerHistoryCardProps) {
+  const shouldScroll = items.length > 3;
+
   return (
     <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -49,7 +51,7 @@ export function CustomerHistoryCard({ items }: CustomerHistoryCardProps) {
       </div>
 
       {items.length > 0 ? (
-        <ul className="mt-5 space-y-3">
+        <ul className={`mt-5 space-y-3 ${shouldScroll ? "max-h-[360px] overflow-y-auto pr-2" : ""}`}>
           {items.map((item) => {
             const amount = formatMoney(item.amount);
 
