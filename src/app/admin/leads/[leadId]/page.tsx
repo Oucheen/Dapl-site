@@ -151,44 +151,47 @@ function isTechnicianReportPageActivity(activity: LeadActivityRecord) {
   return activity.metadata?.source === "technician_report_page";
 }
 
+function getTechnicianReportActivityKey(activity: LeadActivityRecord) {
+  if (activity.event_type === "telegram_report_photo") {
+    const storagePhoto = getStoragePhoto(activity);
+
+    if (storagePhoto?.field) {
+      return `photo:${storagePhoto.field}`;
+    }
+
+    if (storagePhoto?.label) {
+      return `photo:${storagePhoto.label.toLowerCase()}`;
+    }
+
+    const telegramPhoto = getTelegramPhoto(activity);
+    const captionKey = telegramPhoto?.caption.trim().toLowerCase();
+
+    return `photo:${captionKey || activity.title.trim().toLowerCase() || activity.id}`;
+  }
+
+  return activity.event_type;
+}
+
 function getDisplayTechnicianReportItems(activities: LeadActivityRecord[]) {
+  const sortedActivities = [...activities].sort(
+    (first, second) =>
+      new Date(second.created_at).getTime() - new Date(first.created_at).getTime(),
+  );
+  const hasPageReport = sortedActivities.some(isTechnicianReportPageActivity);
+  const reportSourceActivities = hasPageReport
+    ? sortedActivities.filter(isTechnicianReportPageActivity)
+    : sortedActivities;
   const items: LeadActivityRecord[] = [];
-  const seenPageEvents = new Set<string>();
-  const seenPhotoFields = new Set<string>();
+  const seenKeys = new Set<string>();
 
-  for (const activity of activities) {
-    if (!isTechnicianReportPageActivity(activity)) {
-      items.push(activity);
+  for (const activity of reportSourceActivities) {
+    const key = getTechnicianReportActivityKey(activity);
+
+    if (seenKeys.has(key)) {
       continue;
     }
 
-    if (activity.event_type === "telegram_report_photo") {
-      const photo = getStoragePhoto(activity);
-      const fieldKey = photo?.field || photo?.label || activity.title;
-
-      if (!fieldKey || seenPhotoFields.has(fieldKey)) {
-        continue;
-      }
-
-      seenPhotoFields.add(fieldKey);
-      items.push(activity);
-      continue;
-    }
-
-    if (
-      activity.event_type === "telegram_visit_report_completed" ||
-      activity.event_type === "telegram_report_own_part" ||
-      activity.event_type === "telegram_report_photo_upload_failed"
-    ) {
-      if (seenPageEvents.has(activity.event_type)) {
-        continue;
-      }
-
-      seenPageEvents.add(activity.event_type);
-      items.push(activity);
-      continue;
-    }
-
+    seenKeys.add(key);
     items.push(activity);
   }
 
