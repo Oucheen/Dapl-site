@@ -25,10 +25,10 @@ export const metadata: Metadata = {
 
 const navItems = [
   { href: "/app", label: "Today", mark: "T" },
-  { href: "/admin/search", label: "Search", mark: "S" },
-  { href: "/admin/parts", label: "Parts", mark: "P" },
+  { href: "/app/search", label: "Search", mark: "S" },
+  { href: "/app/parts", label: "Parts", mark: "P" },
   { href: "/app/invoices", label: "Invoices", mark: "I" },
-  { href: "/admin", label: "Admin", mark: "A" },
+  { href: "/app/more", label: "More", mark: "M" },
 ];
 
 const statusClasses: Record<InvoiceStatus, string> = {

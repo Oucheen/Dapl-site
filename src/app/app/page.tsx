@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 const technicianActions = [
   { href: "/admin/technician", label: "Start", title: "Route" },
-  { href: "/admin/search", label: "Find", title: "Search" },
+  { href: "/app/search", label: "Find", title: "Search" },
   { href: "/app/invoices", label: "Pay", title: "Invoices" },
 ];
 
@@ -36,10 +36,10 @@ const dispatchActions = [
 
 const navItems = [
   { href: "/app", label: "Today", mark: "T" },
-  { href: "/admin/search", label: "Search", mark: "S" },
-  { href: "/admin/parts", label: "Parts", mark: "P" },
+  { href: "/app/search", label: "Search", mark: "S" },
+  { href: "/app/parts", label: "Parts", mark: "P" },
   { href: "/app/invoices", label: "Invoices", mark: "I" },
-  { href: "/admin", label: "Admin", mark: "A" },
+  { href: "/app/more", label: "More", mark: "M" },
 ];
 
 const jobStatusClasses: Record<InvoiceJobStatus, string> = {
@@ -170,7 +170,7 @@ export default async function AppHomePage() {
         <div className="container-shell py-5 sm:py-7">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <Link href="/" className="text-sm font-black tracking-[0.16em] text-white">
+              <Link href="/app" className="text-sm font-black tracking-[0.16em] text-white">
                 DAPL
               </Link>
               <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/55">
@@ -260,7 +260,7 @@ export default async function AppHomePage() {
               Call
             </a>
             <Link
-              href="/admin/search"
+              href="/app/search"
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-3 text-sm font-black text-primary transition hover:bg-primary/5"
             >
               Search
@@ -364,7 +364,7 @@ export default async function AppHomePage() {
               <span>Open</span>
             </Link>
             <Link
-              href="/admin/parts"
+              href="/app/parts"
               className="flex min-h-12 items-center justify-between rounded-lg border border-amber-500/25 bg-amber-50 px-4 text-sm font-black text-amber-800 transition hover:bg-amber-100"
             >
               <span>Parts</span>
