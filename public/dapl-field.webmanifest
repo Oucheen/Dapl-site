@@ -1,0 +1,22 @@
+{
+  "name": "DAPL Field Service",
+  "short_name": "DAPL Field",
+  "description": "Field service workspace for DAPL Appliance Repair technicians and dispatch.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f2a56",
+  "icons": [
+    {
+      "src": "/icon1.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -7,6 +7,7 @@
 
 ## Key routes
 - `/` - main landing page
+- `/app` - installable PWA entry shell for technician and dispatch/admin modes
 - `/refrigerator-repair-charlotte-nc` - first fully built SEO service page
 - `/washer-repair-charlotte-nc` - second fully built SEO service page
 - `/dryer-repair-charlotte-nc` - third fully built SEO service page
@@ -493,6 +494,14 @@ leadSource: booking-page
   - `src/app/favicon-96x96.png` - 96x96 copy of the same logo icon kept for compatibility/context
 - `layout.tsx` points icon metadata to `/icon.png` (`512x512`) and `/icon1.png` (`96x96`), with shortcut using `/icon1.png`
 - Browsers may keep showing the old icon because of aggressive favicon cache; hard refresh / incognito / waiting after deploy may be needed
+
+## PWA shell
+- `public/dapl-field.webmanifest` defines the installable app manifest for **DAPL Field Service**
+- The manifest is linked from `/app`, starts installed users at `/app`, and is not attached to the public marketing pages
+- `/app` is an internal, noindex PWA entry screen with two main modes:
+  - Technician mode: links to technician day, customer search, and invoices
+  - Dispatch mode: links to schedule, leads, and the admin dashboard
+- Marketing contact/chat widgets are hidden on `/app` through `src/components/ui/global-widgets.tsx`
 
 ## Files worth knowing first
 - `src/app/layout.tsx`
