@@ -498,10 +498,12 @@ leadSource: booking-page
 ## PWA shell
 - `public/dapl-field.webmanifest` defines the installable app manifest for **DAPL Field Service**
 - The manifest is linked from `/app`, starts installed users at `/app`, and is not attached to the public marketing pages
-- `/app` is an internal, noindex PWA entry screen with two main modes:
-  - Technician mode: links to technician day, customer search, and invoices
-  - Dispatch mode: links to schedule, leads, and the admin dashboard
+- `/app` is an authenticated, internal, noindex PWA entry screen with two main modes:
+  - Technician mode: shows the signed-in technician's real route/invoices and links to technician day, customer search, and invoices
+  - Dispatch mode: visible for non-technician roles, with links to schedule, leads, and the admin dashboard
 - `/app` is currently designed as a low-text mobile command center with a top stats band, next-job focus area, route queue, quick actions, dispatch/admin shortcuts, and fixed bottom navigation
+- `/app/invoices` is an authenticated, low-text technician invoice hub with real invoice cards filtered by signed-in role, plus charges, report, signature, send, payment, and closeout shortcuts
+- Admin session cookies are scoped to `/` so the same login works across `/admin` and `/app`; logout clears both the new root cookie and the legacy `/admin` cookie
 - Marketing contact/chat widgets are hidden on `/app` through `src/components/ui/global-widgets.tsx`
 
 ## Files worth knowing first

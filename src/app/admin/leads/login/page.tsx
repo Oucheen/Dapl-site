@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 function getReturnTo(value: string | undefined) {
   const target = value?.trim() ?? "";
 
-  if (target.startsWith("/admin") && !target.startsWith("//")) {
+  if ((target.startsWith("/admin") || target.startsWith("/app")) && !target.startsWith("//")) {
     return target;
   }
 

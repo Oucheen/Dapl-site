@@ -9,6 +9,7 @@ import {
 
 const ADMIN_COOKIE = "dapl_leads_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 8;
+const SESSION_COOKIE_PATH = "/";
 
 export type AdminSessionUser = {
   id: string;
@@ -290,7 +291,7 @@ export async function setAdminSession(user: AdminSessionUser) {
   cookieStore.set(ADMIN_COOKIE, sessionValue, {
     httpOnly: true,
     maxAge: COOKIE_MAX_AGE,
-    path: "/admin",
+    path: SESSION_COOKIE_PATH,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   });
@@ -298,6 +299,13 @@ export async function setAdminSession(user: AdminSessionUser) {
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
+  cookieStore.set(ADMIN_COOKIE, "", {
+    httpOnly: true,
+    maxAge: 0,
+    path: SESSION_COOKIE_PATH,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   cookieStore.set(ADMIN_COOKIE, "", {
     httpOnly: true,
     maxAge: 0,

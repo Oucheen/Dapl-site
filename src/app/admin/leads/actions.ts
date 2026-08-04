@@ -50,7 +50,7 @@ function getLeadRedirectTarget(value: FormDataEntryValue | null, fallback = "/ad
 function getAdminRedirectTarget(value: FormDataEntryValue | string | null, fallback = "/admin") {
   const target = typeof value === "string" ? value.trim() : "";
 
-  if (target.startsWith("/admin") && !target.startsWith("//")) {
+  if ((target.startsWith("/admin") || target.startsWith("/app")) && !target.startsWith("//")) {
     return target;
   }
 
