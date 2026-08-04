@@ -501,6 +501,7 @@ leadSource: booking-page
 - `/app` is an internal, noindex PWA entry screen with two main modes:
   - Technician mode: links to technician day, customer search, and invoices
   - Dispatch mode: links to schedule, leads, and the admin dashboard
+- `/app` is currently designed as a mobile command center with a top stats band, next-job focus area, route queue, quick actions, dispatch/admin shortcuts, and fixed bottom navigation
 - Marketing contact/chat widgets are hidden on `/app` through `src/components/ui/global-widgets.tsx`
 
 ## Files worth knowing first
