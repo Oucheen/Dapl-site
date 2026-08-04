@@ -14,6 +14,13 @@ import {
   type InvoiceRecord,
   type InvoiceStatus,
 } from "@/lib/supabase-invoices";
+import {
+  addAppInvoiceItemAction,
+  addAppInvoicePaymentAction,
+  markAppInvoiceDoneAction,
+  sendAppInvoiceSmsAction,
+  updateAppInvoiceItemsAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -116,8 +123,10 @@ function getLineTotal(quantity: number | string, unitPrice: number | string) {
 
 export default async function AppInvoiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ invoiceId: string }>;
+  searchParams?: Promise<{ notice?: string | string[] }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
 
@@ -127,6 +136,8 @@ export default async function AppInvoiceDetailPage({
   }
 
   const { invoiceId } = await params;
+  const query = await searchParams;
+  const notice = Array.isArray(query?.notice) ? query.notice[0] : query?.notice;
   const invoiceData = await getInvoiceById(invoiceId).catch(() => null);
 
   if (!invoiceData) {
@@ -153,6 +164,17 @@ export default async function AppInvoiceDetailPage({
   const mapsHref = invoice.service_address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(invoice.service_address)}`
     : "";
+  const returnTo = `/app/invoices/${invoice.id}`;
+  const signatureParams = new URLSearchParams(getPublicInvoicePath(invoice.invoice_number).split("?")[1] ?? "");
+  signatureParams.set("returnTo", returnTo);
+  const signatureHref = `/i/${encodeURIComponent(invoice.invoice_number)}/sign?${signatureParams.toString()}#signature-form`;
+  const paymentDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CHARLOTTE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const isLineItemsLocked = invoice.status === "paid" || invoice.status === "void";
 
   return (
     <main className="min-h-screen bg-slate-100 pb-24 text-foreground">
@@ -190,6 +212,12 @@ export default async function AppInvoiceDetailPage({
       </section>
 
       <section className="container-shell grid gap-4 py-4 sm:py-6 lg:grid-cols-[1fr_0.85fr]">
+        {notice ? (
+          <div className="rounded-xl border border-emerald-500/25 bg-emerald-50 p-4 text-sm font-black text-emerald-800 lg:col-span-2">
+            {notice.replaceAll("_", " ")}
+          </div>
+        ) : null}
+
         <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-wrap gap-2">
             <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${statusClasses[invoice.status]}`}>
@@ -252,10 +280,10 @@ export default async function AppInvoiceDetailPage({
               Customer
             </Link>
             <Link
-              href={`/admin/invoices/${invoice.id}`}
+              href={signatureHref}
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-3 text-sm font-black text-accent"
             >
-              Edit
+              Sign
             </Link>
           </div>
         </div>
@@ -265,18 +293,28 @@ export default async function AppInvoiceDetailPage({
             Flow
           </p>
           <div className="mt-4 grid grid-cols-5 gap-2 lg:grid-cols-1">
-            {["Charges", "Report", "Sign", "Send", "Pay"].map((item) => (
-              <div
-                key={item}
-                className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary"
-              >
-                {item}
-              </div>
-            ))}
+            <a href="#charges" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+              Charges
+            </a>
+            <Link href={`/admin/invoices/${invoice.id}`} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+              Report
+            </Link>
+            <Link href={signatureHref} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+              Sign
+            </Link>
+            <form action={sendAppInvoiceSmsAction}>
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <button className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+                Send
+              </button>
+            </form>
+            <a href="#payment" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-2 text-center text-xs font-black text-accent">
+              Pay
+            </a>
           </div>
         </aside>
 
-        <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <div id="charges" className="scroll-mt-4 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
@@ -284,24 +322,51 @@ export default async function AppInvoiceDetailPage({
               </p>
               <h2 className="mt-1 text-2xl font-black text-primary">Lines</h2>
             </div>
-            <Link href={`/admin/invoices/${invoice.id}#invoice-line-items`} className="text-sm font-black text-primary">
-              Edit
-            </Link>
+            <form action={addAppInvoiceItemAction}>
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <button
+                disabled={isLineItemsLocked}
+                className="text-sm font-black text-primary disabled:text-muted"
+              >
+                Add
+              </button>
+            </form>
           </div>
 
-          <div className="mt-4 grid gap-2">
+          <form action={updateAppInvoiceItemsAction} className="mt-4 grid gap-2">
+            <input type="hidden" name="invoiceId" value={invoice.id} />
             {items.length ? (
               items.map((item) => (
                 <div key={item.id} className="rounded-lg border border-border bg-slate-50 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="min-w-0 break-words text-sm font-black text-primary">{item.description}</p>
-                    <p className="shrink-0 text-sm font-black text-primary">
+                  <input type="hidden" name="itemId" value={item.id} />
+                  <label className="grid gap-1">
+                    <span className="text-xs font-black uppercase tracking-[0.12em] text-muted">Description</span>
+                    <input
+                      name="description"
+                      defaultValue={item.description}
+                      disabled={isLineItemsLocked}
+                      className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black text-primary outline-none focus:border-primary disabled:bg-slate-100"
+                    />
+                  </label>
+                  <div className="mt-2 grid grid-cols-[0.75fr_1fr_1fr] gap-2">
+                    <input
+                      name="quantity"
+                      inputMode="decimal"
+                      defaultValue={String(item.quantity ?? 1)}
+                      disabled={isLineItemsLocked}
+                      className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
+                    />
+                    <input
+                      name="unitPrice"
+                      inputMode="decimal"
+                      defaultValue={Number(item.unit_price ?? 0).toFixed(2)}
+                      disabled={isLineItemsLocked}
+                      className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
+                    />
+                    <div className="grid min-h-11 place-items-center rounded-lg border border-border bg-white px-2 text-sm font-black text-primary">
                       {getLineTotal(item.quantity, item.unit_price)}
-                    </p>
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs font-bold text-muted">
-                    {item.quantity} x {formatMoney(item.unit_price)}
-                  </p>
                 </div>
               ))
             ) : (
@@ -309,10 +374,16 @@ export default async function AppInvoiceDetailPage({
                 No charges.
               </p>
             )}
-          </div>
+            <button
+              disabled={isLineItemsLocked || items.length === 0}
+              className="mt-2 min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white disabled:bg-slate-200 disabled:text-slate-500"
+            >
+              Save charges
+            </button>
+          </form>
         </div>
 
-        <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <div id="payment" className="scroll-mt-4 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
@@ -320,10 +391,45 @@ export default async function AppInvoiceDetailPage({
               </p>
               <h2 className="mt-1 text-2xl font-black text-primary">History</h2>
             </div>
-            <Link href={`/admin/invoices/${invoice.id}#payment-history`} className="text-sm font-black text-primary">
-              Add
-            </Link>
+            <form action={markAppInvoiceDoneAction}>
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <button className="text-sm font-black text-primary">Done</button>
+            </form>
           </div>
+
+          <form action={addAppInvoicePaymentAction} className="mt-4 grid gap-2 rounded-lg bg-slate-50 p-3">
+            <input type="hidden" name="invoiceId" value={invoice.id} />
+            <div className="grid grid-cols-[1fr_1fr] gap-2">
+              <input
+                name="amount"
+                inputMode="decimal"
+                defaultValue={amountDue > 0 ? amountDue.toFixed(2) : ""}
+                placeholder="Amount"
+                className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
+              />
+              <select
+                name="method"
+                defaultValue="cash"
+                className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="zelle">Zelle</option>
+                <option value="check">Check</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <input type="hidden" name="paymentDate" value={paymentDate} />
+            <input type="hidden" name="paymentTime" value="" />
+            <input
+              name="note"
+              placeholder="Note"
+              className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
+            />
+            <button className="min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white">
+              Add payment
+            </button>
+          </form>
 
           <div className="mt-4 grid gap-2">
             {payments.length ? (
