@@ -27,7 +27,7 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const returnTo = getReturnTo(params?.returnTo);
 
-  if (await isAdminAuthenticated()) {
+  if ((await isAdminAuthenticated()) && !returnTo.startsWith("/app")) {
     redirect(returnTo);
   }
 
