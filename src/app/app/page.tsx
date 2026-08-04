@@ -15,20 +15,17 @@ const technicianActions = [
   {
     href: "/admin/technician",
     label: "Start",
-    title: "Open today's route",
-    body: "Jobs, maps, field notes, parts, and quick status updates.",
+    title: "Route",
   },
   {
     href: "/admin/search",
     label: "Find",
-    title: "Customer search",
-    body: "Look up phone, address, invoice, appliance, and previous work.",
+    title: "Search",
   },
   {
     href: "/admin/invoices",
     label: "Pay",
-    title: "Open invoices",
-    body: "Customer balances, payments, signatures, and job history.",
+    title: "Invoices",
   },
 ];
 
@@ -36,20 +33,17 @@ const dispatchActions = [
   {
     href: "/admin/schedule",
     label: "Board",
-    title: "Dispatch schedule",
-    body: "Assign jobs, review route timing, and spot conflicts.",
+    title: "Schedule",
   },
   {
     href: "/admin/leads",
     label: "Queue",
     title: "Leads",
-    body: "New requests, customer details, statuses, and invoice creation.",
   },
   {
     href: "/admin",
     label: "HQ",
-    title: "Admin dashboard",
-    body: "Reminders, accounting snapshots, parts, and CRM navigation.",
+    title: "Admin",
   },
 ];
 
@@ -111,11 +105,8 @@ export default function AppHomePage() {
                 Today
               </p>
               <h1 className="mt-2 max-w-2xl text-3xl font-black tracking-tight text-white sm:text-5xl">
-                Field command center for the workday.
+                Today's route
               </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">
-                One place for routes, status, customer history, invoices, and dispatch handoff.
-              </p>
             </div>
             <div className="grid grid-cols-4 gap-2">
               {dayStats.map((stat) => (
@@ -146,11 +137,9 @@ export default function AppHomePage() {
             </span>
           </div>
 
-          <div className="mt-4 grid gap-2 text-sm leading-6 text-muted sm:grid-cols-2">
-            <p>Customer details open from today's job list.</p>
-            <p>Appliance: Refrigerator</p>
-            <p>Phone, address, and history stay inside the route view.</p>
-            <p className="font-bold text-primary">Ready for status, notes, parts, and invoice work.</p>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-bold text-muted">
+            <p className="rounded-lg bg-slate-50 px-3 py-2">Refrigerator</p>
+            <p className="rounded-lg bg-slate-50 px-3 py-2">South Charlotte</p>
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -217,7 +206,7 @@ export default function AppHomePage() {
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
                 Technician mode
               </p>
-              <h2 className="mt-1 text-2xl font-black text-primary">Field work</h2>
+              <h2 className="mt-1 text-2xl font-black text-primary">Field</h2>
             </div>
             <Link
               href="/admin/technician"
@@ -232,15 +221,12 @@ export default function AppHomePage() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="grid grid-cols-[3.25rem_1fr] gap-3 rounded-lg border border-border bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white hover:shadow-sm"
+                className="grid grid-cols-[3.25rem_1fr] items-center gap-3 rounded-lg border border-border bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white hover:shadow-sm"
               >
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-xs font-black text-white">
                   {action.label}
                 </span>
-                <span>
-                  <span className="block text-lg font-black text-primary">{action.title}</span>
-                  <span className="mt-1 block text-sm leading-6 text-muted">{action.body}</span>
-                </span>
+                <span className="block text-lg font-black text-primary">{action.title}</span>
               </Link>
             ))}
           </div>
@@ -281,7 +267,7 @@ export default function AppHomePage() {
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
                 Dispatch mode
               </p>
-              <h2 className="mt-1 text-2xl font-black text-primary">Office control</h2>
+              <h2 className="mt-1 text-2xl font-black text-primary">Dispatch</h2>
             </div>
             <Link
               href="/admin/schedule"
@@ -302,7 +288,6 @@ export default function AppHomePage() {
                   {action.label}
                 </span>
                 <span className="mt-4 block text-lg font-black text-primary">{action.title}</span>
-                <span className="mt-2 block text-sm leading-6 text-muted">{action.body}</span>
               </Link>
             ))}
           </div>
