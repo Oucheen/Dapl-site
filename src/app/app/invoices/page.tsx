@@ -236,7 +236,7 @@ export default async function AppInvoicesPage() {
                 return (
                   <Link
                     key={invoice.id}
-                    href={`/admin/invoices/${invoice.id}`}
+                    href={`/app/invoices/${invoice.id}`}
                     className="rounded-lg border border-border bg-slate-50 p-3 transition hover:border-primary/30 hover:bg-white sm:p-4"
                   >
                     <span className="flex items-start justify-between gap-3">

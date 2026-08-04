@@ -503,6 +503,7 @@ leadSource: booking-page
   - Dispatch mode: visible for non-technician roles, with links to schedule, leads, and the admin dashboard
 - `/app` is currently designed as a low-text mobile command center with a top stats band, next-job focus area, route queue, quick actions, dispatch/admin shortcuts, and fixed bottom navigation
 - `/app/invoices` is an authenticated, low-text technician invoice hub with real invoice cards filtered by signed-in role, plus charges, report, signature, send, payment, and closeout shortcuts
+- `/app/invoices/[invoiceId]` is the PWA invoice detail view with customer/job summary, status, totals, charges, payment history, and quick actions; deeper editing still opens the existing admin invoice module
 - PWA bottom tabs stay inside `/app`: `/app`, `/app/search`, `/app/parts`, `/app/invoices`, and `/app/more`; deeper CRM actions can still open the existing `/admin` modules from inside those tabs
 - Admin session cookies are scoped to `/` so the same login works across `/admin` and `/app`; logout clears both the new root cookie and the legacy `/admin` cookie
 - Marketing contact/chat widgets are hidden on `/app` through `src/components/ui/global-widgets.tsx`

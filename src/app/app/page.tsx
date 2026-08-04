@@ -266,7 +266,7 @@ export default async function AppHomePage() {
               Search
             </Link>
             <Link
-              href={nextInvoice ? `/admin/invoices/${nextInvoice.id}` : "/admin/invoices/new"}
+              href={nextInvoice ? `/app/invoices/${nextInvoice.id}` : "/admin/invoices/new"}
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-3 text-sm font-black text-accent transition hover:bg-red-100"
             >
               Invoice
@@ -292,7 +292,7 @@ export default async function AppHomePage() {
               queueInvoices.map((invoice) => (
                 <Link
                   key={invoice.id}
-                  href={`/admin/invoices/${invoice.id}`}
+                  href={`/app/invoices/${invoice.id}`}
                   className="grid grid-cols-[4.5rem_1fr] gap-3 rounded-lg border border-border bg-slate-50 p-3 transition hover:border-primary/30 hover:bg-white"
                 >
                   <span className="text-sm font-black text-primary">{formatServiceTime(invoice.service_time) || "Time"}</span>
