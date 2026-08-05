@@ -23,15 +23,15 @@ export const metadata: Metadata = {
 };
 
 const technicianActions = [
-  { href: "/admin/technician", label: "Start", title: "Route" },
+  { href: "/app", label: "Start", title: "Route" },
   { href: "/app/search", label: "Find", title: "Search" },
   { href: "/app/invoices", label: "Pay", title: "Invoices" },
 ];
 
 const dispatchActions = [
-  { href: "/admin/schedule", label: "Board", title: "Schedule" },
-  { href: "/admin/leads", label: "Queue", title: "Leads" },
-  { href: "/admin", label: "HQ", title: "Admin" },
+  { href: "/app", label: "Board", title: "Schedule" },
+  { href: "/app/search", label: "Queue", title: "Leads" },
+  { href: "/app/more", label: "HQ", title: "More" },
 ];
 
 const navItems = [
@@ -248,7 +248,7 @@ export default async function AppHomePage() {
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Link
-              href="/admin/technician"
+              href="/app"
               className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-3 text-sm font-black text-white transition hover:bg-primary/90"
             >
               Route
@@ -266,7 +266,7 @@ export default async function AppHomePage() {
               Search
             </Link>
             <Link
-              href={nextInvoice ? `/app/invoices/${nextInvoice.id}` : "/admin/invoices/new"}
+              href={nextInvoice ? `/app/invoices/${nextInvoice.id}` : "/app/invoices"}
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-3 text-sm font-black text-accent transition hover:bg-red-100"
             >
               Invoice
@@ -282,7 +282,7 @@ export default async function AppHomePage() {
               </p>
               <h2 className="mt-1 text-xl font-black text-primary">Up next</h2>
             </div>
-            <Link href="/admin/technician" className="text-sm font-black text-primary">
+            <Link href="/app" className="text-sm font-black text-primary">
               View all
             </Link>
           </div>
@@ -321,7 +321,7 @@ export default async function AppHomePage() {
               <h2 className="mt-1 text-2xl font-black text-primary">Field</h2>
             </div>
             <Link
-              href="/admin/technician"
+              href="/app"
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary/90"
             >
               Open today
@@ -357,11 +357,11 @@ export default async function AppHomePage() {
               <span>Call</span>
             </a>
             <Link
-              href="/admin/invoices/new"
+              href="/app/invoices"
               className="flex min-h-12 items-center justify-between rounded-lg border border-primary/15 bg-white px-4 text-sm font-black text-primary transition hover:bg-primary/5"
             >
               <span>New invoice</span>
-              <span>Open</span>
+              <span>Queue</span>
             </Link>
             <Link
               href="/app/parts"
@@ -383,7 +383,7 @@ export default async function AppHomePage() {
                 <h2 className="mt-1 text-2xl font-black text-primary">Dispatch</h2>
               </div>
               <Link
-                href="/admin/schedule"
+                href="/app/more"
                 className="inline-flex min-h-11 items-center justify-center rounded-lg border border-primary/15 bg-white px-4 text-sm font-black text-primary transition hover:bg-primary/5"
               >
                 Open schedule

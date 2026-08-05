@@ -219,7 +219,7 @@ export default async function AppSearchPage({
                 leadResults.map((lead) => (
                   <Link
                     key={lead.id}
-                    href={`/admin/leads/${lead.id}`}
+                    href={`/app/leads/${lead.id}`}
                     className="rounded-lg border border-border bg-slate-50 p-3 transition hover:border-primary/30 hover:bg-white"
                   >
                     <span className="flex items-start justify-between gap-3">

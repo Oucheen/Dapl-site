@@ -66,14 +66,14 @@ export default async function AppPartsPage() {
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <Link
-              href="/admin/parts"
+              href="/app/parts"
               className="flex min-h-14 items-center justify-between rounded-lg bg-primary px-4 text-sm font-black text-white"
             >
               <span>Parts board</span>
               <span>Open</span>
             </Link>
             <Link
-              href="/admin/technician"
+              href="/app"
               className="flex min-h-14 items-center justify-between rounded-lg border border-amber-500/25 bg-amber-50 px-4 text-sm font-black text-amber-800"
             >
               <span>Add job part</span>

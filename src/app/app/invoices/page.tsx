@@ -223,7 +223,7 @@ export default async function AppInvoicesPage() {
               </p>
               <h2 className="mt-1 text-2xl font-black text-primary">Invoice queue</h2>
             </div>
-            <Link href="/admin/invoices/new" className="text-sm font-black text-primary">
+            <Link href="/app/invoices" className="text-sm font-black text-primary">
               New
             </Link>
           </div>
@@ -297,14 +297,14 @@ export default async function AppInvoicesPage() {
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <Link
-                href="/admin/invoices"
+                href="/app/invoices"
                 className="flex min-h-14 items-center justify-between rounded-lg border border-border bg-slate-50 px-4 text-sm font-black text-primary"
               >
                 <span>All invoices</span>
                 <span>Open</span>
               </Link>
               <Link
-                href="/admin/technician"
+                href="/app"
                 className="flex min-h-14 items-center justify-between rounded-lg border border-border bg-slate-50 px-4 text-sm font-black text-primary"
               >
                 <span>Today route</span>

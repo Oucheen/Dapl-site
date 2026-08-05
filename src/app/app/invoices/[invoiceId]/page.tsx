@@ -296,7 +296,7 @@ export default async function AppInvoiceDetailPage({
             <a href="#charges" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
               Charges
             </a>
-            <Link href={`/admin/invoices/${invoice.id}`} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+            <Link href={`/app/invoices/${invoice.id}`} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
               Report
             </Link>
             <Link href={signatureHref} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">

@@ -506,6 +506,8 @@ leadSource: booking-page
 - `/app/invoices/[invoiceId]` is the PWA invoice detail view with customer/job summary, status, totals, charges, payment history, and quick actions; deeper editing still opens the existing admin invoice module
 - `/app/invoices/[invoiceId]` supports first-pass field actions: edit/save charge lines, add a blank charge line, send invoice SMS, add payment, mark paid/done, and open customer signature
 - `/app/search` is a role-aware PWA search over recent invoices and leads; invoice results open in PWA invoice detail, while lead results still open the existing admin lead module
+- `/app/leads/[leadId]` is a low-text PWA lead detail view so search results stay inside the app
+- Regular PWA navigation avoids direct `/admin` links; old admin modules should be opened only from explicit advanced/admin tooling, not from bottom tabs or primary technician flow
 - PWA bottom tabs stay inside `/app`: `/app`, `/app/search`, `/app/parts`, `/app/invoices`, and `/app/more`; deeper CRM actions can still open the existing `/admin` modules from inside those tabs
 - Admin session cookies are scoped to `/` so the same login works across `/admin` and `/app`; logout clears both the new root cookie and the legacy `/admin` cookie
 - Marketing contact/chat widgets are hidden on `/app` through `src/components/ui/global-widgets.tsx`

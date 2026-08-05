@@ -33,15 +33,15 @@ export default async function AppMorePage() {
 
   const links = permissions.hasTechnicianAccess
     ? [
-        { label: "Today route", href: "/admin/technician" },
+        { label: "Today route", href: "/app" },
         { label: "Invoices", href: "/app/invoices" },
         { label: "Search", href: "/app/search" },
       ]
     : [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Schedule", href: "/admin/schedule" },
-        { label: "Leads", href: "/admin/leads" },
-        { label: "Users", href: "/admin/users" },
+        { label: "Dashboard", href: "/app" },
+        { label: "Invoices", href: "/app/invoices" },
+        { label: "Search", href: "/app/search" },
+        { label: "Parts", href: "/app/parts" },
       ];
 
   return (
