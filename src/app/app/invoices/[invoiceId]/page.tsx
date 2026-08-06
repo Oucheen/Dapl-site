@@ -287,14 +287,14 @@ export default async function AppInvoiceDetailPage({
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-5xl gap-4 px-3 py-4 sm:px-5 sm:py-6 lg:grid-cols-[1fr_0.85fr]">
+      <section className="mx-auto grid w-full max-w-5xl gap-4 overflow-hidden px-3 py-4 sm:px-5 sm:py-6 lg:grid-cols-[1fr_0.85fr]">
         {notice ? (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-50 p-4 text-sm font-black text-emerald-800 lg:col-span-2">
             {notice.replaceAll("_", " ")}
           </div>
         ) : null}
 
-        <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
+        <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <div className="flex flex-wrap gap-2">
             <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${statusClasses[invoice.status]}`}>
               {invoice.status}
@@ -307,7 +307,7 @@ export default async function AppInvoiceDetailPage({
             </span>
           </div>
 
-          <div className="mt-5 grid min-w-0 grid-cols-3 gap-2">
+          <div className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="min-w-0 rounded-lg bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Total</p>
               <p className="mt-1 truncate text-base font-black text-primary sm:text-lg">{formatMoney(invoice.total)}</p>
@@ -322,17 +322,17 @@ export default async function AppInvoiceDetailPage({
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-bold text-muted">
+          <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 text-sm font-bold text-muted sm:grid-cols-2">
             <p className="truncate rounded-lg bg-slate-50 px-3 py-2">{invoice.appliance || "Appliance"}</p>
             <p className="truncate rounded-lg bg-slate-50 px-3 py-2">
               {formatDate(invoice.service_date)} {formatServiceTime(invoice.service_time)}
             </p>
-            <p className="col-span-2 truncate rounded-lg bg-slate-50 px-3 py-2">
+            <p className="truncate rounded-lg bg-slate-50 px-3 py-2 sm:col-span-2">
               {invoice.service_address || "Address"}
             </p>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-4">
             {invoice.customer_phone ? (
               <a
                 href={`tel:${invoice.customer_phone}`}
@@ -364,11 +364,11 @@ export default async function AppInvoiceDetailPage({
           </div>
         </div>
 
-        <aside className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
+        <aside className="min-w-0 overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
             Flow
           </p>
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
             <form action={startAppInvoiceJobAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <AppSubmitButton
@@ -423,7 +423,7 @@ export default async function AppInvoiceDetailPage({
           </div>
         </aside>
 
-        <div id="report" className="scroll-mt-4 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
+        <div id="report" className="min-w-0 scroll-mt-4 overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
@@ -492,7 +492,7 @@ export default async function AppInvoiceDetailPage({
 
             <div className="grid gap-2 rounded-lg bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Photos</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-4">
                 {reportPhotoFields.map((field) => (
                   <label key={field.name} className="grid gap-2 rounded-lg border border-border bg-white p-3 text-xs font-black text-primary">
                     {field.label}
@@ -528,7 +528,7 @@ export default async function AppInvoiceDetailPage({
                   placeholder="Part name"
                   className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
                 />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
                   <input
                     name="partCost"
                     inputMode="decimal"
@@ -563,7 +563,7 @@ export default async function AppInvoiceDetailPage({
           </form>
         </div>
 
-        <div id="charges" className="scroll-mt-4 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <div id="charges" className="min-w-0 scroll-mt-4 overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
@@ -598,7 +598,7 @@ export default async function AppInvoiceDetailPage({
                       className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black text-primary outline-none focus:border-primary disabled:bg-slate-100"
                     />
                   </label>
-                  <div className="mt-2 grid min-w-0 grid-cols-[0.7fr_1fr_1fr] gap-2">
+                  <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[0.7fr_1fr_1fr]">
                     <input
                       name="quantity"
                       inputMode="decimal"
@@ -634,7 +634,7 @@ export default async function AppInvoiceDetailPage({
           </form>
         </div>
 
-        <div id="payment" className="scroll-mt-4 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <div id="payment" className="min-w-0 scroll-mt-4 overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
@@ -652,7 +652,7 @@ export default async function AppInvoiceDetailPage({
 
           <form action={addAppInvoicePaymentAction} className="mt-4 grid gap-2 rounded-lg bg-slate-50 p-3">
             <input type="hidden" name="invoiceId" value={invoice.id} />
-            <div className="grid min-w-0 grid-cols-2 gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
               <input
                 name="amount"
                 inputMode="decimal"
