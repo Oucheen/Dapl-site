@@ -251,9 +251,9 @@ export default async function AppInvoiceDetailPage({
   const isLineItemsLocked = invoice.status === "paid" || invoice.status === "void";
 
   return (
-    <main className="min-h-screen bg-slate-100 pb-24 text-foreground">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100 pb-24 text-foreground">
       <section className="bg-primary text-white">
-        <div className="container-shell py-5 sm:py-7">
+        <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-5 sm:py-7">
           <div className="flex items-center justify-between gap-3">
             <div>
               <Link href="/app/invoices" className="text-sm font-black tracking-[0.16em] text-white">
@@ -285,7 +285,7 @@ export default async function AppInvoiceDetailPage({
         </div>
       </section>
 
-      <section className="container-shell grid gap-4 py-4 sm:py-6 lg:grid-cols-[1fr_0.85fr]">
+      <section className="mx-auto grid w-full max-w-5xl gap-4 px-3 py-4 sm:px-5 sm:py-6 lg:grid-cols-[1fr_0.85fr]">
         {notice ? (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-50 p-4 text-sm font-black text-emerald-800 lg:col-span-2">
             {notice.replaceAll("_", " ")}
@@ -305,18 +305,18 @@ export default async function AppInvoiceDetailPage({
             </span>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            <div className="rounded-lg bg-slate-50 p-3">
+          <div className="mt-5 grid min-w-0 grid-cols-3 gap-2">
+            <div className="min-w-0 rounded-lg bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Total</p>
-              <p className="mt-1 text-lg font-black text-primary">{formatMoney(invoice.total)}</p>
+              <p className="mt-1 truncate text-base font-black text-primary sm:text-lg">{formatMoney(invoice.total)}</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-3">
+            <div className="min-w-0 rounded-lg bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Paid</p>
-              <p className="mt-1 text-lg font-black text-emerald-700">{formatMoney(paidAmount)}</p>
+              <p className="mt-1 truncate text-base font-black text-emerald-700 sm:text-lg">{formatMoney(paidAmount)}</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-3">
+            <div className="min-w-0 rounded-lg bg-slate-50 p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Due</p>
-              <p className="mt-1 text-lg font-black text-accent">{formatMoney(amountDue)}</p>
+              <p className="mt-1 truncate text-base font-black text-accent sm:text-lg">{formatMoney(amountDue)}</p>
             </div>
           </div>
 
@@ -585,22 +585,22 @@ export default async function AppInvoiceDetailPage({
                       className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black text-primary outline-none focus:border-primary disabled:bg-slate-100"
                     />
                   </label>
-                  <div className="mt-2 grid grid-cols-[0.75fr_1fr_1fr] gap-2">
+                  <div className="mt-2 grid min-w-0 grid-cols-[0.7fr_1fr_1fr] gap-2">
                     <input
                       name="quantity"
                       inputMode="decimal"
                       defaultValue={String(item.quantity ?? 1)}
                       disabled={isLineItemsLocked}
-                      className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
+                      className="min-h-11 min-w-0 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
                     />
                     <input
                       name="unitPrice"
                       inputMode="decimal"
                       defaultValue={Number(item.unit_price ?? 0).toFixed(2)}
                       disabled={isLineItemsLocked}
-                      className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
+                      className="min-h-11 min-w-0 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary disabled:bg-slate-100"
                     />
-                    <div className="grid min-h-11 place-items-center rounded-lg border border-border bg-white px-2 text-sm font-black text-primary">
+                    <div className="grid min-h-11 min-w-0 place-items-center truncate rounded-lg border border-border bg-white px-2 text-sm font-black text-primary">
                       {getLineTotal(item.quantity, item.unit_price)}
                     </div>
                   </div>
@@ -636,18 +636,18 @@ export default async function AppInvoiceDetailPage({
 
           <form action={addAppInvoicePaymentAction} className="mt-4 grid gap-2 rounded-lg bg-slate-50 p-3">
             <input type="hidden" name="invoiceId" value={invoice.id} />
-            <div className="grid grid-cols-[1fr_1fr] gap-2">
+            <div className="grid min-w-0 grid-cols-2 gap-2">
               <input
                 name="amount"
                 inputMode="decimal"
                 defaultValue={amountDue > 0 ? amountDue.toFixed(2) : ""}
                 placeholder="Amount"
-                className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
+                className="min-h-11 min-w-0 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
               />
               <select
                 name="method"
                 defaultValue="cash"
-                className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
+                className="min-h-11 min-w-0 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
               >
                 <option value="cash">Cash</option>
                 <option value="card">Card</option>
