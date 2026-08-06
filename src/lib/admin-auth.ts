@@ -9,6 +9,7 @@ import {
 
 const ADMIN_COOKIE = "dapl_leads_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 8;
+const REMEMBERED_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const SESSION_COOKIE_PATH = "/";
 
 export type AdminSessionUser = {
@@ -280,7 +281,7 @@ export async function isAdminAuthenticated() {
   return Boolean(await getCurrentAdminUser());
 }
 
-export async function setAdminSession(user: AdminSessionUser) {
+export async function setAdminSession(user: AdminSessionUser, options?: { rememberDevice?: boolean }) {
   const sessionValue = createSessionValue(user);
 
   if (!sessionValue) {
@@ -290,7 +291,7 @@ export async function setAdminSession(user: AdminSessionUser) {
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE, sessionValue, {
     httpOnly: true,
-    maxAge: COOKIE_MAX_AGE,
+    maxAge: options?.rememberDevice ? REMEMBERED_COOKIE_MAX_AGE : COOKIE_MAX_AGE,
     path: SESSION_COOKIE_PATH,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

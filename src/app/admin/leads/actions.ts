@@ -65,6 +65,7 @@ function withNotice(path: string, notice: string) {
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
   const returnTo = getAdminRedirectTarget(formData.get("returnTo"));
+  const rememberDevice = formData.get("rememberDevice") === "on";
   const user = await verifyAdminLogin(password);
 
   if (!user) {
@@ -77,7 +78,7 @@ export async function loginAdmin(formData: FormData) {
     redirect(`/admin/leads/login?${params.toString()}`);
   }
 
-  await setAdminSession(user);
+  await setAdminSession(user, { rememberDevice });
   redirect(returnTo);
 }
 

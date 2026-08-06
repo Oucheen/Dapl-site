@@ -33,6 +33,7 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
 
   const hasError = params?.error === "1";
   const configured = await isAdminConfigured();
+  const isAppLogin = returnTo.startsWith("/app");
 
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc,#eef4fb)] px-4 py-10 text-foreground">
@@ -68,6 +69,21 @@ export default async function LeadsLoginPage({ searchParams }: LoginPageProps) {
                 </label>
                 <PasswordField />
               </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  name="rememberDevice"
+                  defaultChecked={isAppLogin}
+                  className="h-5 w-5 rounded border-border accent-primary"
+                />
+                <span>
+                  <span className="block text-sm font-bold text-primary">Remember this device</span>
+                  <span className="mt-0.5 block text-xs font-semibold text-muted">
+                    Keep me signed in for 30 days.
+                  </span>
+                </span>
+              </label>
 
               {hasError ? (
                 <p className="rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm font-medium text-accent">
