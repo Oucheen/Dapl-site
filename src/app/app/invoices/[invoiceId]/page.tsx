@@ -218,7 +218,7 @@ export default async function AppInvoiceDetailPage({
           </div>
         ) : null}
 
-        <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <div className="flex flex-wrap gap-2">
             <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${statusClasses[invoice.status]}`}>
               {invoice.status}
@@ -288,11 +288,11 @@ export default async function AppInvoiceDetailPage({
           </div>
         </div>
 
-        <aside className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <aside className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-muted">
             Flow
           </p>
-          <div className="mt-4 grid grid-cols-5 gap-2 lg:grid-cols-1">
+          <div className="mt-4 grid grid-cols-5 gap-2">
             <a href="#charges" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
               Charges
             </a>

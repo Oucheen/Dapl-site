@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { CalendarDays, FileText, MoreHorizontal, PackageSearch, Search } from "lucide-react";
 import { logoutAdmin } from "@/app/admin/leads/actions";
 
 const navItems = [
-  { href: "/app", label: "Today", mark: "T" },
-  { href: "/app/search", label: "Search", mark: "S" },
-  { href: "/app/parts", label: "Parts", mark: "P" },
-  { href: "/app/invoices", label: "Invoice", mark: "I" },
-  { href: "/app/more", label: "More", mark: "M" },
+  { href: "/app", icon: CalendarDays, label: "Today" },
+  { href: "/app/search", icon: Search, label: "Search" },
+  { href: "/app/parts", icon: PackageSearch, label: "Parts" },
+  { href: "/app/invoices", icon: FileText, label: "Invoice" },
+  { href: "/app/more", icon: MoreHorizontal, label: "More" },
 ];
 
 export function AppFieldShell({
@@ -74,6 +75,7 @@ export function AppFieldShell({
         <div className="mx-auto grid max-w-2xl grid-cols-5 px-2 py-2">
           {navItems.map((item) => {
             const isActive = item.href === activeHref;
+            const Icon = item.icon;
 
             return (
               <Link
@@ -83,13 +85,7 @@ export function AppFieldShell({
                   isActive ? "bg-primary text-white" : "text-muted hover:bg-primary/5 hover:text-primary"
                 }`}
               >
-                <span
-                  className={`grid h-6 w-6 place-items-center rounded-md text-[0.65rem] ${
-                    isActive ? "bg-white/15 text-white" : "bg-slate-100 text-primary"
-                  }`}
-                >
-                  {item.mark}
-                </span>
+                <Icon className="h-5 w-5" strokeWidth={2.4} aria-hidden="true" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -103,18 +99,39 @@ export function AppFieldShell({
 export function AppStatStrip({
   items,
 }: {
-  items: Array<{ label: string; value: string }>;
+  items: Array<{ active?: boolean; href?: string; label: string; value: string }>;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-2">
-      {items.map((item) => (
-        <div key={item.label} className="rounded-lg border border-border bg-white p-3 shadow-sm">
-          <p className="text-xl font-black text-primary">{item.value}</p>
-          <p className="mt-0.5 text-[0.65rem] font-black uppercase tracking-[0.1em] text-muted">
-            {item.label}
-          </p>
-        </div>
-      ))}
+    <div className={`grid gap-2 ${items.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
+      {items.map((item) => {
+        const className = `rounded-lg border p-3 shadow-sm transition ${
+          item.active
+            ? "border-primary bg-primary text-white"
+            : "border-border bg-white text-primary hover:border-primary/25"
+        }`;
+        const content = (
+          <>
+            <p className={`text-xl font-black ${item.active ? "text-white" : "text-primary"}`}>{item.value}</p>
+            <p
+              className={`mt-0.5 text-[0.65rem] font-black uppercase tracking-[0.1em] ${
+                item.active ? "text-white/65" : "text-muted"
+              }`}
+            >
+              {item.label}
+            </p>
+          </>
+        );
+
+        return item.href ? (
+          <Link key={item.label} href={item.href} className={className}>
+            {content}
+          </Link>
+        ) : (
+          <div key={item.label} className={className}>
+            {content}
+          </div>
+        );
+      })}
     </div>
   );
 }

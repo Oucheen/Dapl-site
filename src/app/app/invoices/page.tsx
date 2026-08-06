@@ -40,6 +40,8 @@ const invoiceStatusTone: Record<InvoiceStatus, "blue" | "green" | "amber" | "sla
   void: "slate",
 };
 
+type InvoiceFilter = "open" | "draft" | "sent" | "paid" | "parts";
+
 function normalizeText(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? "";
 }
@@ -118,13 +120,41 @@ function getWorkflowState(invoice: InvoiceRecord) {
   return "Close";
 }
 
-export default async function AppInvoicesPage() {
+function getFilterValue(value: string | string[] | undefined): InvoiceFilter {
+  const filter = Array.isArray(value) ? value[0] : value;
+
+  if (filter === "draft" || filter === "sent" || filter === "paid" || filter === "parts") {
+    return filter;
+  }
+
+  return "open";
+}
+
+function getFilteredInvoices(invoices: InvoiceRecord[], filter: InvoiceFilter) {
+  if (filter === "draft" || filter === "sent" || filter === "paid") {
+    return invoices.filter((invoice) => invoice.status === filter);
+  }
+
+  if (filter === "parts") {
+    return invoices.filter((invoice) => getJobStatus(invoice) === "need_parts");
+  }
+
+  return invoices.filter((invoice) => invoice.status !== "paid" || getJobStatus(invoice) !== "done");
+}
+
+export default async function AppInvoicesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ filter?: string | string[] }>;
+}) {
   const permissions = await getCurrentAdminPermissions();
 
   if (!permissions.user) {
     redirect("/admin/leads/login?returnTo=/app/invoices");
   }
 
+  const params = await searchParams;
+  const activeFilter = getFilterValue(params?.filter);
   let invoices: InvoiceRecord[] = [];
   let dataError = "";
 
@@ -139,20 +169,22 @@ export default async function AppInvoicesPage() {
     permissions.user.name,
     permissions.hasTechnicianAccess,
   );
-  const openInvoices = visibleInvoices
-    .filter((invoice) => invoice.status !== "paid" || getJobStatus(invoice) !== "done")
+  const filteredInvoices = getFilteredInvoices(visibleInvoices, activeFilter)
     .sort((left, right) => getInvoiceSortKey(left).localeCompare(getInvoiceSortKey(right)))
     .slice(0, 14);
+  const openCount = getFilteredInvoices(visibleInvoices, "open").length;
   const draftCount = visibleInvoices.filter((invoice) => invoice.status === "draft").length;
   const sentCount = visibleInvoices.filter((invoice) => invoice.status === "sent").length;
   const paidCount = visibleInvoices.filter((invoice) => invoice.status === "paid").length;
   const needPartsCount = visibleInvoices.filter((invoice) => getJobStatus(invoice) === "need_parts").length;
   const states = [
-    { label: "Draft", value: String(draftCount) },
-    { label: "Sent", value: String(sentCount) },
-    { label: "Paid", value: String(paidCount) },
-    { label: "Parts", value: String(needPartsCount) },
+    { active: activeFilter === "open", href: "/app/invoices", label: "Open", value: String(openCount) },
+    { active: activeFilter === "draft", href: "/app/invoices?filter=draft", label: "Draft", value: String(draftCount) },
+    { active: activeFilter === "sent", href: "/app/invoices?filter=sent", label: "Sent", value: String(sentCount) },
+    { active: activeFilter === "paid", href: "/app/invoices?filter=paid", label: "Paid", value: String(paidCount) },
+    { active: activeFilter === "parts", href: "/app/invoices?filter=parts", label: "Parts", value: String(needPartsCount) },
   ];
+  const filterLabel = states.find((state) => state.active)?.label ?? "Open";
 
   return (
     <AppFieldShell
@@ -183,16 +215,16 @@ export default async function AppInvoicesPage() {
             <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-accent">
               Open
             </p>
-            <h2 className="text-xl font-black text-primary">Queue</h2>
+            <h2 className="text-xl font-black text-primary">{filterLabel}</h2>
           </div>
           <span className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-muted">
-            {openInvoices.length}
+            {filteredInvoices.length}
           </span>
         </div>
 
         <div className="grid gap-2">
-          {openInvoices.length ? (
-            openInvoices.map((invoice) => {
+          {filteredInvoices.length ? (
+            filteredInvoices.map((invoice) => {
               const jobStatus = getJobStatus(invoice);
 
               return (
@@ -231,14 +263,14 @@ export default async function AppInvoicesPage() {
 
                   <span className="grid min-w-16 content-between justify-items-end">
                     <span className="text-sm font-black text-primary">{formatMoney(invoice.total)}</span>
-                    <span className="text-xl font-black text-primary">›</span>
+                    <span className="text-xl font-black text-primary">&gt;</span>
                   </span>
                 </Link>
               );
             })
           ) : (
             <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-muted">
-              No open invoices.
+              No invoices.
             </p>
           )}
         </div>
