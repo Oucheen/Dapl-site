@@ -23,6 +23,7 @@ import {
 import {
   addAppInvoiceItemAction,
   addAppInvoicePaymentAction,
+  createAppStripeCheckoutAction,
   markAppInvoiceDoneAction,
   sendAppInvoiceSmsAction,
   startAppInvoiceJobAction,
@@ -685,6 +686,18 @@ export default async function AppInvoiceDetailPage({
               Add payment
             </AppSubmitButton>
           </form>
+
+          {amountDue > 0 ? (
+            <form action={createAppStripeCheckoutAction} className="mt-2">
+              <input type="hidden" name="invoiceId" value={invoice.id} />
+              <AppSubmitButton
+                pendingText="Opening..."
+                className="min-h-12 w-full rounded-lg border border-accent/20 bg-red-50 px-4 text-sm font-black text-accent"
+              >
+                Collect card {formatMoney(amountDue)}
+              </AppSubmitButton>
+            </form>
+          ) : null}
 
           <div className="mt-4 grid gap-2">
             {payments.length ? (

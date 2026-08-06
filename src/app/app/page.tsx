@@ -170,13 +170,13 @@ export default async function AppHomePage() {
 
       <AppStatStrip items={dayStats} />
 
-      <section className="rounded-lg border border-primary/10 bg-primary p-4 text-white shadow-sm sm:p-5">
-        <div className="flex items-start justify-between gap-3">
+      <section className="min-w-0 overflow-hidden rounded-lg border border-primary/10 bg-primary p-4 text-white shadow-sm sm:p-5">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-white/55">
               Current
             </p>
-            <h2 className="mt-1 truncate text-3xl font-black">
+            <h2 className="mt-1 max-w-full truncate text-2xl font-black sm:text-3xl">
               {nextInvoice ? getScheduleLabel(nextInvoice) : "Clear"}
             </h2>
             <p className="mt-1 truncate text-sm font-bold text-white/70">
@@ -190,7 +190,7 @@ export default async function AppHomePage() {
           ) : null}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-black sm:grid-cols-4">
+        <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 text-sm font-black sm:grid-cols-4">
           <Link
             href={nextInvoice ? `/app/invoices/${nextInvoice.id}` : "/app/invoices"}
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-3 text-primary"
@@ -227,7 +227,7 @@ export default async function AppHomePage() {
               <Link
                 key={invoice.id}
                 href={`/app/invoices/${invoice.id}`}
-                className="grid grid-cols-[4.5rem_1fr_auto] items-stretch overflow-hidden rounded-lg border border-border bg-white shadow-sm transition hover:border-primary/25 hover:shadow-md"
+                className="grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-stretch overflow-hidden rounded-lg border border-border bg-white shadow-sm transition hover:border-primary/25 hover:shadow-md sm:grid-cols-[4.5rem_minmax(0,1fr)_auto]"
               >
                 <span
                   className={`grid place-items-center px-2 text-center text-white ${
@@ -260,7 +260,7 @@ export default async function AppHomePage() {
                     </StatusPill>
                   </span>
                 </span>
-                <span className="grid w-10 place-items-center pr-2 text-xl font-black text-primary">›</span>
+                <span className="hidden w-10 place-items-center pr-2 text-xl font-black text-primary sm:grid">&gt;</span>
               </Link>
             );
           })

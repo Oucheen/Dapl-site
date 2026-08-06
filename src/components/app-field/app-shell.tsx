@@ -27,7 +27,7 @@ export function AppFieldShell({
   userName: string;
 }) {
   return (
-    <main className="min-h-screen bg-[#edf2f7] pb-24 text-foreground">
+    <main className="min-h-screen overflow-x-hidden bg-[#edf2f7] pb-24 text-foreground">
       <section className="border-b border-primary/10 bg-white">
         <div className="mx-auto w-full max-w-5xl px-3 py-3 sm:px-5">
           <div className="flex items-center justify-between gap-3">
@@ -67,7 +67,7 @@ export function AppFieldShell({
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-5xl gap-3 px-3 py-3 sm:px-5 sm:py-5">
+      <section className="mx-auto grid w-full max-w-5xl gap-3 overflow-hidden px-3 py-3 sm:px-5 sm:py-5">
         {children}
       </section>
 
@@ -112,7 +112,13 @@ export function AppStatStrip({
   items: Array<{ active?: boolean; href?: string; label: string; value: string }>;
 }) {
   return (
-    <div className={`grid gap-2 ${items.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
+    <div
+      className={`grid max-w-full gap-2 overflow-x-auto pb-1 ${
+        items.length === 5
+          ? "grid-cols-[repeat(5,minmax(4.75rem,1fr))]"
+          : "grid-cols-[repeat(4,minmax(5.25rem,1fr))]"
+      }`}
+    >
       {items.map((item) => {
         const className = `rounded-lg border p-3 shadow-sm transition ${
           item.active

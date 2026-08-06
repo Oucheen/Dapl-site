@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { sendInvoiceSms } from "@/lib/invoice-sms";
+import { getSiteUrl, getStripe, toStripeCents } from "@/lib/stripe-payments";
 import {
   createLeadActivity,
   deleteTechnicianReportPageActivities,
@@ -13,6 +14,7 @@ import {
 import {
   addInvoiceItem,
   addInvoicePayment,
+  calculateInvoiceAmountDue,
   getInvoiceById,
   getLeadIdForInvoice,
   type InvoiceJobStatus,
@@ -255,6 +257,86 @@ export async function addAppInvoicePaymentAction(formData: FormData) {
   });
   await revalidateInvoice(invoiceId);
   redirectBack(invoiceId, "payment_added");
+}
+
+export async function createAppStripeCheckoutAction(formData: FormData) {
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const { permissions, invoiceData } = await requireAppInvoiceAccess(invoiceId);
+  const amountDue = calculateInvoiceAmountDue(invoiceData.invoice, invoiceData.payments);
+  const amountCents = toStripeCents(amountDue);
+  const siteUrl = getSiteUrl();
+
+  if (amountCents <= 0) {
+    redirectBack(invoiceId, "nothing_due");
+  }
+
+  if (!siteUrl) {
+    redirectBack(invoiceId, "stripe_site_url_missing");
+  }
+
+  let session;
+
+  try {
+    const stripe = getStripe();
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: invoiceData.invoice.customer_email || undefined,
+      client_reference_id: invoiceId,
+      success_url: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_returned`,
+      cancel_url: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_canceled`,
+      metadata: {
+        invoiceId,
+        leadId: invoiceData.invoice.lead_id ?? "",
+        source: "dapl_pwa_invoice",
+      },
+      payment_intent_data: {
+        description: `DAPL invoice ${invoiceData.invoice.invoice_number}`,
+        metadata: {
+          invoiceId,
+          leadId: invoiceData.invoice.lead_id ?? "",
+          source: "dapl_pwa_invoice",
+        },
+      },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: amountCents,
+            product_data: {
+              name: `DAPL invoice ${invoiceData.invoice.invoice_number}`,
+              description: invoiceData.invoice.appliance || "Appliance repair service",
+              metadata: {
+                invoiceId,
+              },
+            },
+          },
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Stripe checkout creation failed", { invoiceId, error });
+    redirectBack(invoiceId, "stripe_checkout_failed");
+  }
+
+  await createLeadActivity({
+    leadId: invoiceData.invoice.lead_id,
+    invoiceId,
+    eventType: "stripe_checkout_created",
+    title: "Stripe checkout opened",
+    details: `Checkout created for $${amountDue.toFixed(2)}.`,
+    metadata: {
+      actor: getActor(permissions),
+      source: "stripe_checkout",
+      stripeCheckoutSessionId: session.id,
+    },
+  });
+
+  if (!session.url) {
+    redirectBack(invoiceId, "stripe_checkout_failed");
+  }
+
+  redirect(session.url);
 }
 
 export async function startAppInvoiceJobAction(formData: FormData) {
