@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/leads/actions";
+import { AppBottomNav } from "@/components/app-field/app-shell";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getPublicInvoicePath, getShortPublicInvoicePath } from "@/lib/invoice-public-link";
@@ -33,14 +34,6 @@ export const metadata: Metadata = {
     follow: false,
   },
 };
-
-const navItems = [
-  { href: "/app", label: "Today", mark: "T" },
-  { href: "/app/search", label: "Search", mark: "S" },
-  { href: "/app/parts", label: "Parts", mark: "P" },
-  { href: "/app/invoices", label: "Invoices", mark: "I" },
-  { href: "/app/more", label: "More", mark: "M" },
-];
 
 const statusClasses: Record<InvoiceStatus, string> = {
   draft: "border-primary/20 bg-primary/5 text-primary",
@@ -453,24 +446,7 @@ export default async function AppInvoiceDetailPage({
         </div>
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-white/95 shadow-[0_-12px_30px_rgba(15,23,42,0.10)] backdrop-blur">
-        <div className="mx-auto grid max-w-2xl grid-cols-5 px-2 py-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-black ${
-                item.href === "/app/invoices" ? "bg-primary/5 text-primary" : "text-muted"
-              }`}
-            >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-[0.65rem] text-primary">
-                {item.mark}
-              </span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <AppBottomNav activeHref="/app/invoices" />
     </main>
   );
 }

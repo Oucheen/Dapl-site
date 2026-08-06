@@ -71,28 +71,38 @@ export function AppFieldShell({
         {children}
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-white/95 shadow-[0_-12px_30px_rgba(15,23,42,0.10)] backdrop-blur">
-        <div className="mx-auto grid max-w-2xl grid-cols-5 px-2 py-2">
-          {navItems.map((item) => {
-            const isActive = item.href === activeHref;
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-black transition ${
-                  isActive ? "bg-primary text-white" : "text-muted hover:bg-primary/5 hover:text-primary"
-                }`}
-              >
-                <Icon className="h-5 w-5" strokeWidth={2.4} aria-hidden="true" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <AppBottomNav activeHref={activeHref} />
     </main>
+  );
+}
+
+export function AppBottomNav({ activeHref }: { activeHref: string }) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-white/95 shadow-[0_-12px_30px_rgba(15,23,42,0.10)] backdrop-blur">
+      <div className="mx-auto grid max-w-2xl grid-cols-5 px-2 py-2">
+        {navItems.map((item) => {
+          const isActive = item.href === activeHref;
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-black transition ${
+                isActive ? "text-accent" : "text-muted hover:bg-primary/5 hover:text-primary"
+              }`}
+            >
+              <Icon
+                className={`h-5 w-5 ${isActive ? "text-accent" : "text-primary"}`}
+                strokeWidth={isActive ? 2.8 : 2.3}
+                aria-hidden="true"
+              />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
