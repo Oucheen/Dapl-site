@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/leads/actions";
 import { AppBottomNav } from "@/components/app-field/app-shell";
+import { AppSubmitButton } from "@/components/app-field/submit-button";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 import { getPublicInvoicePath, getShortPublicInvoicePath } from "@/lib/invoice-public-link";
@@ -369,8 +370,9 @@ export default async function AppInvoiceDetailPage({
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             <form action={startAppInvoiceJobAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button
+              <AppSubmitButton
                 disabled={jobStatus === "in_progress" || jobStatus === "done"}
+                pendingText="Starting..."
                 className={`min-h-12 w-full rounded-lg border px-2 text-center text-xs font-black ${
                   jobStatus === "in_progress" || jobStatus === "done"
                     ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
@@ -378,7 +380,7 @@ export default async function AppInvoiceDetailPage({
                 }`}
               >
                 Start
-              </button>
+              </AppSubmitButton>
             </form>
             <a
               href="#report"
@@ -398,18 +400,24 @@ export default async function AppInvoiceDetailPage({
             </Link>
             <form action={sendAppInvoiceSmsAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+              <AppSubmitButton
+                pendingText="Sending..."
+                className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary"
+              >
                 Send
-              </button>
+              </AppSubmitButton>
             </form>
             <a href="#payment" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-2 text-center text-xs font-black text-accent">
               Pay
             </a>
             <form action={markAppInvoiceDoneAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+              <AppSubmitButton
+                pendingText="Closing..."
+                className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary"
+              >
                 Done
-              </button>
+              </AppSubmitButton>
             </form>
           </div>
         </aside>
@@ -545,9 +553,12 @@ export default async function AppInvoiceDetailPage({
               </div>
             </details>
 
-            <button className="min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white">
+            <AppSubmitButton
+              pendingText="Saving..."
+              className="min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white"
+            >
               Save report
-            </button>
+            </AppSubmitButton>
           </form>
         </div>
 
@@ -561,12 +572,13 @@ export default async function AppInvoiceDetailPage({
             </div>
             <form action={addAppInvoiceItemAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button
+              <AppSubmitButton
                 disabled={isLineItemsLocked}
+                pendingText="Adding..."
                 className="text-sm font-black text-primary disabled:text-muted"
               >
                 Add
-              </button>
+              </AppSubmitButton>
             </form>
           </div>
 
@@ -611,12 +623,13 @@ export default async function AppInvoiceDetailPage({
                 No charges.
               </p>
             )}
-            <button
+            <AppSubmitButton
               disabled={isLineItemsLocked || items.length === 0}
+              pendingText="Saving..."
               className="mt-2 min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white disabled:bg-slate-200 disabled:text-slate-500"
             >
               Save charges
-            </button>
+            </AppSubmitButton>
           </form>
         </div>
 
@@ -630,7 +643,9 @@ export default async function AppInvoiceDetailPage({
             </div>
             <form action={markAppInvoiceDoneAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
-              <button className="text-sm font-black text-primary">Done</button>
+              <AppSubmitButton pendingText="Closing..." className="text-sm font-black text-primary">
+                Done
+              </AppSubmitButton>
             </form>
           </div>
 
@@ -663,9 +678,12 @@ export default async function AppInvoiceDetailPage({
               placeholder="Note"
               className="min-h-11 rounded-lg border border-border bg-white px-3 text-sm font-black outline-none focus:border-primary"
             />
-            <button className="min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white">
+            <AppSubmitButton
+              pendingText="Adding..."
+              className="min-h-12 rounded-lg bg-primary px-4 text-sm font-black text-white"
+            >
               Add payment
-            </button>
+            </AppSubmitButton>
           </form>
 
           <div className="mt-4 grid gap-2">
