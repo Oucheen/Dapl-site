@@ -16,12 +16,16 @@ import {
   calculateInvoiceAmountDue,
   calculateInvoicePaidAmount,
   getInvoiceById,
+  INVOICE_DISCOUNT_ADJUSTMENTS,
+  INVOICE_ITEM_TEMPLATES,
   type InvoiceJobStatus,
   type InvoiceRecord,
   type InvoiceStatus,
 } from "@/lib/supabase-invoices";
 import {
+  addAppInvoiceDiscountAction,
   addAppInvoiceItemAction,
+  addAppInvoiceTemplateItemAction,
   addAppInvoicePaymentAction,
   createAppStripeCheckoutAction,
   markAppInvoiceDoneAction,
@@ -75,6 +79,15 @@ const reportPhotoFields = [
   { name: "partPhoto", label: "Part" },
   { name: "receiptPhoto", label: "Receipt" },
 ];
+
+type FlowStepState = "done" | "current" | "ready" | "locked";
+
+const flowStepClasses: Record<FlowStepState, string> = {
+  done: "border-emerald-500/25 bg-emerald-50 text-emerald-700",
+  current: "border-accent/20 bg-red-50 text-accent",
+  ready: "border-primary/15 bg-white text-primary",
+  locked: "border-slate-200 bg-slate-50 text-slate-400",
+};
 
 function normalizeText(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? "";
@@ -175,6 +188,14 @@ function hasReportPhoto(activities: LeadActivityRecord[]) {
   );
 }
 
+function hasActivityType(activities: LeadActivityRecord[], eventTypes: string[]) {
+  return activities.some((activity) => eventTypes.includes(activity.event_type));
+}
+
+function getFlowStepClass(state: FlowStepState) {
+  return `min-h-12 rounded-lg border px-2 text-center text-xs font-black ${flowStepClasses[state]}`;
+}
+
 function getMoneyPrefill(value: unknown) {
   if (typeof value !== "number" || !Number.isFinite(value) || value === 0) {
     return "";
@@ -252,6 +273,23 @@ export default async function AppInvoiceDetailPage({
     day: "2-digit",
   }).format(new Date());
   const isLineItemsLocked = invoice.status === "paid" || invoice.status === "void";
+  const jobStarted =
+    jobStatus !== "scheduled" ||
+    hasReport ||
+    hasActivityType(invoiceActivities, ["job_started"]);
+  const hasCharges = items.length > 0 && Number(invoice.total ?? 0) > 0;
+  const invoiceWasSent =
+    invoice.status === "sent" ||
+    invoice.status === "paid" ||
+    hasActivityType(invoiceActivities, ["invoice_sms_sent", "invoice_email_sent", "stripe_payment_link_sent"]);
+  const isPaid = invoice.status === "paid" || paidAmount > 0 || (hasCharges && amountDue <= 0);
+  const isDone = jobStatus === "done";
+  const reportStepState: FlowStepState = hasReport ? "done" : jobStarted ? "current" : "ready";
+  const chargesStepState: FlowStepState = hasCharges ? "done" : hasReport ? "current" : "ready";
+  const signStepState: FlowStepState = signature ? "done" : hasCharges ? "current" : "ready";
+  const sendStepState: FlowStepState = invoiceWasSent ? "done" : signature ? "current" : "ready";
+  const payStepState: FlowStepState = isPaid ? "done" : invoiceWasSent ? "current" : "ready";
+  const doneStepState: FlowStepState = isDone ? "done" : isPaid ? "current" : "ready";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-100 pb-24 text-foreground">
@@ -380,50 +418,42 @@ export default async function AppInvoiceDetailPage({
             <form action={startAppInvoiceJobAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <AppSubmitButton
-                disabled={jobStatus === "in_progress" || jobStatus === "done"}
+                disabled={jobStarted || isDone}
                 pendingText="Starting..."
-                className={`min-h-12 w-full rounded-lg border px-2 text-center text-xs font-black ${
-                  jobStatus === "in_progress" || jobStatus === "done"
-                    ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
-                    : "border-accent/20 bg-red-50 text-accent"
-                }`}
+                className={`w-full ${getFlowStepClass(jobStarted ? "done" : "current")}`}
               >
                 Start
               </AppSubmitButton>
             </form>
             <a
               href="#report"
-              className={`inline-flex min-h-12 items-center justify-center rounded-lg border px-2 text-center text-xs font-black ${
-                hasReport
-                  ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
-                  : "border-primary/15 bg-white text-primary"
-              }`}
+              className={`inline-flex items-center justify-center ${getFlowStepClass(reportStepState)}`}
             >
               Report
             </a>
-            <a href="#charges" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+            <a href="#charges" className={`inline-flex items-center justify-center ${getFlowStepClass(chargesStepState)}`}>
               Charges
             </a>
-            <Link href={signatureHref} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary">
+            <Link href={signatureHref} className={`inline-flex items-center justify-center ${getFlowStepClass(signStepState)}`}>
               Sign
             </Link>
             <form action={sendAppInvoiceSmsAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <AppSubmitButton
                 pendingText="Sending..."
-                className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary"
+                className={`w-full ${getFlowStepClass(sendStepState)}`}
               >
                 Send
               </AppSubmitButton>
             </form>
-            <a href="#payment" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-accent/20 bg-red-50 px-2 text-center text-xs font-black text-accent">
+            <a href="#payment" className={`inline-flex items-center justify-center ${getFlowStepClass(payStepState)}`}>
               Pay
             </a>
             <form action={markAppInvoiceDoneAction}>
               <input type="hidden" name="invoiceId" value={invoice.id} />
               <AppSubmitButton
                 pendingText="Closing..."
-                className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-2 text-center text-xs font-black text-primary"
+                className={`w-full ${getFlowStepClass(doneStepState)}`}
               >
                 Done
               </AppSubmitButton>
@@ -589,6 +619,45 @@ export default async function AppInvoiceDetailPage({
                 Add
               </AppSubmitButton>
             </form>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {(Object.entries(INVOICE_DISCOUNT_ADJUSTMENTS) as Array<
+              [
+                keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS,
+                (typeof INVOICE_DISCOUNT_ADJUSTMENTS)[keyof typeof INVOICE_DISCOUNT_ADJUSTMENTS],
+              ]
+            >).map(([key, adjustment]) => (
+              <form key={key} action={addAppInvoiceDiscountAction}>
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <input type="hidden" name="adjustmentKey" value={key} />
+                <AppSubmitButton
+                  disabled={isLineItemsLocked}
+                  pendingText="Adding..."
+                  className="flex min-h-14 w-full items-center justify-between gap-2 rounded-lg border border-accent/20 bg-red-50 px-3 text-left text-xs font-black text-accent disabled:bg-slate-100 disabled:text-muted"
+                >
+                  <span className="min-w-0 truncate">{adjustment.label}</span>
+                  <span className="shrink-0">-{formatMoney(adjustment.amount)}</span>
+                </AppSubmitButton>
+              </form>
+            ))}
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {INVOICE_ITEM_TEMPLATES.map((template) => (
+              <form key={template.key} action={addAppInvoiceTemplateItemAction}>
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <input type="hidden" name="templateKey" value={template.key} />
+                <AppSubmitButton
+                  disabled={isLineItemsLocked}
+                  pendingText="Adding..."
+                  className="flex min-h-14 w-full items-center justify-between gap-2 rounded-lg border border-border bg-slate-50 px-3 text-left text-xs font-black text-primary disabled:bg-slate-100 disabled:text-muted"
+                >
+                  <span className="min-w-0 truncate">{template.label}</span>
+                  <span className="shrink-0 text-foreground">{formatMoney(template.unitPrice)}</span>
+                </AppSubmitButton>
+              </form>
+            ))}
           </div>
 
           <form action={updateAppInvoiceItemsAction} className="mt-4 grid gap-2">

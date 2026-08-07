@@ -14,11 +14,16 @@ import {
   type LeadActivityRecord,
 } from "@/lib/supabase-activity";
 import {
+  addInvoiceDiscountAdjustment,
   addInvoiceItem,
+  addInvoiceItemFromTemplate,
   addInvoicePayment,
   calculateInvoiceAmountDue,
   getInvoiceById,
+  getInvoiceItemTemplate,
   getLeadIdForInvoice,
+  INVOICE_DISCOUNT_ADJUSTMENTS,
+  type InvoiceDiscountAdjustmentKey,
   type InvoiceJobStatus,
   type InvoiceItemInput,
   updateInvoiceItems,
@@ -40,6 +45,12 @@ const APP_REPORT_JOB_STATUSES = new Set<InvoiceJobStatus>([
   "done",
   "reschedule",
   "canceled",
+]);
+
+const APP_DISCOUNT_ADJUSTMENTS = new Set<InvoiceDiscountAdjustmentKey>([
+  "service_call",
+  "retirement",
+  "military",
 ]);
 
 type ReportPhotoWithFile = (typeof REPORT_PHOTO_FIELDS)[number] & { file: File };
@@ -255,6 +266,60 @@ export async function addAppInvoiceItemAction(formData: FormData) {
   });
   await revalidateInvoice(invoiceId);
   redirectBack(invoiceId, "line_added");
+}
+
+export async function addAppInvoiceTemplateItemAction(formData: FormData) {
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const templateKey = String(formData.get("templateKey") || "");
+  const { permissions, invoiceData } = await requireAppInvoiceAccess(invoiceId);
+  const template = getInvoiceItemTemplate(templateKey);
+
+  if (!permissions.canManageInvoiceCharges || ["paid", "void"].includes(invoiceData.invoice.status)) {
+    redirectBack(invoiceId, "permission_denied");
+  }
+
+  if (!template) {
+    redirectBack(invoiceId, "invalid_template");
+  }
+
+  await addInvoiceItemFromTemplate(invoiceId, templateKey);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_item_added",
+    title: "PWA invoice template added",
+    details: `${template.label} was added to the invoice.`,
+    metadata: { actor: getActor(permissions), templateKey },
+  });
+  await revalidateInvoice(invoiceId);
+  redirectBack(invoiceId, "template_added");
+}
+
+export async function addAppInvoiceDiscountAction(formData: FormData) {
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const adjustmentKey = String(formData.get("adjustmentKey") || "") as InvoiceDiscountAdjustmentKey;
+  const { permissions, invoiceData } = await requireAppInvoiceAccess(invoiceId);
+  const adjustment = INVOICE_DISCOUNT_ADJUSTMENTS[adjustmentKey];
+
+  if (!permissions.canManageInvoiceCharges || ["paid", "void"].includes(invoiceData.invoice.status)) {
+    redirectBack(invoiceId, "permission_denied");
+  }
+
+  if (!APP_DISCOUNT_ADJUSTMENTS.has(adjustmentKey) || !adjustment) {
+    redirectBack(invoiceId, "invalid_discount");
+  }
+
+  await addInvoiceDiscountAdjustment(invoiceId, adjustmentKey);
+  await createLeadActivity({
+    leadId: await getLeadIdForInvoice(invoiceId),
+    invoiceId,
+    eventType: "invoice_discount_added",
+    title: "PWA invoice discount added",
+    details: `${adjustment.label} was added to the invoice.`,
+    metadata: { actor: getActor(permissions), adjustmentKey },
+  });
+  await revalidateInvoice(invoiceId);
+  redirectBack(invoiceId, "discount_added");
 }
 
 export async function sendAppInvoiceSmsAction(formData: FormData) {
