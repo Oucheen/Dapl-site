@@ -26,6 +26,7 @@ import {
   createAppStripeCheckoutAction,
   markAppInvoiceDoneAction,
   sendAppInvoiceSmsAction,
+  sendAppStripePaymentLinkAction,
   startAppInvoiceJobAction,
   submitAppTechnicianReportAction,
   updateAppInvoiceItemsAction,
@@ -268,11 +269,18 @@ export default async function AppInvoiceDetailPage({
             <form action={logoutAdmin}>
               <button
                 type="submit"
-                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-4 text-sm font-black text-primary"
+                className="hidden min-h-11 items-center justify-center rounded-lg bg-white px-4 text-sm font-black text-primary sm:inline-flex"
               >
                 Sign out
               </button>
             </form>
+            <Link
+              href="/app"
+              aria-label="Close invoice"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-white text-2xl font-black leading-none text-primary shadow-sm"
+            >
+              &times;
+            </Link>
           </div>
 
           <div className="mt-7">
@@ -688,15 +696,26 @@ export default async function AppInvoiceDetailPage({
           </form>
 
           {amountDue > 0 ? (
-            <form action={createAppStripeCheckoutAction} className="mt-2">
-              <input type="hidden" name="invoiceId" value={invoice.id} />
-              <AppSubmitButton
-                pendingText="Opening..."
-                className="min-h-12 w-full rounded-lg border border-accent/20 bg-red-50 px-4 text-sm font-black text-accent"
-              >
-                Collect card {formatMoney(amountDue)}
-              </AppSubmitButton>
-            </form>
+            <div className="mt-2 grid gap-2">
+              <form action={sendAppStripePaymentLinkAction}>
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <AppSubmitButton
+                  pendingText="Sending..."
+                  className="min-h-12 w-full rounded-lg border border-accent/20 bg-red-50 px-4 text-sm font-black text-accent"
+                >
+                  Send pay link {formatMoney(amountDue)}
+                </AppSubmitButton>
+              </form>
+              <form action={createAppStripeCheckoutAction}>
+                <input type="hidden" name="invoiceId" value={invoice.id} />
+                <AppSubmitButton
+                  pendingText="Opening..."
+                  className="min-h-12 w-full rounded-lg border border-primary/15 bg-white px-4 text-sm font-black text-primary"
+                >
+                  Collect on this phone
+                </AppSubmitButton>
+              </form>
+            </div>
           ) : null}
 
           <div className="mt-4 grid gap-2">

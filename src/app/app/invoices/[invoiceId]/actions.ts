@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { sendCustomerSms } from "@/lib/customer-sms";
 import { sendInvoiceSms } from "@/lib/invoice-sms";
+import { getShortPublicInvoiceUrl } from "@/lib/invoice-public-link";
 import { getSiteUrl, getStripe, toStripeCents } from "@/lib/stripe-payments";
 import {
   createLeadActivity,
@@ -145,6 +147,63 @@ function getRetainedPhotoActivities(
   return [...retainedByField.values()];
 }
 
+async function createStripeCheckoutSession(input: {
+  cancelUrl: string;
+  invoiceData: Awaited<ReturnType<typeof getInvoiceById>>;
+  invoiceId: string;
+  successUrl: string;
+}) {
+  if (!input.invoiceData) {
+    throw new Error("Invoice data is required.");
+  }
+
+  const amountDue = calculateInvoiceAmountDue(input.invoiceData.invoice, input.invoiceData.payments);
+  const amountCents = toStripeCents(amountDue);
+
+  if (amountCents <= 0) {
+    throw new Error("nothing_due");
+  }
+
+  const stripe = getStripe();
+
+  return stripe.checkout.sessions.create({
+    mode: "payment",
+    customer_email: input.invoiceData.invoice.customer_email || undefined,
+    client_reference_id: input.invoiceId,
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    metadata: {
+      invoiceId: input.invoiceId,
+      leadId: input.invoiceData.invoice.lead_id ?? "",
+      source: "dapl_pwa_invoice",
+    },
+    payment_intent_data: {
+      description: `DAPL invoice ${input.invoiceData.invoice.invoice_number}`,
+      metadata: {
+        invoiceId: input.invoiceId,
+        leadId: input.invoiceData.invoice.lead_id ?? "",
+        source: "dapl_pwa_invoice",
+      },
+    },
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: amountCents,
+          product_data: {
+            name: `DAPL invoice ${input.invoiceData.invoice.invoice_number}`,
+            description: input.invoiceData.invoice.appliance || "Appliance repair service",
+            metadata: {
+              invoiceId: input.invoiceId,
+            },
+          },
+        },
+      },
+    ],
+  });
+}
+
 export async function updateAppInvoiceItemsAction(formData: FormData) {
   const invoiceId = String(formData.get("invoiceId") || "");
   const { permissions, invoiceData } = await requireAppInvoiceAccess(invoiceId);
@@ -277,42 +336,11 @@ export async function createAppStripeCheckoutAction(formData: FormData) {
   let session;
 
   try {
-    const stripe = getStripe();
-    session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: invoiceData.invoice.customer_email || undefined,
-      client_reference_id: invoiceId,
-      success_url: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_returned`,
-      cancel_url: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_canceled`,
-      metadata: {
-        invoiceId,
-        leadId: invoiceData.invoice.lead_id ?? "",
-        source: "dapl_pwa_invoice",
-      },
-      payment_intent_data: {
-        description: `DAPL invoice ${invoiceData.invoice.invoice_number}`,
-        metadata: {
-          invoiceId,
-          leadId: invoiceData.invoice.lead_id ?? "",
-          source: "dapl_pwa_invoice",
-        },
-      },
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: amountCents,
-            product_data: {
-              name: `DAPL invoice ${invoiceData.invoice.invoice_number}`,
-              description: invoiceData.invoice.appliance || "Appliance repair service",
-              metadata: {
-                invoiceId,
-              },
-            },
-          },
-        },
-      ],
+    session = await createStripeCheckoutSession({
+      invoiceData,
+      invoiceId,
+      successUrl: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_returned`,
+      cancelUrl: `${siteUrl}/app/invoices/${invoiceId}?notice=stripe_checkout_canceled`,
     });
   } catch (error) {
     console.error("Stripe checkout creation failed", { invoiceId, error });
@@ -337,6 +365,62 @@ export async function createAppStripeCheckoutAction(formData: FormData) {
   }
 
   redirect(session.url);
+}
+
+export async function sendAppStripePaymentLinkAction(formData: FormData) {
+  const invoiceId = String(formData.get("invoiceId") || "");
+  const { permissions, invoiceData } = await requireAppInvoiceAccess(invoiceId);
+  const amountDue = calculateInvoiceAmountDue(invoiceData.invoice, invoiceData.payments);
+  const amountCents = toStripeCents(amountDue);
+  const publicInvoiceUrl = getShortPublicInvoiceUrl(invoiceData.invoice.invoice_number);
+
+  if (amountCents <= 0) {
+    redirectBack(invoiceId, "nothing_due");
+  }
+
+  let session;
+
+  try {
+    session = await createStripeCheckoutSession({
+      invoiceData,
+      invoiceId,
+      successUrl: `${publicInvoiceUrl}?paid=1`,
+      cancelUrl: publicInvoiceUrl,
+    });
+  } catch (error) {
+    console.error("Stripe payment link creation failed", { invoiceId, error });
+    redirectBack(invoiceId, "stripe_checkout_failed");
+  }
+
+  if (!session.url) {
+    redirectBack(invoiceId, "stripe_checkout_failed");
+  }
+
+  const result = await sendCustomerSms(
+    invoiceData.invoice.customer_phone,
+    `DAPL Appliance Repair payment link for invoice ${invoiceData.invoice.invoice_number}: ${session.url} Reply STOP to opt out.`,
+  );
+
+  if (!result.ok) {
+    redirectBack(invoiceId, `pay_link_${result.reason}`);
+  }
+
+  await createLeadActivity({
+    leadId: invoiceData.invoice.lead_id,
+    invoiceId,
+    eventType: "stripe_payment_link_sent",
+    title: "Stripe payment link sent",
+    details: `Payment link for $${amountDue.toFixed(2)} sent to ${result.to}.`,
+    metadata: {
+      actor: getActor(permissions),
+      source: "stripe_checkout_sms",
+      stripeCheckoutSessionId: session.id,
+      messageSid: result.messageSid,
+    },
+  });
+
+  await revalidateInvoice(invoiceId);
+  redirectBack(invoiceId, "pay_link_sent");
 }
 
 export async function startAppInvoiceJobAction(formData: FormData) {
