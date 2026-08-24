@@ -61,7 +61,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
       address: {
         "@type": "PostalAddress",
         streetAddress: "9401 Peckham Rye Rd",
-        addressLocality: "Charlotte",
+        addressLocality: "Mint Hill",
         addressRegion: "NC",
         postalCode: "28227",
         addressCountry: "US",

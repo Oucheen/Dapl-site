@@ -58,7 +58,7 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
       address: {
         "@type": "PostalAddress",
         streetAddress: "9401 Peckham Rye Rd",
-        addressLocality: "Charlotte",
+        addressLocality: "Mint Hill",
         addressRegion: "NC",
         postalCode: "28227",
         addressCountry: "US",

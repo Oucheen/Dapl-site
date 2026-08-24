@@ -12,7 +12,7 @@ import type { InvoiceSignatureRecord } from "@/lib/supabase-invoice-signatures";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
 
 const BUSINESS_NAME = "DAPL Appliance Repair";
-const BUSINESS_ADDRESS = "9401 Peckham Rye Rd, Charlotte, NC 28227";
+const BUSINESS_ADDRESS = "9401 Peckham Rye Rd, Mint Hill, NC 28227";
 const BUSINESS_LEGAL = "DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.";
 const PRIMARY = "#0b1d3a";
 const MUTED = "#475569";

@@ -133,7 +133,7 @@ export default async function PublicInvoicePage({
                   DAPL Appliance Repair
                 </p>
                 <p className="mt-1 text-sm leading-6 text-muted">
-                  9401 Peckham Rye Rd, Charlotte, NC 28227
+                  9401 Peckham Rye Rd, Mint Hill, NC 28227
                 </p>
                 <p className="text-sm leading-6 text-muted">{BUSINESS_EMAIL}</p>
               </div>

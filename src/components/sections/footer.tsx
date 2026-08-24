@@ -46,9 +46,9 @@ export function Footer() {
               <div>
                 <p className="font-semibold text-foreground">Location</p>
                 <p className="mt-2">9401 Peckham Rye Rd</p>
-                <p>Charlotte, NC 28227</p>
+                <p>Mint Hill, NC 28227</p>
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Charlotte%2C%20NC%2028227"
+                  href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Mint%20Hill%2C%20NC%2028227"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-flex items-center gap-1 font-semibold underline-offset-4 hover:underline"

@@ -164,7 +164,7 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
               Thank you for choosing DAPL Appliance Repair. Your invoice is attached as a PDF.
             </p>
             <p style="margin: 8px 0 0; color: #475569; font-size: 13px; line-height: 1.6;">
-              9401 Peckham Rye Rd, Charlotte, NC 28227<br/>
+              9401 Peckham Rye Rd, Mint Hill, NC 28227<br/>
               ${escapeHtml(replyToEmail)}
             </p>
           </div>

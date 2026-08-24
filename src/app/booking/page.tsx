@@ -40,7 +40,7 @@ const bookingPageSchema = {
     address: {
       "@type": "PostalAddress",
       streetAddress: "9401 Peckham Rye Rd",
-      addressLocality: "Charlotte",
+      addressLocality: "Mint Hill",
       addressRegion: "NC",
       postalCode: "28227",
       addressCountry: "US",
@@ -132,10 +132,10 @@ export default function BookingPage() {
                         Location
                       </p>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        9401 Peckham Rye Rd, Charlotte, NC 28227
+                        9401 Peckham Rye Rd, Mint Hill, NC 28227
                       </p>
                       <a
-                        href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Charlotte%2C%20NC%2028227"
+                        href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Mint%20Hill%2C%20NC%2028227"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline"
