@@ -18,7 +18,10 @@ export function ServiceAreasSection() {
         <FadeUp delay={0.08}>
           <div className="mx-auto mt-8 max-w-6xl">
             <div className="overflow-hidden rounded-lg border border-border bg-white p-3 shadow-sm sm:p-4">
-              <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent" />
+                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {serviceAreaPagesDirectory.map((area) => (
                   <Link
                     key={area.slug}
@@ -39,8 +42,9 @@ export function ServiceAreasSection() {
                     </span>
                   </Link>
                 ))}
+                </div>
               </div>
-              <p className="mt-2 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+              <p className="mt-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                 Swipe or drag to see more areas
               </p>
             </div>
