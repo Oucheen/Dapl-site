@@ -30,6 +30,59 @@ const sharedHighlights = [
   "Service for many major residential appliance brands",
 ];
 
+function buildLocalCommonNeeds(city: string) {
+  return [
+    {
+      title: "Refrigerators not cooling or leaking",
+      text: `For ${city} service calls, we ask when the cooling problem started, whether the freezer is affected, and if there is frost, water, or unusual noise.`,
+    },
+    {
+      title: "Washers that will not drain, spin, or finish cycles",
+      text:
+        "Drain, spin, and cycle problems can come from several areas, so details about error codes, water left in the tub, and timing help us prepare.",
+    },
+    {
+      title: "Dryers taking too long or not heating",
+      text:
+        "Long dry times often point to heat, airflow, venting, or sensor issues. We ask what the dryer is doing before recommending the next step.",
+    },
+    {
+      title: "Dishwashers leaking, noisy, or not cleaning",
+      text:
+        "Leaks, standing water, poor cleaning, and unusual sounds can come from different parts of the system, so we narrow the symptoms before the visit.",
+    },
+    {
+      title: "Ovens and cooktops with heating trouble",
+      text:
+        "Heating problems can show up as weak heat, uneven cooking, ignition failure, or one burner not working. Those details help guide the inspection.",
+    },
+    {
+      title: "Freezers, ice machines, and wine coolers with temperature issues",
+      text:
+        "For cooling equipment, we look at temperature swings, frost, noise, leaks, and control behavior before suggesting a practical repair path.",
+    },
+  ];
+}
+
+function buildLocalFaqs(city: string, state: "NC" | "SC", nearbyArea: string) {
+  return [
+    {
+      question: `Do you offer appliance repair in ${city}, ${state}?`,
+      answer: `Yes. We serve ${city}, ${state} and nearby ${nearbyArea} addresses when scheduling and route availability allow.`,
+    },
+    {
+      question: `Can I book same-day appliance repair in ${city}?`,
+      answer:
+        "Same-day appointments may be available when the route allows. Calling or sending the service address is the fastest way to confirm timing.",
+    },
+    {
+      question: `What appliances do you repair in ${city}?`,
+      answer:
+        "We help with many common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration issues.",
+    },
+  ];
+}
+
 export const serviceAreaPages: ServiceAreaPageContent[] = [
   {
     slug: "appliance-repair-charlotte-nc",
@@ -741,6 +794,262 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
           "Call or submit the form with your service address, appliance type, symptoms, and preferred date. We will confirm availability.",
       },
     ],
+  },
+  {
+    slug: "appliance-repair-mint-hill-nc",
+    city: "Mint Hill",
+    state: "NC",
+    countyOrArea: "Mecklenburg County",
+    nearbyLabel: "Mint Hill, Matthews, and east Charlotte",
+    heroTitle: "Appliance Repair in Mint Hill, NC",
+    heroDescription:
+      "DAPL Appliance Repair is based in Mint Hill and helps nearby homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration problems.",
+    metaTitle: "Appliance Repair in Mint Hill, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Mint Hill, NC? DAPL Appliance Repair serves Mint Hill and nearby east Charlotte-area homes with practical appliance repair help.",
+    keywords: [
+      "appliance repair Mint Hill NC",
+      "Mint Hill appliance repair",
+      "refrigerator repair Mint Hill",
+      "washer repair Mint Hill",
+      "dryer repair Mint Hill",
+    ],
+    introTitle: "Local appliance repair help from Mint Hill",
+    introText:
+      "Mint Hill is our home base, so this area is a natural fit for kitchen, laundry, and cooling appliance service. We focus on clear communication, practical diagnostics, and scheduling that fits the route.",
+    localNotes: [
+      "Helpful for Mint Hill and ZIP 28227 service requests",
+      "Convenient for nearby Matthews, east Charlotte, and Union County routes",
+      "Good fit for same-day requests when the schedule allows",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Mint Hill"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Charlotte", "Matthews", "Indian Trail", "Harrisburg"],
+    faqs: buildLocalFaqs("Mint Hill", "NC", "east Charlotte"),
+  },
+  {
+    slug: "appliance-repair-indian-trail-nc",
+    city: "Indian Trail",
+    state: "NC",
+    countyOrArea: "Union County",
+    nearbyLabel: "Indian Trail, Lake Park, Stallings, and Monroe",
+    heroTitle: "Appliance Repair in Indian Trail, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Indian Trail-area homeowners with common kitchen, laundry, refrigerator, freezer, wine cooler, and appliance repair needs.",
+    metaTitle: "Appliance Repair in Indian Trail, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Looking for appliance repair in Indian Trail, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance issues.",
+    keywords: [
+      "appliance repair Indian Trail NC",
+      "Indian Trail appliance repair",
+      "refrigerator repair Indian Trail",
+      "washer repair Indian Trail",
+      "dryer repair Indian Trail",
+    ],
+    introTitle: "Appliance repair for Indian Trail and nearby Union County",
+    introText:
+      "Indian Trail service calls often sit on the same southeast route as Matthews, Stallings, and Monroe. Share the address, appliance type, and symptoms so we can confirm the best appointment window.",
+    localNotes: [
+      "Useful for Indian Trail and ZIP 28079 addresses",
+      "Helpful for Lake Park, Stallings, and nearby Union County communities",
+      "Route timing depends on schedule, distance, and service address",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Indian Trail"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Matthews", "Stallings", "Monroe", "Weddington"],
+    faqs: buildLocalFaqs("Indian Trail", "NC", "Union County"),
+  },
+  {
+    slug: "appliance-repair-harrisburg-nc",
+    city: "Harrisburg",
+    state: "NC",
+    countyOrArea: "Cabarrus County",
+    nearbyLabel: "Harrisburg, Concord, and northeast Charlotte",
+    heroTitle: "Appliance Repair in Harrisburg, NC",
+    heroDescription:
+      "DAPL Appliance Repair serves Harrisburg-area homes with practical appliance repair help for kitchen, laundry, cooling, and select commercial refrigeration issues.",
+    metaTitle: "Appliance Repair in Harrisburg, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Harrisburg, NC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and wine cooler problems.",
+    keywords: [
+      "appliance repair Harrisburg NC",
+      "Harrisburg appliance repair",
+      "refrigerator repair Harrisburg",
+      "washer repair Harrisburg",
+      "dryer repair Harrisburg",
+    ],
+    introTitle: "Appliance repair for Harrisburg and northeast Charlotte routes",
+    introText:
+      "Harrisburg sits between Concord and northeast Charlotte routes. We help homeowners sort out appliance symptoms, confirm practical next steps, and schedule service when route availability allows.",
+    localNotes: [
+      "Helpful for Harrisburg and ZIP 28075 service requests",
+      "Convenient for Concord, northeast Charlotte, and nearby Cabarrus County routes",
+      "Same-day timing depends on the technician route",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Harrisburg"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Concord", "Charlotte", "Mint Hill", "Huntersville"],
+    faqs: buildLocalFaqs("Harrisburg", "NC", "Cabarrus County"),
+  },
+  {
+    slug: "appliance-repair-monroe-nc",
+    city: "Monroe",
+    state: "NC",
+    countyOrArea: "Union County",
+    nearbyLabel: "Monroe, Indian Trail, Unionville, and Wingate",
+    heroTitle: "Appliance Repair in Monroe, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Monroe-area homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance repair needs.",
+    metaTitle: "Appliance Repair in Monroe, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Monroe, NC? DAPL Appliance Repair serves Monroe and nearby Union County areas with practical appliance repair guidance.",
+    keywords: [
+      "appliance repair Monroe NC",
+      "Monroe NC appliance repair",
+      "refrigerator repair Monroe NC",
+      "washer repair Monroe NC",
+      "dryer repair Monroe NC",
+    ],
+    introTitle: "Appliance repair help for Monroe and Union County",
+    introText:
+      "Monroe service calls are best scheduled with clear address and symptom details because route distance matters. We confirm coverage, explain likely next steps, and keep repair decisions practical.",
+    localNotes: [
+      "Useful for Monroe, Unionville, and ZIP 28110 service requests",
+      "Good fit for kitchen, laundry, freezer, and cooling appliance problems",
+      "Appointment availability depends on route timing and service address",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Monroe"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Indian Trail", "Matthews", "Waxhaw", "Weddington"],
+    faqs: buildLocalFaqs("Monroe", "NC", "Union County"),
+  },
+  {
+    slug: "appliance-repair-indian-land-sc",
+    city: "Indian Land",
+    state: "SC",
+    countyOrArea: "Lancaster County",
+    nearbyLabel: "Indian Land, Fort Mill, Ballantyne, and south Charlotte",
+    heroTitle: "Appliance Repair in Indian Land, SC",
+    heroDescription:
+      "DAPL Appliance Repair helps Indian Land-area homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance repair needs.",
+    metaTitle: "Appliance Repair in Indian Land, SC | DAPL Appliance Repair",
+    metaDescription:
+      "Looking for appliance repair in Indian Land, SC? DAPL Appliance Repair helps with kitchen, laundry, and cooling appliance issues near Lancaster County and south Charlotte.",
+    keywords: [
+      "appliance repair Indian Land SC",
+      "Indian Land appliance repair",
+      "refrigerator repair Indian Land",
+      "washer repair Indian Land",
+      "dryer repair Indian Land",
+    ],
+    introTitle: "Appliance repair for Indian Land and the south Charlotte edge",
+    introText:
+      "Indian Land sits close to Fort Mill, Ballantyne, and south Charlotte routes. We help homeowners handle appliance problems with clear scheduling and practical repair guidance.",
+    localNotes: [
+      "Helpful for Indian Land and ZIP 29707 service requests",
+      "Convenient for Fort Mill, Ballantyne, and south Charlotte-area routes",
+      "Route availability can vary by day and address",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Indian Land"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Fort Mill", "Waxhaw", "Weddington", "Charlotte"],
+    faqs: buildLocalFaqs("Indian Land", "SC", "Lancaster County"),
+  },
+  {
+    slug: "appliance-repair-tega-cay-sc",
+    city: "Tega Cay",
+    state: "SC",
+    countyOrArea: "York County",
+    nearbyLabel: "Tega Cay, Fort Mill, and Rock Hill",
+    heroTitle: "Appliance Repair in Tega Cay, SC",
+    heroDescription:
+      "DAPL Appliance Repair serves Tega Cay-area homes with appliance repair help for refrigerators, laundry appliances, dishwashers, ovens, cooktops, freezers, wine coolers, and more.",
+    metaTitle: "Appliance Repair in Tega Cay, SC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Tega Cay, SC? DAPL Appliance Repair helps with refrigerator, washer, dryer, dishwasher, oven, cooktop, and cooling appliance problems.",
+    keywords: [
+      "appliance repair Tega Cay SC",
+      "Tega Cay appliance repair",
+      "refrigerator repair Tega Cay",
+      "washer repair Tega Cay",
+      "dryer repair Tega Cay",
+    ],
+    introTitle: "Appliance repair help around Tega Cay",
+    introText:
+      "Tega Cay service calls are usually planned with Fort Mill and Rock Hill routes. Send the appliance symptoms and service address so we can confirm the best timing.",
+    localNotes: [
+      "Useful for Tega Cay and ZIP 29708 service requests",
+      "Helpful for Fort Mill, Lake Wylie-area, and York County routes",
+      "Same-day availability depends on routing and appointment load",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Tega Cay"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Fort Mill", "Rock Hill", "Indian Land", "Charlotte"],
+    faqs: buildLocalFaqs("Tega Cay", "SC", "York County"),
+  },
+  {
+    slug: "appliance-repair-stallings-nc",
+    city: "Stallings",
+    state: "NC",
+    countyOrArea: "Union County",
+    nearbyLabel: "Stallings, Matthews, Indian Trail, and Wesley Chapel",
+    heroTitle: "Appliance Repair in Stallings, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Stallings-area homeowners with common refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance issues.",
+    metaTitle: "Appliance Repair in Stallings, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Stallings, NC? DAPL Appliance Repair serves Stallings, Matthews, Indian Trail, and nearby Union County areas.",
+    keywords: [
+      "appliance repair Stallings NC",
+      "Stallings appliance repair",
+      "refrigerator repair Stallings",
+      "washer repair Stallings",
+      "dryer repair Stallings",
+    ],
+    introTitle: "Appliance repair for Stallings and nearby southeast suburbs",
+    introText:
+      "Stallings is often part of the same southeast route as Matthews and Indian Trail. We help homeowners get clear answers on appliance symptoms and practical repair options.",
+    localNotes: [
+      "Useful for Stallings, Matthews, and ZIP 28104 service requests",
+      "Good fit for homes near Indian Trail, Wesley Chapel, and southeast Charlotte",
+      "Scheduling depends on route availability and the service address",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Stallings"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Matthews", "Indian Trail", "Weddington", "Waxhaw"],
+    faqs: buildLocalFaqs("Stallings", "NC", "Union County"),
+  },
+  {
+    slug: "appliance-repair-steele-creek-charlotte-nc",
+    city: "Steele Creek",
+    state: "NC",
+    countyOrArea: "southwest Charlotte",
+    nearbyLabel: "Steele Creek, southwest Charlotte, Pineville, and Lake Wylie",
+    heroTitle: "Appliance Repair in Steele Creek, Charlotte, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Steele Creek and southwest Charlotte homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance repair needs.",
+    metaTitle: "Appliance Repair in Steele Creek, Charlotte, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Steele Creek or southwest Charlotte? DAPL Appliance Repair helps with kitchen, laundry, and cooling appliance issues near ZIP 28278.",
+    keywords: [
+      "appliance repair Steele Creek Charlotte NC",
+      "Steele Creek appliance repair",
+      "appliance repair 28278",
+      "refrigerator repair Steele Creek",
+      "dryer repair Steele Creek",
+    ],
+    introTitle: "Appliance repair for Steele Creek and southwest Charlotte",
+    introText:
+      "Steele Creek and southwest Charlotte service calls often connect with Pineville, Fort Mill, and Lake Wylie-area routes. We confirm coverage by address and keep repair recommendations straightforward.",
+    localNotes: [
+      "Useful for Steele Creek, southwest Charlotte, and ZIP 28278 service requests",
+      "Helpful for homes near Pineville, Lake Wylie, and the south Charlotte corridor",
+      "Appointment availability depends on route timing and service address",
+    ],
+    commonNeeds: buildLocalCommonNeeds("Steele Creek"),
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Charlotte", "Fort Mill", "Rock Hill", "Matthews"],
+    faqs: buildLocalFaqs("Steele Creek", "NC", "southwest Charlotte"),
   },
   {
     slug: "appliance-repair-rock-hill-sc",
