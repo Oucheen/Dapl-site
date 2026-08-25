@@ -65,10 +65,10 @@ export function ServiceAreasSection() {
                     <Link
                       key={area.slug}
                       href={`/${area.slug}`}
-                      className="flex min-h-20 w-[68%] shrink-0 snap-start flex-col justify-center rounded-lg border border-border bg-surface px-5 py-3 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[32%] lg:w-[24%]"
+                      className="flex min-h-16 w-[68%] shrink-0 snap-start flex-col justify-center rounded-lg border border-border bg-[linear-gradient(135deg,rgba(191,10,48,0.055),rgba(255,255,255,0.92)_44%,rgba(0,40,104,0.06))] px-4 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[32%] lg:w-[24%]"
                     >
-                      <span className="block text-base font-black text-primary">{area.label}</span>
-                      <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                      <span className="block text-sm font-black text-primary sm:text-[15px]">{area.label}</span>
+                      <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
                         View local service
                       </span>
                     </Link>
