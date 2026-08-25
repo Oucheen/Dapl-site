@@ -1,9 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useRef } from "react";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export function ServiceAreasSection() {
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  function scrollAreas(direction: -1 | 1) {
+    const carousel = carouselRef.current;
+
+    if (!carousel) {
+      return;
+    }
+
+    carousel.scrollBy({
+      left: direction * carousel.clientWidth * 0.85,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <section id="service-areas" className="bg-background py-14 sm:py-18">
       <div className="container-shell">
@@ -21,31 +39,52 @@ export function ServiceAreasSection() {
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white to-transparent" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent" />
-                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {serviceAreaPagesDirectory.map((area) => (
-                  <Link
-                    key={area.slug}
-                    href={`/${area.slug}`}
-                    className="group flex min-h-24 w-[82%] shrink-0 snap-start items-center justify-between gap-4 rounded-lg border border-border bg-surface px-5 py-4 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[45%] lg:w-[31.5%]"
-                  >
-                    <span>
-                      <span className="block text-base font-black text-primary">{area.label}</span>
-                      <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-                        View local service
-                      </span>
-                    </span>
-                    <span
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition group-hover:bg-accent"
-                      aria-hidden="true"
+
+                <button
+                  type="button"
+                  aria-label="Show previous service areas"
+                  onClick={() => scrollAreas(-1)}
+                  className="absolute left-2 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white text-xl font-black text-primary shadow-sm transition hover:bg-primary hover:text-white sm:flex"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  aria-label="Show next service areas"
+                  onClick={() => scrollAreas(1)}
+                  className="absolute right-2 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white text-xl font-black text-primary shadow-sm transition hover:bg-primary hover:text-white sm:flex"
+                >
+                  →
+                </button>
+
+                <div
+                  ref={carouselRef}
+                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {serviceAreaPagesDirectory.map((area) => (
+                    <Link
+                      key={area.slug}
+                      href={`/${area.slug}`}
+                      className="group flex min-h-24 w-[82%] shrink-0 snap-start items-center justify-between gap-4 rounded-lg border border-border bg-surface px-5 py-4 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[45%] lg:w-[31.5%]"
                     >
-                      →
-                    </span>
-                  </Link>
-                ))}
+                      <span>
+                        <span className="block text-base font-black text-primary">{area.label}</span>
+                        <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                          View local service
+                        </span>
+                      </span>
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition group-hover:bg-accent"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+                    </Link>
+                  ))}
                 </div>
               </div>
               <p className="mt-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                Swipe or drag to see more areas
+                Use arrows or swipe to see more areas
               </p>
             </div>
           </div>
