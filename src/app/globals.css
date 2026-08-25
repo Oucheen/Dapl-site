@@ -51,21 +51,26 @@ html {
 }
 
 @keyframes service-area-line-flow {
-  0%,
-  7% {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+    transform-origin: left;
+  }
+
+  3% {
     transform: scaleX(0);
     opacity: 1;
     transform-origin: left;
   }
 
-  18%,
-  78% {
+  9%,
+  13% {
     transform: scaleX(1);
     opacity: 1;
     transform-origin: left;
   }
 
-  88%,
+  18%,
   100% {
     transform: scaleX(1);
     opacity: 0;
@@ -109,7 +114,7 @@ html {
 }
 
 .service-area-carousel-track {
-  animation: service-area-carousel-scroll 34s linear infinite;
+  animation: service-area-carousel-scroll 64s linear infinite;
   will-change: transform;
 }
 
@@ -125,8 +130,8 @@ html {
 }
 
 .service-area-title-line::before {
-  animation: service-area-line-flow 7s ease-in-out infinite;
-  animation-delay: inherit;
+  animation: service-area-line-flow var(--service-area-line-duration, 11s) ease-in-out infinite;
+  animation-delay: var(--service-area-line-delay, 0s);
   background: linear-gradient(90deg, rgba(207, 36, 49, 0.85), rgba(15, 42, 86, 0.65));
   content: "";
   inset: -1px 0;

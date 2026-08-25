@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
@@ -72,6 +73,8 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
     .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
     .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area))
     .slice(0, 10);
+  const areaLineStepSeconds = 1.08;
+  const areaLineCycleSeconds = relatedAreas.length * areaLineStepSeconds;
 
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -318,7 +321,12 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                       aria-hidden={index >= relatedAreas.length ? "true" : undefined}
                       tabIndex={index >= relatedAreas.length ? -1 : undefined}
                       className="service-area-flow-card group relative isolate flex min-h-[92px] w-[205px] shrink-0 rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[220px]"
-                      style={{ animationDelay: `${(index % relatedAreas.length) * 0.42}s` }}
+                      style={
+                        {
+                          "--service-area-line-delay": `${(index % relatedAreas.length) * areaLineStepSeconds}s`,
+                          "--service-area-line-duration": `${areaLineCycleSeconds}s`,
+                        } as CSSProperties
+                      }
                     >
                       <span className="relative flex flex-col">
                         <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-accent">
