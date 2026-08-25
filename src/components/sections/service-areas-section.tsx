@@ -4,35 +4,60 @@ import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export function ServiceAreasSection() {
+  const primaryAreas = serviceAreaPagesDirectory.slice(0, 6);
+  const nearbyAreas = serviceAreaPagesDirectory.slice(6);
+
   return (
-    <section id="service-areas" className="bg-background py-16 sm:py-20">
+    <section id="service-areas" className="bg-background py-14 sm:py-18">
       <div className="container-shell">
         <FadeUp>
           <SectionHeading
             eyebrow="Service Areas"
-            title="Appliance repair service areas around Charlotte"
-            description="DAPL Appliance Repair serves Charlotte, NC and nearby communities. Choose your city to see local appliance repair details, service notes, and scheduling information."
+            title="Local appliance repair near Mint Hill and Charlotte"
+            description="Choose your closest area for local service notes, coverage details, and scheduling information."
           />
         </FadeUp>
 
         <FadeUp delay={0.08}>
-          <div className="mx-auto mt-9 max-w-5xl rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {serviceAreaPagesDirectory.map((area) => (
+          <div className="mx-auto mt-8 max-w-6xl">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {primaryAreas.map((area) => (
                 <Link
                   key={area.slug}
                   href={`/${area.slug}`}
-                  className="group flex min-h-16 items-center justify-between gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5 hover:shadow-sm"
+                  className="group flex min-h-20 items-center justify-between gap-4 rounded-lg border border-border bg-white px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                 >
-                  <span>{area.label}</span>
+                  <span>
+                    <span className="block text-base font-black text-primary">{area.label}</span>
+                    <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                      View local service
+                    </span>
+                  </span>
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-accent transition group-hover:bg-accent group-hover:text-white"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition group-hover:bg-accent"
                     aria-hidden="true"
                   >
                     →
                   </span>
                 </Link>
               ))}
+            </div>
+
+            <div className="mt-4 rounded-lg border border-border bg-white p-4 shadow-sm sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                More nearby coverage
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {nearbyAreas.map((area) => (
+                  <Link
+                    key={area.slug}
+                    href={`/${area.slug}`}
+                    className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-semibold text-primary transition hover:border-primary/30 hover:bg-primary/5"
+                  >
+                    {area.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </FadeUp>
