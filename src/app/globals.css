@@ -127,12 +127,13 @@ html {
   display: block;
   overflow: hidden;
   position: relative;
+  background: linear-gradient(90deg, rgba(207, 36, 49, 0), rgba(207, 36, 49, 0.16), rgba(207, 36, 49, 0));
 }
 
 .service-area-title-line::before {
   animation: service-area-line-flow var(--service-area-line-duration, 11s) ease-in-out infinite;
   animation-delay: var(--service-area-line-delay, 0s);
-  background: rgba(207, 36, 49, 0.58);
+  background: linear-gradient(90deg, rgba(207, 36, 49, 0), rgba(207, 36, 49, 0.72) 45%, rgba(15, 42, 86, 0.26) 78%, rgba(15, 42, 86, 0));
   content: "";
   inset: -1px 0;
   position: absolute;
