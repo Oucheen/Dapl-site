@@ -310,7 +310,6 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
 
             <FadeUp className="mt-10">
               <div className="relative overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
-                <div className="pointer-events-none absolute left-5 right-5 top-1/2 h-px bg-gradient-to-r from-accent/20 via-primary/25 to-accent/20" />
                 <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {relatedAreas.map((area) => (
                     <Link
@@ -318,9 +317,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                       href={`/${area.slug}`}
                       className="group relative isolate flex min-h-[104px] w-[72%] shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[38%] lg:w-[23%]"
                     >
-                      <span className="pointer-events-none absolute inset-x-4 bottom-3 h-px bg-border/80" />
-                      <span className="pointer-events-none absolute bottom-[9px] left-4 h-2 w-2 rounded-full bg-accent transition duration-300 group-hover:scale-125 group-hover:bg-primary group-focus-visible:scale-125 group-focus-visible:bg-primary" />
-                      <span className="pointer-events-none absolute bottom-3 left-4 h-px w-0 bg-gradient-to-r from-accent to-primary transition-all duration-500 group-hover:w-[calc(100%-2rem)] group-focus-visible:w-[calc(100%-2rem)]" />
+                      <span className="service-area-card-line pointer-events-none absolute inset-x-4 top-[55px] h-px overflow-hidden bg-gradient-to-r from-accent/25 via-primary/20 to-accent/25" />
                       <span className="relative flex flex-col">
                         <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-accent">
                           Nearby Area
