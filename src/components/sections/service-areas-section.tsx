@@ -65,7 +65,7 @@ export function ServiceAreasSection() {
                     <Link
                       key={area.slug}
                       href={`/${area.slug}`}
-                      className="flex min-h-20 w-[78%] shrink-0 snap-start flex-col justify-center rounded-lg border border-border bg-surface px-5 py-3 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[38%] lg:w-[29%]"
+                      className="flex min-h-20 w-[68%] shrink-0 snap-start flex-col justify-center rounded-lg border border-border bg-surface px-5 py-3 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[32%] lg:w-[24%]"
                     >
                       <span className="block text-base font-black text-primary">{area.label}</span>
                       <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
@@ -75,9 +75,6 @@ export function ServiceAreasSection() {
                   ))}
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                Use arrows or swipe to see more areas
-              </p>
             </div>
           </div>
         </FadeUp>
