@@ -315,7 +315,8 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                     <Link
                       key={area.slug}
                       href={`/${area.slug}`}
-                      className="group relative isolate flex min-h-[104px] w-[72%] shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[38%] lg:w-[23%]"
+                      className="service-area-flow-card group relative isolate flex min-h-[104px] w-[72%] shrink-0 snap-start rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[38%] lg:w-[23%]"
+                      style={{ animationDelay: `${index * 0.52}s` }}
                     >
                       <span className="relative flex flex-col">
                         <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-accent">
@@ -327,7 +328,6 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                           </span>
                           <span
                             className="service-area-title-line pointer-events-none h-px min-w-8 flex-1 overflow-hidden bg-gradient-to-r from-accent/25 via-primary/20 to-accent/25"
-                            style={{ animationDelay: `${index * 0.32}s` }}
                           />
                         </span>
                         <span className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-muted transition group-hover:text-accent group-focus-visible:text-accent">

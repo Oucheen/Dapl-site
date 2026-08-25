@@ -51,12 +51,48 @@ html {
 }
 
 @keyframes service-area-line-flow {
-  from {
-    transform: translateX(-105%);
+  0%,
+  7% {
+    transform: scaleX(0);
+    opacity: 1;
+    transform-origin: left;
   }
 
-  to {
-    transform: translateX(105%);
+  18%,
+  78% {
+    transform: scaleX(1);
+    opacity: 1;
+    transform-origin: left;
+  }
+
+  88%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+    transform-origin: left;
+  }
+}
+
+@keyframes service-area-bridge-flow {
+  0%,
+  16% {
+    transform: scaleX(0);
+    opacity: 0;
+    transform-origin: left;
+  }
+
+  24%,
+  72% {
+    transform: scaleX(1);
+    opacity: 0.9;
+    transform-origin: left;
+  }
+
+  86%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+    transform-origin: left;
   }
 }
 
@@ -69,19 +105,28 @@ html {
 }
 
 .service-area-title-line::before {
-  animation: service-area-line-flow 3.2s ease-in-out infinite;
+  animation: service-area-line-flow 7s ease-in-out infinite;
   animation-delay: inherit;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(207, 36, 49, 0.55),
-    rgba(15, 42, 86, 0.5),
-    transparent
-  );
+  background: linear-gradient(90deg, rgba(207, 36, 49, 0.85), rgba(15, 42, 86, 0.65));
   content: "";
   inset: -1px 0;
   position: absolute;
-  width: 62%;
+  width: 100%;
+}
+
+.service-area-flow-card::after {
+  animation: service-area-bridge-flow 7s ease-in-out infinite;
+  animation-delay: inherit;
+  background: linear-gradient(90deg, rgba(207, 36, 49, 0.85), rgba(15, 42, 86, 0.55));
+  content: "";
+  height: 1px;
+  left: calc(100% - 1px);
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 51px;
+  width: 0.75rem;
+  z-index: 2;
 }
 
 @media (min-width: 768px) {
@@ -101,6 +146,11 @@ html {
 
   .service-area-title-line::before {
     animation: none;
+  }
+
+  .service-area-flow-card::after {
+    animation: none;
+    opacity: 0;
   }
 }
 
