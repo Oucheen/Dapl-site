@@ -72,6 +72,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
     .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
     .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area))
     .slice(0, 10);
+  const carouselAreas = [...relatedAreas, ...relatedAreas];
 
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -310,30 +311,35 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
 
             <FadeUp className="mt-10">
               <div className="relative overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
-                <div className="pointer-events-none absolute left-5 right-5 top-1/2 h-px bg-gradient-to-r from-secondary/20 via-primary/25 to-secondary/20" />
-                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {relatedAreas.map((area) => (
+                <div className="service-area-route-line pointer-events-none absolute left-4 right-4 top-1/2 h-px overflow-hidden bg-gradient-to-r from-accent/20 via-primary/25 to-accent/20" />
+                <div className="service-area-carousel-track flex snap-x snap-mandatory gap-3 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {carouselAreas.map((area, index) => {
+                    const isDuplicate = index >= relatedAreas.length;
+
+                    return (
                     <Link
-                      key={area.slug}
+                      key={`${area.slug}-${index}`}
                       href={`/${area.slug}`}
-                      className="group relative isolate flex min-h-[104px] w-[72%] shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.07),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.07))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[38%] lg:w-[23%]"
+                      aria-hidden={isDuplicate}
+                      tabIndex={isDuplicate ? -1 : undefined}
+                      className="group relative isolate flex min-h-[96px] w-[68%] shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[34%] lg:w-[21%]"
                     >
-                      <span className="pointer-events-none absolute inset-x-4 bottom-3 h-px bg-border/80" />
-                      <span className="pointer-events-none absolute bottom-[9px] left-4 h-2 w-2 rounded-full bg-secondary transition duration-300 group-hover:scale-125 group-hover:bg-primary group-focus-visible:scale-125 group-focus-visible:bg-primary" />
-                      <span className="pointer-events-none absolute bottom-3 left-4 h-px w-0 bg-gradient-to-r from-secondary to-primary transition-all duration-500 group-hover:w-[calc(100%-2rem)] group-focus-visible:w-[calc(100%-2rem)]" />
+                      <span className="pointer-events-none absolute inset-x-4 top-1/2 h-px bg-border/70" />
+                      <span className="pointer-events-none absolute inset-x-4 top-1/2 h-px w-0 bg-gradient-to-r from-accent to-primary transition-all duration-500 group-hover:w-[calc(100%-2rem)] group-focus-visible:w-[calc(100%-2rem)]" />
                       <span className="relative flex flex-col">
                         <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-secondary">
                           Nearby Area
                         </span>
-                        <span className="mt-2 text-lg font-black leading-tight text-primary">
+                        <span className="mt-2 text-base font-black leading-tight text-primary">
                           {area.label}
                         </span>
-                        <span className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-muted transition group-hover:text-secondary group-focus-visible:text-secondary">
+                        <span className="mt-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-muted transition group-hover:text-secondary group-focus-visible:text-secondary">
                           View local service
                         </span>
                       </span>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </FadeUp>
