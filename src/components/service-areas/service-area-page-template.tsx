@@ -73,7 +73,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
     .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
     .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area))
     .slice(0, 10);
-  const areaLineStepSeconds = 1.08;
+  const areaLineStepSeconds = 1.55;
   const areaVisibleLineSlots = 5;
   const areaLineCycleSeconds = areaVisibleLineSlots * areaLineStepSeconds;
 
@@ -321,7 +321,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                       href={`/${area.slug}`}
                       aria-hidden={index >= relatedAreas.length ? "true" : undefined}
                       tabIndex={index >= relatedAreas.length ? -1 : undefined}
-                      className="service-area-flow-card group relative isolate flex min-h-[88px] w-[212px] shrink-0 rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[226px]"
+                      className="service-area-flow-card group relative isolate flex min-h-[72px] w-[212px] shrink-0 rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.08),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.08))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[226px]"
                       style={
                         {
                           "--service-area-line-delay": `${(index % areaVisibleLineSlots) * areaLineStepSeconds}s`,
@@ -337,12 +337,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                           <span className="shrink-0 text-lg font-black leading-tight text-primary">
                             {area.label}
                           </span>
-                          <span
-                            className="service-area-title-line pointer-events-none h-px w-14 flex-none overflow-hidden bg-gradient-to-r from-accent/25 via-primary/20 to-accent/25 sm:w-20"
-                          />
-                        </span>
-                        <span className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-muted transition group-hover:text-accent group-focus-visible:text-accent">
-                          View local service
+                          <span className="service-area-title-line pointer-events-none h-px w-20 flex-none overflow-hidden bg-accent/10 sm:w-28 lg:w-32" />
                         </span>
                       </span>
                     </Link>

@@ -57,20 +57,20 @@ html {
     transform-origin: left;
   }
 
-  3% {
+  4% {
     transform: scaleX(0);
-    opacity: 1;
+    opacity: 0.74;
     transform-origin: left;
   }
 
-  9%,
-  13% {
+  13%,
+  17% {
     transform: scaleX(1);
-    opacity: 1;
+    opacity: 0.74;
     transform-origin: left;
   }
 
-  18%,
+  22%,
   100% {
     transform: scaleX(1);
     opacity: 0;
@@ -114,7 +114,7 @@ html {
 }
 
 .service-area-carousel-track {
-  animation: service-area-carousel-scroll 64.8s linear infinite;
+  animation: service-area-carousel-scroll 69.75s linear infinite;
   will-change: transform;
 }
 
@@ -132,7 +132,7 @@ html {
 .service-area-title-line::before {
   animation: service-area-line-flow var(--service-area-line-duration, 11s) ease-in-out infinite;
   animation-delay: var(--service-area-line-delay, 0s);
-  background: linear-gradient(90deg, rgba(207, 36, 49, 0.85), rgba(15, 42, 86, 0.65));
+  background: rgba(207, 36, 49, 0.58);
   content: "";
   inset: -1px 0;
   position: absolute;
