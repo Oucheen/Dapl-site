@@ -64,8 +64,13 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
-.service-area-card-line::before {
-  animation: service-area-line-flow 2.8s ease-in-out infinite;
+.service-area-title-line {
+  position: relative;
+}
+
+.service-area-title-line::before {
+  animation: service-area-line-flow 3.2s ease-in-out infinite;
+  animation-delay: inherit;
   background: linear-gradient(
     90deg,
     transparent,
@@ -94,7 +99,7 @@ html {
     animation: none;
   }
 
-  .service-area-card-line::before {
+  .service-area-title-line::before {
     animation: none;
   }
 }
