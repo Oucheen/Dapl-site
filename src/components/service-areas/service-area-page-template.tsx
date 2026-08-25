@@ -21,6 +21,27 @@ type ServiceAreaPageTemplateProps = {
   page: ServiceAreaPageContent;
 };
 
+const expandedNearbyCities = [
+  "Mint Hill",
+  "Matthews",
+  "Charlotte",
+  "Indian Trail",
+  "Harrisburg",
+  "Concord",
+  "Huntersville",
+  "Cornelius",
+  "Davidson",
+  "Weddington",
+  "Waxhaw",
+  "Stallings",
+  "Monroe",
+  "Fort Mill",
+  "Tega Cay",
+  "Indian Land",
+  "Steele Creek",
+  "Rock Hill",
+];
+
 function jsonLd(data: Record<string, unknown>) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
@@ -44,9 +65,13 @@ export function buildServiceAreaMetadata(page: ServiceAreaPageContent): Metadata
 
 export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) {
   const cityLabel = `${page.city}, ${page.state}`;
-  const relatedAreas = page.nearbyCities
+  const relatedAreaNames = [...page.nearbyCities, ...expandedNearbyCities].filter(
+    (city, index, areas) => city !== page.city && areas.indexOf(city) === index,
+  );
+  const relatedAreas = relatedAreaNames
     .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
-    .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area));
+    .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area))
+    .slice(0, 10);
 
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -156,7 +181,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                 </div>
               </div>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-9 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
                 <TrackedAnchor
                   href="#contact"
                   gtmEvent={{
@@ -164,14 +189,15 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                     location: page.slug,
                     service_area: cityLabel,
                   }}
-                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                  aria-label={`Schedule service in ${cityLabel}`}
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                 >
-                  Schedule Service in {page.city}
+                  Schedule service
                 </TrackedAnchor>
                 <BookOnlineButton
                   location={page.slug}
                   gtmEvent={{ service_area: cityLabel }}
-                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-primary/20 bg-white px-5 py-3 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <TrackedAnchor
                   href="tel:+17042660508"
@@ -181,7 +207,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                     link_type: "service_area_hero",
                     service_area: cityLabel,
                   }}
-                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   Call +1 (704) 266-0508
                 </TrackedAnchor>
@@ -282,24 +308,35 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
               />
             </FadeUp>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {relatedAreas.map((area, index) => (
-                <FadeUp key={area.slug} delay={index * 0.05}>
-                  <Link
-                    href={`/${area.slug}`}
-                    className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
-                  >
-                    <span className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-accent">
-                      Nearby Area
-                    </span>
-                    <span className="mt-3 text-xl font-bold text-primary">{area.label}</span>
-                    <span className="mt-4 text-sm font-semibold text-primary">
-                      View service area
-                    </span>
-                  </Link>
-                </FadeUp>
-              ))}
-            </div>
+            <FadeUp className="mt-10">
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
+                <div className="pointer-events-none absolute left-5 right-5 top-1/2 h-px bg-gradient-to-r from-secondary/20 via-primary/25 to-secondary/20" />
+                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {relatedAreas.map((area) => (
+                    <Link
+                      key={area.slug}
+                      href={`/${area.slug}`}
+                      className="group relative isolate flex min-h-[104px] w-[72%] shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-[linear-gradient(135deg,rgba(211,38,56,0.07),rgba(255,255,255,0.92)_42%,rgba(14,48,97,0.07))] p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:w-[38%] lg:w-[23%]"
+                    >
+                      <span className="pointer-events-none absolute inset-x-4 bottom-3 h-px bg-border/80" />
+                      <span className="pointer-events-none absolute bottom-[9px] left-4 h-2 w-2 rounded-full bg-secondary transition duration-300 group-hover:scale-125 group-hover:bg-primary group-focus-visible:scale-125 group-focus-visible:bg-primary" />
+                      <span className="pointer-events-none absolute bottom-3 left-4 h-px w-0 bg-gradient-to-r from-secondary to-primary transition-all duration-500 group-hover:w-[calc(100%-2rem)] group-focus-visible:w-[calc(100%-2rem)]" />
+                      <span className="relative flex flex-col">
+                        <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-secondary">
+                          Nearby Area
+                        </span>
+                        <span className="mt-2 text-lg font-black leading-tight text-primary">
+                          {area.label}
+                        </span>
+                        <span className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-muted transition group-hover:text-secondary group-focus-visible:text-secondary">
+                          View local service
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </FadeUp>
           </div>
         </section>
 

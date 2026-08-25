@@ -148,7 +148,7 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
                 ))}
               </div>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-9 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
                 <TrackedAnchor
                   href="#contact"
                   gtmEvent={{
@@ -156,14 +156,15 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
                     location: page.slug,
                     brand: page.name,
                   }}
-                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                  aria-label={`Schedule ${page.name} repair`}
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                 >
-                  Schedule {page.name} Repair
+                  Schedule repair
                 </TrackedAnchor>
                 <BookOnlineButton
                   location={page.slug}
                   gtmEvent={{ brand: page.name }}
-                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-primary/20 bg-white px-5 py-3 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <TrackedAnchor
                   href="tel:+17042660508"
@@ -173,7 +174,7 @@ export function BrandPageTemplate({ page }: BrandPageTemplateProps) {
                     link_type: "brand_hero",
                     brand: page.name,
                   }}
-                  className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   Call +1 (704) 266-0508
                 </TrackedAnchor>
