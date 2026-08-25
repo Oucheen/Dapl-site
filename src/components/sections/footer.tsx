@@ -7,10 +7,10 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-surface py-8">
       <div className="container-shell">
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr] lg:items-start">
-          <div>
+        <div className="grid gap-6 rounded-lg border border-border bg-white p-5 shadow-sm lg:grid-cols-[1fr_1.7fr] lg:items-start">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Image src="/logo.jpg" alt="DAPL Appliance Repair logo" width={64} height={64} />
+              <Image src="/logo.jpg" alt="DAPL Appliance Repair logo" width={72} height={72} />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
                   DAPL
@@ -18,18 +18,34 @@ export function Footer() {
                 <p className="text-base font-bold text-primary">Appliance Repair</p>
               </div>
             </div>
-            <p className="mt-3 max-w-md text-sm leading-6 text-muted">
-              Professional appliance repair services for homeowners and businesses in Charlotte, NC
-              and surrounding areas.
+            <p className="max-w-md text-sm leading-6 text-muted">
+              Professional appliance repair for homes and businesses across Mint Hill, Charlotte,
+              and nearby service areas.
             </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="tel:+17042660508"
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-bold text-white transition hover:bg-primary/90"
+              >
+                Call now
+              </a>
+              <Link
+                href="/booking"
+                className="inline-flex items-center justify-center rounded-md border border-border bg-white px-4 py-2 text-sm font-bold text-primary transition hover:border-primary/40"
+              >
+                Book online
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-5">
-            <div className="grid gap-5 text-sm leading-6 text-muted sm:grid-cols-3">
+            <div className="grid gap-4 text-sm leading-6 text-muted sm:grid-cols-3">
               <address className="not-italic">
-                <p className="font-semibold text-foreground">Contact</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                  Contact
+                </p>
                 <p className="mt-2">
-                  <a href="tel:+17042660508" className="hover:text-primary">
+                  <a href="tel:+17042660508" className="font-semibold text-primary hover:underline">
                     +1 (704) 266-0508
                   </a>
                 </p>
@@ -44,7 +60,9 @@ export function Footer() {
               </address>
 
               <div>
-                <p className="font-semibold text-foreground">Location</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                  Location
+                </p>
                 <p className="mt-2">9401 Peckham Rye Rd</p>
                 <p>Mint Hill, NC 28227</p>
                 <a
@@ -61,15 +79,19 @@ export function Footer() {
               </div>
 
               <div>
-                <p className="font-semibold text-foreground">Working Hours</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                  Working Hours
+                </p>
                 <p className="mt-2">Monday - Sunday</p>
                 <p>8:00 AM - 8:00 PM ET</p>
               </div>
             </div>
 
             <div className="border-t border-border pt-4 text-sm leading-6 text-muted">
-              <p className="font-semibold text-foreground">Service Areas</p>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                Service Areas
+              </p>
+              <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-4">
                 {serviceAreaPagesDirectory.map((area) => (
                   <Link
                     key={area.slug}
@@ -83,7 +105,9 @@ export function Footer() {
             </div>
 
             <div className="border-t border-border pt-4 text-sm leading-6 text-muted">
-              <p className="font-semibold text-foreground">Brand Repair</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                Brand Repair
+              </p>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                 {brandPagesDirectory.map((brand) => (
                   <Link
