@@ -114,7 +114,7 @@ html {
 }
 
 .service-area-carousel-track {
-  animation: service-area-carousel-scroll 64s linear infinite;
+  animation: service-area-carousel-scroll 64.8s linear infinite;
   will-change: transform;
 }
 
