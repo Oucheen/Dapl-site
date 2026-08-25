@@ -59,7 +59,7 @@ export function ServiceAreasSection() {
 
                 <div
                   ref={carouselRef}
-                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-11 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-12"
                 >
                   {serviceAreaPagesDirectory.map((area) => (
                     <Link
