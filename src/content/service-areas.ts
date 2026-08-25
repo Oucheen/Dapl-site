@@ -144,7 +144,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Matthews", "Concord", "Huntersville", "Waxhaw"],
+    nearbyCities: ["Mint Hill", "Matthews", "Steele Creek", "Concord"],
     faqs: [
       {
         question: "Do you offer appliance repair throughout Charlotte?",
@@ -223,7 +223,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Charlotte", "Waxhaw", "Weddington", "Fort Mill"],
+    nearbyCities: ["Stallings", "Mint Hill", "Indian Trail", "Charlotte"],
     faqs: [
       {
         question: "Do you service appliance repair calls in Matthews, NC?",
@@ -381,7 +381,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Rock Hill", "Charlotte", "Waxhaw", "Matthews"],
+    nearbyCities: ["Tega Cay", "Indian Land", "Rock Hill", "Steele Creek"],
     faqs: [
       {
         question: "Do you service Fort Mill, SC?",
@@ -460,7 +460,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Weddington", "Matthews", "Fort Mill", "Charlotte"],
+    nearbyCities: ["Weddington", "Indian Land", "Stallings", "Matthews"],
     faqs: [
       {
         question: "Do you serve Waxhaw, NC?",
@@ -539,7 +539,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Charlotte", "Huntersville", "Cornelius", "Davidson"],
+    nearbyCities: ["Harrisburg", "Charlotte", "Huntersville", "Mint Hill"],
     faqs: [
       {
         question: "Do you repair appliances in Concord, NC?",
@@ -776,7 +776,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Waxhaw", "Matthews", "Charlotte", "Fort Mill"],
+    nearbyCities: ["Waxhaw", "Stallings", "Indian Trail", "Indian Land"],
     faqs: [
       {
         question: "Do you service Weddington, NC?",
@@ -952,7 +952,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     ],
     commonNeeds: buildLocalCommonNeeds("Indian Land"),
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Fort Mill", "Waxhaw", "Weddington", "Charlotte"],
+    nearbyCities: ["Fort Mill", "Tega Cay", "Waxhaw", "Steele Creek"],
     faqs: buildLocalFaqs("Indian Land", "SC", "Lancaster County"),
   },
   {
@@ -984,7 +984,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     ],
     commonNeeds: buildLocalCommonNeeds("Tega Cay"),
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Fort Mill", "Rock Hill", "Indian Land", "Charlotte"],
+    nearbyCities: ["Fort Mill", "Rock Hill", "Indian Land", "Steele Creek"],
     faqs: buildLocalFaqs("Tega Cay", "SC", "York County"),
   },
   {
@@ -1048,7 +1048,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     ],
     commonNeeds: buildLocalCommonNeeds("Steele Creek"),
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Charlotte", "Fort Mill", "Rock Hill", "Matthews"],
+    nearbyCities: ["Charlotte", "Fort Mill", "Tega Cay", "Indian Land"],
     faqs: buildLocalFaqs("Steele Creek", "NC", "southwest Charlotte"),
   },
   {
@@ -1111,7 +1111,7 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
       },
     ],
     serviceHighlights: sharedHighlights,
-    nearbyCities: ["Fort Mill", "Charlotte", "Waxhaw", "Matthews"],
+    nearbyCities: ["Fort Mill", "Tega Cay", "Indian Land", "Steele Creek"],
     faqs: [
       {
         question: "Do you serve Rock Hill, SC?",
