@@ -51,26 +51,27 @@ html {
 }
 
 @keyframes service-area-line-flow {
-  0% {
+  0%,
+  4% {
     transform: scaleX(0);
     opacity: 0;
     transform-origin: left;
   }
 
-  4% {
+  7% {
     transform: scaleX(0);
-    opacity: 0.74;
+    opacity: 0.76;
     transform-origin: left;
   }
 
-  13%,
-  17% {
+  15%,
+  18% {
     transform: scaleX(1);
-    opacity: 0.74;
+    opacity: 0.76;
     transform-origin: left;
   }
 
-  22%,
+  20%,
   100% {
     transform: scaleX(1);
     opacity: 0;
@@ -127,16 +128,19 @@ html {
   display: block;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(90deg, rgba(207, 36, 49, 0), rgba(207, 36, 49, 0.16), rgba(207, 36, 49, 0));
+  background: transparent;
 }
 
 .service-area-title-line::before {
   animation: service-area-line-flow var(--service-area-line-duration, 11s) ease-in-out infinite;
   animation-delay: var(--service-area-line-delay, 0s);
-  background: linear-gradient(90deg, rgba(207, 36, 49, 0), rgba(207, 36, 49, 0.72) 45%, rgba(15, 42, 86, 0.26) 78%, rgba(15, 42, 86, 0));
+  background: linear-gradient(90deg, rgba(207, 36, 49, 0), rgba(207, 36, 49, 0.78) 42%, rgba(15, 42, 86, 0.28) 100%);
   content: "";
   inset: -1px 0;
+  opacity: 0;
   position: absolute;
+  transform: scaleX(0);
+  transform-origin: left;
   width: 100%;
 }
 

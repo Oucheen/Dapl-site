@@ -337,7 +337,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
                           <span className="shrink-0 text-lg font-black leading-tight text-primary">
                             {area.label}
                           </span>
-                          <span className="service-area-title-line pointer-events-none h-px w-14 flex-none overflow-hidden bg-accent/10 sm:w-20 lg:w-24" />
+                          <span className="service-area-title-line pointer-events-none h-px w-14 flex-none overflow-hidden sm:w-20 lg:w-24" />
                         </span>
                       </span>
                     </Link>
