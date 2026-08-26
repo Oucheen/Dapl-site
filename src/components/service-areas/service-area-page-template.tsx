@@ -313,7 +313,7 @@ export function ServiceAreaPageTemplate({ page }: ServiceAreaPageTemplateProps) 
             </FadeUp>
 
             <FadeUp className="mt-10">
-              <div className="service-area-carousel-shell relative overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
+              <div className="service-area-carousel-shell relative overflow-hidden rounded-2xl border border-border bg-white px-5 py-4 shadow-sm sm:px-6 sm:py-5">
                 <div className="service-area-carousel-track flex w-max gap-3 py-2">
                   {[...relatedAreas, ...relatedAreas].map((area, index) => (
                     <Link

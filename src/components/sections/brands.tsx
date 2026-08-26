@@ -44,7 +44,7 @@ export function BrandsSection() {
         </FadeUp>
 
         <FadeUp delay={0.1} className="mt-10">
-          <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden md:left-auto md:w-auto md:translate-x-0">
+          <div className="relative left-1/2 -my-3 w-screen -translate-x-1/2 overflow-hidden py-3 md:left-auto md:w-auto md:translate-x-0">
             <div
               className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-surface to-transparent"
               aria-hidden
@@ -56,7 +56,7 @@ export function BrandsSection() {
 
             <div
               ref={carouselRef}
-              className="brands-carousel-track flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[calc((100vw-240px)/2)] pb-4 touch-pan-x [scrollbar-width:none] sm:px-[calc((100vw-280px)/2)] md:w-max md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
+              className="brands-carousel-track flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[calc((100vw-240px)/2)] py-3 touch-pan-x [scrollbar-width:none] sm:px-[calc((100vw-280px)/2)] md:w-max md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden"
               aria-label="Supported appliance brands"
             >
               {[...brands, ...brands].map((brand, index) => (
