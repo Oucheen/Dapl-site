@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { type CSSProperties, useRef } from "react";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
+
+const AREA_LINE_STEP_SECONDS = 1.45;
+const AREA_VISIBLE_LINE_SLOTS = 5;
+const AREA_LINE_CYCLE_SECONDS = AREA_LINE_STEP_SECONDS * AREA_VISIBLE_LINE_SLOTS;
 
 export function ServiceAreasSection() {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -54,17 +58,23 @@ export function ServiceAreasSection() {
                     ref={carouselRef}
                     className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   >
-                    {serviceAreaPagesDirectory.map((area) => (
+                    {serviceAreaPagesDirectory.map((area, index) => (
                       <Link
                         key={area.slug}
                         href={`/${area.slug}`}
-                        className="flex h-20 w-[62%] shrink-0 snap-start flex-col justify-center rounded-lg border border-border bg-[linear-gradient(135deg,rgba(191,10,48,0.055),rgba(255,255,255,0.92)_44%,rgba(0,40,104,0.06))] px-4 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[29%] lg:w-[21%]"
+                        className="flex h-16 w-[58%] shrink-0 snap-start items-center rounded-lg border border-border bg-[linear-gradient(135deg,rgba(191,10,48,0.055),rgba(255,255,255,0.92)_44%,rgba(0,40,104,0.06))] px-4 text-left transition hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm sm:w-[26%] lg:w-[19%]"
+                        style={
+                          {
+                            "--service-area-line-delay": `${(index % AREA_VISIBLE_LINE_SLOTS) * AREA_LINE_STEP_SECONDS}s`,
+                            "--service-area-line-duration": `${AREA_LINE_CYCLE_SECONDS}s`,
+                          } as CSSProperties
+                        }
                       >
-                        <span className="flex min-h-9 items-end text-sm font-black leading-tight text-primary sm:text-[15px]">
-                          {area.label}
-                        </span>
-                        <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                          View local service
+                        <span className="flex w-full min-w-0 items-center gap-3">
+                          <span className="truncate text-sm font-black leading-tight text-primary sm:text-[15px]">
+                            {area.label}
+                          </span>
+                          <span className="service-area-title-line pointer-events-none h-px w-10 flex-none sm:w-12" />
                         </span>
                       </Link>
                     ))}
