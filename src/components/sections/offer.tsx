@@ -7,10 +7,10 @@ import { BookOnlineButton } from "@/components/ui/book-online-button";
 /** Edit this block to change the promo for your client. */
 export const SITE_OFFER = {
   eyebrow: "Limited-time offer",
-  title: "$25 off your first repair",
+  title: "$30 off your first repair",
   description:
     "New residential customers in Charlotte and surrounding areas. Professional diagnosis and repair—fair pricing, no surprises.",
-  code: "WEB25",
+  code: "WEB30",
   codeLabel: "Mention this code when you call or email",
   finePrint: "Cannot be combined with other offers. Labor and parts billed separately. Restrictions may apply.",
 } as const;

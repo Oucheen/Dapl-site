@@ -142,7 +142,8 @@ export const INVOICE_ITEM_TEMPLATES = [
 export type InvoiceItemTemplateKey = (typeof INVOICE_ITEM_TEMPLATES)[number]["key"];
 
 export const INVOICE_PROMO_DISCOUNTS = {
-  WEB25: 25,
+  WEB30: 30,
+  WEB25: 30,
   RETURN15: 15,
 } as const;
 
