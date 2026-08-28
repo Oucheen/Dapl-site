@@ -178,13 +178,17 @@ html {
 }
 
 .savings-flag-wave::after {
-  background:
-    radial-gradient(circle at 14% 30%, rgba(255, 255, 255, 0.68) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 22% 40%, rgba(255, 255, 255, 0.56) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.6) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 38% 38%, rgba(255, 255, 255, 0.5) 0 1.5px, transparent 2.5px),
-    linear-gradient(120deg, rgba(10, 49, 97, 0.2) 0 25%, transparent 47%);
-  opacity: 0.5;
+  background: linear-gradient(120deg, rgba(10, 49, 97, 0.21) 0 30%, rgba(10, 49, 97, 0.08) 30% 43%, transparent 54%);
+  clip-path: polygon(0 0, 52% 0, 40% 58%, 0 70%);
+  color: rgba(255, 255, 255, 0.7);
+  content: "★  ★  ★\A  ★  ★\A★  ★  ★";
+  font-size: 13px;
+  letter-spacing: 10px;
+  line-height: 1.65;
+  opacity: 0.52;
+  padding: 42px 0 0 44px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+  white-space: pre;
 }
 
 @keyframes savings-flag-wave {
@@ -252,6 +256,12 @@ html {
     inset: auto -22% -8% auto;
     opacity: 0.18;
     width: 112%;
+  }
+
+  .savings-flag-wave::after {
+    font-size: 10px;
+    letter-spacing: 7px;
+    padding: 18px 0 0 28px;
   }
 }
 
