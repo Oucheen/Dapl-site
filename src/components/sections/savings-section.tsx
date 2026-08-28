@@ -29,11 +29,11 @@ export function SavingsSection() {
             className="relative overflow-hidden rounded-2xl border border-[#d7e0ec] bg-white bg-no-repeat p-5 shadow-lg shadow-primary/10 sm:p-6 lg:p-8"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.76) 34%, rgba(255,255,255,0.08) 70%, rgba(255,255,255,0) 100%)",
+                "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.82) 36%, rgba(255,255,255,0.18) 72%, rgba(255,255,255,0.02) 100%)",
             }}
           >
             <div className="savings-flag-wave" aria-hidden="true" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.86)_0%,rgba(255,255,255,0.34)_36%,rgba(255,255,255,0.03)_72%,rgba(255,255,255,0)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.88)_0%,rgba(255,255,255,0.5)_38%,rgba(255,255,255,0.08)_72%,rgba(255,255,255,0)_100%)]" />
 
             <div className="relative">
               <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">

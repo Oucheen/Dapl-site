@@ -145,24 +145,24 @@ html {
 }
 
 .savings-flag-wave {
-  animation: savings-flag-wave 28s ease-in-out infinite;
+  animation: savings-flag-wave 24s ease-in-out infinite;
   background:
-    radial-gradient(ellipse at 78% 44%, rgba(255, 255, 255, 0.16), transparent 58%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.04) 46%, rgba(255, 255, 255, 0) 78%),
+    radial-gradient(ellipse at 76% 46%, rgba(255, 255, 255, 0.12), transparent 58%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 72%),
     repeating-linear-gradient(
-      176deg,
-      rgba(178, 34, 52, 0.72) 0 42px,
-      rgba(255, 255, 255, 0.96) 42px 84px
+      174deg,
+      rgba(179, 25, 66, 0.58) 0 36px,
+      rgba(255, 255, 255, 0.94) 36px 72px
     );
-  background-size: 122% 122%, 100% 100%, 118% 118%;
+  background-size: 120% 120%, 100% 100%, 116% 116%;
   border-radius: inherit;
-  filter: saturate(1.22);
-  inset: -12% -2% -14% 30%;
+  filter: saturate(1.16);
+  inset: -10% -3% -12% 34%;
   mix-blend-mode: normal;
   opacity: 0.98;
   pointer-events: none;
   position: absolute;
-  transform: translate3d(0, 0, 0) scale(1.035) rotate(-1deg);
+  transform: translate3d(0, 0, 0) scale(1.03) rotate(-1.2deg);
   transform-origin: center;
   will-change: transform, background-position;
   z-index: 0;
@@ -176,25 +176,7 @@ html {
 }
 
 .savings-flag-wave::before {
-  animation: savings-stars-float 28s ease-in-out infinite;
-  background:
-    radial-gradient(circle at 13px 13px, rgba(255, 255, 255, 0.96) 0 1.8px, transparent 2.5px),
-    radial-gradient(circle at 34px 27px, rgba(255, 255, 255, 0.88) 0 1.45px, transparent 2.15px),
-    linear-gradient(135deg, rgba(10, 49, 97, 0.95), rgba(10, 49, 97, 0.74));
-  background-size: 42px 31px, 42px 31px, 100% 100%;
-  border-radius: 0 0 30px 0;
-  box-shadow: inset -28px -20px 38px rgba(255, 255, 255, 0.12);
-  height: 52%;
-  left: 0;
-  max-height: 220px;
-  min-height: 150px;
-  opacity: 0.92;
-  overflow: hidden;
-  top: 0;
-  transform: translate3d(0, 0, 0) skewX(-3deg);
-  transform-origin: left top;
-  width: min(410px, 43%);
-  will-change: transform, opacity;
+  display: none;
 }
 
 .savings-flag-wave::after {
@@ -211,17 +193,17 @@ html {
   0%,
   100% {
     background-position: 50% 50%, 0 0, 0 0;
-    transform: translate3d(0, 0, 0) scale(1.035) rotate(-1deg);
+    transform: translate3d(0, 0, 0) scale(1.03) rotate(-1.2deg);
   }
 
   38% {
     background-position: 47% 52%, 0 0, 26px 10px;
-    transform: translate3d(-9px, 5px, 0) scale(1.035) rotate(-0.5deg);
+    transform: translate3d(-8px, 5px, 0) scale(1.03) rotate(-0.6deg);
   }
 
   72% {
     background-position: 53% 48%, 0 0, 48px -8px;
-    transform: translate3d(8px, -4px, 0) scale(1.03) rotate(-1.7deg);
+    transform: translate3d(7px, -4px, 0) scale(1.025) rotate(-1.8deg);
   }
 }
 
@@ -288,28 +270,16 @@ html {
 @media (max-width: 640px) {
   .savings-flag-wave {
     background:
-      radial-gradient(ellipse at 74% 48%, rgba(255, 255, 255, 0.18), transparent 58%),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.01)),
+      radial-gradient(ellipse at 74% 48%, rgba(255, 255, 255, 0.14), transparent 58%),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.01)),
       repeating-linear-gradient(
-        176deg,
-        rgba(178, 34, 52, 0.62) 0 34px,
-        rgba(255, 255, 255, 0.96) 34px 68px
+        174deg,
+        rgba(179, 25, 66, 0.54) 0 32px,
+        rgba(255, 255, 255, 0.94) 32px 64px
       );
     background-size: 120% 120%, 100% 100%, 116% 116%;
     inset: -4% -18% -8% 10%;
     opacity: 0.92;
-  }
-
-  .savings-flag-wave::before {
-    background-size: 30px 22px, 30px 22px, 100% 100%;
-    border-radius: 0 0 22px 0;
-    height: 42%;
-    left: 0;
-    min-height: 100px;
-    opacity: 0.82;
-    right: auto;
-    top: 0;
-    width: 54%;
   }
 }
 
