@@ -147,39 +147,68 @@ html {
 .savings-flag-wave {
   animation: savings-flag-wave 24s ease-in-out infinite;
   background:
-    radial-gradient(ellipse at 72% 32%, rgba(10, 49, 97, 0.18), transparent 44%),
-    linear-gradient(158deg, transparent 0 16%, rgba(179, 25, 66, 0.34) 19%, rgba(179, 25, 66, 0.18) 29%, transparent 34%),
-    linear-gradient(158deg, transparent 34%, rgba(255, 255, 255, 0.72) 39%, rgba(255, 255, 255, 0.42) 50%, transparent 56%),
-    linear-gradient(158deg, transparent 56%, rgba(10, 49, 97, 0.26) 62%, rgba(10, 49, 97, 0.12) 72%, transparent 78%),
-    linear-gradient(158deg, transparent 74%, rgba(179, 25, 66, 0.24) 80%, rgba(179, 25, 66, 0.12) 90%, transparent 100%);
-  background-size: 112% 112%, 118% 118%, 122% 122%, 116% 116%, 120% 120%;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.96) 40%, rgba(255, 255, 255, 0.78) 72%, rgba(255, 255, 255, 0.58) 100%),
+    radial-gradient(ellipse at 4% 0%, rgba(10, 49, 97, 0.82) 0 16%, rgba(10, 49, 97, 0.34) 34%, transparent 52%),
+    radial-gradient(ellipse at 4% 72%, rgba(10, 49, 97, 0.16) 0 24%, transparent 54%),
+    linear-gradient(166deg, transparent 0 61%, rgba(255, 255, 255, 0.78) 64%, rgba(255, 255, 255, 0.92) 72%, transparent 77%),
+    linear-gradient(166deg, transparent 0 69%, rgba(179, 25, 66, 0.54) 73%, rgba(179, 25, 66, 0.66) 81%, transparent 86%),
+    linear-gradient(166deg, transparent 0 77%, rgba(255, 255, 255, 0.92) 80%, rgba(255, 255, 255, 0.96) 86%, transparent 90%),
+    linear-gradient(166deg, transparent 0 82%, rgba(10, 49, 97, 0.76) 88%, rgba(10, 49, 97, 0.88) 100%),
+    repeating-linear-gradient(0deg, rgba(10, 49, 97, 0.026) 0 1px, transparent 1px 5px);
+  background-position: center, left top, left bottom, center, center, center, center, center;
+  background-size: 100% 100%, 52% 74%, 64% 70%, 118% 118%, 118% 118%, 118% 118%, 118% 118%, 100% 100%;
   border-radius: inherit;
   filter: saturate(1.08);
-  inset: -10% -3% -12% 34%;
-  opacity: 0.9;
+  inset: -10% -4% -12% -4%;
+  opacity: 0.96;
+  overflow: hidden;
   pointer-events: none;
   position: absolute;
-  transform: translate3d(0, 0, 0) scale(1.03) rotate(-1.2deg);
+  transform: translate3d(0, 0, 0) scale(1);
   transform-origin: center;
   will-change: transform, background-position;
   z-index: 0;
 }
 
+.savings-flag-wave::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 280'%3E%3Cpath fill='%230a3161' d='M0 0h420v280H0z'/%3E%3Cdefs%3E%3Cpath id='s' fill='%23fff' d='M0 -18 5.3 -5.8 18 -5.6 8 2.8 11.1 16 -0.1 8.8 -11.1 16 -8 2.8 -18 -5.6 -5.3 -5.8Z'/%3E%3C/defs%3E%3Cg opacity='.88'%3E%3Cuse href='%23s' x='55' y='44'/%3E%3Cuse href='%23s' x='140' y='42'/%3E%3Cuse href='%23s' x='225' y='40'/%3E%3Cuse href='%23s' x='96' y='118'/%3E%3Cuse href='%23s' x='180' y='112'/%3E%3Cuse href='%23s' x='20' y='172'/%3E%3Cuse href='%23s' x='64' y='228'/%3E%3Cuse href='%23s' x='150' y='228'/%3E%3Cuse href='%23s' x='238' y='226'/%3E%3C/g%3E%3Cpath fill='%23fff' opacity='.38' d='M0 174c76 -58 165 -76 420 -42v148H0z'/%3E%3C/svg%3E");
+  background-position: left top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  height: 76%;
+  inset: 0 auto auto 0;
+  mask-image: linear-gradient(115deg, #000 0%, #000 48%, transparent 78%);
+  opacity: 0.78;
+  position: absolute;
+  transform: translate(-5%, -7%) rotate(-2deg);
+  width: 44%;
+}
+
+.savings-flag-wave::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 340' fill='none' stroke='%230a3161' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg opacity='.42'%3E%3Crect x='44' y='30' width='150' height='246' rx='12'/%3E%3Cpath d='M70 66h98M150 30v246M72 224h92M82 78h66M222 116h204v160H222zM246 152h72M350 152h54M258 196a54 54 0 1 0 108 0 54 54 0 0 0 -108 0zM282 196a30 30 0 1 0 60 0 30 30 0 0 0 -60 0zM420 72v44M398 94h44M458 58l26 26M484 58l-26 26M92 296h190l-26 24H76zM100 296l-24 -34M270 296l26 -34'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  height: 68%;
+  opacity: 0.12;
+  position: absolute;
+  right: 4%;
+  top: 6%;
+  width: 38%;
+}
+
 @keyframes savings-flag-wave {
   0%,
   100% {
-    background-position: 50% 50%, 0 0, 8px 0, -8px 0, 0 0;
-    transform: translate3d(0, 0, 0) scale(1.03) rotate(-1.2deg);
+    background-position: center, left top, left bottom, center, center, center, center, center;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
-  38% {
-    background-position: 47% 52%, 22px 8px, 36px 12px, 14px -8px, 28px 6px;
-    transform: translate3d(-8px, 5px, 0) scale(1.03) rotate(-0.6deg);
-  }
-
-  72% {
-    background-position: 53% 48%, 44px -6px, 58px -10px, 36px 10px, 52px -4px;
-    transform: translate3d(7px, -4px, 0) scale(1.025) rotate(-1.8deg);
+  50% {
+    background-position: center, -2% 1%, -1% 98%, 52% 48%, 52% 49%, 52% 50%, 52% 51%, center;
+    transform: translate3d(-1.5%, 1%, 0) scale(1.03);
   }
 }
 
@@ -215,14 +244,25 @@ html {
 @media (max-width: 640px) {
   .savings-flag-wave {
     background:
-      radial-gradient(ellipse at 76% 34%, rgba(10, 49, 97, 0.16), transparent 46%),
-      linear-gradient(158deg, transparent 0 14%, rgba(179, 25, 66, 0.28) 20%, transparent 35%),
-      linear-gradient(158deg, transparent 36%, rgba(255, 255, 255, 0.64) 44%, transparent 58%),
-      linear-gradient(158deg, transparent 58%, rgba(10, 49, 97, 0.22) 66%, transparent 80%),
-      linear-gradient(158deg, transparent 76%, rgba(179, 25, 66, 0.2) 84%, transparent 100%);
-    background-size: 112% 112%, 118% 118%, 122% 122%, 116% 116%, 120% 120%;
-    inset: -4% -18% -8% 10%;
-    opacity: 0.84;
+      linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.9) 62%, rgba(255, 255, 255, 0.62) 100%),
+      radial-gradient(ellipse at 0% 0%, rgba(10, 49, 97, 0.72) 0 20%, rgba(10, 49, 97, 0.26) 38%, transparent 58%),
+      linear-gradient(166deg, transparent 0 68%, rgba(179, 25, 66, 0.48) 74%, rgba(179, 25, 66, 0.6) 84%, transparent 90%),
+      linear-gradient(166deg, transparent 0 78%, rgba(10, 49, 97, 0.7) 88%, rgba(10, 49, 97, 0.86) 100%),
+      repeating-linear-gradient(0deg, rgba(10, 49, 97, 0.026) 0 1px, transparent 1px 5px);
+    background-size: 100% 100%, 70% 70%, 122% 122%, 122% 122%, 100% 100%;
+    inset: -6% -16% -8% -10%;
+    opacity: 0.9;
+  }
+
+  .savings-flag-wave::before {
+    height: 54%;
+    width: 70%;
+  }
+
+  .savings-flag-wave::after {
+    opacity: 0.08;
+    right: -8%;
+    width: 58%;
   }
 }
 
