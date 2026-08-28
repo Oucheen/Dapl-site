@@ -35,6 +35,7 @@ export function SavingsSection() {
             }}
           >
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(179,25,66,0.08),transparent_32%,rgba(10,49,97,0.1))]" />
+            <div className="savings-flag-wave" aria-hidden="true" />
             <div className="absolute -left-20 top-8 h-48 w-48 rounded-full border border-[#b31942]/10" />
             <div className="absolute -right-24 bottom-8 h-56 w-56 rounded-full border border-[#0a3161]/10" />
 

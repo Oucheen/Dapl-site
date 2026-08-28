@@ -144,6 +144,76 @@ html {
   width: 100%;
 }
 
+.savings-flag-wave {
+  animation: savings-flag-wave 11s ease-in-out infinite;
+  background:
+    linear-gradient(105deg, rgba(255, 255, 255, 0) 7%, rgba(255, 255, 255, 0.58) 20%, rgba(255, 255, 255, 0) 34%),
+    repeating-linear-gradient(168deg, rgba(179, 25, 66, 0.22) 0 11px, rgba(255, 255, 255, 0.24) 11px 22px, rgba(10, 49, 97, 0.18) 22px 34px, rgba(255, 255, 255, 0) 34px 47px);
+  filter: saturate(0.95);
+  height: 140%;
+  inset: -18% -12% auto auto;
+  mask-image: radial-gradient(ellipse at 58% 50%, #000 0 61%, rgba(0, 0, 0, 0.62) 68%, transparent 78%);
+  mix-blend-mode: multiply;
+  opacity: 0.32;
+  pointer-events: none;
+  position: absolute;
+  transform: skewX(-8deg);
+  width: min(760px, 72%);
+  will-change: transform, background-position;
+  z-index: 0;
+}
+
+.savings-flag-wave::before,
+.savings-flag-wave::after {
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.savings-flag-wave::before {
+  animation: savings-flag-shimmer 7.5s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, 0.56) 24%, transparent 42%);
+  opacity: 0.52;
+}
+
+.savings-flag-wave::after {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(255, 255, 255, 0.54) 0 2px, transparent 3px),
+    radial-gradient(circle at 28% 44%, rgba(255, 255, 255, 0.42) 0 2px, transparent 3px),
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.46) 0 2px, transparent 3px),
+    linear-gradient(120deg, rgba(10, 49, 97, 0.16), transparent 36%);
+  opacity: 0.7;
+}
+
+@keyframes savings-flag-wave {
+  0%,
+  100% {
+    background-position: 0 0, 0 0;
+    transform: translate3d(0, 0, 0) skewX(-8deg) scale(1);
+  }
+
+  35% {
+    background-position: 38px 8px, 18px 12px;
+    transform: translate3d(-16px, 7px, 0) skewX(-5deg) scale(1.025);
+  }
+
+  70% {
+    background-position: 74px -6px, 42px -8px;
+    transform: translate3d(10px, -5px, 0) skewX(-10deg) scale(1.015);
+  }
+}
+
+@keyframes savings-flag-shimmer {
+  0%,
+  100% {
+    transform: translateX(-26%);
+  }
+
+  50% {
+    transform: translateX(30%);
+  }
+}
+
 @media (min-width: 768px) {
   .brands-carousel-track {
     animation: brands-marquee 26s linear infinite;
@@ -166,6 +236,20 @@ html {
 
   .service-area-title-line::before {
     animation: none;
+  }
+
+  .savings-flag-wave,
+  .savings-flag-wave::before {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .savings-flag-wave {
+    height: 68%;
+    inset: auto -22% -8% auto;
+    opacity: 0.18;
+    width: 112%;
   }
 }
 
