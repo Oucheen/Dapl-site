@@ -145,21 +145,25 @@ html {
 }
 
 .savings-flag-wave {
-  animation: savings-flag-wave 11s ease-in-out infinite;
+  animation: savings-flag-wave 28s ease-in-out infinite;
   background:
-    linear-gradient(105deg, rgba(255, 255, 255, 0) 8%, rgba(255, 255, 255, 0.5) 28%, rgba(255, 255, 255, 0) 48%),
-    linear-gradient(168deg, rgba(179, 25, 66, 0.16) 0 8%, rgba(255, 255, 255, 0.25) 8% 19%, rgba(179, 25, 66, 0.14) 19% 28%, rgba(255, 255, 255, 0.24) 28% 42%, rgba(10, 49, 97, 0.13) 42% 55%, rgba(255, 255, 255, 0.22) 55% 70%, rgba(179, 25, 66, 0.12) 70% 82%, rgba(255, 255, 255, 0) 82% 100%);
-  background-size: 130% 130%, 120% 120%;
-  filter: saturate(0.95);
-  height: 140%;
-  inset: -18% -12% auto auto;
-  mask-image: radial-gradient(ellipse at 58% 50%, #000 0 61%, rgba(0, 0, 0, 0.62) 68%, transparent 78%);
-  mix-blend-mode: multiply;
-  opacity: 0.24;
+    radial-gradient(ellipse at 78% 44%, rgba(255, 255, 255, 0.16), transparent 58%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.04) 46%, rgba(255, 255, 255, 0) 78%),
+    repeating-linear-gradient(
+      176deg,
+      rgba(178, 34, 52, 0.72) 0 42px,
+      rgba(255, 255, 255, 0.96) 42px 84px
+    );
+  background-size: 122% 122%, 100% 100%, 118% 118%;
+  border-radius: inherit;
+  filter: saturate(1.22);
+  inset: -12% -2% -14% 30%;
+  mix-blend-mode: normal;
+  opacity: 0.98;
   pointer-events: none;
   position: absolute;
-  transform: skewX(-8deg);
-  width: min(760px, 72%);
+  transform: translate3d(0, 0, 0) scale(1.035) rotate(-1deg);
+  transform-origin: center;
   will-change: transform, background-position;
   z-index: 0;
 }
@@ -167,80 +171,86 @@ html {
 .savings-flag-wave::before,
 .savings-flag-wave::after {
   content: "";
-  inset: 0;
+  pointer-events: none;
   position: absolute;
 }
 
 .savings-flag-wave::before {
-  animation: savings-flag-shimmer 7.5s ease-in-out infinite;
-  background: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, 0.56) 24%, transparent 42%);
-  opacity: 0.52;
+  animation: savings-stars-float 28s ease-in-out infinite;
+  background:
+    radial-gradient(circle at 13px 13px, rgba(255, 255, 255, 0.96) 0 1.8px, transparent 2.5px),
+    radial-gradient(circle at 34px 27px, rgba(255, 255, 255, 0.88) 0 1.45px, transparent 2.15px),
+    linear-gradient(135deg, rgba(10, 49, 97, 0.95), rgba(10, 49, 97, 0.74));
+  background-size: 42px 31px, 42px 31px, 100% 100%;
+  border-radius: 0 0 30px 0;
+  box-shadow: inset -28px -20px 38px rgba(255, 255, 255, 0.12);
+  height: 52%;
+  left: 0;
+  max-height: 220px;
+  min-height: 150px;
+  opacity: 0.92;
+  overflow: hidden;
+  top: 0;
+  transform: translate3d(0, 0, 0) skewX(-3deg);
+  transform-origin: left top;
+  width: min(410px, 43%);
+  will-change: transform, opacity;
 }
 
 .savings-flag-wave::after {
-  animation: savings-stars-float 11s ease-in-out infinite;
+  animation: savings-flag-shimmer 20s ease-in-out infinite;
   background:
-    linear-gradient(105deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 38%),
-    linear-gradient(123deg, rgba(10, 49, 97, 0.24) 0 34%, rgba(10, 49, 97, 0.12) 34% 46%, transparent 56%);
-  clip-path: polygon(0 0, 50% 0, 39% 59%, 0 72%);
-  color: rgba(255, 255, 255, 0.76);
-  content: "★   ★   ★\A  ★   ★\A★   ★   ★";
-  font-size: 12px;
-  letter-spacing: 9px;
-  line-height: 1.78;
-  opacity: 0.58;
-  padding: 38px 0 0 40px;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.34);
-  transform: translate3d(0, 0, 0) skewX(4deg) rotate(-1deg);
-  transform-origin: left top;
-  white-space: pre;
-  will-change: transform, opacity;
+    linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.18) 44%, transparent 66%),
+    radial-gradient(ellipse at 82% 72%, rgba(10, 49, 97, 0.1) 0 20%, transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 42%, rgba(10, 49, 97, 0.08));
+  inset: 0;
+  opacity: 0.44;
 }
 
 @keyframes savings-flag-wave {
   0%,
   100% {
-    background-position: 0 0, 0 0;
-    transform: translate3d(0, 0, 0) skewX(-8deg) scale(1);
+    background-position: 50% 50%, 0 0, 0 0;
+    transform: translate3d(0, 0, 0) scale(1.035) rotate(-1deg);
   }
 
-  35% {
-    background-position: 20px 6px, 10px 8px;
-    transform: translate3d(-10px, 5px, 0) skewX(-6deg) scale(1.015);
+  38% {
+    background-position: 47% 52%, 0 0, 26px 10px;
+    transform: translate3d(-9px, 5px, 0) scale(1.035) rotate(-0.5deg);
   }
 
-  70% {
-    background-position: 42px -4px, 22px -6px;
-    transform: translate3d(6px, -4px, 0) skewX(-9deg) scale(1.01);
+  72% {
+    background-position: 53% 48%, 0 0, 48px -8px;
+    transform: translate3d(8px, -4px, 0) scale(1.03) rotate(-1.7deg);
   }
 }
 
 @keyframes savings-flag-shimmer {
   0%,
   100% {
-    transform: translateX(-26%);
+    transform: translateX(-18%);
   }
 
   50% {
-    transform: translateX(30%);
+    transform: translateX(22%);
   }
 }
 
 @keyframes savings-stars-float {
   0%,
   100% {
-    opacity: 0.52;
-    transform: translate3d(0, 0, 0) skewX(4deg) rotate(-1deg);
+    opacity: 0.82;
+    transform: translate3d(0, 0, 0) skewX(-3deg);
   }
 
-  35% {
-    opacity: 0.62;
-    transform: translate3d(-4px, 3px, 0) skewX(3deg) rotate(-0.4deg);
+  38% {
+    opacity: 0.9;
+    transform: translate3d(-6px, 5px, 0) skewX(-2deg);
   }
 
-  70% {
-    opacity: 0.56;
-    transform: translate3d(4px, -2px, 0) skewX(5deg) rotate(-1.5deg);
+  72% {
+    opacity: 0.84;
+    transform: translate3d(7px, -4px, 0) skewX(-4deg);
   }
 }
 
@@ -277,16 +287,29 @@ html {
 
 @media (max-width: 640px) {
   .savings-flag-wave {
-    height: 68%;
-    inset: auto -22% -8% auto;
-    opacity: 0.18;
-    width: 112%;
+    background:
+      radial-gradient(ellipse at 74% 48%, rgba(255, 255, 255, 0.18), transparent 58%),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.01)),
+      repeating-linear-gradient(
+        176deg,
+        rgba(178, 34, 52, 0.62) 0 34px,
+        rgba(255, 255, 255, 0.96) 34px 68px
+      );
+    background-size: 120% 120%, 100% 100%, 116% 116%;
+    inset: -4% -18% -8% 10%;
+    opacity: 0.92;
   }
 
-  .savings-flag-wave::after {
-    font-size: 10px;
-    letter-spacing: 6px;
-    padding: 18px 0 0 24px;
+  .savings-flag-wave::before {
+    background-size: 30px 22px, 30px 22px, 100% 100%;
+    border-radius: 0 0 22px 0;
+    height: 42%;
+    left: 0;
+    min-height: 100px;
+    opacity: 0.82;
+    right: auto;
+    top: 0;
+    width: 54%;
   }
 }
 

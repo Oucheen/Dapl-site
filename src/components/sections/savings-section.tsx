@@ -29,15 +29,11 @@ export function SavingsSection() {
             className="relative overflow-hidden rounded-2xl border border-[#d7e0ec] bg-white bg-no-repeat p-5 shadow-lg shadow-primary/10 sm:p-6 lg:p-8"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 55%, rgba(255,255,255,0.82) 100%), url('/images/savings-usa-bg.png')",
-              backgroundPosition: "right bottom",
-              backgroundSize: "min(760px, 68%) auto",
+                "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.76) 34%, rgba(255,255,255,0.08) 70%, rgba(255,255,255,0) 100%)",
             }}
           >
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(179,25,66,0.08),transparent_32%,rgba(10,49,97,0.1))]" />
             <div className="savings-flag-wave" aria-hidden="true" />
-            <div className="absolute -left-20 top-8 h-48 w-48 rounded-full border border-[#b31942]/10" />
-            <div className="absolute -right-24 bottom-8 h-56 w-56 rounded-full border border-[#0a3161]/10" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.86)_0%,rgba(255,255,255,0.34)_36%,rgba(255,255,255,0.03)_72%,rgba(255,255,255,0)_100%)]" />
 
             <div className="relative">
               <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
