@@ -178,17 +178,23 @@ html {
 }
 
 .savings-flag-wave::after {
-  background: linear-gradient(120deg, rgba(10, 49, 97, 0.21) 0 30%, rgba(10, 49, 97, 0.08) 30% 43%, transparent 54%);
-  clip-path: polygon(0 0, 52% 0, 40% 58%, 0 70%);
-  color: rgba(255, 255, 255, 0.7);
-  content: "★  ★  ★\A  ★  ★\A★  ★  ★";
-  font-size: 13px;
-  letter-spacing: 10px;
-  line-height: 1.65;
-  opacity: 0.52;
-  padding: 42px 0 0 44px;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+  animation: savings-stars-float 11s ease-in-out infinite;
+  background:
+    linear-gradient(105deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(123deg, rgba(10, 49, 97, 0.24) 0 34%, rgba(10, 49, 97, 0.12) 34% 46%, transparent 56%);
+  clip-path: polygon(0 0, 50% 0, 39% 59%, 0 72%);
+  color: rgba(255, 255, 255, 0.76);
+  content: "★   ★   ★\A  ★   ★\A★   ★   ★";
+  font-size: 12px;
+  letter-spacing: 9px;
+  line-height: 1.78;
+  opacity: 0.58;
+  padding: 38px 0 0 40px;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.34);
+  transform: translate3d(0, 0, 0) skewX(4deg) rotate(-1deg);
+  transform-origin: left top;
   white-space: pre;
+  will-change: transform, opacity;
 }
 
 @keyframes savings-flag-wave {
@@ -220,6 +226,24 @@ html {
   }
 }
 
+@keyframes savings-stars-float {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: translate3d(0, 0, 0) skewX(4deg) rotate(-1deg);
+  }
+
+  35% {
+    opacity: 0.62;
+    transform: translate3d(-4px, 3px, 0) skewX(3deg) rotate(-0.4deg);
+  }
+
+  70% {
+    opacity: 0.56;
+    transform: translate3d(4px, -2px, 0) skewX(5deg) rotate(-1.5deg);
+  }
+}
+
 @media (min-width: 768px) {
   .brands-carousel-track {
     animation: brands-marquee 26s linear infinite;
@@ -245,7 +269,8 @@ html {
   }
 
   .savings-flag-wave,
-  .savings-flag-wave::before {
+  .savings-flag-wave::before,
+  .savings-flag-wave::after {
     animation: none;
   }
 }
@@ -260,8 +285,8 @@ html {
 
   .savings-flag-wave::after {
     font-size: 10px;
-    letter-spacing: 7px;
-    padding: 18px 0 0 28px;
+    letter-spacing: 6px;
+    padding: 18px 0 0 24px;
   }
 }
 
