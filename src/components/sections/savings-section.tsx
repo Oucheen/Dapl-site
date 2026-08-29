@@ -39,7 +39,7 @@ export function SavingsSection() {
                   </h2>
                   <p className="mt-3 max-w-xl text-base leading-7 text-muted">
                     Veterans, military customers, seniors, and returning customers can receive a
-                    customer-facing discount when eligible repair work is completed.
+                    discount when eligible repair work is approved.
                   </p>
                   <div className="mt-4 inline-flex rounded-full border border-[#d7e0ec] bg-white/85 px-4 py-2 text-sm font-bold text-primary shadow-sm backdrop-blur">
                     First repair promo code: WEB30
