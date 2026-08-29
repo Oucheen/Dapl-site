@@ -240,15 +240,19 @@ html {
 }
 
 @media (max-width: 640px) {
+  .savings-flag-wave {
+    opacity: 0.74;
+  }
+
   .savings-flag-wave::before {
-    height: 52%;
-    opacity: 0.38;
-    width: 62%;
+    height: 42%;
+    opacity: 0.26;
+    width: 58%;
   }
 
   .savings-flag-wave::after {
-    inset: 12% -18% -10% 8%;
-    opacity: 0.72;
+    inset: 14% -22% -8% 0;
+    opacity: 0.52;
   }
 }
 
