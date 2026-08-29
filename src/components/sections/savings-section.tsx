@@ -75,9 +75,9 @@ export function SavingsSection() {
               </div>
 
               <div className="mt-5 rounded-xl border border-white/70 bg-white/85 px-4 py-3 text-xs leading-6 text-muted shadow-sm backdrop-blur">
-                Valid when repair service is completed. One discount per invoice. Discounts may not
-                be combined with promo codes or other offers. Parts, taxes, and diagnostic-only visits
-                may not qualify.
+                Valid when repair work is approved. Discount does not apply to diagnostic-only or
+                service-call-only visits. Cannot be combined with other offers. Labor and parts billed
+                separately. Restrictions may apply.
               </div>
             </div>
           </div>
