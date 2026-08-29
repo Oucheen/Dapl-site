@@ -25,15 +25,8 @@ export function SavingsSection() {
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#b31942] via-white to-[#0a3161]" />
       <div className="container-shell">
         <FadeUp>
-          <div
-            className="relative overflow-hidden rounded-2xl border border-[#d7e0ec] bg-white bg-no-repeat p-5 shadow-lg shadow-primary/10 sm:p-6 lg:p-8"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.82) 36%, rgba(255,255,255,0.18) 72%, rgba(255,255,255,0.02) 100%)",
-            }}
-          >
+          <div className="relative overflow-hidden rounded-2xl border border-[#d7e0ec] bg-white p-5 shadow-lg shadow-primary/10 sm:p-6 lg:p-8">
             <div className="savings-flag-wave" aria-hidden="true" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.88)_0%,rgba(255,255,255,0.5)_38%,rgba(255,255,255,0.08)_72%,rgba(255,255,255,0)_100%)]" />
 
             <div className="relative">
               <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
