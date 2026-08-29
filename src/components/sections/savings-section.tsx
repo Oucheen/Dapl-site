@@ -1,3 +1,5 @@
+import { HeartHandshake, Medal, RotateCcw } from "lucide-react";
+
 import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 
@@ -5,17 +7,23 @@ const savings = [
   {
     title: "Veterans and military",
     amount: "$30 off",
-    text: "Thank-you savings for veterans and active-duty military customers.",
+    text: "Thank-you savings for veterans and active-duty military customers when repair work is approved.",
+    icon: Medal,
+    iconClass: "border-[#d8e2ef] bg-[#f3f7fc] text-primary",
   },
   {
     title: "Senior customers",
     amount: "$30 off",
-    text: "A simple senior discount on eligible completed repair work.",
+    text: "A straightforward discount for senior customers on eligible approved repairs.",
+    icon: HeartHandshake,
+    iconClass: "border-[#f1c8d1] bg-[#fff5f7] text-[#b31942]",
   },
   {
     title: "Returning customers",
     amount: "$30 off",
-    text: "For repeat customers when the appliance repair is completed.",
+    text: "A loyalty discount for repeat customers who approve eligible repair work.",
+    icon: RotateCcw,
+    iconClass: "border-[#c8d7e8] bg-[#f6f9fd] text-[#0a3161]",
   },
 ];
 
@@ -63,10 +71,20 @@ export function SavingsSection() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   {savings.map((item, index) => (
                     <FadeUp key={item.title} delay={index * 0.08}>
-                      <article className="h-full rounded-xl border border-white/70 bg-white/90 p-4 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-lg">
-                        <div className="h-1.5 w-12 rounded-full bg-gradient-to-r from-[#b31942] via-white to-[#0a3161]" />
-                        <p className="mt-4 text-2xl font-black text-primary">{item.amount}</p>
-                        <h3 className="mt-2 text-base font-extrabold text-primary">{item.title}</h3>
+                      <article className="relative h-full overflow-hidden rounded-lg border border-[#d8e2ef] bg-white/95 p-5 shadow-[0_18px_38px_rgba(15,42,86,0.10)] ring-1 ring-white/80 backdrop-blur transition hover:-translate-y-0.5 hover:border-[#b8c7dc] hover:shadow-[0_22px_44px_rgba(15,42,86,0.14)]">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#b31942] via-white to-[#0a3161]" />
+                        <div className="flex items-start justify-between gap-3">
+                          <span
+                            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border ${item.iconClass}`}
+                            aria-hidden="true"
+                          >
+                            <item.icon className="h-5 w-5" strokeWidth={2.2} />
+                          </span>
+                          <span className="rounded-full border border-[#d7e0ec] bg-[#f7f9fc] px-3 py-1 text-sm font-black text-primary shadow-sm">
+                            {item.amount}
+                          </span>
+                        </div>
+                        <h3 className="mt-5 text-base font-extrabold text-primary">{item.title}</h3>
                         <p className="mt-2 text-sm leading-6 text-muted">{item.text}</p>
                       </article>
                     </FadeUp>
