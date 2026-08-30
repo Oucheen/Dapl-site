@@ -211,7 +211,7 @@ html {
 
 @media (min-width: 768px) {
   .brands-carousel-track {
-    animation: brands-marquee 26s linear infinite;
+    animation: brands-marquee 120s linear infinite;
   }
 
   .brands-carousel-track:hover {

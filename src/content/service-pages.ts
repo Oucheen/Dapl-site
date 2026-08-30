@@ -56,6 +56,51 @@ export function getServiceCategoryCardDescription(applianceName: string) {
   );
 }
 
+const majorApplianceBrands = [
+  "Whirlpool",
+  "GE",
+  "Samsung",
+  "LG",
+  "KitchenAid",
+  "Maytag",
+  "Bosch",
+  "Frigidaire",
+  "Kenmore",
+  "Amana",
+  "Electrolux",
+  "Haier",
+  "Hotpoint",
+  "Magic Chef",
+  "Crosley",
+  "Roper",
+  "Admiral",
+  "Estate",
+  "Fisher & Paykel",
+  "Cafe",
+  "Monogram",
+  "JennAir",
+  "Thermador",
+  "Viking",
+  "Sub-Zero",
+  "Wolf",
+  "Miele",
+  "Dacor",
+  "Asko",
+  "Beko",
+  "Blomberg",
+  "Speed Queen",
+  "Insignia",
+  "Hisense",
+  "Avanti",
+  "Danby",
+  "Summit",
+  "U-Line",
+  "True Residential",
+  "Scotsman",
+  "Hoshizaki",
+  "Perlick",
+];
+
 export const refrigeratorServicePage: ServicePageContent = {
   slug: "refrigerator-repair-charlotte-nc",
   applianceName: "Refrigerator",
@@ -108,16 +153,7 @@ export const refrigeratorServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for both home and select commercial cooling equipment",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Maytag",
-    "Bosch",
-    "Frigidaire",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the refrigerator is doing",
@@ -213,16 +249,7 @@ export const washerServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for common residential laundry equipment",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "Maytag",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us how the washer is acting",
@@ -318,16 +345,7 @@ export const dryerServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for common laundry appliance issues across major brands",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "Maytag",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the dryer is doing",
@@ -423,16 +441,7 @@ export const dishwasherServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for common cleaning, drainage, and leak-related issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-    "Maytag",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the dishwasher is doing",
@@ -528,16 +537,7 @@ export const ovenServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for common heating, control, and performance issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-    "Maytag",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the oven is doing",
@@ -633,16 +633,7 @@ export const cooktopServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for burner, control, and performance-related issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-    "Maytag",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the cooktop is doing",
@@ -738,16 +729,7 @@ export const freezerServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for common cooling, frost, and leak-related issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "Frigidaire",
-    "KitchenAid",
-    "Maytag",
-    "Bosch",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the freezer is doing",
@@ -843,16 +825,7 @@ export const iceMachineServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for production, leak, and cooling-related issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Frigidaire",
-    "Maytag",
-    "Bosch",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the ice machine is doing",
@@ -948,16 +921,7 @@ export const wineCoolerServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for cooling, control, and storage-performance issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "KitchenAid",
-    "Bosch",
-    "Frigidaire",
-    "Maytag",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the wine cooler is doing",
@@ -1054,16 +1018,7 @@ export const commercialRefrigeratorServicePage: ServicePageContent = {
     "Clear recommendations before major repair decisions",
     "Support for cooling, leak, airflow, and control-related issues",
   ],
-  brands: [
-    "Whirlpool",
-    "GE",
-    "Samsung",
-    "LG",
-    "Frigidaire",
-    "KitchenAid",
-    "Bosch",
-    "Maytag",
-  ],
+  brands: majorApplianceBrands,
   process: [
     {
       title: "Tell us what the commercial refrigerator is doing",

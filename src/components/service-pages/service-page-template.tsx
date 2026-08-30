@@ -10,19 +10,12 @@ import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
-import { getBrandPageByName } from "@/content/brand-pages";
+import { brandPagesDirectory, getBrandPageByName } from "@/content/brand-pages";
 import { servicePagesDirectory, type ServicePageContent } from "@/content/service-pages";
 
-const brandLogoMap: Record<string, string> = {
-  Whirlpool: "/brands/whirlpool.svg",
-  GE: "/brands/general-electric.svg",
-  Samsung: "/brands/samsung.svg",
-  LG: "/brands/lg-electronics.svg",
-  KitchenAid: "/brands/kitchen-aid.svg",
-  Maytag: "/brands/maytag-3.svg",
-  Bosch: "/brands/bosch-1.svg",
-  Frigidaire: "/brands/frigidaire.svg",
-};
+const brandLogoMap = Object.fromEntries(
+  brandPagesDirectory.map((brand) => [brand.name, brand.logo]),
+);
 
 const relatedServicePriorityMap: Record<string, string[]> = {
   "refrigerator-repair-charlotte-nc": [

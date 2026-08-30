@@ -72,18 +72,20 @@ export function BrandsSection() {
                 >
                   <Link
                     href={`/brands/${brand.slug}`}
-                    className="grid h-full place-items-center p-6"
+                    className="grid h-full place-items-center px-5 py-6 sm:px-6"
                     aria-label={`${brand.name} appliance repair in Charlotte, NC`}
                   >
-                    <Image
-                      src={brand.logo}
-                      alt={`${brand.name} logo`}
-                      width={220}
-                      height={90}
-                      className="max-h-20 w-full object-contain"
-                      loading="lazy"
-                      unoptimized
-                    />
+                    <div className="flex h-16 w-44 items-center justify-center sm:h-[72px] sm:w-52 md:h-20 md:w-56">
+                      <Image
+                        src={brand.logo}
+                        alt={`${brand.name} logo`}
+                        width={220}
+                        height={90}
+                        className="h-auto max-h-14 w-full max-w-[205px] object-contain transition-transform duration-300 group-hover:scale-[1.03] sm:max-h-16 md:max-h-[72px]"
+                        loading="lazy"
+                        unoptimized
+                      />
+                    </div>
                   </Link>
                 </motion.article>
               ))}

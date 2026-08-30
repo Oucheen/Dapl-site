@@ -32,11 +32,117 @@ export const brandServiceCategories = standardAppliances.map((service) => ({
   summary: service.summary,
 }));
 
+const createAdditionalBrandPage = (
+  name: string,
+  slugBase: string,
+  logo: string,
+): BrandPageContent => ({
+  slug: `${slugBase}-appliance-repair-charlotte-nc`,
+  name,
+  logo,
+  metaTitle: `${name} Appliance Repair in Charlotte, NC | DAPL Appliance Repair`,
+  metaDescription: `Need ${name} appliance repair in Charlotte, NC? DAPL Appliance Repair helps with common ${name} refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, and cooling appliance issues.`,
+  keywords: [
+    `${name} appliance repair Charlotte NC`,
+    `${name} refrigerator repair Charlotte`,
+    `${name} washer repair Charlotte`,
+    `${name} dryer repair Charlotte`,
+  ],
+  heroTitle: `${name} Appliance Repair in Charlotte, NC`,
+  heroDescription: `DAPL Appliance Repair helps Charlotte-area homeowners with common ${name} kitchen, laundry, refrigeration, and cooking appliance problems with clear scheduling and practical repair guidance.`,
+  introTitle: `Local help for common ${name} appliance problems`,
+  introText: `${name} appliances can show different symptoms depending on the model, age, and appliance type. Tell us what changed, whether the issue is constant or intermittent, and share the model number if you have it so we can prepare for the visit.`,
+  commonIssues: [
+    {
+      title: `${name} refrigerator not cooling properly`,
+      text: "We check airflow, fans, controls, seals, and temperature behavior when refrigerator cooling becomes unreliable.",
+    },
+    {
+      title: `${name} washer not draining or spinning`,
+      text: "Drain and spin symptoms may involve pumps, locks, balance, controls, or restricted water movement.",
+    },
+    {
+      title: `${name} dryer not heating or taking too long`,
+      text: "Long dry times and weak heat often involve airflow, sensors, heating parts, or cycle controls.",
+    },
+    {
+      title: `${name} dishwasher leaks or poor cleaning`,
+      text: "We inspect wash performance, spray action, seals, valves, filters, and drainage before recommending the next step.",
+    },
+    {
+      title: `${name} oven or cooktop heating issues`,
+      text: "No-heat, uneven heat, and burner problems can involve igniters, elements, sensors, switches, or controls.",
+    },
+    {
+      title: `${name} freezer frost or temperature swings`,
+      text: "Frost buildup and unstable temperatures can point to seals, airflow, controls, or defrost-related issues.",
+    },
+  ],
+  serviceNotes: [
+    `Service for many common ${name} kitchen and laundry appliances`,
+    `Helpful diagnosis for cooling, heating, leak, and cycle symptoms`,
+    "Local Charlotte-area scheduling with clear repair guidance",
+  ],
+  faqs: [
+    {
+      question: `Do you repair ${name} appliances in Charlotte?`,
+      answer: `Yes. We help with many common ${name} refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, and wine cooler issues in Charlotte and nearby areas.`,
+    },
+    {
+      question: `Should I provide the ${name} model number?`,
+      answer:
+        "If you have it, yes. The model number helps us understand the appliance configuration and prepare for the most likely repair path.",
+    },
+    {
+      question: `Can you provide same-day ${name} appliance repair?`,
+      answer:
+        "Same-day availability depends on the schedule and route, but we offer priority appointments whenever possible.",
+    },
+  ],
+});
+
+const additionalBrandPages: BrandPageContent[] = [
+  createAdditionalBrandPage("Kenmore", "kenmore", "/brands-normalized/kenmore.png"),
+  createAdditionalBrandPage("Amana", "amana", "/brands-normalized/amana.png"),
+  createAdditionalBrandPage("Electrolux", "electrolux", "/brands-normalized/electrolux.png"),
+  createAdditionalBrandPage("Haier", "haier", "/brands-normalized/haier.png"),
+  createAdditionalBrandPage("Hotpoint", "hotpoint", "/brands-normalized/hotpoint.png"),
+  createAdditionalBrandPage("Magic Chef", "magic-chef", "/brands-normalized/magic-chef.png"),
+  createAdditionalBrandPage("Crosley", "crosley", "/brands-normalized/crosley.png"),
+  createAdditionalBrandPage("Roper", "roper", "/brands-normalized/roper.png"),
+  createAdditionalBrandPage("Admiral", "admiral", "/brands-normalized/admiral.png"),
+  createAdditionalBrandPage("Estate", "estate", "/brands-normalized/estate.png"),
+  createAdditionalBrandPage("Fisher & Paykel", "fisher-paykel", "/brands-normalized/fisher-paykel.png"),
+  createAdditionalBrandPage("Cafe", "cafe", "/brands-normalized/cafe.png"),
+  createAdditionalBrandPage("Monogram", "monogram", "/brands-normalized/monogram.png"),
+  createAdditionalBrandPage("JennAir", "jennair", "/brands-normalized/jennair.png"),
+  createAdditionalBrandPage("Thermador", "thermador", "/brands-normalized/thermador.png"),
+  createAdditionalBrandPage("Viking", "viking", "/brands-normalized/viking.png"),
+  createAdditionalBrandPage("Sub-Zero", "sub-zero", "/brands-normalized/sub-zero.png"),
+  createAdditionalBrandPage("Wolf", "wolf", "/brands-normalized/wolf.png"),
+  createAdditionalBrandPage("Miele", "miele", "/brands-normalized/miele.png"),
+  createAdditionalBrandPage("Dacor", "dacor", "/brands-normalized/dacor.png"),
+  createAdditionalBrandPage("Asko", "asko", "/brands-normalized/asko.png"),
+  createAdditionalBrandPage("Beko", "beko", "/brands-normalized/beko.png"),
+  createAdditionalBrandPage("Blomberg", "blomberg", "/brands-normalized/blomberg.png"),
+  createAdditionalBrandPage("Speed Queen", "speed-queen", "/brands-normalized/speed-queen.png"),
+  createAdditionalBrandPage("Insignia", "insignia", "/brands-normalized/insignia.png"),
+  createAdditionalBrandPage("Hisense", "hisense", "/brands-normalized/hisense.png"),
+  createAdditionalBrandPage("Avanti", "avanti", "/brands-normalized/avanti.png"),
+  createAdditionalBrandPage("Danby", "danby", "/brands-normalized/danby.png"),
+  createAdditionalBrandPage("Summit", "summit", "/brands-normalized/summit.png"),
+  createAdditionalBrandPage("U-Line", "u-line", "/brands-normalized/u-line.png"),
+  createAdditionalBrandPage("True Residential", "true-residential", "/brands-normalized/true-residential.png"),
+  createAdditionalBrandPage("Scotsman", "scotsman", "/brands-normalized/scotsman.png"),
+  createAdditionalBrandPage("Hoshizaki", "hoshizaki", "/brands-normalized/hoshizaki.png"),
+  createAdditionalBrandPage("Perlick", "perlick", "/brands-normalized/perlick.png"),
+];
+
 export const brandPages: BrandPageContent[] = [
   {
     slug: "whirlpool-appliance-repair-charlotte-nc",
     name: "Whirlpool",
-    logo: "/brands/whirlpool.svg",
+    logo: "/brands-normalized/whirlpool.png",
     metaTitle: "Whirlpool Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need Whirlpool appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Whirlpool refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
@@ -104,7 +210,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "ge-appliance-repair-charlotte-nc",
     name: "GE",
-    logo: "/brands/general-electric.svg",
+    logo: "/brands-normalized/general-electric.png",
     metaTitle: "GE Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need GE appliance repair in Charlotte, NC? DAPL Appliance Repair helps with GE refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
@@ -172,7 +278,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "samsung-appliance-repair-charlotte-nc",
     name: "Samsung",
-    logo: "/brands/samsung.svg",
+    logo: "/brands-normalized/samsung.png",
     metaTitle: "Samsung Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need Samsung appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Samsung refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and more.",
@@ -240,7 +346,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "lg-appliance-repair-charlotte-nc",
     name: "LG",
-    logo: "/brands/lg-electronics.svg",
+    logo: "/brands-normalized/lg-electronics.png",
     metaTitle: "LG Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need LG appliance repair in Charlotte, NC? DAPL Appliance Repair helps with LG refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, and cooling appliances.",
@@ -308,7 +414,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "kitchenaid-appliance-repair-charlotte-nc",
     name: "KitchenAid",
-    logo: "/brands/kitchen-aid.svg",
+    logo: "/brands-normalized/kitchen-aid.png",
     metaTitle: "KitchenAid Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need KitchenAid appliance repair in Charlotte, NC? DAPL Appliance Repair helps with KitchenAid refrigerators, dishwashers, ovens, cooktops, freezers, ice machines, and more.",
@@ -376,7 +482,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "bosch-appliance-repair-charlotte-nc",
     name: "Bosch",
-    logo: "/brands/bosch-1.svg",
+    logo: "/brands-normalized/bosch-1.png",
     metaTitle: "Bosch Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need Bosch appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Bosch dishwashers, refrigerators, ovens, cooktops, washers, dryers, freezers, and more.",
@@ -444,7 +550,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "frigidaire-appliance-repair-charlotte-nc",
     name: "Frigidaire",
-    logo: "/brands/frigidaire.svg",
+    logo: "/brands-normalized/frigidaire.png",
     metaTitle: "Frigidaire Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need Frigidaire appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Frigidaire refrigerators, freezers, dishwashers, ovens, cooktops, washers, dryers, and more.",
@@ -512,7 +618,7 @@ export const brandPages: BrandPageContent[] = [
   {
     slug: "maytag-appliance-repair-charlotte-nc",
     name: "Maytag",
-    logo: "/brands/maytag-3.svg",
+    logo: "/brands-normalized/maytag-3.png",
     metaTitle: "Maytag Appliance Repair in Charlotte, NC | DAPL Appliance Repair",
     metaDescription:
       "Need Maytag appliance repair in Charlotte, NC? DAPL Appliance Repair helps with Maytag washers, dryers, refrigerators, dishwashers, ovens, cooktops, freezers, and more.",
@@ -577,6 +683,7 @@ export const brandPages: BrandPageContent[] = [
       },
     ],
   },
+  ...additionalBrandPages,
 ];
 
 export const brandPagesDirectory = brandPages.map((page) => ({

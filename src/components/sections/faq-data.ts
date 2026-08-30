@@ -7,7 +7,7 @@ export const faqItems = [
   {
     question: "Which appliance brands do you repair?",
     answer:
-      "We service most major household appliance brands including Whirlpool, GE, Samsung, LG, KitchenAid, Maytag, Bosch, and Frigidaire.",
+      "We service many major household appliance brands including Whirlpool, GE, Samsung, LG, KitchenAid, Maytag, Bosch, Frigidaire, Kenmore, Amana, Electrolux, and other popular kitchen and laundry appliance brands.",
   },
   {
     question: "Do you repair both residential and commercial appliances?",
