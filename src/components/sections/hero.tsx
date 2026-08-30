@@ -25,7 +25,7 @@ export function Hero() {
         sizes="100vw"
         className="object-cover object-[65%_center] opacity-100 sm:object-[70%_center]"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.9)_38%,rgba(255,255,255,0.4)_62%,rgba(255,255,255,0)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_88%,rgba(207,36,49,0.06),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(15,42,86,0.12),transparent_36%)]" />
 
