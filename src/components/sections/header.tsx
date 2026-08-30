@@ -80,10 +80,23 @@ export function Header({ logoHref }: HeaderProps = {}) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMenuOpen]);
+
   return (
     <header
       ref={headerRef}
-      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+      className={`sticky top-0 z-[70] border-b transition-all duration-300 ${
         isScrolled
           ? "border-border/90 bg-surface/95 shadow-sm backdrop-blur"
           : "border-transparent bg-surface/85"
@@ -186,6 +199,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
           <button
             type="button"
             aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
             onClick={() => {
               setIsMenuOpen((open) => !open);
               setIsAppliancesOpen(false);
@@ -207,9 +221,9 @@ export function Header({ logoHref }: HeaderProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface lg:hidden"
+            className="absolute left-0 right-0 top-full z-[60] h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface shadow-[0_24px_60px_rgba(15,42,86,0.12)] lg:hidden"
           >
-            <nav className="container-shell flex flex-col gap-4 py-5">
+            <nav className="container-shell flex min-h-full flex-col gap-1 py-5">
               {navItems.map((item) =>
                 item.dropdown ? (
                   <div key={item.href}>
@@ -226,7 +240,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
                         setIsBrandsOpen((open) => !open);
                         setIsAppliancesOpen(false);
                       }}
-                      className="flex w-full items-center justify-between text-left text-sm font-medium text-foreground/90 transition hover:text-primary"
+                      className="flex w-full items-center justify-between rounded-2xl px-1 py-3 text-left text-lg font-bold text-foreground transition hover:text-primary"
                     >
                       {item.label}
                       <span className="relative h-5 w-5 text-primary" aria-hidden="true">
@@ -249,13 +263,13 @@ export function Header({ logoHref }: HeaderProps = {}) {
                           transition={{ duration: 0.18 }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-3 grid gap-2 border-l border-border pl-4">
+                          <div className="mb-2 mt-1 grid gap-1 border-l border-border pl-4">
                             {(item.dropdown === "appliances" ? applianceLinks : brandLinks).map((link) => (
                               <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={closeMenu}
-                                className="py-1 text-sm font-medium text-foreground/75 transition hover:text-primary"
+                                className="py-2 text-sm font-semibold text-foreground/75 transition hover:text-primary"
                               >
                                 {link.label}
                               </Link>
@@ -270,24 +284,26 @@ export function Header({ logoHref }: HeaderProps = {}) {
                     key={item.href}
                     href={item.href}
                     onClick={closeMenu}
-                    className="text-sm font-medium text-foreground/90 transition hover:text-primary"
+                    className="rounded-2xl px-1 py-3 text-lg font-bold text-foreground transition hover:text-primary"
                   >
                     {item.label}
                   </a>
                 ),
               )}
-              <a
-                href="tel:+17042660508"
-                onClick={closeMenu}
-                className="mt-2 inline-flex w-fit rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground"
-              >
-                Schedule Your Repair
-              </a>
-              <BookOnlineButton
-                location="mobile_header"
-                onClick={closeMenu}
-                className="inline-flex w-fit rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-              />
+              <div className="mt-auto grid gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6">
+                <a
+                  href="tel:+17042660508"
+                  onClick={closeMenu}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-5 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/20"
+                >
+                  Schedule Your Repair
+                </a>
+                <BookOnlineButton
+                  location="mobile_header"
+                  onClick={closeMenu}
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-primary/20 bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20"
+                />
+              </div>
             </nav>
           </motion.div>
         ) : null}

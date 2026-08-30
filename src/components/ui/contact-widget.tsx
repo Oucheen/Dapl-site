@@ -138,7 +138,7 @@ export function ContactWidget() {
   return (
     <div
       ref={widgetRef}
-      className={`pointer-events-none fixed bottom-5 right-5 z-[60] flex flex-col items-end transition-all duration-200 ${
+      className={`pointer-events-none fixed bottom-5 right-5 z-[60] hidden flex-col items-end transition-all duration-200 md:flex ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-3 opacity-0"

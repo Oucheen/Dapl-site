@@ -1,5 +1,6 @@
 import { FadeUp } from "@/components/ui/fade-up";
 import { BookOnlineButton } from "@/components/ui/book-online-button";
+import { MobileStickyActions } from "@/components/ui/mobile-sticky-actions";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import { CheckCircle2, Phone } from "lucide-react";
 import Image from "next/image";
@@ -25,7 +26,7 @@ export function Hero() {
         sizes="100vw"
         className="object-cover object-[65%_center] opacity-100 sm:object-[70%_center]"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.58)_43%,rgba(255,255,255,0.26)_72%,rgba(255,255,255,0.08)_100%)] sm:bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_88%,rgba(207,36,49,0.06),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(15,42,86,0.12),transparent_36%)]" />
 
@@ -48,20 +49,20 @@ export function Hero() {
               </li>
             ))}
           </ul>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="mt-7 flex items-start gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <TrackedAnchor
               href="#contact"
               gtmEvent={{
                 event: "schedule_click",
                 location: "homepage_hero",
               }}
-              className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95"
+              className="inline-flex min-w-[11rem] items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95 sm:px-6"
             >
               Schedule Your Repair
             </TrackedAnchor>
             <BookOnlineButton
               location="homepage_hero"
-              className="inline-flex items-center justify-center rounded-full bg-[#177dcc] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#177dcc]/20 transition hover:brightness-95"
+              className="hidden items-center justify-center rounded-full bg-[#177dcc] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#177dcc]/20 transition hover:brightness-95 sm:inline-flex"
             />
             <TrackedAnchor
               href="tel:+17042660508"
@@ -70,14 +71,14 @@ export function Hero() {
                 location: "homepage_hero",
                 link_type: "primary_cta",
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
+              className="hidden items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 sm:inline-flex"
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
               Call +1 (704) 266-0508
             </TrackedAnchor>
           </div>
 
-          <div className="mt-7 flex max-w-2xl flex-wrap gap-2.5">
+          <div className="mt-7 hidden max-w-2xl flex-wrap gap-2.5 sm:flex">
             {["Same-day options", "Clear diagnosis", "Local Charlotte team"].map((item) => (
               <span
                 key={item}
@@ -91,6 +92,8 @@ export function Hero() {
 
         </FadeUp>
       </div>
+
+      <MobileStickyActions />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-14 hidden justify-center xl:flex">
         <a
