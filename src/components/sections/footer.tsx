@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { brandPagesDirectory } from "@/content/brand-pages";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
@@ -68,14 +67,12 @@ export function Footer() {
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
                   Contact
                 </p>
-                <p className="mt-3 flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-accent" aria-hidden />
+                <p className="mt-3">
                   <a href="tel:+17042660508" className="font-semibold text-primary hover:underline">
                     +1 (704) 266-0508
                   </a>
                 </p>
-                <p className="mt-1 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-accent" aria-hidden />
+                <p className="mt-1">
                   <a
                     href="mailto:dapl.appliance.repair@gmail.com"
                     className="break-words hover:text-primary"
@@ -89,37 +86,16 @@ export function Footer() {
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
                   Location
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <MapPin className="mt-1 h-4 w-4 flex-none text-accent" aria-hidden />
-                  <div>
-                    <p>9401 Peckham Rye Rd</p>
-                    <p>Mint Hill, NC 28227</p>
-                  </div>
-                </div>
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=9401%20Peckham%20Rye%20Rd%2C%20Mint%20Hill%2C%20NC%2028227"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 font-semibold underline-offset-4 hover:underline"
-                >
-                  <span className="text-[#4285f4]">Open</span>
-                  <span className="text-[#ea4335]">in</span>
-                  <span className="text-[#fbbc05]">Google</span>
-                  <span className="text-[#34a853]">Maps</span>
-                </a>
+                <p className="mt-3">9401 Peckham Rye Rd</p>
+                <p>Mint Hill, NC 28227</p>
               </div>
 
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
                   Working Hours
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <Clock className="mt-1 h-4 w-4 flex-none text-accent" aria-hidden />
-                  <div>
-                    <p>Monday - Sunday</p>
-                    <p>7:00 AM - 8:00 PM ET</p>
-                  </div>
-                </div>
+                <p className="mt-3">Monday - Sunday</p>
+                <p>7:00 AM - 8:00 PM ET</p>
               </div>
             </div>
 
