@@ -24,7 +24,7 @@ export function Hero() {
         fill
         priority
         sizes="100vw"
-        className="object-cover object-[65%_center] opacity-100 sm:object-[70%_center]"
+        className="-translate-y-8 scale-110 object-cover object-[48%_center] opacity-100 sm:translate-y-0 sm:scale-100 sm:object-[70%_center]"
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.58)_43%,rgba(255,255,255,0.26)_72%,rgba(255,255,255,0.08)_100%)] sm:bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
