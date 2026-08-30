@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { brandPages } from "@/content/brand-pages";
@@ -160,8 +161,12 @@ export function Header({ logoHref }: HeaderProps = {}) {
                       <path d="m5.5 7.5 4.5 4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </a>
-                  <div className="invisible absolute left-0 top-full w-[520px] translate-y-2 rounded-2xl border border-border bg-white p-3 opacity-0 shadow-xl shadow-primary/10 transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                    <div className="grid grid-cols-2 gap-1">
+                  <div
+                    className={`invisible absolute top-full max-h-[min(70vh,640px)] translate-y-2 overflow-y-auto rounded-2xl border border-border bg-white p-3 opacity-0 shadow-xl shadow-primary/10 transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${
+                      item.dropdown === "brands" ? "left-1/2 w-[760px] -translate-x-1/2" : "left-0 w-[520px]"
+                    }`}
+                  >
+                    <div className={`grid gap-1 ${item.dropdown === "brands" ? "grid-cols-3" : "grid-cols-2"}`}>
                       {(item.dropdown === "appliances" ? applianceLinks : brandLinks).map((link) => (
                         <Link
                           key={link.href}
@@ -205,11 +210,17 @@ export function Header({ logoHref }: HeaderProps = {}) {
               setIsAppliancesOpen(false);
               setIsBrandsOpen(false);
             }}
-            className="rounded-lg border border-border p-2 lg:hidden"
+            className="grid h-10 w-10 place-items-center rounded-lg border border-border text-foreground lg:hidden"
           >
-            <span className="block h-0.5 w-5 bg-foreground" />
-            <span className="mt-1.5 block h-0.5 w-5 bg-foreground" />
-            <span className="mt-1.5 block h-0.5 w-5 bg-foreground" />
+            {isMenuOpen ? (
+              <X className="h-5 w-5" aria-hidden />
+            ) : (
+              <span aria-hidden>
+                <span className="block h-0.5 w-5 bg-foreground" />
+                <span className="mt-1.5 block h-0.5 w-5 bg-foreground" />
+                <span className="mt-1.5 block h-0.5 w-5 bg-foreground" />
+              </span>
+            )}
           </button>
         </div>
       </div>
