@@ -7,25 +7,25 @@ import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 
 export function MobileStickyActions() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
-    const updateVisibility = () => {
+    const updateBackToTop = () => {
       const hero = document.getElementById("top");
       const heroBottom = hero
         ? hero.getBoundingClientRect().bottom + window.scrollY
         : window.innerHeight;
 
-      setIsVisible(window.scrollY > heroBottom - 80);
+      setShowBackToTop(window.scrollY > heroBottom - 80);
     };
 
-    updateVisibility();
-    window.addEventListener("scroll", updateVisibility, { passive: true });
-    window.addEventListener("resize", updateVisibility);
+    updateBackToTop();
+    window.addEventListener("scroll", updateBackToTop, { passive: true });
+    window.addEventListener("resize", updateBackToTop);
 
     return () => {
-      window.removeEventListener("scroll", updateVisibility);
-      window.removeEventListener("resize", updateVisibility);
+      window.removeEventListener("scroll", updateBackToTop);
+      window.removeEventListener("resize", updateBackToTop);
     };
   }, []);
 
@@ -40,13 +40,13 @@ export function MobileStickyActions() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(15,42,86,0.14)] backdrop-blur transition duration-200 sm:hidden ${
-        isVisible
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-full opacity-0"
-      }`}
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(15,42,86,0.14)] backdrop-blur sm:hidden"
     >
-      <div className="grid grid-cols-[1fr_1fr_1fr_3rem] gap-2">
+      <div
+        className={`grid gap-2 transition-[grid-template-columns] duration-200 ${
+          showBackToTop ? "grid-cols-[1fr_1fr_1fr_3rem]" : "grid-cols-3"
+        }`}
+      >
         <TrackedAnchor
           href="tel:+17042660508"
           gtmEvent={{
@@ -77,14 +77,16 @@ export function MobileStickyActions() {
           <CalendarCheck className="h-4 w-4" aria-hidden="true" />
           Schedule
         </TrackedAnchor>
-        <button
-          type="button"
-          onClick={scrollToTop}
-          aria-label="Back to top"
-          className="inline-flex h-12 items-center justify-center rounded-full border border-primary/15 bg-white text-primary shadow-sm shadow-primary/10"
-        >
-          <ArrowUp className="h-5 w-5" aria-hidden="true" />
-        </button>
+        {showBackToTop ? (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            aria-label="Back to top"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-primary/15 bg-white text-primary shadow-sm shadow-primary/10"
+          >
+            <ArrowUp className="h-5 w-5" aria-hidden="true" />
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export function Hero() {
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_88%,rgba(207,36,49,0.06),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(15,42,86,0.12),transparent_36%)]" />
 
-      <div className="container-shell relative flex min-h-[calc(100svh-5rem)] items-center py-12 sm:py-16 lg:py-20">
+      <div className="container-shell relative flex min-h-[calc(100svh-5rem)] items-center py-12 pb-24 sm:py-16 lg:py-20">
         <FadeUp className="max-w-3xl">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-primary/75 sm:text-sm">
             Charlotte Appliance Repair
@@ -49,24 +49,21 @@ export function Hero() {
               </li>
             ))}
           </ul>
-          <div className="mt-7 grid w-full max-w-[22rem] grid-cols-3 gap-2 sm:mt-8 sm:flex sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-3">
+          <div className="mt-8 hidden flex-wrap gap-3 sm:flex">
             <TrackedAnchor
               href="#contact"
               gtmEvent={{
                 event: "schedule_click",
                 location: "homepage_hero",
               }}
-              className="inline-flex h-12 min-w-0 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent px-3 text-xs font-black text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95 sm:h-auto sm:min-w-[11rem] sm:px-6 sm:py-3 sm:text-sm sm:font-bold"
+              className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95"
             >
-              <span className="sm:hidden">Schedule</span>
-              <span className="hidden sm:inline">Schedule Your Repair</span>
+              Schedule Your Repair
             </TrackedAnchor>
-            <span className="block min-w-0 sm:inline-flex">
-              <BookOnlineButton
-                location="homepage_hero"
-                className="!inline-flex !h-12 !min-h-0 !w-full !items-center !justify-center !rounded-full !border-0 !bg-[#177dcc] !px-3 !py-0 !text-xs !font-black !uppercase !leading-none !text-white !shadow-lg !shadow-[#177dcc]/20 !transition hover:!brightness-95 sm:!h-auto sm:!w-auto sm:!px-6 sm:!py-3 sm:!text-sm sm:!font-bold"
-              />
-            </span>
+            <BookOnlineButton
+              location="homepage_hero"
+              className="inline-flex items-center justify-center rounded-full bg-[#177dcc] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#177dcc]/20 transition hover:brightness-95"
+            />
             <TrackedAnchor
               href="tel:+17042660508"
               gtmEvent={{
@@ -74,11 +71,10 @@ export function Hero() {
                 location: "homepage_hero",
                 link_type: "primary_cta",
               }}
-              className="inline-flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-full bg-primary px-2 text-xs font-black text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 sm:h-auto sm:px-6 sm:py-3 sm:text-sm sm:font-bold"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
             >
-              <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="sm:hidden">Call</span>
-              <span className="hidden sm:inline">Call +1 (704) 266-0508</span>
+              <Phone className="h-4 w-4" aria-hidden="true" />
+              Call +1 (704) 266-0508
             </TrackedAnchor>
           </div>
 
