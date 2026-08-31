@@ -3,7 +3,7 @@ import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { MobileStickyActions } from "@/components/ui/mobile-sticky-actions";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import { googleReviewCount, googleReviewRating, googleReviewsUrl } from "@/content/google-profile";
-import { CheckCircle2, ExternalLink, Phone, Star } from "lucide-react";
+import { CheckCircle2, Phone, Star } from "lucide-react";
 import Image from "next/image";
 
 const highlights = [
@@ -12,6 +12,52 @@ const highlights = [
   "Affordable Pricing",
   "Satisfaction Guaranteed",
 ];
+
+function GoogleWordmark() {
+  return (
+    <span className="font-black leading-none" aria-label="Google">
+      <span className="text-[#4285f4]">G</span>
+      <span className="text-[#ea4335]">o</span>
+      <span className="text-[#fbbc05]">o</span>
+      <span className="text-[#4285f4]">g</span>
+      <span className="text-[#34a853]">l</span>
+      <span className="text-[#ea4335]">e</span>
+    </span>
+  );
+}
+
+function GoogleReviewsBadge({ className = "" }: { className?: string }) {
+  return (
+    <TrackedAnchor
+      href={googleReviewsUrl}
+      target="_blank"
+      rel="noreferrer"
+      gtmEvent={{
+        event: "reviews_click",
+        location: "homepage_hero",
+      }}
+      className={`max-w-full items-center gap-2 rounded-full bg-transparent px-1 py-1 text-primary drop-shadow-[0_1px_1px_rgba(255,255,255,0.72)] transition hover:-translate-y-0.5 sm:gap-3 ${className}`}
+      aria-label={`Read ${googleReviewCount} Google reviews`}
+    >
+      <span className="min-w-0 text-sm sm:text-base">
+        <GoogleWordmark />
+        <span className="mt-0.5 flex items-center gap-1 text-accent sm:mt-1">
+          <span className="text-xs font-black leading-none text-[#fbbc05] sm:text-sm">
+            {googleReviewRating}
+          </span>
+          <span className="flex items-center gap-0.5" aria-hidden="true">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" />
+            ))}
+          </span>
+        </span>
+        <span className="mt-0.5 block text-[0.65rem] font-black uppercase leading-tight tracking-[0.08em] text-primary sm:text-xs">
+          {googleReviewCount} reviews
+        </span>
+      </span>
+    </TrackedAnchor>
+  );
+}
 
 export function Hero() {
   return (
@@ -27,12 +73,14 @@ export function Hero() {
         sizes="100vw"
         className="-translate-y-12 scale-114 object-cover object-[43%_center] opacity-100 sm:translate-y-0 sm:scale-100 sm:object-[70%_center]"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.58)_43%,rgba(255,255,255,0.26)_72%,rgba(255,255,255,0.08)_100%)] sm:bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.40)_0%,rgba(255,255,255,0.5)_43%,rgba(255,255,255,0.26)_72%,rgba(255,255,255,0.08)_100%)] sm:bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.74)_43%,rgba(255,255,255,0.42)_72%,rgba(255,255,255,0.16)_100%)] lg:bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.75)_38%,rgba(255,255,255,0.25)_62%,rgba(255,255,255,0)_100%)]" />
+      <div className="absolute inset-y-0 left-0 w-[92%] bg-[linear-gradient(90deg,rgba(255,255,255,0.90)_0%,rgba(255,255,255,0.40)_58%,rgba(255,255,255,0)_100%)] sm:hidden" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_88%,rgba(207,36,49,0.06),transparent_30%),radial-gradient(circle_at_88%_18%,rgba(15,42,86,0.12),transparent_36%)]" />
 
       <div className="container-shell relative flex min-h-[calc(100svh-5rem)] items-center py-12 pb-24 sm:py-16 lg:py-20">
         <FadeUp className="max-w-3xl">
+          <GoogleReviewsBadge className="mb-5 inline-flex sm:mb-6" />
           <p className="text-xs font-black uppercase tracking-[0.3em] text-primary/75 sm:text-sm">
             Charlotte Appliance Repair
           </p>
@@ -42,27 +90,6 @@ export function Hero() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
             Expert appliance repair services in Charlotte, NC and surrounding areas.
           </p>
-          <TrackedAnchor
-            href={googleReviewsUrl}
-            target="_blank"
-            rel="noreferrer"
-            gtmEvent={{
-              event: "reviews_click",
-              location: "homepage_hero",
-            }}
-            className="mt-5 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-border bg-white/92 px-4 py-2.5 text-sm font-black text-primary shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-white"
-            aria-label={`Read ${googleReviewCount} Google reviews`}
-          >
-            <span className="flex items-center gap-0.5 text-accent" aria-hidden="true">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} className="h-4 w-4 fill-current" />
-              ))}
-            </span>
-            <span>
-              {googleReviewRating} rating · {googleReviewCount} Google reviews
-            </span>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </TrackedAnchor>
           <ul className="mt-7 grid max-w-xl gap-3 sm:grid-cols-2">
             {highlights.map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm font-semibold text-foreground">
