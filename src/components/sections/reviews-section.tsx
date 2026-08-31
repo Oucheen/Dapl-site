@@ -2,6 +2,11 @@
 
 import { useRef } from "react";
 
+import {
+  customerReviews as fallbackReviews,
+  type CustomerReview,
+} from "@/content/customer-reviews";
+
 type ReviewSummaryView = {
   rating: string;
   reviewCount: string;
@@ -10,40 +15,21 @@ type ReviewSummaryView = {
 
 const fallbackGoogleRating: ReviewSummaryView = {
   rating: "5.0",
-  reviewCount: "120+",
+  reviewCount: "157+",
   reviewUrl: "https://www.google.com/maps/place/DAPL+Appliance+Repair/@35.2126377,-81.0614985,10z/data=!4m18!1m9!3m8!1s0x24f2bda0a9366b9:0xc4daa4b6750aec29!2sDAPL+Appliance+Repair!8m2!3d35.2130845!4d-80.73185!9m1!1b1!16s%2Fg%2F11nqc5tfvq!3m7!1s0x24f2bda0a9366b9:0xc4daa4b6750aec29!8m2!3d35.2130845!4d-80.73185!9m1!1b1!16s%2Fg%2F11nqc5tfvq?hl=en&authuser=1&entry=ttu&g_ep=EgoyMDI2MDcxNS4wIKXMDSoASAFQAw%3D%3D",
 };
 
-const reviews = [
-  {
-    name: "Linda Nardelli",
-    service: "Appliance repair",
-    text: "I have used DAPL appliance repair and I will not hesitate to use them in the future. They are knowledgeable, reasonably priced, and very honest in their work ethic.",
-  },
-  {
-    name: "Yuliia Mikhachova",
-    service: "Appliance repair",
-    text: "The technician was professional, knowledgeable, and arrived on time. He quickly diagnosed the issue, explained the repair process clearly, and completed the work efficiently at a fair price.",
-  },
-  {
-    name: "Velvelle",
-    service: "Refrigerator repair",
-    text: "Thanks to your employee Dmitry for repairing the refrigerator; the work was done to a high standard. Thank you.",
-  },
-  {
-    name: "Amy Glenn",
-    service: "Appliance repair",
-    text: "Very nice people and good prices on their appliances.",
-  },
-];
+function Stars({ rating = 5, size = "sm" }: { rating?: number; size?: "sm" | "md" }) {
+  const starCount = Math.min(Math.max(Math.round(rating), 1), 5);
 
-function Stars({ size = "sm" }: { size?: "sm" | "md" }) {
   return (
-    <div className="flex gap-1 text-accent" aria-label="Five star rating">
+    <div className="flex gap-1 text-accent" aria-label={`${starCount} star rating`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
-          className={size === "md" ? "h-5 w-5 fill-current" : "h-4 w-4 fill-current"}
+          className={`${size === "md" ? "h-5 w-5" : "h-4 w-4"} ${
+            star <= starCount ? "fill-current" : "fill-none text-border"
+          }`}
           viewBox="0 0 20 20"
           aria-hidden="true"
         >
@@ -81,9 +67,16 @@ function ArrowIcon({ direction }: { direction: "previous" | "next" }) {
   );
 }
 
-export function ReviewsSection({ summary }: { summary?: ReviewSummaryView }) {
+export function ReviewsSection({
+  reviews = fallbackReviews,
+  summary,
+}: {
+  reviews?: CustomerReview[];
+  summary?: ReviewSummaryView;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const googleRating = summary ?? fallbackGoogleRating;
+  const visibleReviews = reviews.length ? reviews : fallbackReviews;
 
   function scrollReviews(direction: "previous" | "next") {
     const track = trackRef.current;
@@ -175,13 +168,13 @@ export function ReviewsSection({ summary }: { summary?: ReviewSummaryView }) {
               ref={trackRef}
               className="flex snap-x snap-mandatory gap-[18px] overflow-x-auto scroll-smooth pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              {reviews.map((review) => (
+              {visibleReviews.map((review) => (
                 <article
-                  key={`${review.name}-${review.service}`}
+                  key={review.id}
                   data-review-card
                   className="flex h-[300px] w-[82%] max-w-[390px] shrink-0 snap-center flex-col rounded-[1.1rem] border border-border bg-white p-6 shadow-sm sm:w-[48%] lg:w-[32%] lg:snap-start"
                 >
-                  <Stars />
+                  <Stars rating={review.rating} />
                   <p className="mt-5 flex-1 overflow-hidden text-sm leading-7 text-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:5]">
                     {review.text}
                   </p>

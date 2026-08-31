@@ -13,6 +13,7 @@ import { SavingsSection } from "@/components/sections/savings-section";
 import { ServiceAreasSection } from "@/components/sections/service-areas-section";
 import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 import { SectionProgress } from "@/components/ui/section-progress";
+import { customerReviews } from "@/content/customer-reviews";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
 import { getReviewSummary, type ReviewSummary } from "@/lib/review-summary";
 
@@ -98,7 +99,9 @@ export default async function Home() {
         <BrandsSection />
         <WhyChooseUsSection />
         <ServiceAreasSection />
-        {REVIEWS_SECTION_ENABLED ? <ReviewsSection summary={reviewSummary} /> : null}
+        {REVIEWS_SECTION_ENABLED ? (
+          <ReviewsSection reviews={customerReviews} summary={reviewSummary} />
+        ) : null}
         <FAQSection />
         <ContactSection />
         <BottomCtaSection />
