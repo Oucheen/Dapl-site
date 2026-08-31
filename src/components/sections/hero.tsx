@@ -2,7 +2,8 @@ import { FadeUp } from "@/components/ui/fade-up";
 import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { MobileStickyActions } from "@/components/ui/mobile-sticky-actions";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
-import { CheckCircle2, Phone } from "lucide-react";
+import { googleReviewCount, googleReviewRating, googleReviewsUrl } from "@/content/google-profile";
+import { CheckCircle2, ExternalLink, Phone, Star } from "lucide-react";
 import Image from "next/image";
 
 const highlights = [
@@ -41,6 +42,27 @@ export function Hero() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
             Expert appliance repair services in Charlotte, NC and surrounding areas.
           </p>
+          <TrackedAnchor
+            href={googleReviewsUrl}
+            target="_blank"
+            rel="noreferrer"
+            gtmEvent={{
+              event: "reviews_click",
+              location: "homepage_hero",
+            }}
+            className="mt-5 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-border bg-white/92 px-4 py-2.5 text-sm font-black text-primary shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-white"
+            aria-label={`Read ${googleReviewCount} Google reviews`}
+          >
+            <span className="flex items-center gap-0.5 text-accent" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className="h-4 w-4 fill-current" />
+              ))}
+            </span>
+            <span>
+              {googleReviewRating} rating · {googleReviewCount} Google reviews
+            </span>
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </TrackedAnchor>
           <ul className="mt-7 grid max-w-xl gap-3 sm:grid-cols-2">
             {highlights.map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm font-semibold text-foreground">

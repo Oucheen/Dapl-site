@@ -1,3 +1,10 @@
+import {
+  googleReviewCount,
+  googleReviewCountValue,
+  googleReviewRating,
+  googleReviewsUrl,
+} from "@/content/google-profile";
+
 export type ReviewSummary = {
   rating: string;
   reviewCount: string;
@@ -7,14 +14,11 @@ export type ReviewSummary = {
   source: "stored" | "google" | "fallback";
 };
 
-const DEFAULT_REVIEW_URL =
-  "https://www.google.com/maps/place/DAPL+Appliance+Repair/@35.2126377,-81.0614985,10z/data=!4m18!1m9!3m8!1s0x24f2bda0a9366b9:0xc4daa4b6750aec29!2sDAPL+Appliance+Repair!8m2!3d35.2130845!4d-80.73185!9m1!1b1!16s%2Fg%2F11nqc5tfvq!3m7!1s0x24f2bda0a9366b9:0xc4daa4b6750aec29!8m2!3d35.2130845!4d-80.73185!9m1!1b1!16s%2Fg%2F11nqc5tfvq?hl=en&authuser=1&entry=ttu&g_ep=EgoyMDI2MDcxNS4wIKXMDSoASAFQAw%3D%3D";
-
 export const FALLBACK_REVIEW_SUMMARY: ReviewSummary = {
-  rating: "5.0",
-  reviewCount: "157+",
-  reviewCountValue: 157,
-  reviewUrl: DEFAULT_REVIEW_URL,
+  rating: googleReviewRating,
+  reviewCount: googleReviewCount,
+  reviewCountValue: googleReviewCountValue,
+  reviewUrl: googleReviewsUrl,
   source: "fallback",
 };
 
@@ -69,7 +73,7 @@ function mapReviewSummaryRow(
     rating: formatRating(row.rating),
     reviewCount: String(row.review_count),
     reviewCountValue: row.review_count,
-    reviewUrl: row.review_url || DEFAULT_REVIEW_URL,
+    reviewUrl: row.review_url || googleReviewsUrl,
     updatedAt: row.updated_at,
     source,
   };
@@ -133,7 +137,7 @@ export async function upsertReviewSummary(input: {
         id: "google",
         rating,
         review_count: reviewCount,
-        review_url: input.reviewUrl || DEFAULT_REVIEW_URL,
+        review_url: input.reviewUrl || googleReviewsUrl,
       },
     ]),
     cache: "no-store",
