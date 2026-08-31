@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   customerReviews as fallbackReviews,
   type CustomerReview,
 } from "@/content/customer-reviews";
+import { X } from "lucide-react";
 
 type ReviewSummaryView = {
   rating: string;
@@ -75,6 +76,7 @@ export function ReviewsSection({
   summary?: ReviewSummaryView;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const [selectedReview, setSelectedReview] = useState<CustomerReview | null>(null);
   const googleRating = summary ?? fallbackGoogleRating;
   const visibleReviews = reviews.length ? reviews : fallbackReviews;
 
@@ -172,12 +174,23 @@ export function ReviewsSection({
                 <article
                   key={review.id}
                   data-review-card
-                  className="flex h-[300px] w-[82%] max-w-[390px] shrink-0 snap-center flex-col rounded-[1.1rem] border border-border bg-white p-6 shadow-sm sm:w-[48%] lg:w-[32%] lg:snap-start"
+                  className="flex h-[360px] w-[82%] max-w-[390px] shrink-0 snap-center flex-col rounded-[1.1rem] border border-border bg-white p-6 shadow-sm sm:w-[48%] lg:w-[32%] lg:snap-start"
                 >
                   <Stars rating={review.rating} />
-                  <p className="mt-5 flex-1 overflow-hidden text-sm leading-7 text-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:5]">
-                    {review.text}
-                  </p>
+                  <div className="mt-5 flex min-h-0 flex-1 flex-col">
+                    <p className="overflow-hidden text-sm leading-7 text-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
+                      {review.text}
+                    </p>
+                    {review.text.length > 170 ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReview(review)}
+                        className="mt-3 w-fit text-sm font-black text-primary underline decoration-accent/40 underline-offset-4 transition hover:text-accent"
+                      >
+                        Read full review
+                      </button>
+                    ) : null}
+                  </div>
                   <div className="mt-6 border-t border-border pt-4">
                     <p className="font-black text-primary">{review.name}</p>
                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
@@ -194,6 +207,45 @@ export function ReviewsSection({
           </p>
         </div>
       </div>
+
+      {selectedReview ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="review-dialog-title"
+          onClick={() => setSelectedReview(null)}
+        >
+          <div
+            className="max-h-[calc(100vh-3rem)] w-full max-w-xl overflow-y-auto rounded-[1.1rem] border border-border bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Stars rating={selectedReview.rating} />
+                <h3
+                  id="review-dialog-title"
+                  className="mt-4 text-2xl font-black tracking-tight text-primary"
+                >
+                  {selectedReview.name}
+                </h3>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                  {selectedReview.service}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close review"
+                onClick={() => setSelectedReview(null)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-primary transition hover:border-primary/25 hover:bg-primary/5"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            <p className="mt-6 text-base leading-8 text-muted">{selectedReview.text}</p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
