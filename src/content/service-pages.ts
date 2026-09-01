@@ -17,6 +17,7 @@ export type ServicePageContent = {
   metaDescription: string;
   keywords: string[];
   image: string;
+  heroBackgroundImage?: string;
   localServiceTitle: string;
   localServiceDescription: string;
   commonIssues: ServiceIssue[];
@@ -118,6 +119,7 @@ export const refrigeratorServicePage: ServicePageContent = {
     "DAPL refrigerator repair",
   ],
   image: "/appliances/refrigerator.png",
+  heroBackgroundImage: "/images/refrigerator-hero-bg.png",
   localServiceTitle: "Fast refrigerator repair help",
   localServiceDescription:
     "From cooling issues to leaks and ice maker trouble, we help Charlotte homeowners get their refrigerators back to normal quickly.",
