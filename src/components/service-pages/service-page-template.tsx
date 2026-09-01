@@ -11,59 +11,11 @@ import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import { brandPagesDirectory, getBrandPageByName } from "@/content/brand-pages";
-import { googleReviewCount, googleReviewRating, googleReviewsUrl } from "@/content/google-profile";
 import { servicePagesDirectory, type ServicePageContent } from "@/content/service-pages";
-import { CheckCircle2, Phone, Star } from "lucide-react";
 
 const brandLogoMap = Object.fromEntries(
   brandPagesDirectory.map((brand) => [brand.name, brand.logo]),
 );
-
-function GoogleWordmark() {
-  return (
-    <span className="font-black leading-none" aria-label="Google">
-      <span className="text-[#4285f4]">G</span>
-      <span className="text-[#ea4335]">o</span>
-      <span className="text-[#fbbc05]">o</span>
-      <span className="text-[#4285f4]">g</span>
-      <span className="text-[#34a853]">l</span>
-      <span className="text-[#ea4335]">e</span>
-    </span>
-  );
-}
-
-function GoogleReviewsBadge({ location }: { location: string }) {
-  return (
-    <TrackedAnchor
-      href={googleReviewsUrl}
-      target="_blank"
-      rel="noreferrer"
-      gtmEvent={{
-        event: "reviews_click",
-        location,
-      }}
-      className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full bg-transparent px-1 py-1 text-primary drop-shadow-[0_1px_1px_rgba(255,255,255,0.72)] transition hover:-translate-y-0.5 sm:mb-6 sm:gap-3"
-      aria-label={`Read ${googleReviewCount} Google reviews`}
-    >
-      <span className="min-w-0 text-sm sm:text-base">
-        <GoogleWordmark />
-        <span className="mt-0.5 flex items-center gap-1 text-accent sm:mt-1">
-          <span className="text-xs font-black leading-none text-[#fbbc05] sm:text-sm">
-            {googleReviewRating}
-          </span>
-          <span className="flex items-center gap-0.5" aria-hidden="true">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" />
-            ))}
-          </span>
-        </span>
-        <span className="mt-0.5 block text-[0.65rem] font-black uppercase leading-tight tracking-[0.08em] text-primary sm:text-xs">
-          {googleReviewCount} reviews
-        </span>
-      </span>
-    </TrackedAnchor>
-  );
-}
 
 const relatedServicePriorityMap: Record<string, string[]> = {
   "refrigerator-repair-charlotte-nc": [
@@ -170,7 +122,6 @@ export function ServicePageTemplate({
       : `We work on many common household ${applianceLower} brands found across Charlotte homes.`;
   const featuredBrands = page.brands.slice(0, 12);
   const additionalBrandCount = Math.max(page.brands.length - featuredBrands.length, 0);
-  const hasHeroBackground = Boolean(page.heroBackgroundImage);
   const preferredRelatedSlugs = relatedServicePriorityMap[page.slug] ?? [];
   const relatedServices = servicePagesDirectory
     .filter((item) => item.slug !== page.slug)
@@ -264,30 +215,9 @@ export function ServicePageTemplate({
         />
 
         <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
-          {page.heroBackgroundImage ? (
-            <Image
-              src={page.heroBackgroundImage}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-[70%_center]"
-            />
-          ) : null}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
-          {page.heroBackgroundImage ? (
-            <>
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(248,250,252,0.86)_0%,rgba(248,250,252,0.74)_50%,rgba(248,250,252,0.58)_100%)] sm:bg-[linear-gradient(90deg,#f8fafc_0%,rgba(248,250,252,0.90)_42%,rgba(248,250,252,0.48)_65%,rgba(248,250,252,0.08)_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/80 to-transparent" />
-            </>
-          ) : null}
-          <div
-            className={`container-shell relative grid items-center gap-10 ${
-              hasHeroBackground ? "lg:grid-cols-1" : "lg:grid-cols-[1.05fr_0.95fr]"
-            }`}
-          >
-            <FadeUp className={hasHeroBackground ? "max-w-3xl" : undefined}>
-              {hasHeroBackground ? <GoogleReviewsBadge location={page.slug} /> : null}
+          <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <FadeUp>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">
                 {serviceLabel}
               </p>
@@ -313,7 +243,7 @@ export function ServicePageTemplate({
                 </div>
               </div>
 
-              <div className="mt-9 flex max-w-2xl flex-wrap gap-3">
+              <div className="mt-9 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
                 <TrackedAnchor
                   href="#contact"
                   gtmEvent={{
@@ -322,14 +252,14 @@ export function ServicePageTemplate({
                     appliance: page.applianceName,
                   }}
                   aria-label={`Schedule ${serviceLabel}`}
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-bold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                 >
-                  Schedule Your Repair
+                  Schedule repair
                 </TrackedAnchor>
                 <BookOnlineButton
                   location={page.slug}
                   gtmEvent={{ appliance: page.applianceName }}
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-[#177dcc] px-6 py-3 text-center text-sm font-bold leading-tight text-white shadow-lg shadow-[#177dcc]/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-primary/20 bg-white px-5 py-3 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <TrackedAnchor
                   href="tel:+17042660508"
@@ -339,26 +269,11 @@ export function ServicePageTemplate({
                     link_type: "primary_cta",
                     appliance: page.applianceName,
                   }}
-                  className="inline-flex min-h-[54px] items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90"
+                  className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
-                  <Phone className="h-4 w-4" aria-hidden="true" />
                   Call +1 (704) 266-0508
                 </TrackedAnchor>
               </div>
-
-              {hasHeroBackground ? (
-                <div className="mt-7 hidden max-w-2xl flex-wrap gap-2.5 sm:flex">
-                  {["Same-day options", "Clear diagnosis", "Local Charlotte team"].map((item) => (
-                    <span
-                      key={item}
-                      className="inline-flex items-center gap-2 rounded-full border border-border bg-white/90 px-3 py-2 text-xs font-bold text-primary shadow-sm backdrop-blur"
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-accent" aria-hidden="true" />
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
 
               <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">
                 <a
@@ -371,11 +286,10 @@ export function ServicePageTemplate({
               </div>
             </FadeUp>
 
-            {!hasHeroBackground ? (
-              <FadeUp delay={0.08}>
-                <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
-                  <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
-                    <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <FadeUp delay={0.08}>
+              <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
+                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                       <div className="max-w-none sm:max-w-sm sm:pr-0">
                         <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
                           Local Service
@@ -401,22 +315,21 @@ export function ServicePageTemplate({
                         height={148}
                         className="hidden h-auto max-w-[148px] object-contain drop-shadow-[0_14px_24px_rgba(15,42,86,0.14)] sm:block sm:w-full"
                       />
-                    </div>
+                  </div>
 
-                    <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
-                      {page.serviceHighlights.map((item) => (
-                        <div
-                          key={item}
-                          className="rounded-2xl border border-border bg-white px-5 py-4 text-[0.95rem] leading-6 font-medium text-foreground shadow-sm sm:px-4 sm:text-sm sm:leading-normal"
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
+                    {page.serviceHighlights.map((item) => (
+                      <div
+                        key={item}
+                        className="rounded-2xl border border-border bg-white px-5 py-4 text-[0.95rem] leading-6 font-medium text-foreground shadow-sm sm:px-4 sm:text-sm sm:leading-normal"
+                      >
+                        {item}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </FadeUp>
-            ) : null}
+              </div>
+            </FadeUp>
           </div>
         </section>
 
