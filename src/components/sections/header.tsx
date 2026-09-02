@@ -12,6 +12,7 @@ const navItems = [
   { href: "/#offer", label: "Offer" },
   { href: "/#appliances", label: "Appliances", dropdown: "appliances" },
   { href: "/#brands", label: "Brands", dropdown: "brands" },
+  { href: "/blog", label: "Blog" },
   { href: "/#why-us", label: "Why Choose Us" },
   { href: "/#faq", label: "FAQ" },
   { href: "/booking", label: "Booking" },
@@ -103,8 +104,8 @@ export function Header({ logoHref }: HeaderProps = {}) {
           : "border-transparent bg-surface/85"
       }`}
     >
-      <div className="container-shell">
-        <div className="flex h-20 items-center justify-between">
+      <div className="container-shell max-w-[1440px]">
+        <div className="flex h-20 items-center justify-between gap-6">
           {logoHref ? (
             <Link href={logoHref} onClick={closeMenu} className="flex items-center gap-3 text-left" aria-label="Go to homepage">
               <Image
@@ -148,7 +149,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             </button>
           )}
 
-          <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
+          <nav className="hidden items-center gap-4 xl:flex 2xl:gap-6">
             {navItems.map((item) =>
               item.dropdown ? (
                 <div key={item.href} className="group relative">
@@ -210,7 +211,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
               setIsAppliancesOpen(false);
               setIsBrandsOpen(false);
             }}
-            className="grid h-10 w-10 place-items-center rounded-lg border border-border text-foreground lg:hidden"
+            className="grid h-10 w-10 place-items-center rounded-lg border border-border text-foreground xl:hidden"
           >
             {isMenuOpen ? (
               <X className="h-5 w-5" aria-hidden />
@@ -232,7 +233,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-0 right-0 top-full z-[60] h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface shadow-[0_24px_60px_rgba(15,42,86,0.12)] lg:hidden"
+            className="absolute left-0 right-0 top-full z-[60] h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface shadow-[0_24px_60px_rgba(15,42,86,0.12)] xl:hidden"
           >
             <nav className="container-shell flex min-h-full flex-col gap-1 py-5">
               {navItems.map((item) =>

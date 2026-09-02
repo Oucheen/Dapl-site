@@ -59,6 +59,9 @@ export function Footer() {
               Professional appliance repair for homes and businesses across Mint Hill, Charlotte,
               and nearby service areas.
             </p>
+            <Link href="/blog" className="mt-4 inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline">
+              Appliance care &amp; repair blog
+            </Link>
           </div>
 
           <div className="space-y-6">
