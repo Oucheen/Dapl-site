@@ -126,6 +126,29 @@ create table if not exists public.lead_activity (
   metadata jsonb not null default '{}'::jsonb
 );
 
+create table if not exists public.calls (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  twilio_call_sid text not null unique,
+  parent_call_sid text,
+  lead_id uuid references public.leads(id) on delete set null,
+  customer_name text,
+  customer_phone text,
+  direction text not null default 'incoming' check (direction in ('incoming', 'outgoing')),
+  status text not null default 'initiated' check (status in ('initiated', 'ringing', 'answered', 'completed', 'missed', 'failed', 'busy')),
+  employee_id text,
+  employee_name text,
+  started_at timestamptz,
+  answered_at timestamptz,
+  ended_at timestamptz,
+  duration_seconds integer,
+  recording_sid text,
+  recording_url text,
+  recording_status text,
+  recording_duration_seconds integer
+);
+
 create table if not exists public.review_summary (
   id text primary key,
   updated_at timestamptz not null default now(),
@@ -207,6 +230,10 @@ create index if not exists lead_activity_lead_id_created_at_idx
   on public.lead_activity (lead_id, created_at desc);
 create index if not exists lead_activity_invoice_id_created_at_idx
   on public.lead_activity (invoice_id, created_at desc);
+create index if not exists calls_created_at_idx on public.calls (created_at desc);
+create index if not exists calls_lead_id_idx on public.calls (lead_id);
+create index if not exists calls_status_idx on public.calls (status);
+create index if not exists calls_recording_sid_idx on public.calls (recording_sid);
 create index if not exists telegram_users_active_idx on public.telegram_users (is_active);
 create index if not exists telegram_users_role_idx on public.telegram_users (role);
 create unique index if not exists telegram_bot_sessions_user_id_idx
@@ -230,6 +257,11 @@ create trigger set_leads_updated_at
 before update on public.leads
 for each row
 execute function public.set_updated_at();
+
+drop trigger if exists set_calls_updated_at on public.calls;
+create trigger set_calls_updated_at
+before update on public.calls
+for each row execute function public.set_updated_at();
 
 drop trigger if exists set_invoices_updated_at on public.invoices;
 
@@ -302,6 +334,7 @@ grant select, insert, delete on public.invoice_signatures to service_role;
 grant select, insert, update, delete on public.invoice_checks to service_role;
 grant select, insert, update, delete on public.warehouse_parts to service_role;
 grant select, insert on public.lead_activity to service_role;
+grant select, insert, update on public.calls to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
 grant select, insert, update, delete on public.telegram_users to service_role;
 grant select, insert, update, delete on public.telegram_bot_sessions to service_role;

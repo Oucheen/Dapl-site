@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/leads/actions";
 import { AppBottomNav } from "@/components/app-field/app-shell";
+import { CallButton } from "@/components/twilio/call-widget";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getSupabaseLeadById } from "@/lib/supabase-leads";
 
@@ -123,12 +124,7 @@ export default async function AppLeadDetailPage({
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {lead.phone ? (
-              <a
-                href={`tel:${lead.phone}`}
-                className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-3 text-sm font-black text-white"
-              >
-                Call
-              </a>
+              <CallButton phone={lead.phone} name={lead.name} leadId={lead.id} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-black text-white" />
             ) : null}
             {mapsHref ? (
               <Link

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
+import { CallButton } from "@/components/twilio/call-widget";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
@@ -598,10 +599,11 @@ export default async function LeadsAdminPage({
                         </p>
                         <a
                           href={`tel:${lead.phone}`}
-                          className="mt-1 block font-semibold hover:text-primary"
+                          className="mt-1 inline-block font-semibold hover:text-primary"
                         >
                           {lead.phone}
                         </a>
+                        <span className="ml-2"><CallButton phone={lead.phone} name={lead.name} leadId={lead.id} /></span>
                         {customerEmail ? (
                           <a
                             href={`mailto:${customerEmail}`}

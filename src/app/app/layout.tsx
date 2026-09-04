@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
 import { CallWidget } from "@/components/twilio/call-widget";
 import { TwilioVoiceProvider } from "@/components/twilio/twilio-voice-provider";
 
-export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function FieldAppLayout({ children }: { children: React.ReactNode }) {
   return <TwilioVoiceProvider><>{children}<CallWidget /></></TwilioVoiceProvider>;
 }

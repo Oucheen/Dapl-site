@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
+import { CallButton } from "@/components/twilio/call-widget";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
@@ -11,6 +12,7 @@ import {
   type LeadActivityRecord,
 } from "@/lib/supabase-activity";
 import { getInvoiceById, getInvoiceIdForLead } from "@/lib/supabase-invoices";
+import { listCalls, type CallRecord } from "@/lib/supabase-calls";
 import {
   type LeadAdminStatus,
   type LeadRecord,
@@ -230,10 +232,11 @@ export default async function LeadDetailPage({
 
   const query = await searchParams;
   const notice = Array.isArray(query?.notice) ? query?.notice[0] : query?.notice;
-  const [lead, invoiceId, activity] = await Promise.all([
+  const [lead, invoiceId, activity, calls] = await Promise.all([
     getSupabaseLeadById(leadId),
     getInvoiceIdForLead(leadId),
     listActivitiesForLead(leadId, 60),
+    listCalls({ leadId }),
   ]);
 
   if (!lead) {
@@ -362,10 +365,11 @@ export default async function LeadDetailPage({
                   <p className="text-sm font-bold text-foreground">Contact</p>
                   <a
                     href={`tel:${lead.phone}`}
-                    className="mt-1 block font-semibold hover:text-primary"
+                    className="mt-1 inline-block font-semibold hover:text-primary"
                   >
                     {lead.phone}
                   </a>
+                  <span className="ml-2"><CallButton phone={lead.phone} name={lead.name} leadId={lead.id} /></span>
                   {customerEmail ? (
                     <a
                       href={`mailto:${customerEmail}`}
@@ -385,6 +389,14 @@ export default async function LeadDetailPage({
             </section>
 
             <CustomerHistoryCard items={customerHistory} />
+
+            <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">Call history</p><h2 className="mt-1 text-xl font-black text-primary">Phone conversations</h2></div>
+                <Link href="/admin/calls" className="text-xs font-black text-primary hover:underline">All calls</Link>
+              </div>
+              {calls.length ? <div className="mt-4 grid gap-3">{calls.map((call: CallRecord) => <div key={call.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-3 text-sm"><div><p className="font-black text-primary">{call.direction} · {call.status}</p><p className="mt-1 text-xs font-bold text-muted">{formatDateTime(call.created_at)} ET · {call.employee_name || "Unknown employee"}</p></div>{call.recording_sid ? <audio controls preload="none" className="h-8 max-w-full" src={`/api/twilio/recordings/${call.recording_sid}`} /> : <span className="text-xs font-bold text-muted">No recording</span>}</div>)}</div> : <p className="mt-4 text-sm font-bold text-muted">No calls recorded for this customer yet.</p>}
+            </section>
 
             <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">

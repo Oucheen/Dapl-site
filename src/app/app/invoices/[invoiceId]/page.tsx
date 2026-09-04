@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/leads/actions";
 import { AppBottomNav } from "@/components/app-field/app-shell";
+import { CallButton } from "@/components/twilio/call-widget";
 import { AppSubmitButton } from "@/components/app-field/submit-button";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { CHARLOTTE_TIME_ZONE, getDateForCharlotteDisplay } from "@/lib/date-format";
@@ -380,12 +381,7 @@ export default async function AppInvoiceDetailPage({
 
           <div className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-4">
             {invoice.customer_phone ? (
-              <a
-                href={`tel:${invoice.customer_phone}`}
-                className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-3 text-sm font-black text-white"
-              >
-                Call
-              </a>
+              <CallButton phone={invoice.customer_phone} name={invoice.customer_name} leadId={invoice.lead_id || undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-black text-white" />
             ) : null}
             {mapsHref ? (
               <Link

@@ -38,6 +38,13 @@ const adminLinks = [
     group: "Operations",
   },
   {
+    href: "/admin/calls",
+    title: "Calls",
+    description: "Browser phone, incoming calls, missed calls, and recordings.",
+    cta: "Open calls",
+    group: "Operations",
+  },
+  {
     href: "/admin/schedule",
     title: "Dispatch schedule",
     description: "Day and week schedule, technician filters, maps, routes, and conflicts.",
@@ -98,6 +105,7 @@ const adminLinks = [
 const adminLinkGroups = ["Operations", "Money", "Settings"];
 const TECHNICIAN_ADMIN_LINKS = new Set([
   "/admin/search",
+  "/admin/calls",
   "/admin/schedule",
   "/admin/technician",
   "/admin/invoices",
