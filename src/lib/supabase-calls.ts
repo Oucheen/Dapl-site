@@ -124,6 +124,30 @@ export async function listCalls(filters: { from?: string; to?: string; direction
   return (await response.json()) as CallRecord[];
 }
 
+export async function deleteCallById(id: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("Invalid call id.");
+  }
+
+  const config = getConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const response = await fetch(`${tableUrl(config)}?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase call delete failed: ${response.status} ${await response.text()}`);
+  }
+}
+
 export async function findLeadByPhone(phone: string): Promise<LeadRecord | null> {
   const digits = phone.replace(/\D/g, "");
   if (!digits) return null;
