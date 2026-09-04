@@ -17,7 +17,13 @@ export async function deleteCall(formData: FormData) {
   }
 
   const id = String(formData.get("id") || "");
-  await deleteCallById(id);
+  try {
+    await deleteCallById(id);
+  } catch (error) {
+    console.error("Call history delete error:", error);
+    redirect("/admin/calls?notice=delete_failed");
+  }
+
   revalidatePath("/admin/calls");
   redirect("/admin/calls?notice=call_deleted");
 }

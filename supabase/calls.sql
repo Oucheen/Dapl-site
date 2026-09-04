@@ -32,4 +32,4 @@ before update on public.calls
 for each row execute function public.set_updated_at();
 
 alter table public.calls enable row level security;
-grant select, insert, update on public.calls to service_role;
+grant select, insert, update, delete on public.calls to service_role;

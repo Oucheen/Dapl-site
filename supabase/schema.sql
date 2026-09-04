@@ -334,7 +334,7 @@ grant select, insert, delete on public.invoice_signatures to service_role;
 grant select, insert, update, delete on public.invoice_checks to service_role;
 grant select, insert, update, delete on public.warehouse_parts to service_role;
 grant select, insert on public.lead_activity to service_role;
-grant select, insert, update on public.calls to service_role;
+grant select, insert, update, delete on public.calls to service_role;
 grant select, insert, update, delete on public.review_summary to service_role;
 grant select, insert, update, delete on public.telegram_users to service_role;
 grant select, insert, update, delete on public.telegram_bot_sessions to service_role;

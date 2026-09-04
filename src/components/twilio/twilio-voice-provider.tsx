@@ -108,7 +108,7 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
 
     tokenIdentityRef.current = data.identity || "";
     userNameRef.current = data.userName || "";
-    const device = new Device(data.token, { closeProtection: true, appName: "DAPL CRM", appVersion: "1.0" });
+    const device = new Device(data.token, { closeProtection: true, enableImprovedSignalingErrorPrecision: true, appName: "DAPL CRM", appVersion: "1.0" });
     device.on("registering", () => setDeviceState("registering"));
     device.on("registered", () => setDeviceState("registered"));
     device.on("unregistered", () => setDeviceState("unregistered"));
