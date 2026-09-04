@@ -127,6 +127,7 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
       const initial = bindCall(call, { name: "Unknown caller", phone, direction: "incoming" });
       incomingRef.current = initial;
       setIncomingCall(initial);
+      void showIncomingNotification(initial);
       void fetch(`/api/twilio/customer?phone=${encodeURIComponent(phone)}`, { cache: "no-store" })
         .then((response) => response.ok ? response.json() as Promise<{ name?: string; leadId?: string | null }> : null)
         .then((customer) => {
@@ -136,7 +137,7 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
           setIncomingCall((existing) => existing?.call === call ? updated : existing);
           void showIncomingNotification(updated);
         })
-        .catch(() => void showIncomingNotification(initial));
+        .catch(() => undefined);
     });
     device.audio?.on("deviceChange", () => refreshAudioDevices(device));
     deviceRef.current = device;
