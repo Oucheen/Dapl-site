@@ -114,7 +114,7 @@ export function Hero() {
               className="inline-flex items-center justify-center rounded-full bg-[#177dcc] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#177dcc]/20 transition hover:brightness-95"
             />
             <TrackedAnchor
-              href="tel:+17042660508"
+              href="tel:+19803936588"
               gtmEvent={{
                 event: "phone_click",
                 location: "homepage_hero",
@@ -123,7 +123,7 @@ export function Hero() {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
-              Call +1 (704) 266-0508
+              Call +1 (980) 393-6588
             </TrackedAnchor>
           </div>
 

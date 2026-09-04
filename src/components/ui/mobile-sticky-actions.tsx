@@ -48,7 +48,7 @@ export function MobileStickyActions() {
         }`}
       >
         <TrackedAnchor
-          href="tel:+17042660508"
+          href="tel:+19803936588"
           gtmEvent={{
             event: "phone_click",
             location: "mobile_sticky_bar",

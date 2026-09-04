@@ -200,7 +200,7 @@ function buildInvoiceEmailHtml(invoiceData: InvoiceWithItems, replyToEmail: stri
             </table>
 
             <div style="margin-top: 22px; padding: 18px; border-radius: 14px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.7;">
-              <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (704) 266-0508 or reply to this email.</p>
+              <p style="margin: 0;"><strong style="color: #0b1d3a;">Questions?</strong> Call +1 (980) 393-6588 or reply to this email.</p>
               <p style="margin: 8px 0 0;">Replies go to ${escapeHtml(replyToEmail)}.</p>
               <p style="margin: 8px 0 0;">DAPL Appliance Repair is operated by DAPL Honcharos Appliance Service Corp.</p>
             </div>

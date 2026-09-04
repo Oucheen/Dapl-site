@@ -191,7 +191,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
               ),
             )}
             <a
-              href="tel:+17042660508"
+              href="tel:+19803936588"
               className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
             >
               Schedule Your Repair
@@ -304,7 +304,7 @@ export function Header({ logoHref }: HeaderProps = {}) {
               )}
               <div className="mt-auto grid gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-6">
                 <a
-                  href="tel:+17042660508"
+                  href="tel:+19803936588"
                   onClick={closeMenu}
                   className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-5 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/20"
                 >

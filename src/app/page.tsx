@@ -28,7 +28,7 @@ function getLocalBusinessSchema(reviewSummary: ReviewSummary) {
   name: "DAPL Appliance Repair",
   description:
     "Expert appliance repair services in Charlotte, NC and surrounding areas.",
-  telephone: "+1-704-266-0508",
+  telephone: "+1-980-393-6588",
   email: "dapl.appliance.repair@gmail.com",
   address: {
     "@type": "PostalAddress",

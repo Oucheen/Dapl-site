@@ -152,7 +152,7 @@ export function ServicePageTemplate({
     provider: {
       "@type": "LocalBusiness",
       name: "DAPL Appliance Repair",
-      telephone: "+1-704-266-0508",
+      telephone: "+1-980-393-6588",
       url: "https://www.daplappliance.com",
       areaServed: "Charlotte, NC and surrounding areas",
     },
@@ -262,7 +262,7 @@ export function ServicePageTemplate({
                   className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-primary/20 bg-white px-5 py-3 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <TrackedAnchor
-                  href="tel:+17042660508"
+                  href="tel:+19803936588"
                   gtmEvent={{
                     event: "phone_click",
                     location: page.slug,
@@ -271,7 +271,7 @@ export function ServicePageTemplate({
                   }}
                   className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
-                  Call +1 (704) 266-0508
+                  Call +1 (980) 393-6588
                 </TrackedAnchor>
               </div>
 

@@ -154,7 +154,7 @@ export function ContactWidget() {
         <div className="w-[11rem] rounded-[1.15rem] border border-border/80 bg-white/95 p-2 shadow-[0_18px_42px_rgba(15,42,86,0.14)] backdrop-blur-sm">
           <div className="flex flex-col gap-1.5">
             <a
-              href="tel:+17042660508"
+              href="tel:+19803936588"
               onClick={() => {
                 closeWidget();
                 sendGTMEvent({

@@ -73,10 +73,10 @@ export default function ReturningCustomerOfferPage() {
                   className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <a
-                  href="tel:+17042660508"
+                  href="tel:+19803936588"
                   className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
-                  Call +1 (704) 266-0508
+                  Call +1 (980) 393-6588
                 </a>
               </div>
             </FadeUp>

@@ -71,8 +71,8 @@ export function Footer() {
                   Contact
                 </p>
                 <p className="mt-3">
-                  <a href="tel:+17042660508" className="font-semibold text-primary hover:underline">
-                    +1 (704) 266-0508
+                  <a href="tel:+19803936588" className="font-semibold text-primary hover:underline">
+                    +1 (980) 393-6588
                   </a>
                 </p>
                 <p className="mt-1">

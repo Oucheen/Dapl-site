@@ -34,7 +34,7 @@ const bookingPageSchema = {
   mainEntity: {
     "@type": "LocalBusiness",
     name: "DAPL Appliance Repair",
-    telephone: "+1-704-266-0508",
+    telephone: "+1-980-393-6588",
     email: "dapl.appliance.repair@gmail.com",
     url: "https://www.daplappliance.com",
     address: {
@@ -97,10 +97,10 @@ export default function BookingPage() {
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <HousecallProActions />
                   <a
-                    href="tel:+17042660508"
+                    href="tel:+19803936588"
                     className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95 sm:w-auto"
                   >
-                    Call +1 (704) 266-0508
+                    Call +1 (980) 393-6588
                   </a>
                 </div>
               </FadeUp>
@@ -113,10 +113,10 @@ export default function BookingPage() {
                         Phone
                       </p>
                       <a
-                        href="tel:+17042660508"
+                        href="tel:+19803936588"
                         className="mt-2 block text-lg font-bold text-primary hover:underline"
                       >
-                        +1 (704) 266-0508
+                        +1 (980) 393-6588
                       </a>
                     </div>
                     <div>

@@ -163,7 +163,7 @@ export function OfferSection() {
                   )}
                 </div>
                 <a
-                  href="tel:+17042660508"
+                  href="tel:+19803936588"
                   className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95"
                 >
                   Call to redeem

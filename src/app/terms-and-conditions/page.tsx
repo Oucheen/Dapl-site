@@ -62,7 +62,7 @@ const sections = [
   {
     title: "SMS help and opt-out",
     body: [
-      "For help, reply HELP or contact DAPL Appliance Repair at dapl.appliance.repair@gmail.com or +1 (704) 266-0508.",
+      "For help, reply HELP or contact DAPL Appliance Repair at dapl.appliance.repair@gmail.com or +1 (980) 393-6588.",
       "To stop receiving SMS messages from DAPL Appliance Repair, reply STOP. After you send STOP, we may send one confirmation message and then no further SMS messages will be sent unless you opt in again or otherwise request service-related communication.",
     ],
   },
@@ -82,7 +82,7 @@ const sections = [
   {
     title: "Contact",
     body: [
-      "Questions about these terms can be sent to dapl.appliance.repair@gmail.com or +1 (704) 266-0508.",
+      "Questions about these terms can be sent to dapl.appliance.repair@gmail.com or +1 (980) 393-6588.",
     ],
   },
 ];

@@ -60,10 +60,10 @@ export function SavingsSection() {
                       Book with savings
                     </BookOnlineButton>
                     <a
-                      href="tel:+17042660508"
+                      href="tel:+19803936588"
                       className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-bold text-white transition hover:bg-[#12366f] sm:px-6"
                     >
-                      Call +1 (704) 266-0508
+                      Call +1 (980) 393-6588
                     </a>
                   </div>
                 </div>

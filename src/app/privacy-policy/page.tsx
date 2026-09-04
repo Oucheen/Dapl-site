@@ -97,7 +97,7 @@ const sections = [
   {
     title: "Contact us",
     body: [
-      "If you have privacy questions about this website or your submitted information, contact DAPL Appliance Repair at dapl.appliance.repair@gmail.com or call +1 (704) 266-0508.",
+      "If you have privacy questions about this website or your submitted information, contact DAPL Appliance Repair at dapl.appliance.repair@gmail.com or call +1 (980) 393-6588.",
     ],
   },
 ];

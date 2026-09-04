@@ -198,7 +198,7 @@ export default async function AppHomePage() {
             Invoice
           </Link>
           <a
-            href={nextInvoice?.customer_phone ? `tel:${nextInvoice.customer_phone}` : "tel:+17042660508"}
+            href={nextInvoice?.customer_phone ? `tel:${nextInvoice.customer_phone}` : "tel:+19803936588"}
             className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/20 bg-white/10 px-3 text-white"
           >
             Call

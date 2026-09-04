@@ -750,10 +750,10 @@ export function ChatLeadWidget() {
                 <p className="font-semibold">Thanks. Your request was sent.</p>
                 <p>We will contact you soon. For urgent service, call now.</p>
                 <a
-                  href="tel:+17042660508"
+                  href="tel:+19803936588"
                   className="inline-flex w-full items-center justify-center rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white"
                 >
-                  Call +1 (704) 266-0508
+                  Call +1 (980) 393-6588
                 </a>
               </div>
             ) : null}

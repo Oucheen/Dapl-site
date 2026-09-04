@@ -349,7 +349,7 @@ export function ContactSection({
                 {status === "submitting" ? "Sending..." : "Send message"}
               </button>
               <a
-                href="tel:+17042660508"
+                href="tel:+19803936588"
                 onClick={() =>
                   sendGTMEvent({
                     event: "phone_click",
@@ -359,7 +359,7 @@ export function ContactSection({
                 }
                 className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-white px-6 py-3 text-center text-sm font-semibold text-primary transition hover:bg-primary/5"
               >
-                Call +1 (704) 266-0508
+                Call +1 (980) 393-6588
               </a>
               <BookOnlineButton
                 location={source}
