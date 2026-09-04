@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getConfiguredAdminUsers } from "@/lib/admin-auth";
 import { findLeadByPhone, upsertCall } from "@/lib/supabase-calls";
 import { listCrmUsers } from "@/lib/supabase-admin-users";
 import { getPublicRequestUrl, getTwilioConfig, identityForUser, twimlResponse, validateTwilioWebhook } from "@/lib/twilio";
@@ -22,7 +23,17 @@ export async function POST(request: Request) {
     getTwilioConfig();
     const lead = await findLeadByPhone(params.From || "").catch(() => null);
     const usersData = await listCrmUsers(100).catch(() => ({ users: [], ready: false }));
-    const users = usersData.users.filter((user) => user.is_active);
+    const usersByIdentity = new Map<string, { id: string; name: string; role: string }>();
+
+    for (const user of usersData.users.filter((item) => item.is_active)) {
+      usersByIdentity.set(identityForUser(user.id), { id: user.id, name: user.name, role: user.role });
+    }
+
+    for (const user of getConfiguredAdminUsers()) {
+      usersByIdentity.set(identityForUser(user.id), user);
+    }
+
+    const users = [...usersByIdentity.values()].slice(0, 10);
     const response = new twilio.twiml.VoiceResponse();
 
     await upsertCall({
@@ -33,6 +44,8 @@ export async function POST(request: Request) {
       status: users.length ? "ringing" : "missed",
       lead_id: lead?.id || null,
       started_at: new Date().toISOString(),
+    }).catch((error) => {
+      console.error("Twilio incoming call logging error:", error);
     });
 
     if (!users.length) {

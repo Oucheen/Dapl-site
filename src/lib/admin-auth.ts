@@ -90,6 +90,10 @@ function getAdminUsers() {
   return [legacyUser];
 }
 
+export function getConfiguredAdminUsers(): Array<Pick<AdminSessionUser, "id" | "name" | "role">> {
+  return getAdminUsers().map(({ id, name, role }) => ({ id, name, role }));
+}
+
 function signSessionPayload(payload: string) {
   const secret = getSessionSecret();
 

@@ -42,6 +42,8 @@ export async function POST(request: Request) {
       employee_id: params.employeeId || null,
       employee_name: params.employeeName || null,
       started_at: new Date().toISOString(),
+    }).catch((error) => {
+      console.error("Twilio outgoing call logging error:", error);
     });
 
     return twimlResponse(response);
