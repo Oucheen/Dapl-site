@@ -40,7 +40,11 @@ export function CallWidget() {
 
       <div className="fixed bottom-3 left-3 z-[60] w-[min(22rem,calc(100vw-1.5rem))] rounded-xl border border-border bg-white p-3 shadow-xl sm:bottom-4 sm:left-auto sm:right-3">
         <div className="flex items-center justify-between gap-2"><p className="text-xs font-black uppercase tracking-[0.14em] text-primary">DAPL Phone</p><span className={`text-[0.65rem] font-black uppercase ${voice.deviceState === "registered" ? "text-emerald-600" : "text-muted"}`}>{voice.deviceState}</span></div>
-        {!voice.enabled ? <div className="mt-2 flex gap-2"><button type="button" onClick={() => void voice.enablePhone()} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-xs font-black text-white"><Bell className="h-4 w-4" /> Enable phone</button><input value={number} onChange={(event) => setNumber(event.target.value)} placeholder="+1 phone" className="min-w-0 w-28 rounded-lg border border-border px-2 text-xs" /><button type="button" disabled={!number.trim()} onClick={() => void voice.callCustomer({ phone: number })} className="rounded-lg border border-primary px-3 text-xs font-black text-primary disabled:opacity-40"><Phone className="h-4 w-4" /></button></div> : null}
+        <div className="mt-2 flex gap-2">
+          {!voice.enabled ? <button type="button" onClick={() => void voice.enablePhone()} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-xs font-black text-white"><Bell className="h-4 w-4" /> Enable phone</button> : null}
+          <input value={number} onChange={(event) => setNumber(event.target.value)} placeholder="+1 phone" className="min-w-0 flex-1 rounded-lg border border-border px-2 text-xs" />
+          <button type="button" disabled={!number.trim()} onClick={() => void voice.callCustomer({ phone: number })} className="rounded-lg border border-primary px-3 text-xs font-black text-primary disabled:opacity-40"><Phone className="h-4 w-4" /></button>
+        </div>
         {voice.error ? <div className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 p-2 text-xs font-bold text-red-800"><span className="min-w-0 flex-1">{voice.error}</span><button type="button" onClick={voice.clearError} aria-label="Dismiss error"><X className="h-4 w-4" /></button></div> : null}
       </div>
     </>
