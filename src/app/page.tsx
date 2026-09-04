@@ -63,7 +63,7 @@ function getLocalBusinessSchema(reviewSummary: ReviewSummary) {
         "Saturday",
         "Sunday",
       ],
-      opens: "08:00",
+      opens: "07:00",
       closes: "20:00",
     },
   ],

@@ -64,7 +64,7 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const showIncomingNotification = useCallback(async (info: CallInfo) => {
-    if (!document.hidden || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
     const title = "Incoming call";
     const body = `${info.name || "Unknown caller"} — ${info.phone || "Unknown number"}`;

@@ -124,7 +124,7 @@ export default function BookingPage() {
                         Hours
                       </p>
                       <p className="mt-2 text-sm font-semibold text-foreground">
-                        Mon-Sun, 8:00 AM - 8:00 PM
+                        Mon-Sun, 7:00 AM - 8:00 PM ET
                       </p>
                     </div>
                     <div className="sm:col-span-2">

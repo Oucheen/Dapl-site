@@ -123,7 +123,7 @@ export default function NotFound() {
                         </p>
                         <p>
                           <span className="font-semibold text-foreground">Hours:</span> Monday -
-                          Sunday, 8:00 AM - 8:00 PM
+                          Sunday, 7:00 AM - 8:00 PM ET
                         </p>
                       </div>
                     </div>
