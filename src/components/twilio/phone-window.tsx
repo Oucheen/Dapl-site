@@ -5,13 +5,13 @@ import { CallWidget } from "@/components/twilio/call-widget";
 import { useTwilioVoice } from "@/components/twilio/twilio-voice-provider";
 
 export function PhoneWindow() {
-  const voice = useTwilioVoice();
+  const { enabled, enablePhone } = useTwilioVoice();
 
   useEffect(() => {
-    if (!voice.enabled) {
-      void voice.enablePhone();
+    if (!enabled) {
+      void enablePhone();
     }
-  }, [voice.enabled, voice.enablePhone]);
+  }, [enabled, enablePhone]);
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-5 text-foreground">
