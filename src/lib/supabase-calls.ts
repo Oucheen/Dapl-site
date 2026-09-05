@@ -24,6 +24,7 @@ export type CallRecord = {
   recording_url: string | null;
   recording_status: string | null;
   recording_duration_seconds: number | null;
+  intake_data?: Record<string, unknown> | null;
 };
 
 export type CallInput = Partial<Omit<CallRecord, "id" | "created_at" | "updated_at">> & {

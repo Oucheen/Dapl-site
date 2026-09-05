@@ -19,7 +19,8 @@ create table if not exists public.leads (
   admin_notes text,
   scheduled_date date,
   estimated_price numeric(10,2),
-  assigned_technician text
+  assigned_technician text,
+  call_intake jsonb not null default '{}'::jsonb
 );
 
 create table if not exists public.invoices (
@@ -146,7 +147,8 @@ create table if not exists public.calls (
   recording_sid text,
   recording_url text,
   recording_status text,
-  recording_duration_seconds integer
+  recording_duration_seconds integer,
+  intake_data jsonb not null default '{}'::jsonb
 );
 
 create table if not exists public.review_summary (
@@ -200,7 +202,11 @@ alter table public.leads
   add column if not exists admin_notes text,
   add column if not exists scheduled_date date,
   add column if not exists estimated_price numeric(10,2),
-  add column if not exists assigned_technician text;
+  add column if not exists assigned_technician text,
+  add column if not exists call_intake jsonb not null default '{}'::jsonb;
+
+alter table public.calls
+  add column if not exists intake_data jsonb not null default '{}'::jsonb;
 
 alter table public.invoices
   add column if not exists promo_code text,

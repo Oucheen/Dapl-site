@@ -4,7 +4,21 @@ import { Call, Device } from "@twilio/voice-sdk";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 type DeviceOption = { id: string; label: string };
-type CallInfo = {
+export type CustomerInfo = {
+  leadId?: string | null;
+  name: string;
+  phone: string;
+  email?: string | null;
+  address?: string | null;
+  appliance?: string | null;
+  leadSource?: string | null;
+  preferredDate?: string | null;
+  message?: string | null;
+  status?: string | null;
+  adminNotes?: string | null;
+};
+
+export type CallInfo = {
   call: Call;
   name: string;
   phone: string;
@@ -13,6 +27,7 @@ type CallInfo = {
   startedAt: number;
   muted: boolean;
   leadId?: string;
+  customer?: CustomerInfo;
 };
 
 type VoiceContextValue = {
@@ -70,9 +85,14 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
     const body = `${info.name || "Unknown caller"} — ${info.phone || "Unknown number"}`;
     try {
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, { body, icon: "/icon.png", tag: `incoming-call-${info.phone}`, data: { url: window.location.href } });
+      await registration.showNotification(title, { body, icon: "/icon.png", tag: `incoming-call-${info.phone}`, data: { url: `${window.location.origin}/phone` } });
     } catch {
-      new Notification(title, { body, icon: "/icon.png" });
+      const notification = new Notification(title, { body, icon: "/icon.png" });
+      notification.onclick = () => {
+        const phoneWindow = window.open("/phone", "dapl-phone", "popup=yes,width=430,height=760,resizable=yes,scrollbars=yes");
+        phoneWindow?.focus();
+        notification.close();
+      };
     }
   }, []);
 
@@ -90,7 +110,7 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
       window.setTimeout(() => {
         setCurrentCall((existing) => existing?.call === call ? null : existing);
         setIncomingCall((existing) => existing?.call === call ? null : existing);
-      }, 500);
+      }, 120_000);
     });
     call.on("cancel", () => {
       update("Ended");
@@ -129,10 +149,10 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
       setIncomingCall(initial);
       void showIncomingNotification(initial);
       void fetch(`/api/twilio/customer?phone=${encodeURIComponent(phone)}`, { cache: "no-store" })
-        .then((response) => response.ok ? response.json() as Promise<{ name?: string; leadId?: string | null }> : null)
+        .then((response) => response.ok ? response.json() as Promise<CustomerInfo> : null)
         .then((customer) => {
           if (!customer) return;
-          const updated = { ...initial, name: customer.name || initial.name, leadId: customer.leadId || undefined };
+          const updated = { ...initial, name: customer.name || initial.name, leadId: customer.leadId || undefined, customer };
           incomingRef.current = updated;
           setIncomingCall((existing) => existing?.call === call ? updated : existing);
           void showIncomingNotification(updated);
@@ -167,6 +187,13 @@ export function TwilioVoiceProvider({ children }: { children: React.ReactNode })
       const info = bindCall(call, { name: input.name || "Customer", phone: input.phone, direction: "outgoing", leadId: input.leadId });
       setElapsedSeconds(0);
       setCurrentCall(info);
+      void fetch(`/api/twilio/customer?phone=${encodeURIComponent(input.phone)}`, { cache: "no-store" })
+        .then((response) => response.ok ? response.json() as Promise<CustomerInfo> : null)
+        .then((customer) => {
+          if (!customer) return;
+          setCurrentCall((existing) => existing?.call === call ? { ...existing, name: customer.name || existing.name, leadId: customer.leadId || existing.leadId, customer } : existing);
+        })
+        .catch(() => undefined);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not place call.");
     }

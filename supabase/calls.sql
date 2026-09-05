@@ -18,8 +18,12 @@ create table if not exists public.calls (
   recording_sid text,
   recording_url text,
   recording_status text,
-  recording_duration_seconds integer
+  recording_duration_seconds integer,
+  intake_data jsonb not null default '{}'::jsonb
 );
+
+alter table public.calls
+  add column if not exists intake_data jsonb not null default '{}'::jsonb;
 
 create index if not exists calls_created_at_idx on public.calls (created_at desc);
 create index if not exists calls_lead_id_idx on public.calls (lead_id);
