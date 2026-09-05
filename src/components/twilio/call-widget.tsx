@@ -20,6 +20,7 @@ export function CallWidget() {
   const voice = useTwilioVoice();
   const [number, setNumber] = useState("");
   const [showKeypad, setShowKeypad] = useState(true);
+  const isPhoneWindow = typeof window !== "undefined" && window.name === "dapl-phone";
   const handleKeypadDigit = (digit: string) => {
     if (voice.currentCall) {
       voice.sendDigits(digit);
@@ -50,7 +51,17 @@ export function CallWidget() {
       <div className="fixed bottom-3 left-3 z-[60] w-[min(22rem,calc(100vw-1.5rem))] rounded-xl border border-border bg-white p-3 shadow-xl sm:bottom-4 sm:left-auto sm:right-3">
         <div className="flex items-center justify-between gap-2"><p className="text-xs font-black uppercase tracking-[0.14em] text-primary">DAPL Phone</p><div className="flex items-center gap-2"><Link href="/admin/calls" className="text-[0.65rem] font-black uppercase tracking-[0.08em] text-primary underline-offset-2 hover:underline">History</Link><span className={`text-[0.65rem] font-black uppercase ${voice.deviceState === "registered" ? "text-emerald-600" : "text-muted"}`}>{voice.deviceState}</span></div></div>
         <div className="mt-2 flex gap-2">
-          {!voice.enabled ? <button type="button" onClick={() => void voice.enablePhone()} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-xs font-black text-white"><Bell className="h-4 w-4" /> Enable phone</button> : null}
+          {!voice.enabled ? <button type="button" onClick={() => {
+            if (!isPhoneWindow) {
+              const phoneWindow = window.open("/phone", "dapl-phone", "popup=yes,width=430,height=760,resizable=yes,scrollbars=yes");
+              if (phoneWindow) {
+                phoneWindow.focus();
+                return;
+              }
+            }
+
+            void voice.enablePhone();
+          }} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-xs font-black text-white"><Bell className="h-4 w-4" /> {isPhoneWindow ? "Enable phone" : "Open phone"}</button> : null}
           <div className="relative min-w-0 flex-1"><Phone className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" /><input type="tel" inputMode="tel" autoComplete="tel" aria-label="Phone number" value={number} onChange={(event) => setNumber(event.target.value)} placeholder="Enter phone number" className="h-10 w-full rounded-xl border border-border bg-slate-50 pl-8 pr-3 text-sm font-semibold text-primary outline-none transition placeholder:text-muted/70 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/10" /></div>
           <button type="button" disabled={!number.trim()} title={number.trim() ? "Call number" : "Enter a phone number first"} onClick={() => void voice.callCustomer({ phone: number })} className={`inline-flex h-10 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${number.trim() ? "bg-primary shadow-sm hover:bg-primary/90" : "cursor-not-allowed bg-slate-300"}`}><Phone className="h-4 w-4" /></button>
         </div>

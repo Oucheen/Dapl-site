@@ -55,7 +55,7 @@ function updateGoogleConsent(choice: ConsentChoice) {
 
 export function CookieConsent() {
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith("/admin");
+  const isAdminRoute = pathname?.startsWith("/admin") || pathname?.startsWith("/phone");
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
