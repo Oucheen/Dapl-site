@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { CallIntakePanel } from "@/components/twilio/call-intake-panel";
 import { CallWidget } from "@/components/twilio/call-widget";
+import { RecentCallHistory } from "@/components/twilio/recent-call-history";
 import { useTwilioVoice } from "@/components/twilio/twilio-voice-provider";
 
 export function PhoneWindow() {
@@ -39,6 +40,7 @@ export function PhoneWindow() {
         <h1 className="mt-1 text-2xl font-black text-primary">Phone</h1>
         <p className="mt-2 text-xs leading-5 text-muted">Keep this window open to receive calls while you work in other tabs.</p>
       </header>
+      <RecentCallHistory refreshKey={activeCall ? `${activeCall.call.parameters.CallSid || activeCall.phone}:${activeCall.status}` : "idle"} />
       {activeCall ? <CallIntakePanel key={`${activeCall.call.parameters.CallSid || activeCall.phone}-${activeCall.customer ? "loaded" : "pending"}-${activeCall.customer?.leadId || activeCall.leadId || "unknown"}`} call={activeCall} /> : null}
       <CallWidget />
     </main>

@@ -2,7 +2,7 @@
 
 import { Phone, PhoneCall, PhoneOff, Mic, MicOff, Grid3X3, Bell, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CallIntakePanel } from "@/components/twilio/call-intake-panel";
 import { useTwilioVoice } from "@/components/twilio/twilio-voice-provider";
 
@@ -21,7 +21,7 @@ function openPhonePopup(input?: { phone?: string; name?: string; leadId?: string
   return window.open(`/phone${query ? `?${query}` : ""}`, "dapl-phone", "popup=yes,width=430,height=760,resizable=yes,scrollbars=yes");
 }
 
-export function CallButton({ phone, name, leadId, className }: { phone: string; name?: string; leadId?: string; className?: string }) {
+export function CallButton({ phone, name, leadId, className, children }: { phone: string; name?: string; leadId?: string; className?: string; children?: ReactNode }) {
   const { callCustomer } = useTwilioVoice();
   const startCall = () => {
     if (window.name === "dapl-phone") {
@@ -37,7 +37,7 @@ export function CallButton({ phone, name, leadId, className }: { phone: string; 
 
     void callCustomer({ phone, name, leadId });
   };
-  return <button type="button" onClick={startCall} className={className || "inline-flex min-h-9 items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-black text-white shadow-sm hover:bg-primary/90"}><Phone className="h-3.5 w-3.5" aria-hidden="true" /> Call</button>;
+  return <button type="button" onClick={startCall} className={className || "inline-flex min-h-9 items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-black text-white shadow-sm hover:bg-primary/90"}><Phone className="h-3.5 w-3.5" aria-hidden="true" /> {children || "Call"}</button>;
 }
 
 export function CallWidget() {
