@@ -57,14 +57,14 @@ export function MobileStickyActions() {
           className="inline-flex h-12 items-center justify-center gap-1.5 rounded-full bg-primary px-2 text-xs font-black text-white shadow-sm shadow-primary/20"
         >
           <Phone className="h-4 w-4" aria-hidden="true" />
-          Call
+          Call Now
         </TrackedAnchor>
         <BookOnlineButton
           location="mobile_sticky_bar"
           className="!inline-flex !h-12 !min-h-0 !items-center !justify-center !gap-1.5 !rounded-full !border-0 !bg-[#177dcc] !px-2 !py-0 !text-xs !font-black !uppercase !leading-none !text-white !shadow-sm !shadow-[#177dcc]/20"
         >
           <ClipboardList className="h-4 w-4" aria-hidden="true" />
-          Book
+          Book Online
         </BookOnlineButton>
         <TrackedAnchor
           href="#contact"

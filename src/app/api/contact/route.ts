@@ -11,6 +11,9 @@ const MAX = {
   address: 300,
   message: 4000,
   appliance: 80,
+  zipCode: 20,
+  model: 120,
+  contactMethod: 40,
   promoCode: 40,
   leadSource: 120,
   preferredDate: 10,
@@ -65,6 +68,9 @@ function buildInquiryHtml(input: {
   email: string;
   address: string;
   appliance: string;
+  zipCode: string;
+  model: string;
+  contactMethod: string;
   promoCode: string;
   leadSource: string;
   preferredIso: string;
@@ -77,6 +83,9 @@ function buildInquiryHtml(input: {
     email,
     address,
     appliance,
+    zipCode,
+    model,
+    contactMethod,
     promoCode,
     leadSource,
     preferredIso,
@@ -88,10 +97,13 @@ function buildInquiryHtml(input: {
     <h2>New website inquiry</h2>
     <p><strong>Name:</strong> ${escapeHtml(name)}</p>
     <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    ${email ? `<p><strong>Email:</strong> ${escapeHtml(email)}</p>` : ""}
     <p><strong>Address:</strong> ${escapeHtml(address)}</p>
+    ${zipCode ? `<p><strong>ZIP code:</strong> ${escapeHtml(zipCode)}</p>` : ""}
     ${leadSource ? `<p><strong>Lead source:</strong> ${escapeHtml(leadSource)}</p>` : ""}
     ${appliance ? `<p><strong>Appliance:</strong> ${escapeHtml(appliance)}</p>` : ""}
+    ${model ? `<p><strong>Model / serial:</strong> ${escapeHtml(model)}</p>` : ""}
+    ${contactMethod ? `<p><strong>Preferred contact:</strong> ${escapeHtml(contactMethod)}</p>` : ""}
     ${promoCode ? `<p><strong>Promo code:</strong> ${escapeHtml(promoCode)}</p>` : ""}
     ${
       preferredIso
@@ -109,6 +121,9 @@ function buildTelegramMessage(input: {
   email: string;
   address: string;
   appliance: string;
+  zipCode: string;
+  model: string;
+  contactMethod: string;
   promoCode: string;
   leadSource: string;
   preferredIso: string;
@@ -119,10 +134,13 @@ function buildTelegramMessage(input: {
     "New website inquiry",
     `Name: ${input.name}`,
     `Phone: ${input.phone}`,
-    `Email: ${input.email}`,
+    input.email ? `Email: ${input.email}` : "",
     `Address: ${input.address}`,
+    input.zipCode ? `ZIP code: ${input.zipCode}` : "",
     input.leadSource ? `Lead source: ${input.leadSource}` : "",
     input.appliance ? `Appliance: ${input.appliance}` : "",
+    input.model ? `Model / serial: ${input.model}` : "",
+    input.contactMethod ? `Preferred contact: ${input.contactMethod}` : "",
     input.promoCode ? `Promo code: ${input.promoCode}` : "",
     input.preferredIso
       ? `Preferred date: ${input.preferredLabel} (${input.preferredIso})`
@@ -169,7 +187,7 @@ async function sendEmailNotification(input: {
   apiKey: string;
   to: string;
   from: string;
-  replyTo: string;
+  replyTo?: string;
   subject: string;
   html: string;
 }) {
@@ -177,7 +195,7 @@ async function sendEmailNotification(input: {
   const { error } = await resend.emails.send({
     from: input.from,
     to: [input.to],
-    replyTo: input.replyTo,
+    ...(input.replyTo ? { replyTo: input.replyTo } : {}),
     subject: input.subject,
     html: input.html,
   });
@@ -246,6 +264,9 @@ export async function POST(request: Request) {
   const email = typeof data.email === "string" ? data.email.trim() : "";
   const address = typeof data.address === "string" ? data.address.trim() : "";
   const appliance = typeof data.appliance === "string" ? data.appliance.trim() : "";
+  const zipCode = typeof data.zipCode === "string" ? data.zipCode.trim() : "";
+  const model = typeof data.model === "string" ? data.model.trim() : "";
+  const contactMethod = typeof data.contactMethod === "string" ? data.contactMethod.trim() : "";
   const promoCode = typeof data.promoCode === "string" ? data.promoCode.trim() : "";
   const leadSource = typeof data.leadSource === "string" ? data.leadSource.trim() : "";
   const preferredDateRaw =
@@ -255,13 +276,15 @@ export async function POST(request: Request) {
   const message = typeof data.message === "string" ? data.message.trim() : "";
   const smsConsent = data.smsConsent === true;
 
-  if (!name || name.length > MAX.name) {
-    return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
+  const leadName = name || "Website lead";
+
+  if (leadName.length > MAX.name) {
+    return NextResponse.json({ error: "Please enter a shorter name." }, { status: 400 });
   }
   if (!phone || phone.length > MAX.phone) {
     return NextResponse.json({ error: "Please enter a valid phone number." }, { status: 400 });
   }
-  if (!email || !isValidEmail(email) || email.length > MAX.email) {
+  if (email && (!isValidEmail(email) || email.length > MAX.email)) {
     return NextResponse.json({ error: "Please enter a valid email." }, { status: 400 });
   }
   if (!address || address.length > MAX.address) {
@@ -272,6 +295,18 @@ export async function POST(request: Request) {
   }
   if (appliance.length > MAX.appliance) {
     return NextResponse.json({ error: "Invalid appliance selection." }, { status: 400 });
+  }
+  if (!appliance) {
+    return NextResponse.json({ error: "Please choose the appliance type." }, { status: 400 });
+  }
+  if (!zipCode || zipCode.length > MAX.zipCode) {
+    return NextResponse.json({ error: "Please enter a valid ZIP code." }, { status: 400 });
+  }
+  if (model.length > MAX.model) {
+    return NextResponse.json({ error: "Model or serial is too long." }, { status: 400 });
+  }
+  if (!contactMethod || contactMethod.length > MAX.contactMethod) {
+    return NextResponse.json({ error: "Please choose your preferred contact method." }, { status: 400 });
   }
   if (promoCode.length > MAX.promoCode) {
     return NextResponse.json({ error: "Promo code is too long." }, { status: 400 });
@@ -311,9 +346,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const subject = `DAPL Website: ${name}`;
+  const subject = `DAPL Website: ${leadName}`;
   const leadStorageResult = await saveLeadToSupabase({
-    name,
+    name: leadName,
     phone,
     email,
     address,
@@ -369,11 +404,14 @@ export async function POST(request: Request) {
   }
 
   const html = buildInquiryHtml({
-    name,
+    name: leadName,
     phone,
     email,
     address,
     appliance,
+    zipCode,
+    model,
+    contactMethod,
     promoCode,
     leadSource,
     preferredIso: preferred.iso,
@@ -386,11 +424,14 @@ export async function POST(request: Request) {
   );
   const adminLeadsFallbackUrl = getAdminLeadsSearchUrl(request, phone);
   const telegramText = buildTelegramMessage({
-    name,
+    name: leadName,
     phone,
     email,
     address,
     appliance,
+    zipCode,
+    model,
+    contactMethod,
     promoCode,
     leadSource,
     preferredIso: preferred.iso,
@@ -406,7 +447,7 @@ export async function POST(request: Request) {
         apiKey,
         to,
         from,
-        replyTo: email,
+        replyTo: email || undefined,
         subject,
         html,
       });

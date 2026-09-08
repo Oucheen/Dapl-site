@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, MapPin } from "lucide-react";
 import { ContactSection } from "@/components/sections/contact-section";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
@@ -8,9 +9,12 @@ import { RelatedServicesCarousel } from "@/components/service-pages/related-serv
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { BookOnlineButton } from "@/components/ui/book-online-button";
 import { FadeUp } from "@/components/ui/fade-up";
+import { GoogleReviewsBadge } from "@/components/ui/google-reviews-badge";
+import { MobileStickyActions } from "@/components/ui/mobile-sticky-actions";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TrackedAnchor } from "@/components/ui/tracked-anchor";
 import { brandPagesDirectory, getBrandPageByName } from "@/content/brand-pages";
+import { serviceAreaPagesDirectory } from "@/content/service-areas";
 import { servicePagesDirectory, type ServicePageContent } from "@/content/service-pages";
 
 const brandLogoMap = Object.fromEntries(
@@ -76,6 +80,28 @@ const relatedServicePriorityMap: Record<string, string[]> = {
   ],
 };
 
+const heroBackgroundByAppliance: Record<string, string> = {
+  Refrigerator: "/images/refrigerator-flag-hero.png",
+  Washer: "/images/washer-flag-hero.png",
+  Dryer: "/images/dryer-flag-hero.png",
+  Dishwasher: "/images/dishwasher-flag-hero.png",
+  Oven: "/images/oven-flag-hero.png",
+  Cooktop: "/images/cooktop-flag-hero.png",
+  Freezer: "/images/freezer-flag-hero.png",
+  "Ice Machine": "/images/ice-machine-flag-hero.png",
+  "Wine Cooler": "/images/wine-cooler-flag-hero.png",
+  "Commercial Refrigerator": "/images/commercial-refrigerator-flag-hero.png",
+};
+
+const featuredServiceAreaNames = [
+  "Charlotte",
+  "Mint Hill",
+  "Matthews",
+  "Huntersville",
+  "Fort Mill",
+  "Waxhaw",
+];
+
 type ServicePageTemplateProps = {
   page: ServicePageContent;
   bookingEyebrow: string;
@@ -120,6 +146,11 @@ export function ServicePageTemplate({
     page.applianceName === "Commercial Refrigerator"
       ? "We work on many common commercial refrigeration and cooling brands found across Charlotte businesses."
       : `We work on many common household ${applianceLower} brands found across Charlotte homes.`;
+  const heroBackground =
+    heroBackgroundByAppliance[page.applianceName] ?? "/images/appliance-hero-flag-base.png";
+  const featuredServiceAreas = featuredServiceAreaNames
+    .map((city) => serviceAreaPagesDirectory.find((area) => area.city === city))
+    .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area));
   const featuredBrands = page.brands.slice(0, 12);
   const additionalBrandCount = Math.max(page.brands.length - featuredBrands.length, 0);
   const preferredRelatedSlugs = relatedServicePriorityMap[page.slug] ?? [];
@@ -202,8 +233,13 @@ export function ServicePageTemplate({
     })),
   };
 
+  const featuredAreaLabel = featuredServiceAreas
+    .slice(0, 4)
+    .map((area) => `${area.city}, ${area.state}`)
+    .join(" · ");
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background pb-20 text-foreground sm:pb-0">
       <Header logoHref="/" />
       <main>
         <Breadcrumbs
@@ -214,36 +250,52 @@ export function ServicePageTemplate({
           ]}
         />
 
-        <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-surface py-16 sm:py-20">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,42,86,0.11),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(207,36,49,0.08),_transparent_30%)]" />
-          <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <section
+          id="top"
+          className="relative flex min-h-[calc(100svh-8.25rem)] items-start overflow-hidden bg-surface py-5 sm:py-7 lg:py-8"
+        >
+          <Image
+            src={heroBackground}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[68%_center] sm:object-[72%_center] lg:object-contain lg:object-right"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.93)_38%,rgba(255,255,255,0.58)_62%,rgba(255,255,255,0.12)_100%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,42,86,0.03),rgba(255,255,255,0.16)_72%,rgba(255,255,255,0.82)_100%)]" />
+          <div className="container-shell relative grid items-center gap-6">
             <FadeUp>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">
-                {serviceLabel}
+              <GoogleReviewsBadge location={page.slug} className="mb-1 inline-flex sm:mb-2" />
+              <p className="mt-5 text-xs font-black uppercase tracking-[0.24em] text-primary/75 sm:text-sm">
+                DAPL Appliance Repair · Charlotte, NC
               </p>
-              <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              <h1 className="mt-4 max-w-3xl text-4xl font-extrabold leading-[1.02] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 {page.heroTitle}
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
+              <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
                 {page.heroDescription}
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <div className="inline-flex items-center rounded-full border border-primary/10 bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm">
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                <span className="inline-flex items-center rounded-full border border-primary/10 bg-white/95 px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm">
                   <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-accent" />
-                  Same-day appointments when available
-                </div>
-                <div className="inline-flex items-center rounded-full border border-primary/10 bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm">
+                  Same-day options when available
+                </span>
+                <span className="inline-flex items-center rounded-full border border-primary/10 bg-white/95 px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm">
                   <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-accent" />
-                  Charlotte, NC and surrounding areas
-                </div>
-                <div className="inline-flex items-center rounded-full border border-primary/10 bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm">
-                  <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-accent" />
-                  Honest recommendations before major repairs
-                </div>
+                  Clear diagnosis before major repairs
+                </span>
               </div>
 
-              <div className="mt-9 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-primary">
+                <MapPin className="h-4 w-4 text-accent" aria-hidden="true" />
+                <span>Serving</span>
+                <span className="min-w-0">{featuredAreaLabel}</span>
+                <span className="text-muted">and nearby areas</span>
+              </div>
+
+              <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
                 <TrackedAnchor
                   href="#contact"
                   gtmEvent={{
@@ -252,14 +304,14 @@ export function ServicePageTemplate({
                     appliance: page.applianceName,
                   }}
                   aria-label={`Schedule ${serviceLabel}`}
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
+                  className="inline-flex min-h-[50px] items-center justify-center rounded-full bg-accent px-5 py-2.5 text-center text-sm font-semibold leading-tight text-accent-foreground shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:brightness-95"
                 >
                   Schedule repair
                 </TrackedAnchor>
                 <BookOnlineButton
                   location={page.slug}
                   gtmEvent={{ appliance: page.applianceName }}
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-primary/20 bg-white px-5 py-3 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
+                  className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-2.5 text-center text-sm font-semibold leading-tight text-primary transition hover:-translate-y-0.5 hover:bg-primary/5"
                 />
                 <TrackedAnchor
                   href="tel:+19803936588"
@@ -269,71 +321,48 @@ export function ServicePageTemplate({
                     link_type: "primary_cta",
                     appliance: page.applianceName,
                   }}
-                  className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  className="inline-flex min-h-[50px] items-center justify-center whitespace-nowrap rounded-full border border-primary/20 bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   Call +1 (980) 393-6588
                 </TrackedAnchor>
               </div>
 
-              <div className="mt-10 hidden justify-center sm:mt-12 md:flex lg:justify-start">
-                <a
-                  href="#details"
-                  className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg motion-safe:animate-bounce"
-                  aria-label="Scroll to details"
-                >
-                  {"\u2193"}
-                </a>
+              <div className="mt-5 max-w-2xl rounded-2xl border border-primary/10 bg-white/90 p-3.5 shadow-sm backdrop-blur sm:p-4">
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-accent">
+                  What happens next
+                </p>
+                <ol className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {["Call / book", "Diagnosis", "Approve plan", "Repair & test"].map(
+                    (step, index) => (
+                      <li key={step} className="flex items-center gap-1.5 text-xs font-bold text-primary sm:text-sm">
+                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[0.7rem] text-white">
+                          {index + 1}
+                        </span>
+                        <span className="whitespace-nowrap">{step}</span>
+                        {index < 3 ? (
+                          <ArrowRight className="ml-auto hidden h-4 w-4 text-accent sm:block" aria-hidden="true" />
+                        ) : null}
+                      </li>
+                    ),
+                  )}
+                </ol>
               </div>
+
             </FadeUp>
 
-            <FadeUp delay={0.08}>
-              <div className="rounded-3xl border border-border bg-white p-5 shadow-lg shadow-primary/10">
-                <div className="rounded-2xl bg-[linear-gradient(145deg,rgba(15,42,86,0.06),rgba(207,36,49,0.08))] p-6 sm:p-8">
-                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="max-w-none sm:max-w-sm sm:pr-0">
-                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
-                          Local Service
-                        </p>
-                        <h2 className="mt-3 text-[2.35rem] leading-[1] font-black tracking-tight text-primary sm:text-4xl sm:leading-tight">
-                          {page.localServiceTitle}
-                        </h2>
-                        <Image
-                          src={page.image}
-                          alt={`${page.applianceName} appliance we repair`}
-                          width={152}
-                          height={152}
-                          className="mx-auto mt-4 object-contain drop-shadow-[0_12px_20px_rgba(15,42,86,0.12)] sm:hidden"
-                        />
-                        <p className="mx-auto mt-4 max-w-[18rem] text-center text-[0.98rem] leading-7 text-muted sm:mx-0 sm:mt-3 sm:max-w-sm sm:text-left sm:text-sm sm:leading-7">
-                          {page.localServiceDescription}
-                        </p>
-                      </div>
-                      <Image
-                        src={page.image}
-                        alt={`${page.applianceName} appliance we repair`}
-                        width={148}
-                        height={148}
-                        className="hidden h-auto max-w-[148px] object-contain drop-shadow-[0_14px_24px_rgba(15,42,86,0.14)] sm:block sm:w-full"
-                      />
-                  </div>
-
-                  <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
-                    {page.serviceHighlights.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-2xl border border-border bg-white px-5 py-4 text-[0.95rem] leading-6 font-medium text-foreground shadow-sm sm:px-4 sm:text-sm sm:leading-normal"
-                      >
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </FadeUp>
           </div>
+          <a
+            href="#details"
+            className="service-hero-arrow absolute bottom-3 left-1/2 hidden h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border border-primary/15 bg-white text-[1.35rem] text-primary shadow-md shadow-primary/10 transition hover:border-primary/25 hover:shadow-lg md:inline-flex"
+            aria-label="Scroll to details"
+          >
+            {"\u2193"}
+          </a>
         </section>
 
-        <section id="details" className="bg-background py-20">
+        <MobileStickyActions />
+
+        <section id="details" className="bg-background py-16 sm:py-20">
           <div className="container-shell">
             <FadeUp>
               <SectionHeading
@@ -357,7 +386,7 @@ export function ServicePageTemplate({
           </div>
         </section>
 
-        <section className="bg-[#f2f5f9] py-20">
+        <section className="bg-[#f2f5f9] py-16 sm:py-20">
           <div className="container-shell">
             <FadeUp>
               <SectionHeading
@@ -409,7 +438,7 @@ export function ServicePageTemplate({
           </div>
         </section>
 
-        <section className="bg-background py-20">
+        <section className="bg-background py-16 sm:py-20">
           <div className="container-shell">
             <FadeUp>
               <SectionHeading
@@ -434,7 +463,7 @@ export function ServicePageTemplate({
           </div>
         </section>
 
-        <section id="faq" className="bg-[#f2f5f9] py-20">
+        <section id="faq" className="bg-[#f2f5f9] py-16 sm:py-20">
           <div className="container-shell">
             <FadeUp>
               <SectionHeading
@@ -461,7 +490,7 @@ export function ServicePageTemplate({
           </div>
         </section>
 
-        <section className="bg-background py-20">
+        <section className="bg-background py-16 sm:py-20">
           <div className="container-shell">
             <FadeUp>
               <SectionHeading

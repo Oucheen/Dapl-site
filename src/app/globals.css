@@ -36,6 +36,23 @@ html {
   scroll-behavior: smooth;
 }
 
+@keyframes service-hero-arrow-blink {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, 0.35rem);
+  }
+}
+
+.service-hero-arrow {
+  animation: service-hero-arrow-blink 1.6s ease-in-out infinite;
+}
+
 .container-shell {
   @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
 }
@@ -220,6 +237,10 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .service-hero-arrow {
+    animation: none;
+  }
+
   .brands-carousel-track {
     animation: none;
   }
