@@ -62,6 +62,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <GoogleTagManager gtmId="GTM-M2RWZXK9" />
       <body className="min-h-full flex flex-col">
         <Script
           id="google-consent-default"
@@ -88,7 +89,6 @@ export default function RootLayout({
             `,
           }}
         />
-        <GoogleTagManager gtmId="GTM-M2RWZXK9" />
         <Script
           id="ga-event-src"
           src="https://www.googletagmanager.com/gtag/js?id=G-KBVZ673NP2"
