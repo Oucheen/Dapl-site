@@ -96,12 +96,6 @@ export default function BookingPage() {
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <HousecallProActions />
-                  <a
-                    href="tel:+19803936588"
-                    className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition hover:brightness-95 sm:w-auto"
-                  >
-                    Call +1 (980) 393-6588
-                  </a>
                 </div>
               </FadeUp>
 

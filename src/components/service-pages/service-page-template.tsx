@@ -252,7 +252,7 @@ export function ServicePageTemplate({
 
         <section
           id="top"
-          className="relative flex min-h-[calc(100svh-8.25rem)] items-start overflow-hidden bg-surface py-5 sm:py-7 lg:py-8"
+          className="relative flex min-h-[calc(100svh-8.25rem)] items-start overflow-hidden bg-surface py-3 sm:py-7 lg:py-8"
         >
           <Image
             src={heroBackground}
@@ -267,17 +267,17 @@ export function ServicePageTemplate({
           <div className="container-shell relative grid items-center gap-6">
             <FadeUp>
               <GoogleReviewsBadge location={page.slug} className="mb-1 inline-flex sm:mb-2" />
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.24em] text-primary/75 sm:text-sm">
+              <p className="mt-3 whitespace-nowrap text-[0.68rem] font-black uppercase tracking-[0.13em] text-primary/75 sm:mt-5 sm:text-sm sm:tracking-[0.24em]">
                 DAPL Appliance Repair · Charlotte, NC
               </p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-extrabold leading-[1.02] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              <h1 className="mt-3 max-w-3xl text-4xl font-extrabold leading-[1.02] tracking-tight text-foreground sm:mt-4 sm:text-5xl lg:text-6xl">
                 {page.heroTitle}
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
+              <p className="mt-3 max-w-2xl overflow-hidden text-base leading-6 text-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] sm:mt-4 sm:block sm:text-lg sm:leading-8">
                 {page.heroDescription}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2.5">
+              <div className="mt-5 hidden flex-wrap gap-2.5 sm:flex">
                 <span className="inline-flex items-center rounded-full border border-primary/10 bg-white/95 px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm">
                   <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-accent" />
                   Same-day options when available
@@ -295,7 +295,7 @@ export function ServicePageTemplate({
                 <span className="text-muted">and nearby areas</span>
               </div>
 
-              <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-[1fr_0.72fr_1.08fr]">
+              <div className="mt-6 hidden max-w-2xl gap-3 sm:grid sm:grid-cols-[1fr_0.72fr_1.08fr]">
                 <TrackedAnchor
                   href="#contact"
                   gtmEvent={{
@@ -327,7 +327,7 @@ export function ServicePageTemplate({
                 </TrackedAnchor>
               </div>
 
-              <div className="mt-5 max-w-2xl rounded-2xl border border-primary/10 bg-white/90 p-3.5 shadow-sm backdrop-blur sm:p-4">
+              <div className="mt-5 hidden max-w-2xl rounded-2xl border border-primary/10 bg-white/90 p-3.5 shadow-sm backdrop-blur sm:block sm:p-4">
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-accent">
                   What happens next
                 </p>

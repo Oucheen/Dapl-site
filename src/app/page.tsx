@@ -7,7 +7,6 @@ import { FAQSection } from "@/components/sections/faq";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
-import { OfferSection } from "@/components/sections/offer";
 import { ReviewsSection } from "@/components/sections/reviews-section";
 import { SavingsSection } from "@/components/sections/savings-section";
 import { ServiceAreasSection } from "@/components/sections/service-areas-section";
@@ -93,7 +92,6 @@ export default async function Home() {
       <SectionProgress />
       <main>
         <Hero />
-        <OfferSection />
         <SavingsSection />
         <AppliancesSection />
         <BrandsSection />

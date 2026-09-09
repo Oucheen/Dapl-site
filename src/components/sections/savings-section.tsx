@@ -29,7 +29,11 @@ const savings = [
 
 export function SavingsSection() {
   return (
-    <section className="relative overflow-hidden bg-[#f7f9fc] py-8 sm:py-12" aria-label="Customer savings">
+    <section
+      id="offer"
+      className="relative overflow-hidden bg-[#f7f9fc] py-8 sm:py-12"
+      aria-labelledby="savings-heading"
+    >
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#b31942] via-white to-[#0a3161]" />
       <div className="container-shell">
         <FadeUp>
@@ -42,12 +46,13 @@ export function SavingsSection() {
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b31942]">
                     Service savings
                   </p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight text-primary sm:text-[2.35rem]">
-                    $30 repair discounts for local customers
+                  <h2 id="savings-heading" className="mt-2 text-2xl font-black tracking-tight text-primary sm:text-[2.35rem]">
+                    $30 off your first repair
                   </h2>
                   <p className="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base sm:leading-7">
-                    Eligible veterans, military customers, seniors, and returning customers can
-                    receive $30 off when repair work is approved.
+                    New residential customers in Charlotte and surrounding areas can receive $30
+                    off when eligible repair work is approved. Clear terms, fair pricing, and no
+                    countdown pressure.
                   </p>
                   <div className="mt-4 inline-flex rounded-full border border-[#d7e0ec] bg-white/90 px-3 py-2 text-xs font-bold text-primary shadow-sm backdrop-blur sm:px-4 sm:text-sm">
                     First repair promo code: WEB30
@@ -57,7 +62,7 @@ export function SavingsSection() {
                       location="savings_section"
                       className="inline-flex items-center justify-center rounded-full bg-[#b31942] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#b31942]/20 transition hover:brightness-95 sm:px-6"
                     >
-                      Book with savings
+                      Book
                     </BookOnlineButton>
                     <a
                       href="tel:+19803936588"
@@ -93,9 +98,10 @@ export function SavingsSection() {
               </div>
 
               <div className="mt-4 rounded-lg border border-white/70 bg-white/90 px-3 py-3 text-xs leading-5 text-muted shadow-sm backdrop-blur sm:mt-5 sm:rounded-xl sm:px-4 sm:leading-6">
-                Valid when repair work is approved. Discount does not apply to diagnostic-only or
-                service-call-only visits. Cannot be combined with other offers. Labor and parts billed
-                separately. Restrictions may apply.
+                Valid for new residential customers in Charlotte and surrounding areas when repair
+                work is approved. Discount does not apply to diagnostic-only or service-call-only
+                visits. Cannot be combined with other offers. Labor and parts billed separately.
+                Restrictions may apply.
               </div>
             </div>
           </div>
