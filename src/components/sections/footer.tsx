@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { brandPagesDirectory } from "@/content/brand-pages";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
+import { businessSocialLinks } from "@/content/social-links";
 
 const popularServiceAreas = [
   "Mint Hill, NC",
@@ -65,7 +66,7 @@ export function Footer() {
           </div>
 
           <div className="space-y-6">
-            <div className="grid gap-5 text-sm leading-6 text-muted sm:grid-cols-3">
+            <div className="grid gap-5 text-sm leading-6 text-muted sm:grid-cols-2 lg:grid-cols-4">
               <address className="not-italic">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
                   Contact
@@ -99,6 +100,25 @@ export function Footer() {
                 </p>
                 <p className="mt-3">Monday - Sunday</p>
                 <p>7:00 AM - 8:00 PM ET</p>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+                  Follow Us
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+                  {businessSocialLinks.map((socialLink) => (
+                    <a
+                      key={socialLink.name}
+                      href={socialLink.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      {socialLink.name}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
 

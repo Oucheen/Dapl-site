@@ -14,6 +14,7 @@ import { WhyChooseUsSection } from "@/components/sections/why-choose-us";
 import { SectionProgress } from "@/components/ui/section-progress";
 import { customerReviews } from "@/content/customer-reviews";
 import { serviceAreaPagesDirectory } from "@/content/service-areas";
+import { businessSocialLinks } from "@/content/social-links";
 import { getReviewSummary, type ReviewSummary } from "@/lib/review-summary";
 
 const REVIEWS_SECTION_ENABLED = true;
@@ -44,6 +45,7 @@ function getLocalBusinessSchema(reviewSummary: ReviewSummary) {
     addressCountry: "US",
   })),
   url: "https://www.daplappliance.com",
+  sameAs: businessSocialLinks.map((socialLink) => socialLink.href),
   serviceType: "Appliance Repair Service",
   aggregateRating: {
     "@type": "AggregateRating",
