@@ -281,7 +281,7 @@ export function ContactSection({
                   type="tel"
                   required
                   autoComplete="tel"
-                  placeholder="(704) 555-0100"
+                  placeholder="(980) 555-0100"
                   className={fieldClass}
                 />
               </div>

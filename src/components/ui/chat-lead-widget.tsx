@@ -618,7 +618,7 @@ export function ChatLeadWidget() {
                     min={step === "date" ? minDate : undefined}
                     placeholder={
                       step === "phone"
-                        ? "(704) 555-0100"
+                        ? "(980) 555-0100"
                         : step === "address"
                           ? "Street, city, ZIP"
                           : ""

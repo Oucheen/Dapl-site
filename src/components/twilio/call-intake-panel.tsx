@@ -207,7 +207,7 @@ export function CallIntakePanel({ call }: { call: CallInfo }) {
       <div className="grid gap-4 p-4">
         {tab === "contact" ? <div className="grid gap-3 sm:grid-cols-2">
           <Label>Name<input className={fieldClass()} value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Customer name" /></Label>
-          <Label>Phone<input className={fieldClass()} value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+1 704..." /></Label>
+          <Label>Phone<input className={fieldClass()} value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+1 980..." /></Label>
           <Label>Email<input type="email" className={fieldClass()} value={form.email} onChange={(event) => update("email", event.target.value)} placeholder="customer@email.com" /></Label>
           <Label>Address<input className={fieldClass()} value={form.address} onChange={(event) => update("address", event.target.value)} placeholder="Service address" /></Label>
           <Label>Business unit<input className={fieldClass()} value={form.businessUnit} onChange={(event) => update("businessUnit", event.target.value)} placeholder="Appliance repair" /></Label>

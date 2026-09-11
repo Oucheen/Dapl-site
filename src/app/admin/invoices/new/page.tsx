@@ -125,7 +125,7 @@ export default async function NewInvoicePage() {
                   <input
                     name="phone"
                     required
-                    placeholder="+1 (704) 000-0000"
+                    placeholder="+1 (980) 000-0000"
                     className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 transition placeholder:text-muted focus:border-primary focus:ring-2"
                   />
                 </label>

@@ -14,7 +14,7 @@ const quickLinks = [
 const trustItems = [
   "Same-day service when available",
   "Charlotte, NC and surrounding areas",
-  "Open daily from 8:00 AM to 8:00 PM",
+  "Open daily from 7:00 AM to 8:00 PM ET",
 ];
 
 export default function NotFound() {

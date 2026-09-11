@@ -103,7 +103,7 @@ function getScheduleSmsIntent(
     return {
       kind: "canceled",
       title: "Customer cancellation SMS sent",
-      body: "DAPL Appliance Repair canceled your service visit. Call 704-266-0508 if you need help. Reply STOP to opt out.",
+      body: "DAPL Appliance Repair canceled your service visit. Call +1 (980) 393-6588 if you need help. Reply STOP to opt out.",
     };
   }
 

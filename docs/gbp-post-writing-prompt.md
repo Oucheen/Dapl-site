@@ -28,7 +28,7 @@ Business:
 - Website: `https://www.daplappliance.com`
 - Booking page on site: `https://www.daplappliance.com/booking`
 - Direct Housecall Pro booking link: `https://book.housecallpro.com/book/DAPL-Appliance-Repair/598955567c7f416c96e1275fc1cf1061?v2=true`
-- Phone: `+1 (704) 266-0508`
+- Phone: `+1 (980) 393-6588`
 - Base location: Mint Hill, NC
 - Main market: Charlotte, NC and surrounding service areas
 
