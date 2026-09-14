@@ -45,6 +45,7 @@ export type LeadRecord = {
 };
 
 type RecentVoiceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "message">;
+type RecentSourceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "message">;
 
 export type LeadAdminUpdateInput = {
   status: LeadAdminStatus;
@@ -389,6 +390,48 @@ export async function findRecentVoiceLeadDuplicate(input: {
     return rows.find((row) => normalizePhoneForDedupe(row.phone) === normalizedPhone) ?? null;
   } catch (error) {
     console.error("Supabase recent voice lead fetch error:", error);
+    return null;
+  }
+}
+
+export async function findRecentLeadBySourceReference(input: {
+  leadSource: string;
+  reference: string;
+  windowMinutes?: number;
+}) {
+  const config = getSupabaseConfig();
+  const leadSource = input.leadSource.trim();
+  const reference = input.reference.trim();
+
+  if (!config || !leadSource || !reference) {
+    return null;
+  }
+
+  const since = new Date(Date.now() - (input.windowMinutes ?? 24 * 60) * 60_000).toISOString();
+  const params = new URLSearchParams({
+    select: "id,created_at,phone,message",
+    lead_source: `eq.${leadSource}`,
+    created_at: `gte.${since}`,
+    order: "created_at.desc",
+    limit: "100",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase source lead duplicate check failed: ${response.status} ${details}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as RecentSourceLeadRecord[];
+    return rows.find((row) => row.message?.includes(reference)) ?? null;
+  } catch (error) {
+    console.error("Supabase source lead duplicate check error:", error);
     return null;
   }
 }
