@@ -4,6 +4,7 @@ import {
   findRecentLeadBySourceReference,
   saveLeadToSupabase,
 } from "@/lib/supabase-leads";
+import { buildUnifiedTelegramLeadMessage } from "@/lib/telegram-lead-message";
 
 export const runtime = "nodejs";
 
@@ -101,14 +102,6 @@ function getField(payload: JsonRecord, ...names: string[]) {
   return "";
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
 function normalizePhone(value: string) {
   const digits = value.replace(/[^\d+]/g, "");
 
@@ -162,26 +155,18 @@ function buildLeadMessage(input: {
     .join("\n");
 }
 
-function buildTelegramMessage(input: {
-  name: string;
-  phone: string;
-  message: string;
-  recordingUrl: string;
-}) {
-  const lines = [
-    "<b>🔴 NEW eLOCAL CALL</b>",
-    "",
-    `<b>Customer:</b> ${escapeHtml(input.name)}`,
-    input.phone ? `<b>Phone:</b> <a href="tel:${escapeHtml(input.phone)}">${escapeHtml(input.phone)}</a>` : null,
-    "",
-    input.message.split("\n").map((line) => escapeHtml(line)).join("\n"),
-    input.recordingUrl ? `\n🎧 <a href="${escapeHtml(input.recordingUrl)}">Call recording</a>` : null,
-  ];
+function getRequestOrigin(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
 
-  return lines.filter(Boolean).join("\n");
+  if (forwardedHost) {
+    return `${forwardedProto || "https"}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
 }
 
-async function sendTelegram(text: string) {
+async function sendTelegram(text: string, buttons: { text: string; url: string }[] = []) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || "";
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || "";
 
@@ -195,8 +180,14 @@ async function sendTelegram(text: string) {
     body: JSON.stringify({
       chat_id: chatId,
       text,
-      parse_mode: "HTML",
       disable_web_page_preview: true,
+      ...(buttons.length
+        ? {
+            reply_markup: {
+              inline_keyboard: [buttons],
+            },
+          }
+        : {}),
     }),
   });
 
@@ -321,12 +312,25 @@ export async function POST(request: Request) {
   }
 
   const telegram = await sendTelegram(
-    buildTelegramMessage({
+    buildUnifiedTelegramLeadMessage({
+      source: ELOCAL_LEAD_SOURCE,
+      type: "Phone call",
       name: callerName,
       phone,
-      message,
+      category,
+      sourceDetail: `eLocal number ${ELOCAL_FORWARD_NUMBER}`,
+      status,
+      callId,
+      callTime: callDateTime,
+      duration,
+      cost,
+      forwardNumber,
       recordingUrl,
+      message: location ? `Location: ${location}` : "",
     }),
+    storedLeadId
+      ? [{ text: "Open lead", url: `${getRequestOrigin(request)}/admin/leads/${storedLeadId}` }]
+      : [],
   );
 
   return NextResponse.json({

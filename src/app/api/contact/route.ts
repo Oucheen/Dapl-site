@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { sendSmsOptInConfirmation } from "@/lib/customer-sms";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import { saveLeadToSupabase } from "@/lib/supabase-leads";
+import { buildUnifiedTelegramLeadMessage } from "@/lib/telegram-lead-message";
 
 const MAX = {
   name: 120,
@@ -113,44 +114,6 @@ function buildInquiryHtml(input: {
     <p><strong>Message:</strong></p>
     <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
   `;
-}
-
-function buildTelegramMessage(input: {
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  appliance: string;
-  zipCode: string;
-  model: string;
-  contactMethod: string;
-  promoCode: string;
-  leadSource: string;
-  preferredIso: string;
-  preferredLabel: string;
-  message: string;
-}) {
-  const lines = [
-    "New website inquiry",
-    `Name: ${input.name}`,
-    `Phone: ${input.phone}`,
-    input.email ? `Email: ${input.email}` : "",
-    `Address: ${input.address}`,
-    input.zipCode ? `ZIP code: ${input.zipCode}` : "",
-    input.leadSource ? `Lead source: ${input.leadSource}` : "",
-    input.appliance ? `Appliance: ${input.appliance}` : "",
-    input.model ? `Model / serial: ${input.model}` : "",
-    input.contactMethod ? `Preferred contact: ${input.contactMethod}` : "",
-    input.promoCode ? `Promo code: ${input.promoCode}` : "",
-    input.preferredIso
-      ? `Preferred date: ${input.preferredLabel} (${input.preferredIso})`
-      : "",
-    "",
-    "Message:",
-    input.message,
-  ];
-
-  return lines.filter(Boolean).join("\n");
 }
 
 function getRequestOrigin(request: Request) {
@@ -423,19 +386,22 @@ export async function POST(request: Request) {
     leadStorageResult.saved ? leadStorageResult.id : undefined,
   );
   const adminLeadsFallbackUrl = getAdminLeadsSearchUrl(request, phone);
-  const telegramText = buildTelegramMessage({
+  const telegramText = buildUnifiedTelegramLeadMessage({
+    source: "Website",
+    type: "Form inquiry",
     name: leadName,
     phone,
     email,
     address,
-    appliance,
+    category: appliance,
     zipCode,
     model,
     contactMethod,
     promoCode,
-    leadSource,
-    preferredIso: preferred.iso,
-    preferredLabel: preferred.label,
+    sourceDetail: leadSource,
+    preferredDate: preferred.iso
+      ? `${preferred.label} (${preferred.iso})`
+      : "",
     message,
   });
 
