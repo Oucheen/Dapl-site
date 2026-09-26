@@ -87,6 +87,13 @@ const adminLinks = [
     group: "Operations",
   },
   {
+    href: "/admin/pricebook",
+    title: "Price book",
+    description: "Find any customer price quickly while speaking with a client.",
+    cta: "Open price book",
+    group: "Operations",
+  },
+  {
     href: "/admin/telegram",
     title: "Telegram access",
     description: "Bot users, Telegram IDs, technician names, and roles.",
@@ -109,6 +116,7 @@ const TECHNICIAN_ADMIN_LINKS = new Set([
   "/admin/schedule",
   "/admin/technician",
   "/admin/invoices",
+  "/admin/pricebook",
 ]);
 
 export const dynamic = "force-dynamic";
