@@ -7,6 +7,17 @@ type PricebookSearchProps = {
   entries: PricebookEntry[];
 };
 
+type PricebookGroup = {
+  key: string;
+  category: string;
+  subcategory: string;
+  brandGroups: string[];
+  name: string;
+  description: string;
+  totalCount: number;
+  variants: Array<{ brandGroup: string; price: string; count: number }>;
+};
+
 function normalize(value: string) {
   return value
     .toLocaleLowerCase()
@@ -27,6 +38,7 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [subcategory, setSubcategory] = useState("All");
+  const [brandGroup, setBrandGroup] = useState("All");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -41,37 +53,76 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
     return ["All", ...Array.from(new Set(source.map((entry) => entry.subcategory).filter(Boolean))).sort()];
   }, [category, entries]);
 
+  const availableBrandGroups = useMemo(() => {
+    const source = entries.filter(
+      (entry) =>
+        (category === "All" || entry.category === category) &&
+        (subcategory === "All" || entry.subcategory === subcategory),
+    );
+    return ["All", ...Array.from(new Set(source.map((entry) => entry.brandGroup).filter(Boolean))).sort()];
+  }, [category, entries, subcategory]);
+
   const filteredEntries = useMemo(() => {
     const normalizedQuery = normalize(query);
 
     return entries
       .filter((entry) => category === "All" || entry.category === category)
       .filter((entry) => subcategory === "All" || entry.subcategory === subcategory)
+      .filter((entry) => brandGroup === "All" || entry.brandGroup === brandGroup)
       .filter((entry) => {
         if (!normalizedQuery) {
           return true;
         }
 
         return normalize(
-          [entry.name, entry.category, entry.subcategory, entry.description].filter(Boolean).join(" "),
+          [entry.name, entry.category, entry.subcategory, entry.brandGroup, entry.description].filter(Boolean).join(" "),
         ).includes(normalizedQuery);
       })
       .sort((left, right) => {
         const nameSort = left.name.localeCompare(right.name);
         return nameSort || priceValue(left.price) - priceValue(right.price);
       });
-  }, [category, entries, query, subcategory]);
+  }, [brandGroup, category, entries, query, subcategory]);
 
-  const duplicateNames = useMemo(() => {
-    const counts = new Map<string, number>();
+  const groupedEntries = useMemo<PricebookGroup[]>(() => {
+    const groups = new Map<string, PricebookGroup>();
 
-    for (const entry of entries) {
+    for (const entry of filteredEntries) {
       const key = `${entry.category}|${entry.subcategory}|${normalize(entry.name)}`;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
+      const group = groups.get(key) ?? {
+        key,
+        category: entry.category,
+        subcategory: entry.subcategory,
+        brandGroups: [],
+        name: entry.name,
+        description: entry.description,
+        totalCount: 0,
+        variants: [],
+      };
+      const variant = group.variants.find(
+        (item) => item.brandGroup === entry.brandGroup && item.price === entry.price,
+      );
+
+      group.totalCount += 1;
+      if (variant) {
+        variant.count += 1;
+      } else {
+        group.variants.push({ brandGroup: entry.brandGroup, price: entry.price, count: 1 });
+      }
+
+      if (entry.brandGroup && !group.brandGroups.includes(entry.brandGroup)) {
+        group.brandGroups.push(entry.brandGroup);
+      }
+
+      if (!group.description && entry.description) {
+        group.description = entry.description;
+      }
+
+      groups.set(key, group);
     }
 
-    return counts;
-  }, [entries]);
+    return Array.from(groups.values()).sort((left, right) => left.name.localeCompare(right.name));
+  }, [filteredEntries]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -91,11 +142,11 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
-  async function copyPrice(entry: PricebookEntry) {
+  async function copyPrice(id: string, price: string) {
     try {
-      await navigator.clipboard.writeText(entry.price);
-      setCopiedId(entry.id);
-      window.setTimeout(() => setCopiedId((current) => (current === entry.id ? null : current)), 1400);
+      await navigator.clipboard.writeText(price);
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1400);
     } catch {
       setCopiedId(null);
     }
@@ -105,6 +156,7 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
     setQuery("");
     setCategory("All");
     setSubcategory("All");
+    setBrandGroup("All");
     searchRef.current?.focus();
   }
 
@@ -135,6 +187,7 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
               onClick={() => {
                 setCategory(item);
                 setSubcategory("All");
+                setBrandGroup("All");
               }}
               className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-bold transition ${
                 category === item
@@ -153,7 +206,10 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
               <button
                 key={item}
                 type="button"
-                onClick={() => setSubcategory(item)}
+                onClick={() => {
+                  setSubcategory(item);
+                  setBrandGroup("All");
+                }}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   subcategory === item
                     ? "bg-slate-800 text-white"
@@ -165,19 +221,38 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
             ))}
           </div>
         ) : null}
+
+        {availableBrandGroups.length > 1 ? (
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+            {availableBrandGroups.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setBrandGroup(item)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                  brandGroup === item
+                    ? "bg-blue-900 text-white"
+                    : "bg-blue-50 text-blue-900 hover:bg-blue-100"
+                }`}
+              >
+                {item === "All" ? "All brands" : item}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-semibold text-muted">
-          {query || category !== "All" || subcategory !== "All" ? (
+          {query || category !== "All" || subcategory !== "All" || brandGroup !== "All" ? (
             <>
-              Found <span className="font-black text-primary">{formatCount(filteredEntries.length)}</span> of {formatCount(entries.length)} positions
+              Found <span className="font-black text-primary">{formatCount(groupedEntries.length)}</span> groups / {formatCount(filteredEntries.length)} source positions
             </>
           ) : (
-            <>{formatCount(entries.length)} positions in the price book</>
+            <>{formatCount(groupedEntries.length)} groups / {formatCount(entries.length)} source positions</>
           )}
         </p>
-        {query || category !== "All" || subcategory !== "All" ? (
+        {query || category !== "All" || subcategory !== "All" || brandGroup !== "All" ? (
           <button type="button" onClick={resetFilters} className="text-xs font-bold text-primary hover:underline">
             Clear search
           </button>
@@ -200,49 +275,90 @@ export function PricebookSearch({ entries }: PricebookSearchProps) {
             <span className="text-right">Customer price</span>
           </div>
           <div className="divide-y divide-border">
-            {filteredEntries.map((entry) => {
-              const duplicateKey = `${entry.category}|${entry.subcategory}|${normalize(entry.name)}`;
-              const hasDuplicate = (duplicateNames.get(duplicateKey) ?? 0) > 1;
-              const expanded = expandedId === entry.id;
+            {groupedEntries.map((group) => {
+              const expanded = expandedId === group.key;
+              const sortedVariants = [...group.variants].sort((left, right) => {
+                const brandSort = left.brandGroup.localeCompare(right.brandGroup);
+                return brandSort || priceValue(left.price) - priceValue(right.price);
+              });
+              const prices = Array.from(new Set(sortedVariants.map((variant) => variant.price))).sort(
+                (left, right) => priceValue(left) - priceValue(right),
+              );
+              const lowestPrice = prices[0] ?? "$0.00";
+              const highestPrice = prices[prices.length - 1] ?? lowestPrice;
+              const hasVariants = sortedVariants.length > 1;
+              const priceLabel = prices.length > 1 ? `${lowestPrice}–${highestPrice}` : lowestPrice;
 
               return (
-                <div key={entry.id} className="px-4 py-4 transition hover:bg-slate-50 sm:px-5">
+                <div key={group.key} className="px-4 py-4 transition hover:bg-slate-50 sm:px-5">
                   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_110px] sm:items-center sm:gap-4">
                     <button
                       type="button"
-                      onClick={() => setExpandedId(expanded ? null : entry.id)}
+                      onClick={() => setExpandedId(expanded ? null : group.key)}
                       className="min-w-0 text-left"
                       aria-expanded={expanded}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="break-words font-black text-primary">{entry.name}</p>
-                        {hasDuplicate ? (
+                        <p className="break-words font-black text-primary">{group.name}</p>
+                        {hasVariants || group.totalCount > 1 ? (
                           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-bold text-amber-800">
-                            model / variant pricing
+                            {group.brandGroups.length > 1
+                              ? `${group.brandGroups.length} brand groups`
+                              : hasVariants
+                                ? `${sortedVariants.length} price variants`
+                                : `${group.totalCount} source rows`}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-xs text-muted">Click for details</p>
+                      <p className="mt-1 text-xs text-muted">{hasVariants ? "Click to compare prices" : "Click for details"}</p>
                     </button>
                     <div className="flex flex-wrap gap-1.5 text-xs font-bold text-muted">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1">{entry.category}</span>
-                      {entry.subcategory ? <span className="rounded-full bg-slate-100 px-2.5 py-1">{entry.subcategory}</span> : null}
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1">{group.category}</span>
+                      {group.subcategory ? <span className="rounded-full bg-slate-100 px-2.5 py-1">{group.subcategory}</span> : null}
+                      {group.brandGroups.length === 1 ? (
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-900">{group.brandGroups[0]}</span>
+                      ) : group.brandGroups.length > 1 ? (
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-900">Multiple brands</span>
+                      ) : null}
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
-                      <span className="text-2xl font-black tabular-nums text-primary">{entry.price}</span>
-                      <button
-                        type="button"
-                        onClick={() => copyPrice(entry)}
-                        className="rounded-lg border border-primary/15 px-2.5 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/5"
-                        title="Copy price"
-                      >
-                        {copiedId === entry.id ? "Copied" : "Copy"}
-                      </button>
+                      <span className="text-xl font-black tabular-nums text-primary sm:text-2xl">{priceLabel}</span>
+                      {!hasVariants ? (
+                        <button
+                          type="button"
+                          onClick={() => copyPrice(group.key, lowestPrice)}
+                          className="rounded-lg border border-primary/15 px-2.5 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/5"
+                          title="Copy price"
+                        >
+                          {copiedId === group.key ? "Copied" : "Copy"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   {expanded ? (
                     <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-6 text-foreground">
-                      {entry.description || "No additional note in the price book."}
+                      {hasVariants ? (
+                        <div className="flex flex-wrap gap-2">
+                          {sortedVariants.map((variant) => (
+                            <div key={`${variant.brandGroup}-${variant.price}`} className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2">
+                              <span className="font-black text-primary">{variant.brandGroup || "General"}</span>
+                              <span className="font-black text-primary">{variant.price}</span>
+                              {variant.count > 1 ? <span className="text-xs text-muted">×{variant.count}</span> : null}
+                              <button
+                                type="button"
+                                onClick={() => copyPrice(`${group.key}-${variant.price}`, variant.price)}
+                                className="rounded border border-primary/15 px-2 py-1 text-xs font-bold text-primary"
+                              >
+                                {copiedId === `${group.key}-${variant.price}` ? "Copied" : "Copy"}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      {group.description ? <p className={hasVariants ? "mt-3" : ""}>{group.description}</p> : null}
+                      <p className="mt-3 text-xs font-semibold text-muted">
+                        Brand groups are taken from subcategory 2. Some source rows intentionally combine several brands.
+                      </p>
                     </div>
                   ) : null}
                 </div>

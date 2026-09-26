@@ -33,6 +33,12 @@ export default async function PricebookPage() {
         </div>
       </header>
       <section className="container-shell py-6 sm:py-8">
+        <div className="mb-5 rounded-2xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950 sm:px-5">
+          <p className="font-black">Brand groups are included in the price book.</p>
+          <p className="mt-1">
+            Brand groups are read from subcategory 2. Use the brand filter to narrow the list before quoting a customer. Some source rows combine multiple brands in one group.
+          </p>
+        </div>
         <PricebookSearch entries={pricebookEntries} />
       </section>
     </main>
