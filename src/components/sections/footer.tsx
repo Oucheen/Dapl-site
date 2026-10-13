@@ -14,6 +14,8 @@ const popularServiceAreas = [
   "Indian Trail, NC",
   "Concord, NC",
   "Waxhaw, NC",
+  "Greensboro, NC",
+  "Winston-Salem, NC",
 ];
 
 const popularBrands = [

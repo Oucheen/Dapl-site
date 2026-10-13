@@ -41,6 +41,8 @@ const expandedNearbyCities = [
   "Indian Land",
   "Steele Creek",
   "Rock Hill",
+  "Greensboro",
+  "Winston-Salem",
 ];
 
 function jsonLd(data: Record<string, unknown>) {

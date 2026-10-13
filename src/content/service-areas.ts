@@ -164,6 +164,166 @@ export const serviceAreaPages: ServiceAreaPageContent[] = [
     ],
   },
   {
+    slug: "appliance-repair-greensboro-nc",
+    city: "Greensboro",
+    state: "NC",
+    countyOrArea: "Guilford County",
+    nearbyLabel: "Greensboro, High Point, and nearby Triad communities",
+    heroTitle: "Appliance Repair in Greensboro, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Greensboro homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration problems.",
+    metaTitle: "Appliance Repair in Greensboro, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Greensboro, NC? DAPL Appliance Repair helps with refrigerators, washers, dryers, dishwashers, ovens, and cooling appliances across Greensboro and nearby Triad routes.",
+    keywords: [
+      "appliance repair Greensboro NC",
+      "Greensboro appliance repair",
+      "refrigerator repair Greensboro",
+      "washer repair Greensboro NC",
+      "dryer repair Greensboro NC",
+      "DAPL Appliance Repair Greensboro",
+    ],
+    introTitle: "Local appliance repair help across Greensboro",
+    introText:
+      "Greensboro service calls can include busy family kitchens, laundry rooms, refrigerators, and cooling equipment across Guilford County. We focus on practical diagnostics, clear communication, and scheduling that is confirmed by address and route availability.",
+    localNotes: [
+      "Helpful for Greensboro homes and nearby Guilford County communities",
+      "Good fit for kitchen, laundry, freezer, and cooling appliance requests",
+      "Appointment timing depends on the service address and Triad route",
+    ],
+    commonNeeds: [
+      {
+        title: "Refrigerators not cooling or leaking",
+        text:
+          "For Greensboro refrigerator calls, we ask when cooling changed, whether the freezer is affected, and if there is frost, water, or unusual noise.",
+      },
+      {
+        title: "Washers that will not drain, spin, or finish cycles",
+        text:
+          "Details about standing water, error codes, shaking, and where the cycle stops help us prepare for the right drain, balance, or control checks.",
+      },
+      {
+        title: "Dryers taking too long or not heating",
+        text:
+          "Long dry times can involve heat, airflow, venting, or sensor issues. We ask what the dryer is doing before recommending the next step.",
+      },
+      {
+        title: "Dishwashers leaking or leaving dishes dirty",
+        text:
+          "Leaks, standing water, and poor cleaning can come from different areas, so we narrow down door, drain, spray arm, and cycle symptoms first.",
+      },
+      {
+        title: "Ovens and cooktops with heating trouble",
+        text:
+          "Weak heat, uneven cooking, ignition failure, and a burner that will not start each point to different checks during the visit.",
+      },
+      {
+        title: "Freezers, ice machines, and wine coolers with temperature issues",
+        text:
+          "For cooling equipment, we look at temperature swings, frost, noise, leaks, and control behavior before suggesting a practical repair path.",
+      },
+    ],
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Winston-Salem", "Charlotte", "Mint Hill"],
+    faqs: [
+      {
+        question: "Do you offer appliance repair in Greensboro, NC?",
+        answer:
+          "Yes. We serve Greensboro and nearby Guilford County addresses when scheduling and Triad route availability allow.",
+      },
+      {
+        question: "Can I book same-day appliance repair in Greensboro?",
+        answer:
+          "Same-day appointments may be available when the route allows. Calling or sending the service address is the fastest way to confirm timing.",
+      },
+      {
+        question: "What appliances do you repair in Greensboro?",
+        answer:
+          "We help with many common refrigerators, washers, dryers, dishwashers, ovens, cooktops, freezers, ice machines, wine coolers, and select commercial refrigeration issues.",
+      },
+    ],
+  },
+  {
+    slug: "appliance-repair-winston-salem-nc",
+    city: "Winston-Salem",
+    state: "NC",
+    countyOrArea: "Forsyth County",
+    nearbyLabel: "Winston-Salem, Clemmons, and nearby Triad communities",
+    heroTitle: "Appliance Repair in Winston-Salem, NC",
+    heroDescription:
+      "DAPL Appliance Repair helps Winston-Salem homeowners with refrigerator, washer, dryer, dishwasher, oven, cooktop, freezer, ice machine, wine cooler, and select commercial refrigeration problems.",
+    metaTitle: "Appliance Repair in Winston-Salem, NC | DAPL Appliance Repair",
+    metaDescription:
+      "Need appliance repair in Winston-Salem, NC? DAPL Appliance Repair helps with refrigerators, washers, dryers, dishwashers, ovens, and cooling appliances across Winston-Salem and nearby Triad routes.",
+    keywords: [
+      "appliance repair Winston-Salem NC",
+      "Winston-Salem appliance repair",
+      "refrigerator repair Winston-Salem",
+      "washer repair Winston-Salem NC",
+      "dryer repair Winston-Salem NC",
+      "DAPL Appliance Repair Winston-Salem",
+    ],
+    introTitle: "Practical appliance repair for Winston-Salem homes",
+    introText:
+      "Winston-Salem service calls can range from kitchen and laundry problems to refrigerators, freezers, and other cooling equipment. Share the appliance symptoms and address so we can confirm coverage and the most practical appointment window.",
+    localNotes: [
+      "Helpful for Winston-Salem homes and nearby Forsyth County communities",
+      "Good fit for kitchen, laundry, freezer, and cooling appliance requests",
+      "Coverage and same-day timing depend on the service address and route",
+    ],
+    commonNeeds: [
+      {
+        title: "Refrigerators warming up or making unusual noise",
+        text:
+          "We ask whether the fresh-food section, freezer, or ice maker is affected and whether frost, water, or fan noise appeared first.",
+      },
+      {
+        title: "Washers stopping before the cycle is complete",
+        text:
+          "Tell us if the washer leaves water, will not spin, shakes, or shows an error code so we can narrow down drain, balance, and control symptoms.",
+      },
+      {
+        title: "Dryers running without enough heat",
+        text:
+          "A dryer can tumble normally while still failing to dry. We ask about heat, airflow, cycle length, and any burning smell before scheduling.",
+      },
+      {
+        title: "Dishwashers not draining or cleaning properly",
+        text:
+          "Standing water, poor cleaning, and unusual sounds can involve the filter, pump, spray arms, or drain path and need a focused look.",
+      },
+      {
+        title: "Ovens and cooktops with heating or ignition issues",
+        text:
+          "Slow preheat, uneven cooking, failed ignition, and a dead burner can have different causes, so we ask which symptom is most obvious.",
+      },
+      {
+        title: "Freezers and wine coolers losing temperature",
+        text:
+          "Cooling problems can affect food or bottle storage quickly, so we collect temperature, frost, leak, noise, and control details before scheduling.",
+      },
+    ],
+    serviceHighlights: sharedHighlights,
+    nearbyCities: ["Greensboro", "Charlotte", "Huntersville"],
+    faqs: [
+      {
+        question: "Do you serve Winston-Salem, NC?",
+        answer:
+          "Yes. We serve Winston-Salem and nearby Forsyth County addresses when scheduling and Triad route availability allow.",
+      },
+      {
+        question: "Is same-day appliance repair available in Winston-Salem?",
+        answer:
+          "Same-day service may be available depending on the route and appointment schedule. Calling directly is the fastest way to check.",
+      },
+      {
+        question: "What should I include when requesting service in Winston-Salem?",
+        answer:
+          "Include the appliance type, brand if known, symptoms, and service address. That helps us prepare and confirm the best available appointment time.",
+      },
+    ],
+  },
+  {
     slug: "appliance-repair-matthews-nc",
     city: "Matthews",
     state: "NC",

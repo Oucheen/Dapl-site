@@ -6,8 +6,16 @@ import { serviceAreaPagesDirectory } from "@/content/service-areas";
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
 
+const triadAreaSlugs = [
+  "appliance-repair-greensboro-nc",
+  "appliance-repair-winston-salem-nc",
+] as const;
+
 export function ServiceAreasSection() {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const triadAreas = triadAreaSlugs
+    .map((slug) => serviceAreaPagesDirectory.find((area) => area.slug === slug))
+    .filter((area): area is (typeof serviceAreaPagesDirectory)[number] => Boolean(area));
 
   function scrollAreas(direction: -1 | 1) {
     const carousel = carouselRef.current;
@@ -32,6 +40,49 @@ export function ServiceAreasSection() {
             description="Choose your closest area for local service notes, coverage details, and scheduling information."
           />
         </FadeUp>
+
+        {triadAreas.length > 0 ? (
+          <FadeUp delay={0.04}>
+            <div className="mx-auto mt-8 max-w-6xl rounded-3xl border border-primary/10 bg-[linear-gradient(135deg,rgba(15,42,86,0.055),rgba(255,255,255,0.98)_48%,rgba(207,36,49,0.06))] p-5 shadow-sm sm:p-8">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
+                  New service areas
+                </p>
+                <h3 className="mt-3 text-2xl font-black tracking-tight text-primary sm:text-3xl">
+                  Now serving the Triad
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted sm:text-base">
+                  Appliance repair coverage is expanding to Greensboro and Winston-Salem, with
+                  appointment timing confirmed by service address and route availability.
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {triadAreas.map((area) => (
+                  <Link
+                    key={area.slug}
+                    href={`/${area.slug}`}
+                    className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md sm:p-6"
+                  >
+                    <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-accent">
+                      Triad service area
+                    </span>
+                    <span className="mt-3 block text-xl font-black text-primary sm:text-2xl">
+                      {area.label}
+                    </span>
+                    <span className="mt-2 block text-sm leading-6 text-muted">
+                      Local appliance repair help for kitchen, laundry, cooling, and freezer
+                      concerns.
+                    </span>
+                    <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary transition group-hover:gap-3">
+                      View service area <span aria-hidden>→</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </FadeUp>
+        ) : null}
 
         <FadeUp delay={0.08}>
           <div className="mx-auto mt-8 max-w-6xl">
