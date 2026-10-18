@@ -2,6 +2,7 @@
 
 import { FadeUp } from "@/components/ui/fade-up";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { measureOpenAICustomerAction } from "@/lib/openai-pixel";
 import { sendGTMEvent } from "@next/third-parties/google";
 import { useMemo, useState } from "react";
 
@@ -152,6 +153,7 @@ export function ContactSection({
         promo_code: payload.promoCode || "",
         lead_source: payload.leadSource || source,
       });
+      measureOpenAICustomerAction("lead_created");
       setStatus("success");
       form.reset();
       setStep(1);

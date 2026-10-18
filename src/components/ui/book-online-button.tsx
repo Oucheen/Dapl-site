@@ -3,6 +3,7 @@
 import { sendGTMEvent } from "@next/third-parties/google";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { housecallProBookingToken, housecallProOrgName } from "@/components/ui/housecall-pro-config";
+import { measureOpenAICustomEvent } from "@/lib/openai-pixel";
 
 declare global {
   interface Window {
@@ -52,6 +53,7 @@ export function BookOnlineButton({
           booking_provider: "housecall_pro",
           ...gtmEvent,
         });
+        measureOpenAICustomEvent("booking_started");
 
         window.HCPWidget?.openModal();
       }}

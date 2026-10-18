@@ -20,13 +20,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.daplappliance.com"),
-  title: "DAPL Appliance Repair | Appliance Repair in Charlotte, NC",
+  title: "DAPL Appliance Repair | Charlotte, Greensboro & Winston-Salem",
   description:
-    "Expert appliance repair in Charlotte, NC and surrounding areas. Same-day service, certified technicians, and affordable pricing.",
+    "Expert appliance repair in Charlotte, Greensboro, Winston-Salem, and surrounding NC areas. Same-day service, certified technicians, and affordable pricing.",
   keywords: [
     "appliance repair Charlotte NC",
     "refrigerator repair Charlotte",
     "washer and dryer repair Charlotte",
+    "appliance repair Greensboro NC",
+    "appliance repair Winston-Salem NC",
     "same day appliance repair",
     "DAPL Appliance Repair",
   ],
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "DAPL Appliance Repair | We Fix It Right. The First Time.",
     description:
-      "Expert appliance repair services in Charlotte, NC and surrounding areas.",
+      "Expert appliance repair services in Charlotte, Greensboro, Winston-Salem, and surrounding NC areas.",
     type: "website",
     locale: "en_US",
     url: "/",
@@ -63,6 +65,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <GoogleTagManager gtmId="GTM-M2RWZXK9" />
+      <Script
+        id="openai-pixel"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            !function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var choice=null;try{choice=w.localStorage.getItem("dapl_cookie_consent")}catch(error){}oaiq("consent",choice === "accepted");var j=d.createElement(s);j.async=true;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");oaiq("init",{pixelId:"AtZ3qgzrgGSsLStxsnMGsp",debug:true});
+          `,
+        }}
+      />
       <body className="min-h-full flex flex-col">
         <Script
           id="google-consent-default"

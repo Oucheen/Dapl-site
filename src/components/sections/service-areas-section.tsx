@@ -80,6 +80,26 @@ export function ServiceAreasSection() {
                   </Link>
                 ))}
               </div>
+
+              <p className="mx-auto mt-6 max-w-4xl text-center text-sm leading-7 text-muted sm:text-base">
+                Homeowners looking for appliance repair in{" "}
+                <Link
+                  href="/appliance-repair-greensboro-nc"
+                  className="font-semibold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+                >
+                  Greensboro
+                </Link>{" "}
+                or{" "}
+                <Link
+                  href="/appliance-repair-winston-salem-nc"
+                  className="font-semibold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+                >
+                  Winston-Salem
+                </Link>{" "}
+                can request help with refrigerators, washers, dryers, dishwashers, ovens,
+                cooktops, freezers, ice machines, and wine coolers. Share your service address
+                and appliance details so we can confirm route availability.
+              </p>
             </div>
           </FadeUp>
         ) : null}

@@ -18,6 +18,7 @@ type ConsentState = {
 type WindowWithGtag = Window & {
   dataLayer?: unknown[];
   gtag?: (...args: unknown[]) => void;
+  oaiq?: (...args: unknown[]) => void;
 };
 
 function ensureGtag(win: WindowWithGtag) {
@@ -47,6 +48,7 @@ function updateGoogleConsent(choice: ConsentChoice) {
   const gtag = ensureGtag(win);
 
   gtag("consent", "update", getConsentState(choice));
+  win.oaiq?.("consent", choice === "accepted");
   win.dataLayer?.push({
     event: "cookie_consent_update",
     cookie_consent: choice,

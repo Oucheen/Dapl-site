@@ -1,6 +1,7 @@
 "use client";
 
 import { sendGTMEvent } from "@next/third-parties/google";
+import { measureOpenAICustomerAction } from "@/lib/openai-pixel";
 import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -476,6 +477,7 @@ export function ChatLeadWidget() {
         promo_code: "",
         lead_source: "chat-widget",
       });
+      measureOpenAICustomerAction("lead_created");
       setStatus("success");
       window.sessionStorage.setItem(chatInviteStorageKey, "1");
     } catch {

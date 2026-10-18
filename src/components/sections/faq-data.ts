@@ -22,7 +22,7 @@ export const faqItems = [
   {
     question: "What areas do you serve?",
     answer:
-      "We serve Charlotte, NC and surrounding areas. If you are nearby and unsure whether you are in range, call us and we will confirm.",
+      "We serve Charlotte, Greensboro, Winston-Salem, and surrounding NC areas. If you are nearby and unsure whether you are in range, call us and we will confirm.",
   },
   {
     question: "Can I use a promo code when I book online?",

@@ -36,13 +36,14 @@ export function Hero() {
         <FadeUp className="max-w-3xl">
           <GoogleReviewsBadge location="homepage_hero" className="mb-5 inline-flex sm:mb-6" />
           <p className="text-xs font-black uppercase tracking-[0.3em] text-primary/75 sm:text-sm">
-            Charlotte Appliance Repair
+            Charlotte &amp; Triad Appliance Repair
           </p>
           <h1 className="mt-4 text-4xl font-black leading-[0.98] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             We Fix It Right. The First Time.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
-            Expert appliance repair services in Charlotte, NC and surrounding areas.
+            Expert appliance repair services in Charlotte, Greensboro, Winston-Salem, and
+            surrounding NC areas.
           </p>
           <ul className="mt-7 grid max-w-xl gap-3 sm:grid-cols-2">
             {highlights.map((item) => (
@@ -82,7 +83,7 @@ export function Hero() {
           </div>
 
           <div className="mt-7 hidden max-w-2xl flex-wrap gap-2.5 sm:flex">
-            {["Same-day options", "Clear diagnosis", "Local Charlotte team"].map((item) => (
+            {["Same-day options", "Clear diagnosis", "Local service team"].map((item) => (
               <span
                 key={item}
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-white/90 px-3 py-2 text-xs font-bold text-primary shadow-sm backdrop-blur"

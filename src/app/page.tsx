@@ -27,7 +27,7 @@ function getLocalBusinessSchema(reviewSummary: ReviewSummary) {
   "@type": "LocalBusiness",
   name: "DAPL Appliance Repair",
   description:
-    "Expert appliance repair services in Charlotte, NC and surrounding areas.",
+    "Expert appliance repair services in Charlotte, Greensboro, Winston-Salem, and surrounding NC areas.",
   telephone: "+1-980-393-6588",
   email: "dapl.appliance.repair@gmail.com",
   address: {
