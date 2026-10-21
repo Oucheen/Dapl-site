@@ -590,4 +590,5 @@ Still worth doing or verifying:
 - Domain names and email addresses stay lowercase.
 
 ## Maintenance note
+- BBB business profile: https://www.bbb.org/us/nc/mint-hill/profile/appliance-repair/dapl-appliance-repair-0473-92038974. Added to the shared online profile links, footer, and homepage LocalBusiness `sameAs`. Profile verified on October 22, 2026: A- rating, not BBB Accredited; do not imply accreditation or use an accreditation seal.
 - Keep this file updated when adding new routes, SEO changes, form behavior, domain/email settings, or important UI flows

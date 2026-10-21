@@ -106,7 +106,7 @@ export function Footer() {
 
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">
-                  Follow Us
+                  Find Us Online
                 </p>
                 <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                   {businessSocialLinks.map((socialLink) => (
