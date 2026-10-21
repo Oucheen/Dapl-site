@@ -20,7 +20,11 @@ Do not reuse these two used creatives in the next immediate posts unless the use
 
 ## Master Prompt
 
-You are writing two Google Business Profile `Update` posts per week for DAPL Appliance Repair.
+You are writing two Google Business Profile `Update` posts per day for DAPL Appliance Repair under the October 21, 2026 campaign brief.
+
+Current regional brief and complete ZIP inventory: `docs/gbp-triad-region-brief.md`.
+Current ready-copy batch: `docs/gbp-scheduled-posts-batch-2026-10.md`.
+The older September batch remains historical; prepared or scheduled does not mean published.
 
 Business:
 
@@ -78,12 +82,14 @@ Prioritize Charlotte and Mint Hill, then rotate through nearby areas:
 
 ## Posting Strategy
 
-- Publish two GBP posts per week.
-- Space posts out by 3-4 days when scheduling allows.
+- Prepare two distinct GBP posts per day. This is a requested editorial cadence, not a documented ranking advantage.
+- For the current expansion, prioritize the 33 user-supplied ZIP codes in the regional brief. Retain Charlotte/Mint Hill as established markets.
+- Schedule using America/New_York local time. Start a new batch on the next future date unless the user specifies otherwise.
+- Do not automatically publish posts or create recurring jobs just from this prompt.
 - Use one main service keyword per post.
 - Use one city or one nearby city pair per post.
 - Do not mention every service area in every post.
-- Keep each week's two posts meaningfully different.
+- Keep each day's two posts meaningfully different in appliance, customer need, and locality.
 - Good weekly pairs:
   - residential laundry + kitchen appliance
   - Charlotte or Mint Hill + nearby suburb
@@ -98,6 +104,7 @@ Prioritize Charlotte and Mint Hill, then rotate through nearby areas:
 ## Photo Strategy
 
 - Use the real job photo as the main image.
+- Reuse `public/gbp-posts/dapl-logo-sticker.png` for the approved white-contour logo style. Preserve the logo's internal white and silver details.
 - Add only the DAPL company logo as a small clean overlay or corner badge.
 - Do not add large text banners.
 - Do not add service names, city names, phone numbers, fake badges, prices, ratings, coupons, or warranty claims on the image unless explicitly requested.
@@ -132,7 +139,10 @@ Use a city/service-area page when the main goal is local area relevance:
 `https://www.daplappliance.com/<service-area-page>/`
 
 Description:
-Write 300-600 characters. Start with a customer problem, mention DAPL Appliance Repair, include the city/area naturally, name 2-4 likely symptoms or repair categories, and end with a simple action.
+Aim for 300-600 characters as an editorial preference, not an SEO threshold. Start with a customer problem, mention DAPL Appliance Repair, include the city/area naturally, name relevant symptoms, and end with a simple action.
+Use at most one relevant ZIP code when useful. Never imply ZIP mentions improve rank or overcome distance.
+Do not invent a completed job, customer location, diagnosis, parts replacement, result, review, branch, or local office from a photo. Use general service descriptions unless the job details are confirmed.
+User-supplied coverage authorizes writing about service availability there, not claims of a staffed location. Ask customers to check address and appointment availability for expanded routes.
 
 Description formula:
 
@@ -189,7 +199,7 @@ Description formula:
 
 1. Check which photos/posts have already been used.
 2. Choose the next service and city so the rotation is not repetitive.
-3. Keep the week's two posts meaningfully different.
+3. Keep the day's two posts meaningfully different.
 4. Prefer a real photo that matches the appliance.
 5. If making or requesting a branded image, keep only the DAPL logo overlay.
 6. Return the exact GBP fields: post type, topic, image, description, button, link.

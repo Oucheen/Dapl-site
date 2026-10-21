@@ -1,5 +1,14 @@
 # DAPL Google Business Profile Post Plan
 
+## Current Campaign - October 21, 2026
+
+The user changed the requested cadence to two posts per day for the Triad/Salisbury expansion.
+Use `docs/gbp-triad-region-brief.md` for the 33 added ZIP codes and `docs/gbp-scheduled-posts-batch-2026-10.md` for the next 34 drafts, October 22-November 7.
+The weekly rotation below is retained as historical planning only; its frequency and ready-next labels are superseded.
+No new service areas have been submitted to Google or added to the website by this document change.
+
+## Historical Weekly Plan
+
 Purpose: publish two Google Business Profile updates per week using real DAPL job photos, rotating appliance type and service area. Posts should look like real local work, not generic SEO text.
 
 Default post type: `Update`
