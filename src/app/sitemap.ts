@@ -1,9 +1,11 @@
 import type { MetadataRoute } from "next";
 import { brandPages } from "@/content/brand-pages";
 import { serviceAreaPages } from "@/content/service-areas";
-import { blogPosts } from "@/content/blog-posts";
+import { getPublicBlogPosts } from "@/content/blog-posts";
+export const dynamic = "force-dynamic";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const publicBlogPosts = getPublicBlogPosts();
   const baseUrl = "https://www.daplappliance.com";
   const lastModified = new Date();
 
@@ -98,9 +100,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
-    ...blogPosts.map((post) => ({
+    ...publicBlogPosts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: new Date(post.updatedAt),
+      lastModified: new Date(post.updatedAt ?? post.publishedAt ?? post.scheduledFor),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
