@@ -1,5 +1,12 @@
 type GoogleReview = {
+  name?: string;
+  reviewId?: string;
+  reviewer?: {
+    displayName?: string;
+    isAnonymous?: boolean;
+  };
   starRating?: string;
+  comment?: string;
 };
 
 type GoogleReviewsResponse = {
@@ -89,7 +96,7 @@ export async function fetchGoogleBusinessReviewSummary() {
   );
 
   const response = await fetch(
-    `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews?pageSize=50`,
+    `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews?pageSize=24&orderBy=updateTime%20desc`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -116,5 +123,22 @@ export async function fetchGoogleBusinessReviewSummary() {
     rating,
     reviewCount,
     reviewUrl: process.env.GOOGLE_REVIEWS_URL,
+    reviews: reviews
+      .map((review, index) => {
+        const text = review.comment?.trim();
+
+        if (!text) {
+          return null;
+        }
+
+        return {
+          id: review.reviewId || review.name || `google-review-${index}`,
+          name: review.reviewer?.displayName?.trim() || "Google customer",
+          service: "Google Business Profile",
+          text,
+          rating: STAR_RATING_VALUES[review.starRating || ""] || 5,
+        };
+      })
+      .filter((review): review is NonNullable<typeof review> => review !== null),
   };
 }

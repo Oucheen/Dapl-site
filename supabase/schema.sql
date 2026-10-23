@@ -156,7 +156,8 @@ create table if not exists public.review_summary (
   updated_at timestamptz not null default now(),
   rating numeric(2,1) not null,
   review_count integer not null check (review_count >= 0),
-  review_url text
+  review_url text,
+  reviews jsonb not null default '[]'::jsonb
 );
 
 create table if not exists public.telegram_users (
@@ -211,6 +212,9 @@ alter table public.calls
 alter table public.invoices
   add column if not exists promo_code text,
   add column if not exists discount_amount numeric(10,2) not null default 0;
+
+alter table public.review_summary
+  add column if not exists reviews jsonb not null default '[]'::jsonb;
 
 create index if not exists leads_created_at_idx on public.leads (created_at desc);
 create index if not exists leads_status_idx on public.leads (status);

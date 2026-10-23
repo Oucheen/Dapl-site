@@ -1,5 +1,9 @@
 {
-  "crons": [ ]
-    
-  
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/google-reviews-sync",
+      "schedule": "17 5 * * *"
+    }
+  ]
 }

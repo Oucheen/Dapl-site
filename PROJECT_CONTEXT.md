@@ -254,8 +254,10 @@ For local development, create `.env.local` with the same keys if you want the fo
 
 ### Reviews / trust section
 - `src/components/sections/reviews-section.tsx` contains the selected carousel-style reviews section
-- The homepage imports it, but `REVIEWS_SECTION_ENABLED` in `src/app/page.tsx` is currently `false`, so the section is not visible on the live site
-- Before enabling it, replace sample review text with real Google reviews, set the real Google Business Profile reviews URL, and update the manual Google rating/review count
+- `REVIEWS_SECTION_ENABLED` in `src/app/page.tsx` is `true`, so the section is visible on the homepage
+- `/api/google-reviews-sync` fetches the latest Google Business Profile rating, count, names, ratings, and review text, then stores them in the `review_summary.reviews` JSONB column in Supabase
+- `vercel.json` schedules the sync daily; the route revalidates the homepage after a successful update
+- The hand-written reviews in `src/content/customer-reviews.ts` remain the fallback if Google or Supabase is unavailable
 - Review carousel behavior: mobile uses swipe and a next-card peek; desktop/tablet shows arrow controls
 
 ### Brands section

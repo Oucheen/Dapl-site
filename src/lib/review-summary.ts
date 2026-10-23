@@ -4,12 +4,14 @@ import {
   googleReviewRating,
   googleReviewsUrl,
 } from "@/content/google-profile";
+import { customerReviews, type CustomerReview } from "@/content/customer-reviews";
 
 export type ReviewSummary = {
   rating: string;
   reviewCount: string;
   reviewCountValue: number;
   reviewUrl: string;
+  reviews: CustomerReview[];
   updatedAt?: string;
   source: "stored" | "google" | "fallback";
 };
@@ -19,6 +21,7 @@ export const FALLBACK_REVIEW_SUMMARY: ReviewSummary = {
   reviewCount: googleReviewCount,
   reviewCountValue: googleReviewCountValue,
   reviewUrl: googleReviewsUrl,
+  reviews: customerReviews,
   source: "fallback",
 };
 
@@ -27,6 +30,7 @@ type SupabaseReviewSummaryRow = {
   rating: number | string;
   review_count: number;
   review_url?: string | null;
+  reviews?: CustomerReview[] | null;
 };
 
 function normalizeSupabaseUrl(url: string) {
@@ -74,6 +78,7 @@ function mapReviewSummaryRow(
     reviewCount: String(row.review_count),
     reviewCountValue: row.review_count,
     reviewUrl: row.review_url || googleReviewsUrl,
+    reviews: Array.isArray(row.reviews) && row.reviews.length ? row.reviews : customerReviews,
     updatedAt: row.updated_at,
     source,
   };
@@ -88,7 +93,7 @@ export async function getReviewSummary(): Promise<ReviewSummary> {
 
   try {
     const response = await fetch(
-      `${config.url}/rest/v1/review_summary?id=eq.google&select=updated_at,rating,review_count,review_url&limit=1`,
+      `${config.url}/rest/v1/review_summary?id=eq.google&select=updated_at,rating,review_count,review_url,reviews&limit=1`,
       {
         headers: getHeaders(config),
         next: { revalidate: 3600 },
@@ -116,6 +121,7 @@ export async function upsertReviewSummary(input: {
   rating: number;
   reviewCount: number;
   reviewUrl?: string;
+  reviews?: CustomerReview[];
 }) {
   const config = getSupabaseConfig();
 
@@ -138,6 +144,7 @@ export async function upsertReviewSummary(input: {
         rating,
         review_count: reviewCount,
         review_url: input.reviewUrl || googleReviewsUrl,
+        reviews: input.reviews || [],
       },
     ]),
     cache: "no-store",
