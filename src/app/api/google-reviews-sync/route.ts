@@ -31,10 +31,13 @@ async function syncReviews(request: NextRequest) {
 
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown sync error";
+    console.error("[google-reviews-sync] failed", { message });
+
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unknown sync error",
+        error: message,
       },
       { status: 500 },
     );
