@@ -1,3 +1,5 @@
+import { googleReviewsUrl } from "@/content/google-profile";
+
 type GoogleReview = {
   name?: string;
   reviewId?: string;
@@ -124,7 +126,7 @@ export async function fetchGoogleBusinessReviewSummary() {
   return {
     rating,
     reviewCount,
-    reviewUrl: process.env.GOOGLE_REVIEWS_URL,
+    reviewUrl: process.env.GOOGLE_REVIEWS_URL || googleReviewsUrl,
     reviews: reviews
       .map((review, index) => {
         const text = review.comment?.trim();
@@ -140,7 +142,7 @@ export async function fetchGoogleBusinessReviewSummary() {
           text,
           rating: STAR_RATING_VALUES[review.starRating || ""] || 5,
           date: review.createTime,
-          reviewUrl: process.env.GOOGLE_REVIEWS_URL,
+          reviewUrl: process.env.GOOGLE_REVIEWS_URL || googleReviewsUrl,
         };
       })
       .filter((review): review is NonNullable<typeof review> => review !== null),
