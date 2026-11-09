@@ -144,6 +144,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Legacy `LEADS_ADMIN_USERS` format is semicolon-separated: `Name|password|role;Second Name|password2|staff`.
   Roles are normalized to lowercase automatically, so `BOSS` becomes `boss`.
 - When multiple staff users are configured, the signed-in user name is stored in the admin session and new activity-log rows show who made each change.
+- The official Housecall Pro chat bubble is loaded globally from `src/app/layout.tsx` using the DAPL organization ID from `src/components/ui/housecall-pro-config.ts`
+- The previous custom multi-step chat lead widget is no longer mounted; lead intake through the chat bubble is handled by Housecall Pro
 - The floating contact widget is hidden on `/admin` routes
 - Auth is intentionally simple for the first CRM step:
   - `LEADS_ADMIN_PASSWORD` is useful as fallback/bootstrapping owner access in Vercel

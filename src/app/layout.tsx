@@ -3,7 +3,12 @@ import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
-import { housecallProBookingScriptUrl } from "@/components/ui/housecall-pro-config";
+import {
+  housecallProBookingScriptUrl,
+  housecallProChatColor,
+  housecallProChatOrganization,
+  housecallProChatScriptUrl,
+} from "@/components/ui/housecall-pro-config";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { GlobalWidgets } from "@/components/ui/global-widgets";
 import "./globals.css";
@@ -121,6 +126,13 @@ export default function RootLayout({
           id="housecall-pro-online-booking"
           src={housecallProBookingScriptUrl}
           strategy="afterInteractive"
+        />
+        <Script
+          id="housecall-pro-chat"
+          src={housecallProChatScriptUrl}
+          strategy="afterInteractive"
+          data-color={housecallProChatColor}
+          data-organization={housecallProChatOrganization}
         />
         {children}
         <Suspense fallback={null}>
