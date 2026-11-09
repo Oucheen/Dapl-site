@@ -7,7 +7,7 @@ import {
   type CustomerReview,
 } from "@/content/customer-reviews";
 import { googleReviewCount, googleReviewRating, googleReviewsUrl } from "@/content/google-profile";
-import { X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 
 type ReviewSummaryView = {
   rating: string;
@@ -53,6 +53,21 @@ function GoogleWordmark() {
       <span className="text-[#ea4335]">e</span>
     </span>
   );
+}
+
+function formatReviewDate(value?: string) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
 }
 
 function ArrowIcon({ direction }: { direction: "previous" | "next" }) {
@@ -175,9 +190,19 @@ export function ReviewsSection({
                 <article
                   key={review.id}
                   data-review-card
-                  className="flex h-[360px] w-[82%] max-w-[390px] shrink-0 snap-center flex-col rounded-[1.1rem] border border-border bg-white p-6 shadow-sm sm:w-[48%] lg:w-[32%] lg:snap-start"
+                  className="flex h-[360px] w-[82%] max-w-[390px] shrink-0 snap-center flex-col rounded-[1.1rem] border border-border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[48%] lg:w-[32%] lg:snap-start"
                 >
-                  <Stars rating={review.rating} />
+                  <div className="flex items-center justify-between gap-3">
+                    <Stars rating={review.rating} />
+                    {formatReviewDate(review.date) ? (
+                      <time
+                        dateTime={review.date}
+                        className="text-xs font-semibold text-muted"
+                      >
+                        {formatReviewDate(review.date)}
+                      </time>
+                    ) : null}
+                  </div>
                   <div className="mt-5 flex min-h-0 flex-1 flex-col">
                     <p className="overflow-hidden text-sm leading-7 text-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
                       {review.text}
@@ -192,11 +217,25 @@ export function ReviewsSection({
                       </button>
                     ) : null}
                   </div>
-                  <div className="mt-6 border-t border-border pt-4">
-                    <p className="font-black text-primary">{review.name}</p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                      {review.service}
-                    </p>
+                  <div className="mt-6 flex items-end justify-between gap-3 border-t border-border pt-4">
+                    <div className="min-w-0">
+                      <p className="truncate font-black text-primary">{review.name}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                        {review.service}
+                      </p>
+                    </div>
+                    {review.reviewUrl ? (
+                      <a
+                        href={review.reviewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex shrink-0 items-center gap-1 text-xs font-black text-primary underline decoration-accent/50 underline-offset-4 transition hover:text-accent"
+                        aria-label={`Open ${review.name}'s review on Google`}
+                      >
+                        Google
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    ) : null}
                   </div>
                 </article>
               ))}

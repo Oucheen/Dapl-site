@@ -4,6 +4,8 @@ export type CustomerReview = {
   service: string;
   text: string;
   rating: number;
+  date?: string;
+  reviewUrl?: string;
 };
 
 export const customerReviews: CustomerReview[] = [

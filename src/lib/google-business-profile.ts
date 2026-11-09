@@ -7,6 +7,8 @@ type GoogleReview = {
   };
   starRating?: string;
   comment?: string;
+  createTime?: string;
+  updateTime?: string;
 };
 
 type GoogleReviewsResponse = {
@@ -137,6 +139,8 @@ export async function fetchGoogleBusinessReviewSummary() {
           service: "Google Business Profile",
           text,
           rating: STAR_RATING_VALUES[review.starRating || ""] || 5,
+          date: review.createTime,
+          reviewUrl: process.env.GOOGLE_REVIEWS_URL,
         };
       })
       .filter((review): review is NonNullable<typeof review> => review !== null),
