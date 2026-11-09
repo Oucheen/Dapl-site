@@ -5,6 +5,7 @@ import { measureOpenAICustomerAction } from "@/lib/openai-pixel";
 import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { announceWidgetOpened, widgetOpenEvent } from "@/components/ui/widget-events";
 
 type ChatStatus = "idle" | "submitting" | "success" | "error";
 
@@ -302,11 +303,29 @@ export function ChatLeadWidget() {
     }
   }, [isOpen, step]);
 
+  useEffect(() => {
+    const closeWhenAnotherWidgetOpens = (event: Event) => {
+      const widget = (event as CustomEvent<{ widget?: string }>).detail?.widget;
+
+      if (widget !== "chat") {
+        setIsOpen(false);
+        setShowInvite(false);
+      }
+    };
+
+    window.addEventListener(widgetOpenEvent, closeWhenAnotherWidgetOpens);
+
+    return () => {
+      window.removeEventListener(widgetOpenEvent, closeWhenAnotherWidgetOpens);
+    };
+  }, []);
+
   if (isAdminRoute || !isMounted) {
     return null;
   }
 
   const openChat = () => {
+    announceWidgetOpened("chat");
     setIsOpen(true);
     setShowInvite(false);
     window.sessionStorage.setItem(chatInviteStorageKey, "1");
@@ -504,7 +523,7 @@ export function ChatLeadWidget() {
   const showTextInput = ["issue", "name", "phone", "email", "address", "date"].includes(step);
 
   return (
-    <div className="pointer-events-auto fixed bottom-24 right-5 z-[1400] flex w-[calc(100vw-2rem)] max-w-[22rem] flex-col items-end sm:bottom-24">
+    <div className="pointer-events-auto fixed bottom-40 right-5 z-[1400] flex w-[calc(100vw-2rem)] max-w-[22rem] flex-col items-end sm:bottom-40">
       {isOpen ? (
         <section
           className="mb-3 w-full overflow-hidden rounded-2xl border border-border bg-white shadow-[0_22px_60px_rgba(15,42,86,0.2)]"

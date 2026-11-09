@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOnlineButton } from "@/components/ui/book-online-button";
+import { announceWidgetOpened, widgetOpenEvent } from "@/components/ui/widget-events";
 
 function PhoneIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -92,6 +93,22 @@ export function ContactWidget() {
   }, [isAdminRoute]);
 
   useEffect(() => {
+    const closeWhenAnotherWidgetOpens = (event: Event) => {
+      const widget = (event as CustomEvent<{ widget?: string }>).detail?.widget;
+
+      if (widget !== "contact") {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener(widgetOpenEvent, closeWhenAnotherWidgetOpens);
+
+    return () => {
+      window.removeEventListener(widgetOpenEvent, closeWhenAnotherWidgetOpens);
+    };
+  }, []);
+
+  useEffect(() => {
     if (isAdminRoute) {
       return;
     }
@@ -135,10 +152,20 @@ export function ContactWidget() {
 
   const closeWidget = () => setIsOpen(false);
 
+  const toggleWidget = () => {
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+
+    announceWidgetOpened("contact");
+    setIsOpen(true);
+  };
+
   return (
     <div
       ref={widgetRef}
-      className={`pointer-events-none fixed bottom-5 right-[5.75rem] z-[1410] hidden flex-col items-end transition-all duration-200 md:flex ${
+      className={`pointer-events-none fixed bottom-24 right-5 z-[1410] hidden flex-col items-end transition-all duration-200 md:flex ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-3 opacity-0"
@@ -244,7 +271,7 @@ export function ContactWidget() {
 
       <button
         type="button"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={toggleWidget}
         aria-expanded={isOpen}
         aria-label={isOpen ? "Close contact actions" : "Open contact actions"}
         className={`relative inline-flex h-14 w-14 items-center justify-center text-white transition duration-200 hover:-translate-y-0.5 ${
