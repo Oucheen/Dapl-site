@@ -13,4 +13,4 @@ export const housecallProChatScriptUrl =
 export const housecallProChatOrganization =
   "7bde8094-bc03-4f48-a1fd-8ea1fc4a6303";
 
-export const housecallProChatColor = "#0E6BFE";
+export const housecallProChatColor = "#0E6FBE";

@@ -5,10 +5,12 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import {
   housecallProBookingScriptUrl,
+  housecallProChatColor,
+  housecallProChatOrganization,
+  housecallProChatScriptUrl,
 } from "@/components/ui/housecall-pro-config";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { GlobalWidgets } from "@/components/ui/global-widgets";
-import { HousecallProChatLoader } from "@/components/ui/housecall-pro-chat-loader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -67,6 +69,17 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <Script
+          id="housecall-pro-chat-bubble"
+          src={housecallProChatScriptUrl}
+          strategy="beforeInteractive"
+          type="text/javascript"
+          data-color={housecallProChatColor}
+          data-organization={housecallProChatOrganization}
+          defer
+        />
+      </head>
       <GoogleTagManager gtmId="GTM-M2RWZXK9" />
       <Script
         id="openai-pixel"
@@ -130,7 +143,6 @@ export default function RootLayout({
           <GlobalWidgets />
         </Suspense>
         <CookieConsent />
-        <HousecallProChatLoader />
       </body>
     </html>
   );
