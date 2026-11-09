@@ -32,6 +32,10 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+#proChatIframeContainer {
+  z-index: 1300 !important;
+}
+
 html {
   scroll-behavior: smooth;
 }

@@ -127,18 +127,19 @@ export default function RootLayout({
           src={housecallProBookingScriptUrl}
           strategy="afterInteractive"
         />
-        <Script
-          id="housecall-pro-chat"
-          src={housecallProChatScriptUrl}
-          strategy="afterInteractive"
-          data-color={housecallProChatColor}
-          data-organization={housecallProChatOrganization}
-        />
         {children}
         <Suspense fallback={null}>
           <GlobalWidgets />
         </Suspense>
         <CookieConsent />
+        <script
+          id="housecall-pro-chat"
+          src={housecallProChatScriptUrl}
+          type="text/javascript"
+          data-color={housecallProChatColor}
+          data-organization={housecallProChatOrganization}
+          defer
+        />
       </body>
     </html>
   );
