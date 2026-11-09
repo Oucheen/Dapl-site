@@ -5,12 +5,10 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import {
   housecallProBookingScriptUrl,
-  housecallProChatColor,
-  housecallProChatOrganization,
-  housecallProChatScriptUrl,
 } from "@/components/ui/housecall-pro-config";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { GlobalWidgets } from "@/components/ui/global-widgets";
+import { HousecallProChatLoader } from "@/components/ui/housecall-pro-chat-loader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -132,14 +130,7 @@ export default function RootLayout({
           <GlobalWidgets />
         </Suspense>
         <CookieConsent />
-        <script
-          id="housecall-pro-chat"
-          src={housecallProChatScriptUrl}
-          type="text/javascript"
-          data-color={housecallProChatColor}
-          data-organization={housecallProChatOrganization}
-          defer
-        />
+        <HousecallProChatLoader />
       </body>
     </html>
   );
