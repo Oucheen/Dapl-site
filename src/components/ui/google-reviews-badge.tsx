@@ -18,9 +18,13 @@ function GoogleWordmark() {
 export function GoogleReviewsBadge({
   className = "",
   location,
+  rating = googleReviewRating,
+  reviewCount = googleReviewCount,
 }: {
   className?: string;
   location: string;
+  rating?: string;
+  reviewCount?: string;
 }) {
   return (
     <TrackedAnchor
@@ -29,13 +33,13 @@ export function GoogleReviewsBadge({
       rel="noreferrer"
       gtmEvent={{ event: "reviews_click", location }}
       className={`max-w-full items-center gap-2 rounded-full bg-transparent px-1 py-1 text-primary drop-shadow-[0_1px_1px_rgba(255,255,255,0.72)] transition hover:-translate-y-0.5 sm:gap-3 ${className}`}
-      aria-label={`Read ${googleReviewCount} Google reviews`}
+      aria-label={`Read ${reviewCount} Google reviews`}
     >
       <span className="min-w-0 text-sm sm:text-base">
         <GoogleWordmark />
         <span className="mt-0.5 flex items-center gap-1 text-accent sm:mt-1">
           <span className="text-xs font-black leading-none text-[#fbbc05] sm:text-sm">
-            {googleReviewRating}
+            {rating}
           </span>
           <span className="flex items-center gap-0.5" aria-hidden="true">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -44,7 +48,7 @@ export function GoogleReviewsBadge({
           </span>
         </span>
         <span className="mt-0.5 block text-[0.65rem] font-black uppercase leading-tight tracking-[0.08em] text-primary sm:text-xs">
-          {googleReviewCount} reviews
+          {reviewCount} reviews
         </span>
       </span>
     </TrackedAnchor>

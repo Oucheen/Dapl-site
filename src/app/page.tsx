@@ -92,7 +92,7 @@ export default async function Home() {
       <Header />
       <SectionProgress />
       <main>
-        <Hero />
+        <Hero rating={reviewSummary.rating} reviewCount={reviewSummary.reviewCount} />
         <SavingsSection />
         <AppliancesSection />
         <BrandsSection />

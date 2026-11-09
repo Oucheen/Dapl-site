@@ -13,7 +13,13 @@ const highlights = [
   "Satisfaction Guaranteed",
 ];
 
-export function Hero() {
+export function Hero({
+  rating,
+  reviewCount,
+}: {
+  rating?: string;
+  reviewCount?: string;
+}) {
   return (
     <section
       id="top"
@@ -34,7 +40,12 @@ export function Hero() {
 
       <div className="container-shell relative flex min-h-[calc(100svh-5rem)] items-center py-12 pb-24 sm:py-16 lg:py-20">
         <FadeUp className="max-w-3xl">
-          <GoogleReviewsBadge location="homepage_hero" className="mb-5 inline-flex sm:mb-6" />
+          <GoogleReviewsBadge
+            location="homepage_hero"
+            className="mb-5 inline-flex sm:mb-6"
+            rating={rating}
+            reviewCount={reviewCount}
+          />
           <p className="text-xs font-black uppercase tracking-[0.3em] text-primary/75 sm:text-sm">
             Charlotte &amp; Triad Appliance Repair
           </p>
