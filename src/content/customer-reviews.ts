@@ -5,6 +5,7 @@ export type CustomerReview = {
   text: string;
   rating: number;
   date?: string;
+  dateLabel?: string;
   reviewUrl?: string;
 };
 

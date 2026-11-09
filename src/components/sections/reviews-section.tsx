@@ -199,6 +199,7 @@ export function ReviewsSection({
                         dateTime={review.date}
                         className="text-xs font-semibold text-muted"
                       >
+                        {review.dateLabel ? `${review.dateLabel} ` : null}
                         {formatReviewDate(review.date)}
                       </time>
                     ) : null}

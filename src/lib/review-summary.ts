@@ -84,6 +84,8 @@ function mapReviewSummaryRow(
     reviewUrl,
     reviews: reviews.map((review) => ({
       ...review,
+      date: review.date || row.updated_at,
+      dateLabel: review.date ? review.dateLabel : "Updated",
       reviewUrl: review.reviewUrl || reviewUrl,
     })),
     updatedAt: row.updated_at,

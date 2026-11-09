@@ -141,7 +141,7 @@ export async function fetchGoogleBusinessReviewSummary() {
           service: "Google Business Profile",
           text,
           rating: STAR_RATING_VALUES[review.starRating || ""] || 5,
-          date: review.createTime,
+          date: review.createTime || review.updateTime,
           reviewUrl: process.env.GOOGLE_REVIEWS_URL || googleReviewsUrl,
         };
       })
