@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { ChatLeadWidget } from "@/components/ui/chat-lead-widget";
 import { ContactWidget } from "@/components/ui/contact-widget";
 
 const HIDDEN_WIDGET_PATHS = ["/admin", "/app", "/phone", "/i", "/tech/report", "/tech/invoice", "/v"];
@@ -15,6 +16,7 @@ export function GlobalWidgets() {
 
   return (
     <>
+      <ChatLeadWidget />
       <ContactWidget />
     </>
   );
