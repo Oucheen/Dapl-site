@@ -504,7 +504,7 @@ export function ChatLeadWidget() {
   const showTextInput = ["issue", "name", "phone", "email", "address", "date"].includes(step);
 
   return (
-    <div className="fixed bottom-24 right-5 z-[1250] flex w-[calc(100vw-2rem)] max-w-[22rem] flex-col items-end sm:bottom-24">
+    <div className="pointer-events-auto fixed bottom-24 right-5 z-[1400] flex w-[calc(100vw-2rem)] max-w-[22rem] flex-col items-end sm:bottom-24">
       {isOpen ? (
         <section
           className="mb-3 w-full overflow-hidden rounded-2xl border border-border bg-white shadow-[0_22px_60px_rgba(15,42,86,0.2)]"
