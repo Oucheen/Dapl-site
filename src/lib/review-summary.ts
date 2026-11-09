@@ -73,12 +73,19 @@ function mapReviewSummaryRow(
   row: SupabaseReviewSummaryRow,
   source: ReviewSummary["source"] = "stored",
 ): ReviewSummary {
+  const reviewUrl = row.review_url || googleReviewsUrl;
+  const storedReviews = Array.isArray(row.reviews) ? row.reviews : [];
+  const reviews = storedReviews.length ? storedReviews : customerReviews;
+
   return {
     rating: formatRating(row.rating),
     reviewCount: String(row.review_count),
     reviewCountValue: row.review_count,
-    reviewUrl: row.review_url || googleReviewsUrl,
-    reviews: Array.isArray(row.reviews) && row.reviews.length ? row.reviews : customerReviews,
+    reviewUrl,
+    reviews: reviews.map((review) => ({
+      ...review,
+      reviewUrl: review.reviewUrl || reviewUrl,
+    })),
     updatedAt: row.updated_at,
     source,
   };
