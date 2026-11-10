@@ -506,7 +506,7 @@ export function ChatLeadWidget() {
   };
 
   const currentQuestion = {
-    intro: "Hi, thanks for visiting DAPL. If something is wrong with an appliance, I can help send the details to our team in under a minute.",
+    intro: "I’m DAPL’s automated assistant. I can collect your service details and send them to our team. For a direct conversation with support, use Live support.",
     appliance: "What appliance are you having trouble with?",
     issue: "What is going on with it?",
     name: "What is your name?",
@@ -523,7 +523,12 @@ export function ChatLeadWidget() {
   const showTextInput = ["issue", "name", "phone", "email", "address", "date"].includes(step);
 
   return (
-    <div className="pointer-events-auto fixed bottom-40 right-5 z-[1400] flex w-[calc(100vw-2rem)] max-w-[22rem] flex-col items-end sm:bottom-40">
+    <div className="pointer-events-auto fixed bottom-[14rem] right-3 z-[1400] flex w-[calc(100vw-1.5rem)] max-w-[22rem] flex-col items-end sm:bottom-40 sm:right-5 sm:w-[calc(100vw-2rem)]">
+      {!isOpen && !showInvite ? (
+        <span className="pointer-events-none absolute bottom-3 right-16 whitespace-nowrap rounded-full border border-accent/15 bg-white/95 px-2.5 py-1 text-[0.65rem] font-bold text-primary shadow-[0_8px_20px_rgba(15,42,86,0.12)] sm:text-xs">
+          AI assistant
+        </span>
+      ) : null}
       {isOpen ? (
         <section
           className="mb-3 w-full overflow-hidden rounded-2xl border border-border bg-white shadow-[0_22px_60px_rgba(15,42,86,0.2)]"
@@ -532,7 +537,7 @@ export function ChatLeadWidget() {
           <div className="flex items-center justify-between bg-primary px-4 py-3 text-white">
             <div>
               <p className="text-sm font-bold">DAPL assistant</p>
-              <p className="text-xs text-white/75">Service request helper</p>
+              <p className="text-xs text-white/75">Automated assistant · bot</p>
             </div>
             <button
               type="button"
@@ -799,7 +804,7 @@ export function ChatLeadWidget() {
             onClick={openChat}
             className="min-w-0 flex-1 text-left"
           >
-            Hi, need help with an appliance? We can take a quick request here.
+            Need help with an appliance? Our assistant bot can collect a quick request here.
           </button>
           <button
             type="button"

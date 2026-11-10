@@ -36,6 +36,20 @@ body {
   z-index: 1300 !important;
 }
 
+@media (max-width: 767px) {
+  #proChatIframeContainer {
+    bottom: 5.75rem !important;
+    right: 0.75rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  #proChatIframeContainer {
+    bottom: 1.5rem !important;
+    right: 1.25rem !important;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
