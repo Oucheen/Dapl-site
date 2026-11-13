@@ -19,6 +19,7 @@ export type LeadInsertInput = {
   leadSource: string;
   preferredDate: string;
   message: string;
+  housecallProLeadId?: string;
 };
 
 type SupabaseLeadRow = {
@@ -43,6 +44,7 @@ export type LeadRecord = {
   scheduled_date?: string | null;
   estimated_price?: number | string | null;
   assigned_technician?: string | null;
+  housecall_pro_lead_id?: string | null;
   pipeline_stage?: PipelineStage;
   pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
@@ -57,6 +59,7 @@ export type LeadAdminUpdateInput = {
   scheduledDate?: string;
   estimatedPrice?: string;
   assignedTechnician?: string;
+  housecallProLeadId?: string;
   pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
@@ -127,7 +130,7 @@ export type CallIntakeLeadInput = {
 };
 
 type SaveLeadResult =
-  | { saved: true; id?: string }
+  | { saved: true; id?: string; duplicate?: boolean }
   | { saved: false; skipped: true }
   | { saved: false; skipped: false; error: unknown };
 
@@ -319,7 +322,7 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
       method: "POST",
       headers: {
         ...headers(config),
-        Prefer: "return=representation",
+        Prefer: "resolution=ignore-duplicates,return=representation",
       },
       body: JSON.stringify({
         status: "new" satisfies LeadStatus,
@@ -332,6 +335,9 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
         lead_source: input.leadSource || null,
         preferred_date: input.preferredDate || null,
         message: input.message,
+        ...(input.housecallProLeadId?.trim()
+          ? { housecall_pro_lead_id: input.housecallProLeadId.trim() }
+          : {}),
       }),
     });
 
@@ -341,7 +347,11 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
     }
 
     const rows = (await response.json().catch(() => [])) as SupabaseLeadRow[];
-    return { saved: true, id: rows[0]?.id };
+    return {
+      saved: true,
+      id: rows[0]?.id,
+      duplicate: Boolean(input.housecallProLeadId?.trim()) && !rows[0]?.id,
+    };
   } catch (error) {
     return { saved: false, skipped: false, error };
   }
@@ -440,6 +450,40 @@ export async function findRecentLeadBySourceReference(input: {
     return rows.find((row) => row.message?.includes(reference)) ?? null;
   } catch (error) {
     console.error("Supabase source lead duplicate check error:", error);
+    return null;
+  }
+}
+
+export async function findSupabaseLeadByHousecallProLeadId(housecallProLeadId: string) {
+  const config = getSupabaseConfig();
+  const normalizedId = housecallProLeadId.trim();
+
+  if (!config || !normalizedId) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    housecall_pro_lead_id: `eq.${normalizedId}`,
+    limit: "1",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase Housecall Pro lead lookup failed: ${response.status} ${details}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as LeadRecord[];
+    return rows[0] ?? null;
+  } catch (error) {
+    console.error("Supabase Housecall Pro lead lookup error:", error);
     return null;
   }
 }
@@ -611,6 +655,10 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   if (input.assignedTechnician !== undefined) {
     payload.assigned_technician = input.assignedTechnician.trim() || null;
+  }
+
+  if (input.housecallProLeadId !== undefined) {
+    payload.housecall_pro_lead_id = input.housecallProLeadId.trim() || null;
   }
 
   if (input.pipelineStage !== undefined) {

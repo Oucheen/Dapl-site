@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
+  findSupabaseLeadByHousecallProLeadId,
   findRecentLeadBySourceReference,
   getSupabaseLeadById,
   saveLeadToSupabase,
@@ -358,8 +359,12 @@ export async function POST(request: Request) {
     estimated_price: null,
   };
 
-  if (reference) {
-    const duplicate = await findRecentLeadBySourceReference({
+  let duplicate: { id: string } | null = externalId
+    ? await findSupabaseLeadByHousecallProLeadId(externalId)
+    : null;
+
+  if (!duplicate && reference) {
+    duplicate = await findRecentLeadBySourceReference({
       leadSource: HCP_LEAD_SOURCE,
       reference,
       windowMinutes: 10 * 365 * 24 * 60,
@@ -369,6 +374,18 @@ export async function POST(request: Request) {
       let pipelineTelegramSent = false;
       const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
       const nextPipelineStage = getPipelineStageForHcpEvent(eventName, status);
+
+      if (duplicateLead && externalId && !duplicateLead.housecall_pro_lead_id) {
+        try {
+          await updateSupabaseLead(duplicate.id, {
+            status: duplicateLead.status,
+            adminNotes: duplicateLead.admin_notes ?? "",
+            housecallProLeadId: externalId,
+          });
+        } catch (error) {
+          console.error("Housecall Pro lead ID backfill error:", error);
+        }
+      }
 
       if (
         duplicateLead &&
@@ -447,10 +464,22 @@ export async function POST(request: Request) {
       leadSource: HCP_LEAD_SOURCE,
       preferredDate: "",
       message,
+      housecallProLeadId: externalId || undefined,
     });
 
     if (stored.saved) {
       storedLeadId = stored.id || null;
+
+      if (!storedLeadId && stored.duplicate && externalId) {
+        const concurrentLead = await findSupabaseLeadByHousecallProLeadId(externalId);
+
+        return NextResponse.json({
+          ok: true,
+          duplicate: true,
+          leadId: concurrentLead?.id || null,
+          pipelineTelegramSent: false,
+        });
+      }
     } else if (!stored.skipped) {
       console.error("Housecall Pro lead storage error:", stored.error);
     }
