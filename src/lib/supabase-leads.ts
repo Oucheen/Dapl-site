@@ -20,6 +20,7 @@ export type LeadInsertInput = {
   preferredDate: string;
   message: string;
   housecallProLeadId?: string;
+  housecallProJobId?: string;
 };
 
 type SupabaseLeadRow = {
@@ -45,6 +46,7 @@ export type LeadRecord = {
   estimated_price?: number | string | null;
   assigned_technician?: string | null;
   housecall_pro_lead_id?: string | null;
+  housecall_pro_job_id?: string | null;
   pipeline_stage?: PipelineStage;
   pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
@@ -60,6 +62,7 @@ export type LeadAdminUpdateInput = {
   estimatedPrice?: string;
   assignedTechnician?: string;
   housecallProLeadId?: string;
+  housecallProJobId?: string;
   pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
@@ -338,6 +341,9 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
         ...(input.housecallProLeadId?.trim()
           ? { housecall_pro_lead_id: input.housecallProLeadId.trim() }
           : {}),
+        ...(input.housecallProJobId?.trim()
+          ? { housecall_pro_job_id: input.housecallProJobId.trim() }
+          : {}),
       }),
     });
 
@@ -350,7 +356,9 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
     return {
       saved: true,
       id: rows[0]?.id,
-      duplicate: Boolean(input.housecallProLeadId?.trim()) && !rows[0]?.id,
+      duplicate:
+        Boolean(input.housecallProLeadId?.trim() || input.housecallProJobId?.trim()) &&
+        !rows[0]?.id,
     };
   } catch (error) {
     return { saved: false, skipped: false, error };
@@ -484,6 +492,40 @@ export async function findSupabaseLeadByHousecallProLeadId(housecallProLeadId: s
     return rows[0] ?? null;
   } catch (error) {
     console.error("Supabase Housecall Pro lead lookup error:", error);
+    return null;
+  }
+}
+
+export async function findSupabaseLeadByHousecallProJobId(housecallProJobId: string) {
+  const config = getSupabaseConfig();
+  const normalizedId = housecallProJobId.trim();
+
+  if (!config || !normalizedId) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    select: "*",
+    housecall_pro_job_id: `eq.${normalizedId}`,
+    limit: "1",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase Housecall Pro job lookup failed: ${response.status} ${details}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as LeadRecord[];
+    return rows[0] ?? null;
+  } catch (error) {
+    console.error("Supabase Housecall Pro job lookup error:", error);
     return null;
   }
 }
@@ -659,6 +701,10 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   if (input.housecallProLeadId !== undefined) {
     payload.housecall_pro_lead_id = input.housecallProLeadId.trim() || null;
+  }
+
+  if (input.housecallProJobId !== undefined) {
+    payload.housecall_pro_job_id = input.housecallProJobId.trim() || null;
   }
 
   if (input.pipelineStage !== undefined) {

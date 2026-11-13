@@ -140,6 +140,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Lead details include an optional `pipeline_telegram_enabled` subscription flag; when enabled, status changes for that lead are posted to the Pipeline Telegram channel
 - Run `supabase/pipeline-telegram.sql` once in Supabase for an existing database before using the checkbox
 - Housecall Pro webhook leads store the external `housecall_pro_lead_id`; a partial unique index plus conflict-safe inserts prevents `lead.created` and immediate `lead.updated` events from creating duplicate cards
+- Housecall Pro job webhooks (`job.created`, `job.updated`, `job.scheduled`, `job.completed`, `job.canceled`, and `job.deleted`) use `housecall_pro_job_id` for the same idempotent Pipeline sync; run the latest `supabase/pipeline-telegram.sql` after this column is added
+- `/admin/pipeline` supports source filtering for all records, with quick filters for Housecall Pro and Google Local plus discovered sources from the database
 - Login page: `/admin/leads/login`
 - Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`

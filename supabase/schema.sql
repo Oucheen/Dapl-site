@@ -21,6 +21,7 @@ create table if not exists public.leads (
   estimated_price numeric(10,2),
   assigned_technician text,
   housecall_pro_lead_id text,
+  housecall_pro_job_id text,
   pipeline_stage text not null default 'new_lead',
   pipeline_telegram_enabled boolean not null default false,
   call_intake jsonb not null default '{}'::jsonb
@@ -208,6 +209,7 @@ alter table public.leads
   add column if not exists estimated_price numeric(10,2),
   add column if not exists assigned_technician text,
   add column if not exists housecall_pro_lead_id text,
+  add column if not exists housecall_pro_job_id text,
   add column if not exists pipeline_stage text not null default 'new_lead',
   add column if not exists pipeline_telegram_enabled boolean not null default false,
   add column if not exists call_intake jsonb not null default '{}'::jsonb;
@@ -228,6 +230,9 @@ create index if not exists leads_pipeline_stage_idx on public.leads (pipeline_st
 create unique index if not exists leads_housecall_pro_lead_id_unique_idx
   on public.leads (housecall_pro_lead_id)
   where housecall_pro_lead_id is not null;
+create unique index if not exists leads_housecall_pro_job_id_unique_idx
+  on public.leads (housecall_pro_job_id)
+  where housecall_pro_job_id is not null;
 create index if not exists leads_email_idx on public.leads (email);
 create index if not exists invoices_created_at_idx on public.invoices (created_at desc);
 create index if not exists invoices_lead_id_idx on public.invoices (lead_id);

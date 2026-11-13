@@ -14,6 +14,36 @@ function getSearchQuery(value: string | string[] | undefined) {
   return query?.trim().toLowerCase() ?? "";
 }
 
+function getSourceFilter(value: string | string[] | undefined) {
+  const source = Array.isArray(value) ? value[0] : value;
+  return source?.trim() || "all";
+}
+
+function normalizeSource(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/\s+/g, " ") || "";
+}
+
+function matchesSource(
+  lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number],
+  sourceFilter: string,
+) {
+  if (sourceFilter === "all") {
+    return true;
+  }
+
+  const source = normalizeSource(lead.lead_source);
+
+  if (sourceFilter === "housecall-pro") {
+    return source.includes("housecall pro");
+  }
+
+  if (sourceFilter === "google-local") {
+    return source.includes("google local") || source.includes("google lsa");
+  }
+
+  return source === normalizeSource(sourceFilter);
+}
+
 function matchesSearch(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number], query: string) {
   if (!query) {
     return true;
@@ -38,7 +68,7 @@ function matchesSearch(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[numbe
 export default async function PipelineAdminPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string | string[] }>;
+  searchParams?: Promise<{ q?: string | string[]; source?: string | string[] }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
 
@@ -57,7 +87,13 @@ export default async function PipelineAdminPage({
 
   const params = await searchParams;
   const searchQuery = getSearchQuery(params?.q);
-  const visibleLeads = leads.filter((lead) => matchesSearch(lead, searchQuery));
+  const sourceFilter = getSourceFilter(params?.source);
+  const discoveredSources = Array.from(
+    new Set(leads.map((lead) => lead.lead_source?.trim()).filter(Boolean) as string[]),
+  ).sort((left, right) => left.localeCompare(right));
+  const visibleLeads = leads.filter(
+    (lead) => matchesSearch(lead, searchQuery) && matchesSource(lead, sourceFilter),
+  );
   const pipelineTelegram = getPipelineConfigStatus();
 
   return (
@@ -120,7 +156,7 @@ export default async function PipelineAdminPage({
             <h2 className="text-xl font-black text-primary">DAPL Repair Pipeline</h2>
             <p className="text-sm font-semibold text-muted">Move a request through the workflow as the dispatcher works it.</p>
           </div>
-          <form action="/admin/pipeline" className="flex w-full shrink-0 gap-2 lg:w-auto">
+          <form action="/admin/pipeline" className="flex w-full shrink-0 flex-wrap gap-2 lg:w-auto lg:flex-nowrap">
             <input
               type="search"
               name="q"
@@ -128,6 +164,27 @@ export default async function PipelineAdminPage({
               placeholder="Search customer, phone, address..."
               className="min-w-0 flex-1 rounded-full border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 lg:w-80"
             />
+            <select
+              name="source"
+              defaultValue={sourceFilter}
+              aria-label="Filter by lead source"
+              className="rounded-full border border-border bg-white px-4 py-2.5 text-sm font-bold text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="all">All sources</option>
+              <option value="housecall-pro">Housecall Pro</option>
+              <option value="google-local">Google Local</option>
+              {discoveredSources
+                .filter(
+                  (source) =>
+                    normalizeSource(source) !== "housecall pro" &&
+                    !normalizeSource(source).includes("google local"),
+                )
+                .map((source) => (
+                  <option key={source} value={source}>
+                    {source}
+                  </option>
+                ))}
+            </select>
             <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
               Search
             </button>

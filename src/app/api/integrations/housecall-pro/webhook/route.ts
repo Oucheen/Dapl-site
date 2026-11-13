@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   findSupabaseLeadByHousecallProLeadId,
+  findSupabaseLeadByHousecallProJobId,
   findRecentLeadBySourceReference,
   getSupabaseLeadById,
   saveLeadToSupabase,
@@ -18,12 +19,21 @@ import {
 export const runtime = "nodejs";
 
 const HCP_LEAD_SOURCE = "Housecall Pro";
-const HCP_LEAD_EVENTS = new Set([
+const HCP_EVENTS = new Set([
   "lead.created",
   "lead.updated",
   "lead.converted",
   "lead.deleted",
   "lead.lost",
+  "job.created",
+  "job.updated",
+  "job.deleted",
+  "job.canceled",
+  "job.scheduled",
+  "job.completed",
+  "job.started",
+  "job.appointment.scheduled",
+  "job.appointment.rescheduled",
 ]);
 
 type JsonRecord = Record<string, unknown>;
@@ -68,6 +78,10 @@ function getField(payload: JsonRecord, ...names: string[]) {
     asRecord(payload.data),
     asRecord(payload.lead),
     asRecord(asRecord(payload.data).lead),
+    asRecord(payload.job),
+    asRecord(asRecord(payload.data).job),
+    asRecord(payload.resource),
+    asRecord(asRecord(payload.data).resource),
     asRecord(payload.customer),
     asRecord(asRecord(payload.data).customer),
   ];
@@ -123,11 +137,11 @@ function normalizePhone(value: string) {
   return digits.length === 10 ? `+1${digits}` : `+${digits}`;
 }
 
-function getAddress(payload: JsonRecord) {
+function getAddress(payload: JsonRecord, primaryRecord?: JsonRecord) {
   const data = asRecord(payload.data);
-  const lead = asRecord(data.lead ?? payload.lead);
-  const customer = asRecord(lead.customer ?? data.customer ?? payload.customer);
-  const address = asRecord(lead.address ?? data.address ?? customer.address ?? payload.address);
+  const record = primaryRecord ?? asRecord(data.lead ?? payload.lead ?? data.job ?? payload.job);
+  const customer = asRecord(record.customer ?? data.customer ?? payload.customer);
+  const address = asRecord(record.address ?? data.address ?? customer.address ?? payload.address);
   const street = getNestedField(address, "street", "address", "line1", "addressLine1");
   const city = getNestedField(address, "city");
   const state = getNestedField(address, "state", "stateCode", "province");
@@ -210,8 +224,20 @@ function getPipelineStageForHcpEvent(eventName: string, status: string) {
     return "closed_no_repair" as const;
   }
 
+  if (value.includes("completed")) {
+    return "completed" as const;
+  }
+
   if (value.includes("converted") || value.includes("scheduled")) {
     return "scheduled" as const;
+  }
+
+  if (value.includes("started")) {
+    return "repair_scheduled" as const;
+  }
+
+  if (eventName === "job.created") {
+    return "new_lead" as const;
   }
 
   return null;
@@ -296,13 +322,16 @@ export async function POST(request: Request) {
   const event = getField(payload, "event", "eventType", "event_type", "type") || "lead.created";
   const eventName = event.toLowerCase();
 
-  if (!HCP_LEAD_EVENTS.has(eventName)) {
+  if (!HCP_EVENTS.has(eventName)) {
     return NextResponse.json({ ok: true, ignored: event });
   }
 
   const data = asRecord(payload.data);
   const lead = asRecord(data.lead ?? payload.lead);
-  const customer = asRecord(lead.customer ?? data.customer ?? payload.customer);
+  const job = asRecord(data.job ?? payload.job);
+  const isJobEvent = eventName.startsWith("job.");
+  const primaryRecord = isJobEvent ? job : lead;
+  const customer = asRecord(primaryRecord.customer ?? data.customer ?? payload.customer);
   const customerName = firstText(
     getNestedField(customer, "name", "fullName", "full_name"),
     [
@@ -325,24 +354,25 @@ export async function POST(request: Request) {
     getField(payload, "email", "emailAddress", "email_address"),
   );
   const category = firstText(
-    getNestedField(lead, "jobType", "job_type", "serviceType", "service_type", "leadType", "lead_type", "category", "appliance", "service"),
+    getNestedField(primaryRecord, "jobType", "job_type", "serviceType", "service_type", "leadType", "lead_type", "category", "appliance", "service"),
     getField(payload, "jobType", "job_type", "serviceType", "service_type", "leadType", "lead_type", "category", "appliance", "service"),
   );
   const sourceDetail = getField(payload, "leadSource", "lead_source", "marketingSource", "marketing_source", "source");
   const externalId = firstText(
     getField(payload, "id", "leadId", "lead_id", "resourceId", "resource_id"),
     getNestedField(data, "id", "leadId", "lead_id"),
-    getNestedField(lead, "id", "leadId", "lead_id", "resourceId", "resource_id"),
+    getNestedField(primaryRecord, "id", "leadId", "lead_id", "resourceId", "resource_id"),
   );
   const createdAt = getField(payload, "createdAt", "created_at", "timestamp", "date");
   const status = firstText(getField(payload, "status"), eventName);
-  const address = getAddress(payload);
+  const address = getAddress(payload, primaryRecord);
   const notes = getField(payload, "notes", "description", "message", "customerMessage", "customer_message");
-  const reference = externalId ? `HCP ID: ${externalId}` : phone ? `Phone: ${phone}` : "";
+  const entityLabel = isJobEvent ? "HCP Job ID" : "HCP ID";
+  const reference = externalId ? `${entityLabel}: ${externalId}` : phone ? `Phone: ${phone}` : "";
   const message = [
     `Source: ${HCP_LEAD_SOURCE}`,
     `Event: ${eventName}`,
-    externalId ? `HCP ID: ${externalId}` : null,
+    externalId ? `${entityLabel}: ${externalId}` : null,
     sourceDetail ? `Lead source: ${sourceDetail}` : null,
     notes ? `Notes: ${notes}` : null,
   ]
@@ -360,7 +390,9 @@ export async function POST(request: Request) {
   };
 
   let duplicate: { id: string } | null = externalId
-    ? await findSupabaseLeadByHousecallProLeadId(externalId)
+    ? isJobEvent
+      ? await findSupabaseLeadByHousecallProJobId(externalId)
+      : await findSupabaseLeadByHousecallProLeadId(externalId)
     : null;
 
   if (!duplicate && reference) {
@@ -375,12 +407,18 @@ export async function POST(request: Request) {
       const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
       const nextPipelineStage = getPipelineStageForHcpEvent(eventName, status);
 
-      if (duplicateLead && externalId && !duplicateLead.housecall_pro_lead_id) {
+      if (
+        duplicateLead &&
+        externalId &&
+        (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id)
+      ) {
         try {
           await updateSupabaseLead(duplicate.id, {
             status: duplicateLead.status,
             adminNotes: duplicateLead.admin_notes ?? "",
-            housecallProLeadId: externalId,
+            ...(isJobEvent
+              ? { housecallProJobId: externalId }
+              : { housecallProLeadId: externalId }),
           });
         } catch (error) {
           console.error("Housecall Pro lead ID backfill error:", error);
@@ -407,6 +445,7 @@ export async function POST(request: Request) {
               source: HCP_LEAD_SOURCE,
               event: eventName,
               externalId: externalId || null,
+              entity: isJobEvent ? "job" : "lead",
             },
           });
         } catch (error) {
@@ -414,7 +453,7 @@ export async function POST(request: Request) {
         }
       }
 
-      if (eventName !== "lead.created" && duplicateLead?.pipeline_telegram_enabled === true) {
+      if (!eventName.endsWith(".created") && duplicateLead?.pipeline_telegram_enabled === true) {
         try {
           const pipelineTelegram = await sendPipelineTelegramMessage(
             {
@@ -464,14 +503,18 @@ export async function POST(request: Request) {
       leadSource: HCP_LEAD_SOURCE,
       preferredDate: "",
       message,
-      housecallProLeadId: externalId || undefined,
+      ...(isJobEvent
+        ? { housecallProJobId: externalId || undefined }
+        : { housecallProLeadId: externalId || undefined }),
     });
 
     if (stored.saved) {
       storedLeadId = stored.id || null;
 
       if (!storedLeadId && stored.duplicate && externalId) {
-        const concurrentLead = await findSupabaseLeadByHousecallProLeadId(externalId);
+        const concurrentLead = isJobEvent
+          ? await findSupabaseLeadByHousecallProJobId(externalId)
+          : await findSupabaseLeadByHousecallProLeadId(externalId);
 
         return NextResponse.json({
           ok: true,
@@ -489,12 +532,13 @@ export async function POST(request: Request) {
     await createLeadActivity({
       leadId: storedLeadId,
       eventType: `housecall_pro_${eventName.replace(/[^a-z0-9]+/g, "_")}`,
-      title: "Housecall Pro lead received",
+      title: isJobEvent ? "Housecall Pro job received" : "Housecall Pro lead received",
       details: message,
       metadata: {
         source: HCP_LEAD_SOURCE,
         event: eventName,
         externalId: externalId || null,
+        entity: isJobEvent ? "job" : "lead",
         rawFields: Object.keys(payload),
       },
     });
@@ -526,7 +570,7 @@ export async function POST(request: Request) {
     const pipelineTelegram = await sendPipelineTelegramMessage(
       {
         source: HCP_LEAD_SOURCE,
-        type: eventName === "lead.created" ? "new_lead" : "update",
+        type: eventName.endsWith(".created") ? "new_lead" : "update",
         eventName,
         lead: {
           ...pipelineLead,
