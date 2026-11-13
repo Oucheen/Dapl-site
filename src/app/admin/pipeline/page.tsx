@@ -142,7 +142,7 @@ export default async function PipelineAdminPage({
         ) : null}
 
         <div className="mt-5">
-          <PipelineBoard leads={visibleLeads} />
+          <PipelineBoard leads={visibleLeads} canDeleteLeads={permissions.canDeleteLeads} />
         </div>
       </section>
     </main>

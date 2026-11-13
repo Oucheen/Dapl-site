@@ -376,3 +376,32 @@ export async function deleteLead(formData: FormData) {
   revalidatePath("/admin/leads");
   redirect("/admin/leads?notice=lead_deleted");
 }
+
+export async function deleteLeadFromPipeline(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    throw new Error("Your admin session has expired. Please sign in again.");
+  }
+
+  if (!permissions.canDeleteLeads) {
+    throw new Error("You do not have permission to delete leads.");
+  }
+
+  const id = String(formData.get("id") || "").trim();
+
+  if (!id) {
+    throw new Error("Lead ID is missing.");
+  }
+
+  const existingInvoiceId = await getInvoiceIdForLead(id);
+
+  if (existingInvoiceId) {
+    throw new Error("This lead has an invoice. Open the lead details to delete it safely.");
+  }
+
+  await deleteSupabaseLead(id);
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+}

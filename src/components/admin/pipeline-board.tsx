@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
 import type { LeadRecord } from "@/lib/supabase-leads";
 import {
+  deleteLeadFromPipeline,
   updateLeadPipelineTelegramPreference,
   updateLeadPipelineStage,
 } from "@/app/admin/leads/actions";
@@ -48,7 +49,13 @@ function getColumnLeads(leads: LeadRecord[], stage: PipelineStage) {
   return leads.filter((lead) => (lead.pipeline_stage || "new_lead") === stage);
 }
 
-export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
+export function PipelineBoard({
+  leads,
+  canDeleteLeads,
+}: {
+  leads: LeadRecord[];
+  canDeleteLeads: boolean;
+}) {
   const router = useRouter();
   const topScrollRef = useRef<HTMLDivElement>(null);
   const boardScrollRef = useRef<HTMLDivElement>(null);
@@ -134,6 +141,33 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
             ? error.message
             : "Could not save the Telegram preference. Check the Supabase migration.",
         );
+      }
+    });
+  }
+
+  function deleteLead(lead: LeadRecord) {
+    if (isPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete ${lead.name} from DAPL Pipeline? This cannot be undone.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("id", lead.id);
+    setActionError("");
+
+    startTransition(async () => {
+      try {
+        await deleteLeadFromPipeline(formData);
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Could not delete the lead.");
       }
     });
   }
@@ -283,6 +317,17 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                         </select>
                       </div>
                     </div>
+                    {canDeleteLeads ? (
+                      <button
+                        type="button"
+                        onClick={() => deleteLead(lead)}
+                        disabled={isPending}
+                        className="mt-2 w-full rounded-lg border border-accent/20 bg-white px-2 py-1.5 text-[0.65rem] font-black text-accent transition hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={`Delete ${lead.name}`}
+                      >
+                        Delete card
+                      </button>
+                    ) : null}
                   </article>
                 ))}
 
