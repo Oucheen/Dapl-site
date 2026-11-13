@@ -4,6 +4,7 @@ import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   findSupabaseLeadByHousecallProLeadId,
   findSupabaseLeadByHousecallProJobId,
+  findRecentLeadBySourcePhone,
   findRecentLeadBySourceReference,
   getSupabaseLeadById,
   saveLeadToSupabase,
@@ -672,6 +673,14 @@ export async function POST(request: Request) {
       ok: true,
       ignored: eventName,
       reason: "No matching HCP lead or job was found for this event.",
+    });
+  }
+
+  if (!duplicate && (isLeadEvent || isJobEvent) && phone) {
+    duplicate = await findRecentLeadBySourcePhone({
+      leadSource: HCP_LEAD_SOURCE,
+      phone,
+      windowMinutes: 30,
     });
   }
 

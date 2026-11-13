@@ -464,6 +464,48 @@ export async function findRecentLeadBySourceReference(input: {
   }
 }
 
+export async function findRecentLeadBySourcePhone(input: {
+  leadSource: string;
+  phone: string;
+  windowMinutes?: number;
+}) {
+  const config = getSupabaseConfig();
+  const leadSource = input.leadSource.trim();
+  const normalizedPhone = normalizePhoneForDedupe(input.phone);
+
+  if (!config || !leadSource || !normalizedPhone) {
+    return null;
+  }
+
+  const since = new Date(Date.now() - (input.windowMinutes ?? 30) * 60_000).toISOString();
+  const params = new URLSearchParams({
+    select: "id,created_at,phone,message",
+    lead_source: `eq.${leadSource}`,
+    created_at: `gte.${since}`,
+    order: "created_at.desc",
+    limit: "100",
+  });
+
+  try {
+    const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+      headers: headers(config),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      console.error(`Supabase source phone duplicate check failed: ${response.status} ${details}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as RecentSourceLeadRecord[];
+    return rows.find((row) => normalizePhoneForDedupe(row.phone) === normalizedPhone) ?? null;
+  } catch (error) {
+    console.error("Supabase source phone duplicate check error:", error);
+    return null;
+  }
+}
+
 export async function findSupabaseLeadByHousecallProLeadId(housecallProLeadId: string) {
   const config = getSupabaseConfig();
   const normalizedId = housecallProLeadId.trim();
