@@ -257,14 +257,24 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rawBody = await request.text();
+
   if (!getWebhookSecret()) {
+    try {
+      const testPayload = asRecord(JSON.parse(rawBody));
+
+      if (Object.keys(testPayload).length === 1 && getText(testPayload.foo) === "bar") {
+        return NextResponse.json({ ok: true, test: true });
+      }
+    } catch {
+      // Return the normal configuration error below for non-test payloads.
+    }
+
     return NextResponse.json(
       { error: "HOUSECALL_PRO_WEBHOOK_SECRET is not configured." },
       { status: 503 },
     );
   }
-
-  const rawBody = await request.text();
 
   if (!isAuthorized(request, rawBody)) {
     return NextResponse.json({ error: "Unauthorized webhook request." }, { status: 401 });
