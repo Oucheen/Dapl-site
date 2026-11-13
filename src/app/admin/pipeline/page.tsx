@@ -14,9 +14,9 @@ function getSearchQuery(value: string | string[] | undefined) {
   return query?.trim().toLowerCase() ?? "";
 }
 
-function getSourceFilter(value: string | string[] | undefined) {
-  const source = Array.isArray(value) ? value[0] : value;
-  return source?.trim() || "all";
+function getSourceFilters(value: string | string[] | undefined) {
+  const sources = Array.isArray(value) ? value : value ? [value] : [];
+  return sources.filter(Boolean).map((source) => source.trim()).filter(Boolean);
 }
 
 function normalizeSource(value: string | null | undefined) {
@@ -25,23 +25,25 @@ function normalizeSource(value: string | null | undefined) {
 
 function matchesSource(
   lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number],
-  sourceFilter: string,
+  sourceFilters: string[],
 ) {
-  if (sourceFilter === "all") {
+  if (!sourceFilters.length || sourceFilters.includes("all")) {
     return true;
   }
 
   const source = normalizeSource(lead.lead_source);
 
-  if (sourceFilter === "housecall-pro") {
-    return source.includes("housecall pro");
-  }
+  return sourceFilters.some((sourceFilter) => {
+    if (sourceFilter === "housecall-pro") {
+      return source.includes("housecall pro");
+    }
 
-  if (sourceFilter === "google-local") {
-    return source.includes("google local") || source.includes("google lsa");
-  }
+    if (sourceFilter === "google-local") {
+      return source.includes("google local") || source.includes("google lsa");
+    }
 
-  return source === normalizeSource(sourceFilter);
+    return source === normalizeSource(sourceFilter);
+  });
 }
 
 function matchesSearch(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[number], query: string) {
@@ -87,12 +89,9 @@ export default async function PipelineAdminPage({
 
   const params = await searchParams;
   const searchQuery = getSearchQuery(params?.q);
-  const sourceFilter = getSourceFilter(params?.source);
-  const discoveredSources = Array.from(
-    new Set(leads.map((lead) => lead.lead_source?.trim()).filter(Boolean) as string[]),
-  ).sort((left, right) => left.localeCompare(right));
+  const sourceFilters = getSourceFilters(params?.source);
   const visibleLeads = leads.filter(
-    (lead) => matchesSearch(lead, searchQuery) && matchesSource(lead, sourceFilter),
+    (lead) => matchesSearch(lead, searchQuery) && matchesSource(lead, sourceFilters),
   );
   const pipelineTelegram = getPipelineConfigStatus();
 
@@ -164,27 +163,29 @@ export default async function PipelineAdminPage({
               placeholder="Search customer, phone, address..."
               className="min-w-0 flex-1 rounded-full border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 lg:w-80"
             />
-            <select
-              name="source"
-              defaultValue={sourceFilter}
-              aria-label="Filter by lead source"
-              className="rounded-full border border-border bg-white px-4 py-2.5 text-sm font-bold text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">All sources</option>
-              <option value="housecall-pro">Housecall Pro</option>
-              <option value="google-local">Google Local</option>
-              {discoveredSources
-                .filter(
-                  (source) =>
-                    normalizeSource(source) !== "housecall pro" &&
-                    !normalizeSource(source).includes("google local"),
-                )
-                .map((source) => (
-                  <option key={source} value={source}>
-                    {source}
-                  </option>
-                ))}
-            </select>
+            <div className="flex items-center gap-3 rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-primary">
+              <span className="text-xs uppercase tracking-wide text-muted">Sources</span>
+              <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  name="source"
+                  value="housecall-pro"
+                  defaultChecked={sourceFilters.includes("housecall-pro")}
+                  className="h-4 w-4 accent-primary"
+                />
+                HCP
+              </label>
+              <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  name="source"
+                  value="google-local"
+                  defaultChecked={sourceFilters.includes("google-local")}
+                  className="h-4 w-4 accent-primary"
+                />
+                Google Local
+              </label>
+            </div>
             <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
               Search
             </button>
