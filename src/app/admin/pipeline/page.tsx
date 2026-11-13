@@ -115,18 +115,18 @@ export default async function PipelineAdminPage({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <h2 className="text-xl font-black text-primary">DAPL Repair Pipeline</h2>
-            <p className="mt-1 text-sm font-semibold text-muted">Move a request through the workflow as the dispatcher works it.</p>
+            <p className="text-sm font-semibold text-muted">Move a request through the workflow as the dispatcher works it.</p>
           </div>
-          <form action="/admin/pipeline" className="flex gap-2">
+          <form action="/admin/pipeline" className="flex w-full shrink-0 gap-2 lg:w-auto">
             <input
               type="search"
               name="q"
               defaultValue={searchQuery}
               placeholder="Search customer, phone, address..."
-              className="min-w-0 flex-1 rounded-full border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-80"
+              className="min-w-0 flex-1 rounded-full border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 lg:w-80"
             />
             <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
               Search
