@@ -38,6 +38,13 @@ const adminLinks = [
     group: "Operations",
   },
   {
+    href: "/admin/pipeline",
+    title: "Pipeline",
+    description: "Dispatcher Kanban board for moving requests through the repair workflow.",
+    cta: "Open Pipeline",
+    group: "Operations",
+  },
+  {
     href: "/admin/calls",
     title: "Calls",
     description: "Browser phone, incoming calls, missed calls, and recordings.",
@@ -673,8 +680,14 @@ export default async function AdminPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                href="/admin/leads"
+                href="/admin/pipeline"
                 className="inline-flex rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Pipeline
+              </Link>
+              <Link
+                href="/admin/leads"
+                className="inline-flex rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/5"
               >
                 Leads
               </Link>

@@ -18,10 +18,15 @@ import {
 import {
   type LeadAdminStatus,
   deleteSupabaseLead,
+  getSupabaseLeadById,
   updateSupabaseLead,
   updateSupabaseLeadAfterInvoice,
   updateSupabaseLeadStatus,
 } from "@/lib/supabase-leads";
+import {
+  getPipelineLeadUrl,
+  sendPipelineTelegramMessage,
+} from "@/lib/telegram-pipeline";
 
 const ALLOWED_STATUSES: LeadAdminStatus[] = [
   "new",
@@ -62,6 +67,34 @@ function withNotice(path: string, notice: string) {
   return `${path}${separator}notice=${encodeURIComponent(notice)}`;
 }
 
+async function notifyLeadStatusChange(
+  leadId: string,
+  lead: Awaited<ReturnType<typeof getSupabaseLeadById>>,
+  nextStatus: LeadAdminStatus,
+  details?: string,
+) {
+  if (!lead || lead.status === nextStatus) {
+    return;
+  }
+
+  try {
+    await sendPipelineTelegramMessage(
+      {
+        source: "DAPL",
+        type: "status_change",
+        lead,
+        leadId,
+        previousStatus: lead.status,
+        nextStatus,
+        details,
+      },
+      [{ text: "Open lead", url: getPipelineLeadUrl(leadId) }],
+    );
+  } catch (error) {
+    console.error("DAPL pipeline Telegram error:", error);
+  }
+}
+
 export async function loginAdmin(formData: FormData) {
   const password = String(formData.get("password") || "");
   const returnTo = getAdminRedirectTarget(formData.get("returnTo"));
@@ -99,6 +132,7 @@ export async function updateLeadStatus(formData: FormData) {
     throw new Error("Invalid lead status.");
   }
 
+  const lead = await getSupabaseLeadById(id);
   await updateSupabaseLeadStatus(id, status);
   await createLeadActivity({
     leadId: id,
@@ -106,6 +140,7 @@ export async function updateLeadStatus(formData: FormData) {
     title: "Lead status updated",
     details: `Status changed to ${status}.`,
   });
+  await notifyLeadStatusChange(id, lead, status);
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${id}`);
 }
@@ -122,6 +157,7 @@ export async function updateLeadDetails(formData: FormData) {
     throw new Error("Invalid lead status.");
   }
 
+  const lead = await getSupabaseLeadById(id);
   const existingInvoiceId = await getInvoiceIdForLead(id);
 
   if (existingInvoiceId) {
@@ -140,6 +176,7 @@ export async function updateLeadDetails(formData: FormData) {
       title: "Lead status / notes updated",
       details: `Status set to ${status}.`,
     });
+    await notifyLeadStatusChange(id, lead, status);
 
     revalidatePath("/admin/leads");
     revalidatePath(`/admin/leads/${id}`);
@@ -156,6 +193,7 @@ export async function updateLeadDetails(formData: FormData) {
     title: "Lead details updated",
     details: `Status set to ${status}.`,
   });
+  await notifyLeadStatusChange(id, lead, status);
 
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${id}`);
@@ -169,12 +207,14 @@ export async function createInvoiceForLead(formData: FormData) {
   const id = String(formData.get("id") || "");
 
   const status = String(formData.get("status") || "") as LeadAdminStatus;
+  const lead = await getSupabaseLeadById(id);
 
   if (ALLOWED_STATUSES.includes(status)) {
     await updateSupabaseLead(id, {
       status,
       adminNotes: String(formData.get("adminNotes") || ""),
     });
+    await notifyLeadStatusChange(id, lead, status, "Invoice workflow updated.");
   }
 
   const existingInvoiceId = await getInvoiceIdForLead(id);

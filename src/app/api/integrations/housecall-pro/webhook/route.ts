@@ -6,6 +6,11 @@ import {
   saveLeadToSupabase,
 } from "@/lib/supabase-leads";
 import { buildUnifiedTelegramLeadMessage } from "@/lib/telegram-lead-message";
+import {
+  getPipelineConfigStatus,
+  getPipelineLeadUrl,
+  sendPipelineTelegramMessage,
+} from "@/lib/telegram-pipeline";
 
 export const runtime = "nodejs";
 
@@ -230,6 +235,7 @@ export async function GET() {
     configured: {
       webhookSecret: Boolean(getWebhookSecret()),
       telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
+      pipelineTelegram: getPipelineConfigStatus(),
     },
   });
 }
@@ -316,6 +322,16 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
 
+  const pipelineLead = {
+    name: customerName,
+    phone,
+    email,
+    service_address: address,
+    appliance: category,
+    assigned_technician: null,
+    estimated_price: null,
+  };
+
   if (reference) {
     const duplicate = await findRecentLeadBySourceReference({
       leadSource: HCP_LEAD_SOURCE,
@@ -323,7 +339,40 @@ export async function POST(request: Request) {
     });
 
     if (duplicate) {
-      return NextResponse.json({ ok: true, duplicate: true, leadId: duplicate.id });
+      let pipelineTelegramSent = false;
+
+      if (eventName !== "lead.created") {
+        try {
+          const pipelineTelegram = await sendPipelineTelegramMessage(
+            {
+              source: HCP_LEAD_SOURCE,
+              type: eventName === "lead.converted" ? "status_change" : "update",
+              eventName,
+              lead: pipelineLead,
+              leadId: duplicate.id,
+              externalId,
+              status,
+              details: notes,
+            },
+            [
+              {
+                text: "Open lead",
+                url: getPipelineLeadUrl(duplicate.id),
+              },
+            ],
+          );
+          pipelineTelegramSent = pipelineTelegram.sent;
+        } catch (error) {
+          console.error("Housecall Pro pipeline Telegram error:", error);
+        }
+      }
+
+      return NextResponse.json({
+        ok: true,
+        duplicate: true,
+        leadId: duplicate.id,
+        pipelineTelegramSent,
+      });
     }
   }
 
@@ -384,11 +433,38 @@ export async function POST(request: Request) {
       : [],
   );
 
+  let pipelineTelegramSent = false;
+
+  try {
+    const pipelineTelegram = await sendPipelineTelegramMessage(
+      {
+        source: HCP_LEAD_SOURCE,
+        type: eventName === "lead.created" ? "new_lead" : "update",
+        eventName,
+        lead: {
+          ...pipelineLead,
+          id: storedLeadId || undefined,
+        },
+        leadId: storedLeadId,
+        externalId,
+        status,
+        details: notes,
+      },
+      storedLeadId
+        ? [{ text: "Open lead", url: getPipelineLeadUrl(storedLeadId) }]
+        : [],
+    );
+    pipelineTelegramSent = pipelineTelegram.sent;
+  } catch (error) {
+    console.error("Housecall Pro pipeline Telegram error:", error);
+  }
+
   return NextResponse.json({
     ok: true,
     event: eventName,
     leadId: storedLeadId,
     telegramSent: telegram.sent,
+    pipelineTelegramSent,
     ...(telegram.sent ? {} : { warning: telegram.reason }),
   });
 }

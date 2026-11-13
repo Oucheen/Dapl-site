@@ -44,6 +44,9 @@ CONTACT_TO_EMAIL=dapl.appliance.repair@gmail.com
 CONTACT_FROM_EMAIL=DAPL Website <noreply@daplappliance.com>
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
+TELEGRAM_PIPELINE_BOT_TOKEN=...
+TELEGRAM_PIPELINE_CHAT_ID=...
+TELEGRAM_PIPELINE_MESSAGE_THREAD_ID=... # optional Telegram forum topic ID
 TELEGRAM_TECH_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_SECRET=...
 VOICE_AGENT_API_KEY=...
@@ -88,6 +91,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Telegram delivery is supported in `src/app/api/contact/route.ts`
 - If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set, each new lead is also sent to Telegram
 - Email and Telegram now work as parallel notification channels
+- Pipeline events use a separate Telegram bot/channel through `TELEGRAM_PIPELINE_BOT_TOKEN` and `TELEGRAM_PIPELINE_CHAT_ID`
+- `TELEGRAM_PIPELINE_MESSAGE_THREAD_ID` is optional and routes messages to a specific topic in a Telegram forum
 - The request succeeds if at least one notification channel delivers successfully
 - Technician bot webhook is supported at `src/app/api/telegram/route.ts`
 - Technician bot uses `TELEGRAM_TECH_BOT_TOKEN`, separate from `TELEGRAM_BOT_TOKEN` used for lead notifications
@@ -129,6 +134,9 @@ For local development, create `.env.local` with the same keys if you want the fo
 
 ## Leads admin dashboard
 - Admin entry point: `/admin/leads`
+- Dispatcher Pipeline board: `/admin/pipeline`
+- `/admin/pipeline` currently provides a Kanban view over Supabase leads with New Lead, Contacted, Scheduled, Estimate / Invoice, Completed, and Cancelled columns
+- Pipeline cards can be moved by drag-and-drop or the status selector; moves use the same lead status workflow and create the normal lead activity record
 - Login page: `/admin/leads/login`
 - Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`
