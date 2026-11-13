@@ -185,6 +185,50 @@ function getAddress(payload: JsonRecord, primaryRecord?: JsonRecord) {
   return [street, city, state, postalCode].filter(Boolean).join(", ");
 }
 
+function hasScheduleInfo(payload: JsonRecord, primaryRecord: JsonRecord) {
+  const data = asRecord(payload.data);
+  const appointment = asRecord(
+    primaryRecord.appointment ?? data.appointment ?? payload.appointment,
+  );
+
+  return Boolean(
+    firstText(
+      getField(
+        payload,
+        "scheduledDate",
+        "scheduled_date",
+        "appointmentDate",
+        "appointment_date",
+        "startTime",
+        "start_time",
+        "startsAt",
+        "starts_at",
+      ),
+      getNestedField(
+        primaryRecord,
+        "scheduledDate",
+        "scheduled_date",
+        "appointmentDate",
+        "appointment_date",
+        "startTime",
+        "start_time",
+        "startsAt",
+        "starts_at",
+      ),
+      getNestedField(
+        appointment,
+        "date",
+        "scheduledDate",
+        "scheduled_date",
+        "startTime",
+        "start_time",
+        "startsAt",
+        "starts_at",
+      ),
+    ),
+  );
+}
+
 function normalizeSignature(value: string) {
   return value.trim().replace(/^sha256=/i, "").replace(/^v1=/i, "");
 }
@@ -256,6 +300,7 @@ function getPipelineStageForHcpEvent(
   eventName: string,
   status: string,
   currentStage: string = "new_lead",
+  scheduledAtCreation = false,
 ) {
   const value = `${eventName} ${status}`.toLowerCase();
 
@@ -312,6 +357,10 @@ function getPipelineStageForHcpEvent(
     return ["approved", "parts_ordered", "parts_received", "repair_scheduled"].includes(currentStage)
       ? ("repair_scheduled" as const)
       : ("scheduled" as const);
+  }
+
+  if (eventName === "job.created" && (value.includes("scheduled") || scheduledAtCreation)) {
+    return "scheduled" as const;
   }
 
   if (eventName === "job.created") {
@@ -468,6 +517,7 @@ export async function POST(request: Request) {
   const createdAt = getField(payload, "createdAt", "created_at", "timestamp", "date");
   const status = firstText(getField(payload, "status"), eventName);
   const address = getAddress(payload, primaryRecord);
+  const scheduledAtCreation = isJobEvent && hasScheduleInfo(payload, primaryRecord);
   const notes = getField(payload, "notes", "description", "message", "customerMessage", "customer_message");
   const entityLabel = isJobEvent ? "HCP Job ID" : isLeadEvent ? "HCP ID" : "HCP Event ID";
   const referenceJobId = isJobEvent ? externalId : relatedJobId;
@@ -520,6 +570,7 @@ export async function POST(request: Request) {
         eventName,
         status,
         duplicateLead?.pipeline_stage || "new_lead",
+        scheduledAtCreation,
       );
 
       if (
@@ -637,6 +688,9 @@ export async function POST(request: Request) {
       ...(isJobEvent
         ? { housecallProJobId: externalId || undefined }
         : { housecallProLeadId: externalId || undefined }),
+      pipelineStage:
+        getPipelineStageForHcpEvent(eventName, status, "new_lead", scheduledAtCreation) ||
+        undefined,
     });
 
     if (stored.saved) {
@@ -652,6 +706,7 @@ export async function POST(request: Request) {
             eventName,
             status,
             concurrentLead.pipeline_stage || "new_lead",
+            scheduledAtCreation,
           );
 
           if (
@@ -690,6 +745,7 @@ export async function POST(request: Request) {
             eventName,
             status,
             concurrentLead?.pipeline_stage || "new_lead",
+            scheduledAtCreation,
           ),
           pipelineTelegramSent: false,
         });

@@ -21,6 +21,7 @@ export type LeadInsertInput = {
   message: string;
   housecallProLeadId?: string;
   housecallProJobId?: string;
+  pipelineStage?: PipelineStage;
 };
 
 type SupabaseLeadRow = {
@@ -344,6 +345,7 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
         ...(input.housecallProJobId?.trim()
           ? { housecall_pro_job_id: input.housecallProJobId.trim() }
           : {}),
+        ...(input.pipelineStage ? { pipeline_stage: input.pipelineStage } : {}),
       }),
     });
 
