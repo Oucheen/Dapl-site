@@ -10,6 +10,7 @@ import {
   verifyAdminLogin,
 } from "@/lib/admin-auth";
 import { createLeadActivity } from "@/lib/supabase-activity";
+import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
 import {
   createInvoiceFromLead,
   deleteInvoiceById,
@@ -70,13 +71,15 @@ function withNotice(path: string, notice: string) {
 async function notifyLeadStatusChange(
   leadId: string,
   lead: Awaited<ReturnType<typeof getSupabaseLeadById>>,
-  nextStatus: LeadAdminStatus,
+  nextStatus: string,
   details?: string,
   notificationsEnabled?: boolean,
+  previousStatus?: string,
 ) {
   const shouldNotify = notificationsEnabled ?? lead?.pipeline_telegram_enabled === true;
+  const previousValue = previousStatus ?? lead?.status;
 
-  if (!lead || lead.status === nextStatus || !shouldNotify) {
+  if (!lead || previousValue === nextStatus || !shouldNotify) {
     return;
   }
 
@@ -87,7 +90,7 @@ async function notifyLeadStatusChange(
         type: "status_change",
         lead,
         leadId,
-        previousStatus: lead.status,
+        previousStatus: previousValue,
         nextStatus,
         details,
       },
@@ -148,6 +151,89 @@ export async function updateLeadStatus(formData: FormData) {
   revalidatePath(`/admin/leads/${id}`);
 }
 
+export async function updateLeadPipelineTelegramPreference(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  const enabled = formData.get("enabled") === "true";
+  const lead = await getSupabaseLeadById(id);
+
+  if (!lead) {
+    throw new Error("Lead not found.");
+  }
+
+  await updateSupabaseLead(id, {
+    status: lead.status,
+    adminNotes: lead.admin_notes ?? "",
+    pipelineTelegramEnabled: enabled,
+  });
+  await createLeadActivity({
+    leadId: id,
+    eventType: "lead_pipeline_telegram_preference_updated",
+    title: enabled ? "Pipeline Telegram notifications enabled" : "Pipeline Telegram notifications disabled",
+    details: enabled
+      ? "Status changes for this lead will be posted to the Pipeline Telegram channel."
+      : "Status changes for this lead will no longer be posted to the Pipeline Telegram channel.",
+    metadata: { enabled },
+  });
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${id}`);
+}
+
+export async function updateLeadPipelineStage(formData: FormData) {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/leads/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  const stageValue = String(formData.get("stage") || "") as PipelineStage;
+
+  if (!PIPELINE_STAGES.includes(stageValue)) {
+    throw new Error("Invalid pipeline stage.");
+  }
+
+  const lead = await getSupabaseLeadById(id);
+
+  if (!lead) {
+    throw new Error("Lead not found.");
+  }
+
+  await updateSupabaseLead(id, {
+    status: lead.status,
+    adminNotes: lead.admin_notes ?? "",
+    pipelineStage: stageValue,
+  });
+  await createLeadActivity({
+    leadId: id,
+    eventType: "pipeline_stage_updated",
+    title: "Pipeline stage updated",
+    details: `Pipeline stage set to ${stageValue}.`,
+    metadata: {
+      previousStage: lead.pipeline_stage || "new_lead",
+      nextStage: stageValue,
+    },
+  });
+
+  if ((lead.pipeline_stage || "new_lead") !== stageValue) {
+    await notifyLeadStatusChange(
+      id,
+      lead,
+      stageValue,
+      "Pipeline stage updated.",
+      undefined,
+      lead.pipeline_stage || "new_lead",
+    );
+  }
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${id}`);
+}
+
 export async function updateLeadDetails(formData: FormData) {
   if (!(await isAdminAuthenticated())) {
     redirect("/admin/leads/login");
@@ -156,6 +242,10 @@ export async function updateLeadDetails(formData: FormData) {
   const id = String(formData.get("id") || "");
   const status = String(formData.get("status") || "") as LeadAdminStatus;
   const pipelineTelegramEnabled = formData.get("pipelineTelegramEnabled") === "on";
+  const pipelineStageValue = String(formData.get("pipelineStage") || "");
+  const pipelineStage = PIPELINE_STAGES.includes(pipelineStageValue as PipelineStage)
+    ? (pipelineStageValue as PipelineStage)
+    : undefined;
 
   if (!ALLOWED_STATUSES.includes(status)) {
     throw new Error("Invalid lead status.");
@@ -172,6 +262,7 @@ export async function updateLeadDetails(formData: FormData) {
     await updateSupabaseLeadAfterInvoice(id, {
       status: status as (typeof POST_INVOICE_STATUSES)[number],
       adminNotes: String(formData.get("adminNotes") || ""),
+      pipelineStage,
       pipelineTelegramEnabled,
     });
     await createLeadActivity({
@@ -191,6 +282,7 @@ export async function updateLeadDetails(formData: FormData) {
   await updateSupabaseLead(id, {
     status,
     adminNotes: String(formData.get("adminNotes") || ""),
+    pipelineStage,
     pipelineTelegramEnabled,
   });
   await createLeadActivity({
@@ -215,11 +307,16 @@ export async function createInvoiceForLead(formData: FormData) {
   const status = String(formData.get("status") || "") as LeadAdminStatus;
   const lead = await getSupabaseLeadById(id);
   const pipelineTelegramEnabled = formData.get("pipelineTelegramEnabled") === "on";
+  const pipelineStageValue = String(formData.get("pipelineStage") || "");
+  const pipelineStage = PIPELINE_STAGES.includes(pipelineStageValue as PipelineStage)
+    ? (pipelineStageValue as PipelineStage)
+    : undefined;
 
   if (ALLOWED_STATUSES.includes(status)) {
     await updateSupabaseLead(id, {
       status,
       adminNotes: String(formData.get("adminNotes") || ""),
+      pipelineStage,
       pipelineTelegramEnabled,
     });
     await notifyLeadStatusChange(

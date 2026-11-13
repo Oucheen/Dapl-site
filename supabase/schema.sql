@@ -20,6 +20,7 @@ create table if not exists public.leads (
   scheduled_date date,
   estimated_price numeric(10,2),
   assigned_technician text,
+  pipeline_stage text not null default 'new_lead',
   pipeline_telegram_enabled boolean not null default false,
   call_intake jsonb not null default '{}'::jsonb
 );
@@ -205,6 +206,7 @@ alter table public.leads
   add column if not exists scheduled_date date,
   add column if not exists estimated_price numeric(10,2),
   add column if not exists assigned_technician text,
+  add column if not exists pipeline_stage text not null default 'new_lead',
   add column if not exists pipeline_telegram_enabled boolean not null default false,
   add column if not exists call_intake jsonb not null default '{}'::jsonb;
 
@@ -220,6 +222,7 @@ alter table public.review_summary
 
 create index if not exists leads_created_at_idx on public.leads (created_at desc);
 create index if not exists leads_status_idx on public.leads (status);
+create index if not exists leads_pipeline_stage_idx on public.leads (pipeline_stage);
 create index if not exists leads_email_idx on public.leads (email);
 create index if not exists invoices_created_at_idx on public.invoices (created_at desc);
 create index if not exists invoices_lead_id_idx on public.invoices (lead_id);

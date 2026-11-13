@@ -5,6 +5,7 @@ import {
   findRecentLeadBySourceReference,
   getSupabaseLeadById,
   saveLeadToSupabase,
+  updateSupabaseLead,
 } from "@/lib/supabase-leads";
 import { buildUnifiedTelegramLeadMessage } from "@/lib/telegram-lead-message";
 import {
@@ -201,6 +202,20 @@ function getRequestOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
+function getPipelineStageForHcpEvent(eventName: string, status: string) {
+  const value = `${eventName} ${status}`.toLowerCase();
+
+  if (value.includes("lost") || value.includes("deleted") || value.includes("cancel")) {
+    return "closed_no_repair" as const;
+  }
+
+  if (value.includes("converted") || value.includes("scheduled")) {
+    return "scheduled" as const;
+  }
+
+  return null;
+}
+
 async function sendTelegram(text: string, buttons: { text: string; url: string }[] = []) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || "";
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || "";
@@ -343,6 +358,34 @@ export async function POST(request: Request) {
     if (duplicate) {
       let pipelineTelegramSent = false;
       const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
+      const nextPipelineStage = getPipelineStageForHcpEvent(eventName, status);
+
+      if (
+        duplicateLead &&
+        nextPipelineStage &&
+        (duplicateLead.pipeline_stage || "new_lead") !== nextPipelineStage
+      ) {
+        try {
+          await updateSupabaseLead(duplicate.id, {
+            status: duplicateLead.status,
+            adminNotes: duplicateLead.admin_notes ?? "",
+            pipelineStage: nextPipelineStage,
+          });
+          await createLeadActivity({
+            leadId: duplicate.id,
+            eventType: `housecall_pro_pipeline_stage_${nextPipelineStage}`,
+            title: "Housecall Pro updated Pipeline stage",
+            details: `${duplicateLead.pipeline_stage || "new_lead"} → ${nextPipelineStage}.`,
+            metadata: {
+              source: HCP_LEAD_SOURCE,
+              event: eventName,
+              externalId: externalId || null,
+            },
+          });
+        } catch (error) {
+          console.error("Housecall Pro pipeline stage update error:", error);
+        }
+      }
 
       if (eventName !== "lead.created" && duplicateLead?.pipeline_telegram_enabled === true) {
         try {
@@ -354,6 +397,8 @@ export async function POST(request: Request) {
               lead: duplicateLead,
               leadId: duplicate.id,
               externalId,
+              previousStatus: duplicateLead.pipeline_stage || "new_lead",
+              nextStatus: nextPipelineStage || undefined,
               status,
               details: notes,
             },

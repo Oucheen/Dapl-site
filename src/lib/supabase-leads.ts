@@ -1,3 +1,5 @@
+import type { PipelineStage } from "@/lib/pipeline-stages";
+
 type LeadStatus = "new";
 export type LeadAdminStatus =
   | "new"
@@ -41,6 +43,7 @@ export type LeadRecord = {
   scheduled_date?: string | null;
   estimated_price?: number | string | null;
   assigned_technician?: string | null;
+  pipeline_stage?: PipelineStage;
   pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
 };
@@ -54,12 +57,14 @@ export type LeadAdminUpdateInput = {
   scheduledDate?: string;
   estimatedPrice?: string;
   assignedTechnician?: string;
+  pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
 
 export type LeadPostInvoiceUpdateInput = {
   status: Extract<LeadAdminStatus, "invoiced" | "completed" | "cancelled">;
   adminNotes: string;
+  pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
 
@@ -608,6 +613,10 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
     payload.assigned_technician = input.assignedTechnician.trim() || null;
   }
 
+  if (input.pipelineStage !== undefined) {
+    payload.pipeline_stage = input.pipelineStage;
+  }
+
   if (input.pipelineTelegramEnabled !== undefined) {
     payload.pipeline_telegram_enabled = input.pipelineTelegramEnabled;
   }
@@ -648,6 +657,9 @@ export async function updateSupabaseLeadAfterInvoice(
     body: JSON.stringify({
       status: input.status,
       admin_notes: input.adminNotes.trim() || null,
+      ...(input.pipelineStage !== undefined
+        ? { pipeline_stage: input.pipelineStage }
+        : {}),
       ...(input.pipelineTelegramEnabled !== undefined
         ? { pipeline_telegram_enabled: input.pipelineTelegramEnabled }
         : {}),

@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import type { LeadAdminStatus, LeadRecord } from "@/lib/supabase-leads";
-import { updateLeadStatus } from "@/app/admin/leads/actions";
+import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
+import type { LeadRecord } from "@/lib/supabase-leads";
+import {
+  updateLeadPipelineTelegramPreference,
+  updateLeadPipelineStage,
+} from "@/app/admin/leads/actions";
 
-const COLUMNS: { value: LeadAdminStatus; label: string; description: string; tone: string }[] = [
-  { value: "new", label: "New Lead", description: "Needs first contact", tone: "border-accent/25 bg-accent/5" },
-  { value: "contacted", label: "Contacted", description: "Follow-up in progress", tone: "border-primary/20 bg-primary/5" },
-  { value: "confirmed", label: "Scheduled", description: "Visit or job confirmed", tone: "border-emerald-500/25 bg-emerald-50" },
-  { value: "invoiced", label: "Estimate / Invoice", description: "Money workflow started", tone: "border-amber-500/25 bg-amber-50" },
-  { value: "completed", label: "Completed", description: "Work finished", tone: "border-slate-300 bg-slate-50" },
-  { value: "cancelled", label: "Cancelled", description: "Closed without completion", tone: "border-slate-300 bg-slate-100" },
-];
+const COLUMNS = PIPELINE_STAGES.map((value) => ({
+  value,
+  ...PIPELINE_STAGE_CONFIG[value],
+}));
 
 function formatMoney(value: number | string | null | undefined) {
   const amount = Number(value);
@@ -44,30 +44,45 @@ function getLocation(value: string) {
   return value.split(",").slice(1, 3).join(", ").trim() || value;
 }
 
-function getColumnLeads(leads: LeadRecord[], status: LeadAdminStatus) {
-  return leads.filter((lead) => lead.status === status);
+function getColumnLeads(leads: LeadRecord[], stage: PipelineStage) {
+  return leads.filter((lead) => (lead.pipeline_stage || "new_lead") === stage);
 }
 
 export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
   const router = useRouter();
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<LeadAdminStatus | null>(null);
+  const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function moveLead(leadId: string, status: LeadAdminStatus) {
+  function moveLead(leadId: string, stage: PipelineStage) {
     if (isPending) {
       return;
     }
 
     const formData = new FormData();
     formData.set("id", leadId);
-    formData.set("status", status);
-    setPendingStatus(status);
+    formData.set("stage", stage);
+    setPendingStage(stage);
 
     startTransition(async () => {
-      await updateLeadStatus(formData);
+      await updateLeadPipelineStage(formData);
       setDraggedLeadId(null);
-      setPendingStatus(null);
+      setPendingStage(null);
+      router.refresh();
+    });
+  }
+
+  function setTelegramPreference(leadId: string, enabled: boolean) {
+    if (isPending) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("id", leadId);
+    formData.set("enabled", String(enabled));
+
+    startTransition(async () => {
+      await updateLeadPipelineTelegramPreference(formData);
       router.refresh();
     });
   }
@@ -80,14 +95,14 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
         </div>
       ) : null}
 
-      <div className="grid min-w-[1180px] grid-cols-6 gap-3 pb-4">
+      <div className="grid min-w-[2800px] grid-cols-[repeat(13,minmax(200px,1fr))] gap-3 pb-4">
         {COLUMNS.map((column) => {
           const columnLeads = getColumnLeads(leads, column.value);
 
           return (
             <section
               key={column.value}
-              className={`min-h-[34rem] rounded-2xl border p-2.5 ${column.tone}`}
+              className={`min-h-[34rem] min-w-0 rounded-2xl border p-2.5 ${column.tone}`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -119,12 +134,12 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                       setDraggedLeadId(lead.id);
                     }}
                     onDragEnd={() => setDraggedLeadId(null)}
-                    className={`cursor-grab rounded-xl border border-border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing ${
+                    className={`w-full min-w-0 overflow-hidden cursor-grab rounded-xl border border-border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing ${
                       draggedLeadId === lead.id ? "opacity-50" : ""
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1.5 truncate text-sm font-black text-primary">
                           <span className="truncate">{lead.name}</span>
                           {lead.pipeline_telegram_enabled ? (
@@ -155,7 +170,7 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                       )}
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2.5">
+                    <div className="mt-3 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
                       <Link
                         href={`/admin/leads/${lead.id}`}
                         className="text-xs font-black text-primary underline-offset-4 hover:underline"
@@ -163,19 +178,32 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                       >
                         Open lead
                       </Link>
-                      <select
-                        value={lead.status}
-                        disabled={isPending}
-                        onChange={(event) => moveLead(lead.id, event.target.value as LeadAdminStatus)}
-                        className="max-w-[8rem] rounded-lg border border-border bg-white px-2 py-1 text-[0.65rem] font-bold text-primary outline-none focus:border-primary"
-                        aria-label={`Move ${lead.name}`}
-                      >
-                        {COLUMNS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <label className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/15 bg-primary/5 px-2 py-1 text-[0.65rem] font-black text-primary" title="Send Telegram notifications for this lead">
+                          <input
+                            type="checkbox"
+                            checked={lead.pipeline_telegram_enabled === true}
+                            disabled={isPending}
+                            onChange={(event) => setTelegramPreference(lead.id, event.target.checked)}
+                            className="h-3.5 w-3.5 accent-primary"
+                            aria-label={`Telegram notifications for ${lead.name}`}
+                          />
+                          TG
+                        </label>
+                        <select
+                          value={lead.pipeline_stage || "new_lead"}
+                          disabled={isPending}
+                          onChange={(event) => moveLead(lead.id, event.target.value as PipelineStage)}
+                          className="min-w-0 max-w-[8rem] rounded-lg border border-border bg-white px-2 py-1 text-[0.65rem] font-bold text-primary outline-none focus:border-primary"
+                          aria-label={`Move ${lead.name}`}
+                        >
+                          {COLUMNS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -191,8 +219,8 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
         })}
       </div>
 
-      {pendingStatus ? (
-        <p className="mt-2 text-xs font-bold text-muted">Saving move to {COLUMNS.find((column) => column.value === pendingStatus)?.label}…</p>
+      {pendingStage ? (
+        <p className="mt-2 text-xs font-bold text-muted">Saving move to {COLUMNS.find((column) => column.value === pendingStage)?.label}…</p>
       ) : null}
     </div>
   );

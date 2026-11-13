@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CustomerHistoryCard } from "@/components/admin/customer-history-card";
 import { CallButton } from "@/components/twilio/call-widget";
+import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES } from "@/lib/pipeline-stages";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getDisplayCustomerEmail } from "@/lib/customer-email";
 import { listCustomerHistory } from "@/lib/customer-history";
@@ -591,6 +592,21 @@ export default async function LeadDetailPage({
                   {statusOptions.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                Pipeline stage
+                <select
+                  name="pipelineStage"
+                  defaultValue={lead.pipeline_stage || "new_lead"}
+                  className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-foreground outline-none ring-primary/30 focus:border-primary focus:ring-2"
+                >
+                  {PIPELINE_STAGES.map((stage) => (
+                    <option key={stage} value={stage}>
+                      {PIPELINE_STAGE_CONFIG[stage].label}
                     </option>
                   ))}
                 </select>
