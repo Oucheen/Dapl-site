@@ -56,6 +56,7 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
   const [boardWidth, setBoardWidth] = useState(2800);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
+  const [actionError, setActionError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -93,13 +94,23 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
     const formData = new FormData();
     formData.set("id", leadId);
     formData.set("stage", stage);
+    setActionError("");
     setPendingStage(stage);
 
     startTransition(async () => {
-      await updateLeadPipelineStage(formData);
-      setDraggedLeadId(null);
-      setPendingStage(null);
-      router.refresh();
+      try {
+        await updateLeadPipelineStage(formData);
+        setDraggedLeadId(null);
+        router.refresh();
+      } catch (error) {
+        setActionError(
+          error instanceof Error
+            ? error.message
+            : "Could not move the card. Check the Supabase Pipeline migration.",
+        );
+      } finally {
+        setPendingStage(null);
+      }
     });
   }
 
@@ -111,10 +122,19 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
     const formData = new FormData();
     formData.set("id", leadId);
     formData.set("enabled", String(enabled));
+    setActionError("");
 
     startTransition(async () => {
-      await updateLeadPipelineTelegramPreference(formData);
-      router.refresh();
+      try {
+        await updateLeadPipelineTelegramPreference(formData);
+        router.refresh();
+      } catch (error) {
+        setActionError(
+          error instanceof Error
+            ? error.message
+            : "Could not save the Telegram preference. Check the Supabase migration.",
+        );
+      }
     });
   }
 
@@ -123,6 +143,16 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
       {isPending ? (
         <div className="fixed inset-x-0 top-0 z-50 h-1 bg-primary/20">
           <div className="h-full w-1/2 animate-pulse bg-primary" />
+        </div>
+      ) : null}
+
+      {actionError ? (
+        <div className="mb-3 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm font-bold leading-6 text-accent">
+          <p>Could not save this Pipeline change.</p>
+          <p className="mt-1 font-mono text-xs font-semibold text-foreground">{actionError}</p>
+          <p className="mt-2 text-xs font-semibold text-foreground">
+            Run <code className="rounded bg-white px-1.5 py-0.5">supabase/pipeline-telegram.sql</code> in the Supabase SQL Editor, then reload this page.
+          </p>
         </div>
       ) : null}
 
