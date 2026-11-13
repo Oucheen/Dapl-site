@@ -359,12 +359,15 @@ function getPipelineStageForHcpEvent(
       : ("scheduled" as const);
   }
 
-  if (eventName === "job.created" && (value.includes("scheduled") || scheduledAtCreation)) {
+  if (
+    (eventName === "job.created" || eventName === "job.updated") &&
+    (value.includes("scheduled") || scheduledAtCreation)
+  ) {
     return "scheduled" as const;
   }
 
   if (eventName === "job.created") {
-    return "new_lead" as const;
+    return "scheduled" as const;
   }
 
   return null;
