@@ -596,6 +596,21 @@ export default async function LeadDetailPage({
                 </select>
               </label>
 
+              <label className="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm font-semibold text-primary">
+                <input
+                  type="checkbox"
+                  name="pipelineTelegramEnabled"
+                  defaultChecked={lead.pipeline_telegram_enabled === true}
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>
+                  Notify me in Telegram when this lead changes
+                  <span className="mt-1 block text-xs font-medium leading-5 text-muted">
+                    Changes are sent to the DAPL Pipeline notifications channel.
+                  </span>
+                </span>
+              </label>
+
               <label className="grid gap-1 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 Preferred date
                 <div className="rounded-lg border border-border bg-white px-3 py-2">

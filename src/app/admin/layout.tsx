@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { CallWidget } from "@/components/twilio/call-widget";
-import { TwilioVoiceProvider } from "@/components/twilio/twilio-voice-provider";
+import { AdminRuntimeShell } from "@/components/admin/admin-runtime-shell";
 
 export const metadata: Metadata = {
   robots: {
@@ -10,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <TwilioVoiceProvider><>{children}<CallWidget /></></TwilioVoiceProvider>;
+  return <AdminRuntimeShell>{children}</AdminRuntimeShell>;
 }

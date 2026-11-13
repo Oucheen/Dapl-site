@@ -125,7 +125,14 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-primary">{lead.name}</p>
+                        <p className="flex items-center gap-1.5 truncate text-sm font-black text-primary">
+                          <span className="truncate">{lead.name}</span>
+                          {lead.pipeline_telegram_enabled ? (
+                            <span title="Telegram notifications enabled" aria-label="Telegram notifications enabled">
+                              🔔
+                            </span>
+                          ) : null}
+                        </p>
                         <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-muted">
                           {lead.appliance || "Appliance repair"}
                         </p>

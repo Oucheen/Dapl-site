@@ -20,6 +20,7 @@ create table if not exists public.leads (
   scheduled_date date,
   estimated_price numeric(10,2),
   assigned_technician text,
+  pipeline_telegram_enabled boolean not null default false,
   call_intake jsonb not null default '{}'::jsonb
 );
 
@@ -204,6 +205,7 @@ alter table public.leads
   add column if not exists scheduled_date date,
   add column if not exists estimated_price numeric(10,2),
   add column if not exists assigned_technician text,
+  add column if not exists pipeline_telegram_enabled boolean not null default false,
   add column if not exists call_intake jsonb not null default '{}'::jsonb;
 
 alter table public.calls

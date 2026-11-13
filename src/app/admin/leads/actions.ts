@@ -72,8 +72,11 @@ async function notifyLeadStatusChange(
   lead: Awaited<ReturnType<typeof getSupabaseLeadById>>,
   nextStatus: LeadAdminStatus,
   details?: string,
+  notificationsEnabled?: boolean,
 ) {
-  if (!lead || lead.status === nextStatus) {
+  const shouldNotify = notificationsEnabled ?? lead?.pipeline_telegram_enabled === true;
+
+  if (!lead || lead.status === nextStatus || !shouldNotify) {
     return;
   }
 
@@ -152,6 +155,7 @@ export async function updateLeadDetails(formData: FormData) {
 
   const id = String(formData.get("id") || "");
   const status = String(formData.get("status") || "") as LeadAdminStatus;
+  const pipelineTelegramEnabled = formData.get("pipelineTelegramEnabled") === "on";
 
   if (!ALLOWED_STATUSES.includes(status)) {
     throw new Error("Invalid lead status.");
@@ -168,6 +172,7 @@ export async function updateLeadDetails(formData: FormData) {
     await updateSupabaseLeadAfterInvoice(id, {
       status: status as (typeof POST_INVOICE_STATUSES)[number],
       adminNotes: String(formData.get("adminNotes") || ""),
+      pipelineTelegramEnabled,
     });
     await createLeadActivity({
       leadId: id,
@@ -176,7 +181,7 @@ export async function updateLeadDetails(formData: FormData) {
       title: "Lead status / notes updated",
       details: `Status set to ${status}.`,
     });
-    await notifyLeadStatusChange(id, lead, status);
+    await notifyLeadStatusChange(id, lead, status, undefined, pipelineTelegramEnabled);
 
     revalidatePath("/admin/leads");
     revalidatePath(`/admin/leads/${id}`);
@@ -186,6 +191,7 @@ export async function updateLeadDetails(formData: FormData) {
   await updateSupabaseLead(id, {
     status,
     adminNotes: String(formData.get("adminNotes") || ""),
+    pipelineTelegramEnabled,
   });
   await createLeadActivity({
     leadId: id,
@@ -193,7 +199,7 @@ export async function updateLeadDetails(formData: FormData) {
     title: "Lead details updated",
     details: `Status set to ${status}.`,
   });
-  await notifyLeadStatusChange(id, lead, status);
+  await notifyLeadStatusChange(id, lead, status, undefined, pipelineTelegramEnabled);
 
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${id}`);
@@ -208,13 +214,21 @@ export async function createInvoiceForLead(formData: FormData) {
 
   const status = String(formData.get("status") || "") as LeadAdminStatus;
   const lead = await getSupabaseLeadById(id);
+  const pipelineTelegramEnabled = formData.get("pipelineTelegramEnabled") === "on";
 
   if (ALLOWED_STATUSES.includes(status)) {
     await updateSupabaseLead(id, {
       status,
       adminNotes: String(formData.get("adminNotes") || ""),
+      pipelineTelegramEnabled,
     });
-    await notifyLeadStatusChange(id, lead, status, "Invoice workflow updated.");
+    await notifyLeadStatusChange(
+      id,
+      lead,
+      status,
+      "Invoice workflow updated.",
+      pipelineTelegramEnabled,
+    );
   }
 
   const existingInvoiceId = await getInvoiceIdForLead(id);

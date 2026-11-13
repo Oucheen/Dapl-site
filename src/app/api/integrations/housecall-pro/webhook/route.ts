@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createLeadActivity } from "@/lib/supabase-activity";
 import {
   findRecentLeadBySourceReference,
+  getSupabaseLeadById,
   saveLeadToSupabase,
 } from "@/lib/supabase-leads";
 import { buildUnifiedTelegramLeadMessage } from "@/lib/telegram-lead-message";
@@ -336,19 +337,21 @@ export async function POST(request: Request) {
     const duplicate = await findRecentLeadBySourceReference({
       leadSource: HCP_LEAD_SOURCE,
       reference,
+      windowMinutes: 10 * 365 * 24 * 60,
     });
 
     if (duplicate) {
       let pipelineTelegramSent = false;
+      const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
 
-      if (eventName !== "lead.created") {
+      if (eventName !== "lead.created" && duplicateLead?.pipeline_telegram_enabled === true) {
         try {
           const pipelineTelegram = await sendPipelineTelegramMessage(
             {
               source: HCP_LEAD_SOURCE,
               type: eventName === "lead.converted" ? "status_change" : "update",
               eventName,
-              lead: pipelineLead,
+              lead: duplicateLead,
               leadId: duplicate.id,
               externalId,
               status,

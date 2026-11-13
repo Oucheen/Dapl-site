@@ -137,6 +137,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Dispatcher Pipeline board: `/admin/pipeline`
 - `/admin/pipeline` currently provides a Kanban view over Supabase leads with New Lead, Contacted, Scheduled, Estimate / Invoice, Completed, and Cancelled columns
 - Pipeline cards can be moved by drag-and-drop or the status selector; moves use the same lead status workflow and create the normal lead activity record
+- Lead details include an optional `pipeline_telegram_enabled` subscription flag; when enabled, status changes for that lead are posted to the Pipeline Telegram channel
+- Run `supabase/pipeline-telegram.sql` once in Supabase for an existing database before using the checkbox
 - Login page: `/admin/leads/login`
 - Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`

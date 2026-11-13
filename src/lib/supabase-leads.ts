@@ -41,6 +41,7 @@ export type LeadRecord = {
   scheduled_date?: string | null;
   estimated_price?: number | string | null;
   assigned_technician?: string | null;
+  pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
 };
 
@@ -53,11 +54,13 @@ export type LeadAdminUpdateInput = {
   scheduledDate?: string;
   estimatedPrice?: string;
   assignedTechnician?: string;
+  pipelineTelegramEnabled?: boolean;
 };
 
 export type LeadPostInvoiceUpdateInput = {
   status: Extract<LeadAdminStatus, "invoiced" | "completed" | "cancelled">;
   adminNotes: string;
+  pipelineTelegramEnabled?: boolean;
 };
 
 export type ManualLeadInput = {
@@ -413,7 +416,7 @@ export async function findRecentLeadBySourceReference(input: {
     lead_source: `eq.${leadSource}`,
     created_at: `gte.${since}`,
     order: "created_at.desc",
-    limit: "100",
+    limit: "1000",
   });
 
   try {
@@ -588,7 +591,7 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   assertUuid(id);
 
-  const payload: Record<string, string | number | null> = {
+  const payload: Record<string, string | number | boolean | null> = {
     status: input.status,
     admin_notes: input.adminNotes.trim() || null,
   };
@@ -603,6 +606,10 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   if (input.assignedTechnician !== undefined) {
     payload.assigned_technician = input.assignedTechnician.trim() || null;
+  }
+
+  if (input.pipelineTelegramEnabled !== undefined) {
+    payload.pipeline_telegram_enabled = input.pipelineTelegramEnabled;
   }
 
   const response = await fetch(`${getSupabaseUrl(config)}?id=eq.${id}`, {
@@ -641,6 +648,9 @@ export async function updateSupabaseLeadAfterInvoice(
     body: JSON.stringify({
       status: input.status,
       admin_notes: input.adminNotes.trim() || null,
+      ...(input.pipelineTelegramEnabled !== undefined
+        ? { pipeline_telegram_enabled: input.pipelineTelegramEnabled }
+        : {}),
     }),
   });
 
