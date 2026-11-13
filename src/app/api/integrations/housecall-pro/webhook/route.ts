@@ -25,6 +25,28 @@ const HCP_EVENTS = new Set([
   "lead.converted",
   "lead.deleted",
   "lead.lost",
+  "estimate.canceled",
+  "estimate.completed",
+  "estimate.copy_to_job",
+  "estimate.created",
+  "estimate.deleted",
+  "estimate.on_my_way",
+  "estimate.option.approval_status_changed",
+  "estimate.option.canceled",
+  "estimate.option.created",
+  "estimate.option.deleted",
+  "estimate.scheduled",
+  "estimate.sent",
+  "estimate.updated",
+  "invoice.amount_updated",
+  "invoice.canceled",
+  "invoice.created",
+  "invoice.paid",
+  "invoice.payment.failed",
+  "invoice.payment.succeeded",
+  "invoice.refund.succeeded",
+  "invoice.sent",
+  "invoice.voided",
   "job.created",
   "job.updated",
   "job.deleted",
@@ -32,6 +54,11 @@ const HCP_EVENTS = new Set([
   "job.scheduled",
   "job.completed",
   "job.started",
+  "job.on_my_way",
+  "job.paid",
+  "job.appointment.appointment_discarded",
+  "job.appointment.appointment_pros_assigned",
+  "job.appointment.appointment_pros_unassigned",
   "job.appointment.scheduled",
   "job.appointment.rescheduled",
 ]);
@@ -40,6 +67,10 @@ type JsonRecord = Record<string, unknown>;
 
 function getWebhookSecret() {
   return process.env.HOUSECALL_PRO_WEBHOOK_SECRET?.trim() || "";
+}
+
+function isHousecallProTelegramEnabled() {
+  return process.env.HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true";
 }
 
 function asRecord(value: unknown): JsonRecord {
@@ -80,6 +111,10 @@ function getField(payload: JsonRecord, ...names: string[]) {
     asRecord(asRecord(payload.data).lead),
     asRecord(payload.job),
     asRecord(asRecord(payload.data).job),
+    asRecord(payload.estimate),
+    asRecord(asRecord(payload.data).estimate),
+    asRecord(payload.invoice),
+    asRecord(asRecord(payload.data).invoice),
     asRecord(payload.resource),
     asRecord(asRecord(payload.data).resource),
     asRecord(payload.customer),
@@ -217,23 +252,66 @@ function getRequestOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
-function getPipelineStageForHcpEvent(eventName: string, status: string) {
+function getPipelineStageForHcpEvent(
+  eventName: string,
+  status: string,
+  currentStage: string = "new_lead",
+) {
   const value = `${eventName} ${status}`.toLowerCase();
 
-  if (value.includes("lost") || value.includes("deleted") || value.includes("cancel")) {
+  if (
+    (eventName.startsWith("lead.") || eventName.startsWith("job.")) &&
+    (value.includes("lost") || value.includes("deleted") || value.includes("cancel"))
+  ) {
     return "closed_no_repair" as const;
   }
 
-  if (value.includes("completed")) {
+  if (
+    eventName === "job.completed" ||
+    eventName === "job.paid" ||
+    eventName === "invoice.paid"
+  ) {
     return "completed" as const;
   }
 
-  if (value.includes("converted") || value.includes("scheduled")) {
+  if (eventName === "estimate.option.approval_status_changed") {
+    if (/(approved|accepted|confirmed)/i.test(status)) {
+      return "approved" as const;
+    }
+
+    if (/(declined|rejected|denied|canceled|cancelled)/i.test(status)) {
+      return "closed_no_repair" as const;
+    }
+
+    return "estimate_sent_awaiting_approval" as const;
+  }
+
+  if (eventName === "estimate.created" || eventName === "estimate.copy_to_job") {
+    return "diagnosed_estimate_needed" as const;
+  }
+
+  if (eventName === "estimate.sent") {
+    return "estimate_sent_awaiting_approval" as const;
+  }
+
+  if (eventName === "estimate.scheduled" || eventName === "estimate.on_my_way") {
     return "scheduled" as const;
   }
 
-  if (value.includes("started")) {
-    return "repair_scheduled" as const;
+  if (
+    eventName === "job.scheduled" ||
+    eventName === "job.appointment.scheduled" ||
+    eventName === "job.appointment.rescheduled"
+  ) {
+    return ["approved", "parts_ordered", "parts_received"].includes(currentStage)
+      ? ("repair_scheduled" as const)
+      : ("scheduled" as const);
+  }
+
+  if (eventName === "job.started" || eventName === "job.on_my_way") {
+    return ["approved", "parts_ordered", "parts_received", "repair_scheduled"].includes(currentStage)
+      ? ("repair_scheduled" as const)
+      : ("scheduled" as const);
   }
 
   if (eventName === "job.created") {
@@ -278,6 +356,7 @@ export async function GET() {
     configured: {
       webhookSecret: Boolean(getWebhookSecret()),
       telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
+      housecallProTelegram: isHousecallProTelegramEnabled(),
       pipelineTelegram: getPipelineConfigStatus(),
     },
   });
@@ -329,9 +408,26 @@ export async function POST(request: Request) {
   const data = asRecord(payload.data);
   const lead = asRecord(data.lead ?? payload.lead);
   const job = asRecord(data.job ?? payload.job);
+  const estimate = asRecord(data.estimate ?? payload.estimate);
+  const invoice = asRecord(data.invoice ?? payload.invoice);
+  const isLeadEvent = eventName.startsWith("lead.");
   const isJobEvent = eventName.startsWith("job.");
-  const primaryRecord = isJobEvent ? job : lead;
-  const customer = asRecord(primaryRecord.customer ?? data.customer ?? payload.customer);
+  const isEstimateEvent = eventName.startsWith("estimate.");
+  const isInvoiceEvent = eventName.startsWith("invoice.");
+  const primaryRecord = isJobEvent
+    ? job
+    : isEstimateEvent
+      ? estimate
+      : isInvoiceEvent
+        ? invoice
+        : lead;
+  const customer = asRecord(
+    primaryRecord.customer ??
+      job.customer ??
+      lead.customer ??
+      data.customer ??
+      payload.customer,
+  );
   const customerName = firstText(
     getNestedField(customer, "name", "fullName", "full_name"),
     [
@@ -363,16 +459,30 @@ export async function POST(request: Request) {
     getNestedField(data, "id", "leadId", "lead_id"),
     getNestedField(primaryRecord, "id", "leadId", "lead_id", "resourceId", "resource_id"),
   );
+  const relatedJobId = firstText(
+    getField(payload, "jobId", "job_id", "jobID"),
+    getNestedField(data, "jobId", "job_id", "jobID"),
+    getNestedField(primaryRecord, "jobId", "job_id", "jobID"),
+    getNestedField(job, "id", "jobId", "job_id"),
+  );
   const createdAt = getField(payload, "createdAt", "created_at", "timestamp", "date");
   const status = firstText(getField(payload, "status"), eventName);
   const address = getAddress(payload, primaryRecord);
   const notes = getField(payload, "notes", "description", "message", "customerMessage", "customer_message");
-  const entityLabel = isJobEvent ? "HCP Job ID" : "HCP ID";
-  const reference = externalId ? `${entityLabel}: ${externalId}` : phone ? `Phone: ${phone}` : "";
+  const entityLabel = isJobEvent ? "HCP Job ID" : isLeadEvent ? "HCP ID" : "HCP Event ID";
+  const referenceJobId = isJobEvent ? externalId : relatedJobId;
+  const reference = referenceJobId
+    ? `HCP Job ID: ${referenceJobId}`
+    : isLeadEvent && externalId
+      ? `HCP ID: ${externalId}`
+      : phone
+        ? `Phone: ${phone}`
+        : "";
   const message = [
     `Source: ${HCP_LEAD_SOURCE}`,
     `Event: ${eventName}`,
     externalId ? `${entityLabel}: ${externalId}` : null,
+    !isLeadEvent && !isJobEvent && relatedJobId ? `HCP Job ID: ${relatedJobId}` : null,
     sourceDetail ? `Lead source: ${sourceDetail}` : null,
     notes ? `Notes: ${notes}` : null,
   ]
@@ -389,13 +499,14 @@ export async function POST(request: Request) {
     estimated_price: null,
   };
 
-  let duplicate: { id: string } | null = externalId
-    ? isJobEvent
-      ? await findSupabaseLeadByHousecallProJobId(externalId)
-      : await findSupabaseLeadByHousecallProLeadId(externalId)
+  const exactLookupId = isJobEvent || isLeadEvent ? externalId : relatedJobId;
+  let duplicate: { id: string } | null = exactLookupId
+    ? isJobEvent || !isLeadEvent
+      ? await findSupabaseLeadByHousecallProJobId(exactLookupId)
+      : await findSupabaseLeadByHousecallProLeadId(exactLookupId)
     : null;
 
-  if (!duplicate && reference) {
+  if (!duplicate && reference && (isLeadEvent || isJobEvent || relatedJobId)) {
     duplicate = await findRecentLeadBySourceReference({
       leadSource: HCP_LEAD_SOURCE,
       reference,
@@ -405,11 +516,16 @@ export async function POST(request: Request) {
     if (duplicate) {
       let pipelineTelegramSent = false;
       const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
-      const nextPipelineStage = getPipelineStageForHcpEvent(eventName, status);
+      const nextPipelineStage = getPipelineStageForHcpEvent(
+        eventName,
+        status,
+        duplicateLead?.pipeline_stage || "new_lead",
+      );
 
       if (
         duplicateLead &&
         externalId &&
+        (isJobEvent || isLeadEvent) &&
         (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id)
       ) {
         try {
@@ -445,7 +561,7 @@ export async function POST(request: Request) {
               source: HCP_LEAD_SOURCE,
               event: eventName,
               externalId: externalId || null,
-              entity: isJobEvent ? "job" : "lead",
+              entity: isJobEvent ? "job" : isLeadEvent ? "lead" : isEstimateEvent ? "estimate" : "invoice",
             },
           });
         } catch (error) {
@@ -453,12 +569,19 @@ export async function POST(request: Request) {
         }
       }
 
-      if (!eventName.endsWith(".created") && duplicateLead?.pipeline_telegram_enabled === true) {
+      if (
+        isHousecallProTelegramEnabled() &&
+        !eventName.endsWith(".created") &&
+        duplicateLead?.pipeline_telegram_enabled === true
+      ) {
         try {
           const pipelineTelegram = await sendPipelineTelegramMessage(
             {
               source: HCP_LEAD_SOURCE,
-              type: eventName === "lead.converted" ? "status_change" : "update",
+              type:
+                eventName === "lead.converted" || eventName === "estimate.option.approval_status_changed"
+                  ? "status_change"
+                  : "update",
               eventName,
               lead: duplicateLead,
               leadId: duplicate.id,
@@ -490,6 +613,14 @@ export async function POST(request: Request) {
     }
   }
 
+  if (!isLeadEvent && !isJobEvent) {
+    return NextResponse.json({
+      ok: true,
+      ignored: eventName,
+      reason: "No matching HCP lead or job was found for this event.",
+    });
+  }
+
   let storedLeadId: string | null = null;
 
   if (phone) {
@@ -516,10 +647,50 @@ export async function POST(request: Request) {
           ? await findSupabaseLeadByHousecallProJobId(externalId)
           : await findSupabaseLeadByHousecallProLeadId(externalId);
 
+        if (concurrentLead) {
+          const nextPipelineStage = getPipelineStageForHcpEvent(
+            eventName,
+            status,
+            concurrentLead.pipeline_stage || "new_lead",
+          );
+
+          if (
+            nextPipelineStage &&
+            (concurrentLead.pipeline_stage || "new_lead") !== nextPipelineStage
+          ) {
+            try {
+              await updateSupabaseLead(concurrentLead.id, {
+                status: concurrentLead.status,
+                adminNotes: concurrentLead.admin_notes ?? "",
+                pipelineStage: nextPipelineStage,
+              });
+              await createLeadActivity({
+                leadId: concurrentLead.id,
+                eventType: `housecall_pro_pipeline_stage_${nextPipelineStage}`,
+                title: "Housecall Pro updated Pipeline stage",
+                details: `${concurrentLead.pipeline_stage || "new_lead"} → ${nextPipelineStage}.`,
+                metadata: {
+                  source: HCP_LEAD_SOURCE,
+                  event: eventName,
+                  entity: isJobEvent ? "job" : "lead",
+                  externalId,
+                },
+              });
+            } catch (error) {
+              console.error("Housecall Pro concurrent Pipeline stage update error:", error);
+            }
+          }
+        }
+
         return NextResponse.json({
           ok: true,
           duplicate: true,
           leadId: concurrentLead?.id || null,
+          pipelineStage: getPipelineStageForHcpEvent(
+            eventName,
+            status,
+            concurrentLead?.pipeline_stage || "new_lead",
+          ),
           pipelineTelegramSent: false,
         });
       }
@@ -544,48 +715,52 @@ export async function POST(request: Request) {
     });
   }
 
-  const telegram = await sendTelegram(
-    buildUnifiedTelegramLeadMessage({
-      source: HCP_LEAD_SOURCE,
-      type: "Lead notification",
-      name: customerName,
-      phone,
-      email,
-      address,
-      category,
-      sourceDetail: sourceDetail || "Housecall Pro",
-      externalId,
-      status,
-      callTime: createdAt,
-      message: notes || "",
-    }),
-    storedLeadId
-      ? [{ text: "Open lead", url: `${getRequestOrigin(request)}/admin/leads/${storedLeadId}` }]
-      : [],
-  );
+  const telegram = isHousecallProTelegramEnabled()
+    ? await sendTelegram(
+        buildUnifiedTelegramLeadMessage({
+          source: HCP_LEAD_SOURCE,
+          type: "Lead notification",
+          name: customerName,
+          phone,
+          email,
+          address,
+          category,
+          sourceDetail: sourceDetail || "Housecall Pro",
+          externalId,
+          status,
+          callTime: createdAt,
+          message: notes || "",
+        }),
+        storedLeadId
+          ? [{ text: "Open lead", url: `${getRequestOrigin(request)}/admin/leads/${storedLeadId}` }]
+          : [],
+      )
+    : { sent: false, reason: "Housecall Pro Telegram notifications are disabled." };
 
   let pipelineTelegramSent = false;
 
   try {
-    const pipelineTelegram = await sendPipelineTelegramMessage(
-      {
-        source: HCP_LEAD_SOURCE,
-        type: eventName.endsWith(".created") ? "new_lead" : "update",
-        eventName,
-        lead: {
-          ...pipelineLead,
-          id: storedLeadId || undefined,
+    if (isHousecallProTelegramEnabled()) {
+      const pipelineTelegram = await sendPipelineTelegramMessage(
+        {
+          source: HCP_LEAD_SOURCE,
+          type: eventName.endsWith(".created") ? "new_lead" : "update",
+          eventName,
+          lead: {
+            ...pipelineLead,
+            id: storedLeadId || undefined,
+          },
+          leadId: storedLeadId,
+          externalId,
+          status,
+          details: notes,
         },
-        leadId: storedLeadId,
-        externalId,
-        status,
-        details: notes,
-      },
-      storedLeadId
-        ? [{ text: "Open lead", url: getPipelineLeadUrl(storedLeadId) }]
-        : [],
-    );
-    pipelineTelegramSent = pipelineTelegram.sent;
+        storedLeadId
+          ? [{ text: "Open lead", url: getPipelineLeadUrl(storedLeadId) }]
+          : [],
+      );
+      pipelineTelegramSent = pipelineTelegram.sent;
+    }
   } catch (error) {
     console.error("Housecall Pro pipeline Telegram error:", error);
   }
