@@ -141,7 +141,7 @@ export default async function PipelineAdminPage({
           </div>
         ) : null}
 
-        <div className="mt-5 overflow-x-auto pb-2">
+        <div className="mt-5">
           <PipelineBoard leads={visibleLeads} />
         </div>
       </section>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
 import type { LeadRecord } from "@/lib/supabase-leads";
 import {
@@ -50,9 +50,40 @@ function getColumnLeads(leads: LeadRecord[], stage: PipelineStage) {
 
 export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
   const router = useRouter();
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const boardScrollRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [boardWidth, setBoardWidth] = useState(2800);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const grid = gridRef.current;
+
+    if (!grid) {
+      return;
+    }
+
+    const updateWidth = () => {
+      setBoardWidth(Math.max(grid.scrollWidth, 2800));
+    };
+
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(grid);
+
+    return () => observer.disconnect();
+  }, [leads.length]);
+
+  function syncHorizontalScroll(source: "top" | "board") {
+    const sourceElement = source === "top" ? topScrollRef.current : boardScrollRef.current;
+    const targetElement = source === "top" ? boardScrollRef.current : topScrollRef.current;
+
+    if (sourceElement && targetElement) {
+      targetElement.scrollLeft = sourceElement.scrollLeft;
+    }
+  }
 
   function moveLead(leadId: string, stage: PipelineStage) {
     if (isPending) {
@@ -95,7 +126,24 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
         </div>
       ) : null}
 
-      <div className="grid min-w-[2800px] grid-cols-[repeat(13,minmax(200px,1fr))] gap-3 pb-4">
+      <div
+        ref={topScrollRef}
+        onScroll={() => syncHorizontalScroll("top")}
+        className="mb-2 h-5 overflow-x-auto overflow-y-hidden rounded-full border border-border bg-white shadow-sm"
+        aria-label="Scroll Pipeline horizontally"
+      >
+        <div style={{ width: `${boardWidth}px`, height: "1px" }} />
+      </div>
+
+      <div
+        ref={boardScrollRef}
+        onScroll={() => syncHorizontalScroll("board")}
+        className="overflow-x-auto pb-4"
+      >
+        <div
+          ref={gridRef}
+          className="grid min-w-[2800px] grid-cols-[repeat(13,minmax(200px,1fr))] gap-3"
+        >
         {COLUMNS.map((column) => {
           const columnLeads = getColumnLeads(leads, column.value);
 
@@ -217,6 +265,7 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
             </section>
           );
         })}
+        </div>
       </div>
 
       {pendingStage ? (
