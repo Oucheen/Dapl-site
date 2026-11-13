@@ -191,9 +191,9 @@ export function PipelineBoard({ leads }: { leads: LeadRecord[] }) {
                 }
               }}
             >
-              <div className="flex items-start justify-between gap-2 px-1.5 pb-2.5">
+              <div className="flex min-h-[6.5rem] items-start justify-between gap-2 px-1.5 pb-2.5">
                 <div>
-                  <h2 className="text-sm font-black text-primary">{column.label}</h2>
+                  <h2 className="min-h-[2.75rem] text-sm font-black leading-5 text-primary">{column.label}</h2>
                   <p className="mt-0.5 text-[0.65rem] font-semibold text-muted">{column.description}</p>
                 </div>
                 <span className="rounded-full bg-white/80 px-2 py-1 text-xs font-black text-primary shadow-sm">

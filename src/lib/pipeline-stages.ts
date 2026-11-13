@@ -1,4 +1,5 @@
 export const PIPELINE_STAGES = [
+  "follow_up_required",
   "new_lead",
   "scheduled",
   "diagnosed_estimate_needed",
@@ -9,7 +10,6 @@ export const PIPELINE_STAGES = [
   "repair_scheduled",
   "completed",
   "closed_no_repair",
-  "follow_up_required",
   "waiting_for_customer",
   "waiting_for_property_manager",
 ] as const;
