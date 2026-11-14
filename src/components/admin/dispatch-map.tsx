@@ -94,7 +94,7 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
         let remaining = visibleJobs.length;
         let found = 0;
 
-        visibleJobs.forEach((job) => {
+        visibleJobs.forEach((job, index) => {
           geocoder.geocode({ address: job.address }, (results, status) => {
             if (cancelled) {
               return;
@@ -105,6 +105,7 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
                 map,
                 position: results[0].geometry.location,
                 title: `${job.name} · ${job.technician}`,
+                label: String(index + 1),
               });
               const infoWindow = new googleMaps.InfoWindow();
               infoWindow.setContent(`<strong>${job.name}</strong><br>${job.technician}<br>${job.time}<br>${job.address}`);
@@ -152,6 +153,18 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
           <p className="mt-1 text-xs font-bold text-muted">Showing up to {MAX_MARKERS} addresses on the current Dispatch view.</p>
         </div>
         {error ? <span className="text-xs font-bold text-accent">{error}</span> : null}
+      </div>
+      <div className="grid gap-2 border-b border-border bg-slate-50 p-4 md:grid-cols-2">
+        {visibleJobs.map((job, index) => (
+          <div key={job.id} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-white px-3 py-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">{index + 1}</span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black text-primary">{job.name}</p>
+              <p className="mt-0.5 text-xs font-black text-foreground">{job.time} · {job.technician}</p>
+              <p className="mt-0.5 truncate text-xs font-semibold text-muted">{job.address}</p>
+            </div>
+          </div>
+        ))}
       </div>
       <div ref={mapRef} className="h-[34rem] w-full bg-slate-100" aria-label="Dispatch jobs map" />
     </div>

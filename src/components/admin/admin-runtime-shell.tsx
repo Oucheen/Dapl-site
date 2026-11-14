@@ -6,9 +6,13 @@ import { TwilioVoiceProvider } from "@/components/twilio/twilio-voice-provider";
 
 export function AdminRuntimeShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isPipeline = pathname === "/admin/pipeline" || pathname.startsWith("/admin/pipeline/");
+  const isDispatcherWorkspace =
+    pathname === "/admin/pipeline" ||
+    pathname.startsWith("/admin/pipeline/") ||
+    pathname === "/admin/dispatch" ||
+    pathname.startsWith("/admin/dispatch/");
 
-  if (isPipeline) {
+  if (isDispatcherWorkspace) {
     return <>{children}</>;
   }
 
