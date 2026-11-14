@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
-import { HousecallProSyncButton } from "@/components/admin/housecall-pro-sync-button";
 import { PipelineBoard } from "@/components/admin/pipeline-board";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listSupabaseLeads } from "@/lib/supabase-leads";
@@ -146,7 +145,6 @@ export default async function PipelineAdminPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-muted">
-            <HousecallProSyncButton />
             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-2 ${pipelineTelegram.botToken && pipelineTelegram.chatId ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
               <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
               Pipeline Telegram {pipelineTelegram.botToken && pipelineTelegram.chatId ? "ready" : "not configured"}

@@ -94,15 +94,18 @@ export default async function DispatchPage({
     error = caught instanceof Error ? caught.message : "Could not load dispatch data.";
   }
 
-  const scheduledLeads = leads
-    .filter((lead) => lead.housecall_pro_job_id && (lead.scheduled_date || lead.scheduled_start))
+  const hcpLeads = leads
+    .filter((lead) => lead.housecall_pro_job_id || lead.lead_source?.toLowerCase().includes("housecall pro"))
+    .filter((lead) => !selectedTech || getTechName(lead) === selectedTech);
+  const scheduledLeads = hcpLeads
     .filter((lead) => (lead.scheduled_date || lead.scheduled_start?.slice(0, 10)) === selectedDate)
-    .filter((lead) => !selectedTech || getTechName(lead) === selectedTech)
     .sort((left, right) => (left.scheduled_start || "9999").localeCompare(right.scheduled_start || "9999"));
+  const unscheduledLeads = hcpLeads
+    .filter((lead) => !lead.scheduled_date && !lead.scheduled_start)
+    .sort((left, right) => left.name.localeCompare(right.name));
   const technicians = Array.from(
     new Set(
-      leads
-        .filter((lead) => lead.housecall_pro_job_id)
+      hcpLeads
         .map(getTechName),
     ),
   ).sort((left, right) => left.localeCompare(right));
@@ -150,7 +153,7 @@ export default async function DispatchPage({
             </select>
           </label>
           <button type="submit" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground">Show schedule</button>
-          <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length} jobs</span>
+          <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length} scheduled · {unscheduledLeads.length} without date</span>
         </form>
 
         {error ? <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-5 text-sm font-bold text-accent">{error}</div> : null}
@@ -188,7 +191,32 @@ export default async function DispatchPage({
           })}
         </div>
 
-        {!grouped.length ? <div className="mt-6 rounded-2xl border border-dashed border-border bg-white p-10 text-center text-sm font-bold text-muted">No scheduled HCP jobs for this filter. Run “Sync HCP jobs” on the Pipeline page after adding the API key.</div> : null}
+        {unscheduledLeads.length ? (
+          <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black text-primary">HCP jobs without a date</h2>
+                <p className="mt-1 text-sm font-semibold text-muted">These cards are already in Pipeline, but HCP has not provided a scheduled date yet.</p>
+              </div>
+              <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-primary">{unscheduledLeads.length} jobs</span>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {unscheduledLeads.map((lead) => (
+                <article key={lead.id} className="rounded-xl border border-amber-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="truncate text-sm font-black text-primary">{lead.name}</p>
+                    <Link href={`/admin/leads/${lead.id}`} className="shrink-0 text-xs font-black text-primary underline-offset-4 hover:underline">Open</Link>
+                  </div>
+                  <p className="mt-2 text-sm font-bold text-foreground">{lead.service_address}</p>
+                  <p className="mt-2 text-xs font-bold text-muted">Technician: {getTechName(lead)}</p>
+                  <a href={getMapsSearchUrl(lead.service_address)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-black text-primary underline-offset-4 hover:underline">Open address in Google Maps</a>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {!grouped.length && !unscheduledLeads.length ? <div className="mt-6 rounded-2xl border border-dashed border-border bg-white p-10 text-center text-sm font-bold text-muted">No Housecall Pro cards found for this filter. Dispatch reads the same Pipeline data, so new webhook cards will appear here automatically.</div> : null}
       </section>
     </main>
   );
