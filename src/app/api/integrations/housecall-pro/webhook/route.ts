@@ -327,6 +327,8 @@ function getTechnicianNames(payload: JsonRecord, primaryRecord: JsonRecord) {
     getNestedValue(payload, "assignedPros", "assigned_pros", "pros", "employees", "team", "assignedEmployees", "assigned_employees", "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
     getNestedValue(appointment, "assignedPro", "assigned_pro", "employee", "technician"),
     getNestedValue(primaryRecord, "assignedPro", "assigned_pro", "employee", "technician"),
+    getNestedValue(appointment, "technicianName", "technician_name", "proName", "pro_name", "employeeName", "employee_name", "assignedEmployeeName", "assigned_employee_name"),
+    getNestedValue(primaryRecord, "technicianName", "technician_name", "proName", "pro_name", "employeeName", "employee_name", "assignedEmployeeName", "assigned_employee_name"),
   ];
   const names: string[] = [];
 

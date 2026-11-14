@@ -96,7 +96,11 @@ export default async function DispatchPage({
   }
 
   const hcpLeads = leads
-    .filter((lead) => lead.housecall_pro_job_id || lead.lead_source?.toLowerCase().includes("housecall pro"))
+    .filter((lead) =>
+      lead.housecall_pro_job_id ||
+      lead.lead_source?.toLowerCase().includes("housecall pro") ||
+      lead.pipeline_stage === "scheduled",
+    )
     .filter((lead) => !selectedTech || getTechName(lead) === selectedTech);
   const scheduledLeads = hcpLeads
     .filter((lead) => (lead.scheduled_date || lead.scheduled_start?.slice(0, 10)) === selectedDate)
