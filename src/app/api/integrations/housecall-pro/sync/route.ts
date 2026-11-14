@@ -120,6 +120,12 @@ export async function POST(request: Request) {
           await updateSupabaseLead(existing.id, {
             status: existing.status,
             adminNotes: existing.admin_notes ?? "",
+            ...(job.customerName && job.customerName !== "Housecall Pro customer" ? { name: job.customerName } : {}),
+            ...(job.phone ? { phone: job.phone } : {}),
+            ...(job.email ? { email: job.email } : {}),
+            ...(job.address ? { serviceAddress: job.address } : {}),
+            ...(job.appliance ? { appliance: job.appliance } : {}),
+            ...(job.notes ? { message: getJobMessage(job) } : {}),
             housecallProJobId: job.id,
             ...(job.leadId ? { housecallProLeadId: job.leadId } : {}),
             ...(job.appointmentId ? { housecallProAppointmentId: job.appointmentId } : {}),

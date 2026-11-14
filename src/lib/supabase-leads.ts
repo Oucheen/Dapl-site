@@ -70,6 +70,12 @@ type RecentSourceLeadRecord = Pick<
 export type LeadAdminUpdateInput = {
   status: LeadAdminStatus;
   adminNotes: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  serviceAddress?: string;
+  appliance?: string;
+  message?: string;
   scheduledDate?: string;
   estimatedPrice?: string;
   assignedTechnician?: string;
@@ -753,6 +759,30 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
     status: input.status,
     admin_notes: input.adminNotes.trim() || null,
   };
+
+  if (input.name !== undefined) {
+    payload.name = input.name.trim();
+  }
+
+  if (input.phone !== undefined) {
+    payload.phone = input.phone.trim();
+  }
+
+  if (input.email !== undefined) {
+    payload.email = input.email.trim();
+  }
+
+  if (input.serviceAddress !== undefined) {
+    payload.service_address = input.serviceAddress.trim();
+  }
+
+  if (input.appliance !== undefined) {
+    payload.appliance = input.appliance.trim() || null;
+  }
+
+  if (input.message !== undefined) {
+    payload.message = input.message.trim();
+  }
 
   if (input.scheduledDate !== undefined) {
     payload.scheduled_date = input.scheduledDate || null;

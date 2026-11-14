@@ -18,6 +18,7 @@ export type HousecallProJobSnapshot = {
 };
 
 const DEFAULT_API_BASE_URL = "https://api.housecallpro.com";
+const JOB_EXPAND_QUERY = "expand[]=customer&expand[]=appointments";
 
 function getApiKey() {
   return process.env.HOUSECALL_PRO_API_KEY?.trim() || "";
@@ -144,16 +145,35 @@ function getAppointments(job: JsonRecord) {
   return Array.isArray(value) ? value.map(asRecord).filter((item) => Object.keys(item).length) : [];
 }
 
-function getAppointmentTechnicians(appointment: JsonRecord, job: JsonRecord) {
+function getAppointmentTechnicians(appointment: JsonRecord, job: JsonRecord, employeeNames = new Map<string, string>()) {
   const names: string[] = [];
   const values = [
     getValue(appointment, "assignedPros", "assigned_pros", "pros", "employees", "team", "technicians"),
+    getValue(appointment, "dispatchedEmployeeIds", "dispatched_employee_ids", "assignedEmployeeIds", "assigned_employee_ids"),
     getValue(appointment, "assignedPro", "assigned_pro", "employee", "technician"),
     getValue(job, "assignedPros", "assigned_pros", "pros", "employees", "team", "technicians"),
+    getValue(job, "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
     getValue(job, "assignedPro", "assigned_pro", "employee", "technician"),
   ];
 
-  values.forEach((value) => collectNames(value, names));
+  values.forEach((value) => {
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        const itemText = getText(item);
+
+        if (itemText && employeeNames.has(itemText)) {
+          names.push(employeeNames.get(itemText) || itemText);
+        } else {
+          collectNames(item, names);
+        }
+      });
+    } else {
+      const valueText = getText(value);
+      names.push(valueText && employeeNames.has(valueText) ? employeeNames.get(valueText) || valueText : "");
+      collectNames(value, names);
+    }
+  });
+
   return Array.from(new Set(names)).join(", ");
 }
 
@@ -189,7 +209,7 @@ function getAppointmentEnd(appointment: JsonRecord, job: JsonRecord) {
   );
 }
 
-function normalizeJob(value: unknown): HousecallProJobSnapshot | null {
+function normalizeJob(value: unknown, employeeNames = new Map<string, string>()): HousecallProJobSnapshot | null {
   const job = asRecord(value);
   const id = firstText(getValue(job, "id", "jobId", "job_id"));
 
@@ -206,10 +226,10 @@ function normalizeJob(value: unknown): HousecallProJobSnapshot | null {
     .sort((left, right) => (left.start || "9999").localeCompare(right.start || "9999"));
   const selectedAppointment = appointments[0]?.appointment ?? job;
   const allTechnicians = appointments.flatMap(({ appointment }) => {
-    const text = getAppointmentTechnicians(appointment, job);
+    const text = getAppointmentTechnicians(appointment, job, employeeNames);
     return text ? text.split(", ") : [];
   });
-  const assignedTechnician = Array.from(new Set(allTechnicians)).join(", ") || getAppointmentTechnicians(job, job);
+  const assignedTechnician = Array.from(new Set(allTechnicians)).join(", ") || getAppointmentTechnicians(job, job, employeeNames);
   const scheduledStart = getAppointmentStart(selectedAppointment, job);
   const scheduledEnd = getAppointmentEnd(selectedAppointment, job);
 
@@ -228,7 +248,7 @@ function normalizeJob(value: unknown): HousecallProJobSnapshot | null {
     address: getAddress(job, customer),
     appliance: firstText(getValue(job, "jobType", "job_type", "serviceType", "service_type", "category", "service"), "Appliance repair"),
     notes: firstText(getValue(job, "notes", "description", "message")),
-    status: firstText(getValue(job, "status", "jobStatus", "job_status")),
+    status: firstText(getValue(job, "status", "workStatus", "work_status", "jobStatus", "job_status")),
     assignedTechnician,
     scheduledStart,
     scheduledEnd,
@@ -259,6 +279,11 @@ async function requestJson(path: string) {
   return response.json() as Promise<unknown>;
 }
 
+function unwrapRecord(value: unknown) {
+  const root = asRecord(value);
+  return asRecord(getValue(root, "data", "job", "resource") ?? value);
+}
+
 function getCollection(value: unknown) {
   const root = asRecord(value);
   const candidates = [getValue(root, "data", "jobs", "items", "results")];
@@ -283,10 +308,70 @@ export async function listHousecallProJobs(limit = 250) {
   const jobs: HousecallProJobSnapshot[] = [];
   const pageSize = Math.min(Math.max(limit, 1), 100);
   const maxPages = Math.ceil(limit / pageSize);
+  const employeeNames = new Map<string, string>();
+
+  try {
+    const employeePayload = await requestJson("/employees?page=1&page_size=100");
+
+    for (const employee of getCollection(employeePayload)) {
+      const record = asRecord(employee);
+      const id = firstText(getValue(record, "id", "employeeId", "employee_id"));
+      const name = getName(record);
+
+      if (id && name) {
+        employeeNames.set(id, name);
+      }
+    }
+  } catch {
+    // The job payload can still contain employee names even when the employee list is unavailable.
+  }
 
   for (let page = 1; page <= maxPages && jobs.length < limit; page += 1) {
-    const payload = await requestJson(`/jobs?page=${page}&page_size=${pageSize}`);
-    const pageJobs = getCollection(payload).map(normalizeJob).filter((job): job is HousecallProJobSnapshot => Boolean(job));
+    const payload = await requestJson(`/jobs?page=${page}&page_size=${pageSize}&${JOB_EXPAND_QUERY}`);
+    const rawJobs = getCollection(payload);
+    const detailedJobs: unknown[] = [];
+
+    for (let index = 0; index < rawJobs.length; index += 5) {
+      const batch = rawJobs.slice(index, index + 5);
+      const details = await Promise.all(
+        batch.map(async (rawJob) => {
+          const rawRecord = asRecord(rawJob);
+          const id = firstText(getValue(rawRecord, "id", "jobId", "job_id"));
+
+          if (!id) {
+            return rawJob;
+          }
+
+          try {
+            const detailPayload = await requestJson(`/jobs/${encodeURIComponent(id)}?${JOB_EXPAND_QUERY}`);
+            const detail = unwrapRecord(detailPayload);
+
+            if (!getAppointments(detail).length) {
+              try {
+                const appointmentPayload = await requestJson(`/jobs/${encodeURIComponent(id)}/appointments`);
+                const appointments = getCollection(appointmentPayload);
+
+                if (appointments.length) {
+                  return { ...detail, appointments };
+                }
+              } catch {
+                // Keep the detailed job when the account has no appointment endpoint data.
+              }
+            }
+
+            return detail;
+          } catch {
+            return rawJob;
+          }
+        }),
+      );
+
+      detailedJobs.push(...details);
+    }
+
+    const pageJobs = detailedJobs
+      .map((job) => normalizeJob(job, employeeNames))
+      .filter((job): job is HousecallProJobSnapshot => Boolean(job));
 
     jobs.push(...pageJobs);
 
