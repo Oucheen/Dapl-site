@@ -251,7 +251,12 @@ function getScheduleValue(payload: JsonRecord, primaryRecord: JsonRecord, names:
       getNestedValue(data, "appointment") ??
       getNestedValue(payload, "appointment"),
   );
-  const containers = [payload, data, primaryRecord, appointment];
+  const schedule = asRecord(
+    getNestedValue(primaryRecord, "schedule", "appointmentSchedule", "appointment_schedule") ??
+      getNestedValue(appointment, "schedule", "appointmentSchedule", "appointment_schedule") ??
+      getNestedValue(data, "schedule", "appointmentSchedule", "appointment_schedule"),
+  );
+  const containers = [payload, data, primaryRecord, schedule, appointment];
 
   for (const container of containers) {
     const value = getNestedValue(container, ...names);
@@ -316,10 +321,10 @@ function getTechnicianNames(payload: JsonRecord, primaryRecord: JsonRecord) {
       getNestedValue(payload, "appointment"),
   );
   const candidates = [
-    getNestedValue(appointment, "assignedPros", "assigned_pros", "pros", "employees", "team"),
-    getNestedValue(primaryRecord, "assignedPros", "assigned_pros", "pros", "employees", "team"),
-    getNestedValue(data, "assignedPros", "assigned_pros", "pros", "employees", "team"),
-    getNestedValue(payload, "assignedPros", "assigned_pros", "pros", "employees", "team"),
+    getNestedValue(appointment, "assignedPros", "assigned_pros", "pros", "employees", "team", "assignedEmployees", "assigned_employees", "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
+    getNestedValue(primaryRecord, "assignedPros", "assigned_pros", "pros", "employees", "team", "assignedEmployees", "assigned_employees", "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
+    getNestedValue(data, "assignedPros", "assigned_pros", "pros", "employees", "team", "assignedEmployees", "assigned_employees", "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
+    getNestedValue(payload, "assignedPros", "assigned_pros", "pros", "employees", "team", "assignedEmployees", "assigned_employees", "assignedEmployeeIds", "assigned_employee_ids", "dispatchedEmployeeIds", "dispatched_employee_ids"),
     getNestedValue(appointment, "assignedPro", "assigned_pro", "employee", "technician"),
     getNestedValue(primaryRecord, "assignedPro", "assigned_pro", "employee", "technician"),
   ];
@@ -694,19 +699,31 @@ export async function POST(request: Request) {
       scheduledAtCreation,
     );
 
-    if (
+    const shouldBackfillExternalId = Boolean(
       duplicateLead &&
-      externalId &&
-      (isJobEvent || isLeadEvent) &&
-      (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id)
-    ) {
+        externalId &&
+        (isJobEvent || isLeadEvent) &&
+        (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id),
+    );
+    const shouldBackfillSchedule = Boolean(
+      duplicateLead &&
+        (assignedTechnician ||
+          schedule.scheduledStart ||
+          schedule.scheduledEnd ||
+          schedule.scheduledDate ||
+          schedule.appointmentId),
+    );
+
+    if (duplicateLead && (shouldBackfillExternalId || shouldBackfillSchedule)) {
       try {
         await updateSupabaseLead(duplicateId, {
           status: duplicateLead.status,
           adminNotes: duplicateLead.admin_notes ?? "",
-          ...(isJobEvent
+          ...(shouldBackfillExternalId && isJobEvent
             ? { housecallProJobId: externalId }
-            : { housecallProLeadId: externalId }),
+            : shouldBackfillExternalId && isLeadEvent
+              ? { housecallProLeadId: externalId }
+              : {}),
           ...(assignedTechnician ? { assignedTechnician } : {}),
           ...(schedule.scheduledStart ? { scheduledStart: schedule.scheduledStart } : {}),
           ...(schedule.scheduledEnd ? { scheduledEnd: schedule.scheduledEnd } : {}),

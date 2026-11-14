@@ -56,6 +56,30 @@ function formatScheduleTime(start: string | null | undefined, end: string | null
   return endLabel ? `${startLabel}–${endLabel}` : startLabel;
 }
 
+function formatBookedLabel(lead: LeadRecord) {
+  const scheduleTime = formatScheduleTime(lead.scheduled_start, lead.scheduled_end);
+
+  if (lead.scheduled_date && scheduleTime) {
+    return `${formatDate(lead.scheduled_date)} · ${scheduleTime}`;
+  }
+
+  if (lead.scheduled_date) {
+    return formatDate(lead.scheduled_date);
+  }
+
+  if (lead.scheduled_start) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "America/New_York",
+    }).format(new Date(lead.scheduled_start));
+  }
+
+  return "Not booked";
+}
+
 function getLocation(value: string) {
   return value.split(",").slice(1, 3).join(", ").trim() || value;
 }
@@ -77,6 +101,7 @@ export function PipelineBoard({
   const gridRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState(2800);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [expandedColumns, setExpandedColumns] = useState<Partial<Record<PipelineStage, boolean>>>({});
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [actionError, setActionError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -225,6 +250,9 @@ export function PipelineBoard({
         >
         {COLUMNS.map((column) => {
           const columnLeads = getColumnLeads(leads, column.value);
+          const isExpanded = expandedColumns[column.value] === true;
+          const visibleColumnLeads = isExpanded ? columnLeads : columnLeads.slice(0, 5);
+          const hiddenLeadCount = Math.max(columnLeads.length - visibleColumnLeads.length, 0);
 
           return (
             <section
@@ -251,7 +279,7 @@ export function PipelineBoard({
               </div>
 
               <div className="grid gap-2.5">
-                {columnLeads.map((lead) => (
+                {visibleColumnLeads.map((lead) => (
                   <article
                     key={lead.id}
                     draggable
@@ -286,19 +314,16 @@ export function PipelineBoard({
 
                     <p className="mt-2 truncate text-xs font-bold text-muted">{getLocation(lead.service_address)}</p>
 
-                    <div className="mt-3 flex flex-wrap gap-1.5 text-[0.65rem] font-bold text-muted">
-                      <span className="rounded-full bg-slate-100 px-2 py-1">{formatDate(lead.scheduled_date)}</span>
-                      {formatScheduleTime(lead.scheduled_start, lead.scheduled_end) ? (
-                        <span className="rounded-full bg-sky-50 px-2 py-1 text-sky-700">
-                          {formatScheduleTime(lead.scheduled_start, lead.scheduled_end)}
-                        </span>
-                      ) : null}
+                    <div className="mt-3 grid gap-1.5 text-[0.65rem] font-bold text-muted">
+                      <span className="truncate rounded-full bg-slate-100 px-2 py-1" title="Booked date and time">
+                        Booked: {formatBookedLabel(lead)}
+                      </span>
                       {lead.assigned_technician ? (
-                        <span className="rounded-full bg-primary/5 px-2 py-1 text-primary">
-                          {lead.assigned_technician}
+                        <span className="truncate rounded-full bg-primary/5 px-2 py-1 text-primary" title="Assigned technician">
+                          Tech: {lead.assigned_technician}
                         </span>
                       ) : (
-                        <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Unassigned</span>
+                        <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Tech: Unassigned</span>
                       )}
                     </div>
 
@@ -350,6 +375,16 @@ export function PipelineBoard({
                     ) : null}
                   </article>
                 ))}
+
+                {columnLeads.length > 5 ? (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedColumns((current) => ({ ...current, [column.value]: !isExpanded }))}
+                    className="rounded-xl border border-primary/15 bg-white px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/5"
+                  >
+                    {isExpanded ? "Show less" : `Show ${hiddenLeadCount} more`}
+                  </button>
+                ) : null}
 
                 {columnLeads.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-primary/15 bg-white/40 px-3 py-8 text-center text-xs font-bold text-muted">
