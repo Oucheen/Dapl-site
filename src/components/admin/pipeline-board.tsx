@@ -16,6 +16,9 @@ const COLUMNS = PIPELINE_STAGES.map((value) => ({
   ...PIPELINE_STAGE_CONFIG[value],
 }));
 
+const INITIAL_VISIBLE_CARDS = 8;
+const LOAD_MORE_CARDS = 4;
+
 function formatMoney(value: number | string | null | undefined) {
   const amount = Number(value);
 
@@ -101,7 +104,7 @@ export function PipelineBoard({
   const gridRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState(2800);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
-  const [expandedColumns, setExpandedColumns] = useState<Partial<Record<PipelineStage, boolean>>>({});
+  const [visibleCardCounts, setVisibleCardCounts] = useState<Partial<Record<PipelineStage, number>>>({});
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [actionError, setActionError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -244,14 +247,14 @@ export function PipelineBoard({
         onScroll={() => syncHorizontalScroll("board")}
         className="overflow-x-auto pb-4"
       >
-        <div
+          <div
           ref={gridRef}
-          className="grid min-w-[2800px] grid-cols-[repeat(13,minmax(200px,1fr))] gap-3"
+          className="grid min-w-[5200px] grid-cols-[repeat(13,minmax(400px,1fr))] gap-3"
         >
         {COLUMNS.map((column) => {
           const columnLeads = getColumnLeads(leads, column.value);
-          const isExpanded = expandedColumns[column.value] === true;
-          const visibleColumnLeads = isExpanded ? columnLeads : columnLeads.slice(0, 5);
+          const visibleCardCount = visibleCardCounts[column.value] ?? INITIAL_VISIBLE_CARDS;
+          const visibleColumnLeads = columnLeads.slice(0, visibleCardCount);
           const hiddenLeadCount = Math.max(columnLeads.length - visibleColumnLeads.length, 0);
 
           return (
@@ -278,7 +281,7 @@ export function PipelineBoard({
                 </span>
               </div>
 
-              <div className="grid gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
                 {visibleColumnLeads.map((lead) => (
                   <article
                     key={lead.id}
@@ -376,18 +379,37 @@ export function PipelineBoard({
                   </article>
                 ))}
 
-                {columnLeads.length > 5 ? (
-                  <button
-                    type="button"
-                    onClick={() => setExpandedColumns((current) => ({ ...current, [column.value]: !isExpanded }))}
-                    className="rounded-xl border border-primary/15 bg-white px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/5"
-                  >
-                    {isExpanded ? "Show less" : `Show ${hiddenLeadCount} more`}
-                  </button>
+                {columnLeads.length > INITIAL_VISIBLE_CARDS ? (
+                  <div className="col-span-2 grid gap-2">
+                    {hiddenLeadCount > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCardCounts((current) => ({
+                          ...current,
+                          [column.value]: Math.min(visibleCardCount + LOAD_MORE_CARDS, columnLeads.length),
+                        }))}
+                        className="rounded-xl border border-primary/15 bg-white px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/5"
+                      >
+                        Show {Math.min(LOAD_MORE_CARDS, hiddenLeadCount)} more
+                      </button>
+                    ) : null}
+                    {visibleCardCount > INITIAL_VISIBLE_CARDS ? (
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCardCounts((current) => ({
+                          ...current,
+                          [column.value]: INITIAL_VISIBLE_CARDS,
+                        }))}
+                        className="rounded-xl border border-border bg-white px-3 py-2 text-xs font-black text-muted transition hover:bg-slate-50"
+                      >
+                        Show less
+                      </button>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {columnLeads.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-primary/15 bg-white/40 px-3 py-8 text-center text-xs font-bold text-muted">
+                  <div className="col-span-2 rounded-xl border border-dashed border-primary/15 bg-white/40 px-3 py-8 text-center text-xs font-bold text-muted">
                     Drop a lead here
                   </div>
                 ) : null}
