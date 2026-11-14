@@ -553,6 +553,102 @@ export async function POST(request: Request) {
     estimated_price: null,
   };
 
+  async function processDuplicateLead(duplicateId: string) {
+    let pipelineTelegramSent = false;
+    const duplicateLead = await getSupabaseLeadById(duplicateId).catch(() => null);
+    const nextPipelineStage = getPipelineStageForHcpEvent(
+      eventName,
+      status,
+      duplicateLead?.pipeline_stage || "new_lead",
+      scheduledAtCreation,
+    );
+
+    if (
+      duplicateLead &&
+      externalId &&
+      (isJobEvent || isLeadEvent) &&
+      (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id)
+    ) {
+      try {
+        await updateSupabaseLead(duplicateId, {
+          status: duplicateLead.status,
+          adminNotes: duplicateLead.admin_notes ?? "",
+          ...(isJobEvent
+            ? { housecallProJobId: externalId }
+            : { housecallProLeadId: externalId }),
+        });
+      } catch (error) {
+        console.error("Housecall Pro external ID backfill error:", error);
+      }
+    }
+
+    if (
+      duplicateLead &&
+      nextPipelineStage &&
+      (duplicateLead.pipeline_stage || "new_lead") !== nextPipelineStage
+    ) {
+      try {
+        await updateSupabaseLead(duplicateId, {
+          status: duplicateLead.status,
+          adminNotes: duplicateLead.admin_notes ?? "",
+          pipelineStage: nextPipelineStage,
+        });
+        await createLeadActivity({
+          leadId: duplicateId,
+          eventType: `housecall_pro_pipeline_stage_${nextPipelineStage}`,
+          title: "Housecall Pro updated Pipeline stage",
+          details: `${duplicateLead.pipeline_stage || "new_lead"} → ${nextPipelineStage}.`,
+          metadata: {
+            source: HCP_LEAD_SOURCE,
+            event: eventName,
+            externalId: externalId || null,
+            entity: isJobEvent ? "job" : isLeadEvent ? "lead" : isEstimateEvent ? "estimate" : "invoice",
+          },
+        });
+      } catch (error) {
+        console.error("Housecall Pro pipeline stage update error:", error);
+      }
+    }
+
+    if (
+      isHousecallProTelegramEnabled() &&
+      !eventName.endsWith(".created") &&
+      duplicateLead?.pipeline_telegram_enabled === true
+    ) {
+      try {
+        const pipelineTelegram = await sendPipelineTelegramMessage(
+          {
+            source: HCP_LEAD_SOURCE,
+            type:
+              eventName === "lead.converted" || eventName === "estimate.option.approval_status_changed"
+                ? "status_change"
+                : "update",
+            eventName,
+            lead: duplicateLead,
+            leadId: duplicateId,
+            externalId,
+            previousStatus: duplicateLead.pipeline_stage || "new_lead",
+            nextStatus: nextPipelineStage || undefined,
+            status,
+            details: notes,
+          },
+          [{ text: "Open lead", url: getPipelineLeadUrl(duplicateId) }],
+        );
+        pipelineTelegramSent = pipelineTelegram.sent;
+      } catch (error) {
+        console.error("Housecall Pro pipeline Telegram error:", error);
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      duplicate: true,
+      leadId: duplicateId,
+      pipelineTelegramSent,
+      pipelineStage: nextPipelineStage,
+    });
+  }
+
   const exactLookupId = isJobEvent || isLeadEvent ? externalId : relatedJobId;
   let duplicate: { id: string } | null = exactLookupId
     ? isJobEvent || !isLeadEvent
@@ -567,105 +663,6 @@ export async function POST(request: Request) {
       windowMinutes: 10 * 365 * 24 * 60,
     });
 
-    if (duplicate) {
-      let pipelineTelegramSent = false;
-      const duplicateLead = await getSupabaseLeadById(duplicate.id).catch(() => null);
-      const nextPipelineStage = getPipelineStageForHcpEvent(
-        eventName,
-        status,
-        duplicateLead?.pipeline_stage || "new_lead",
-        scheduledAtCreation,
-      );
-
-      if (
-        duplicateLead &&
-        externalId &&
-        (isJobEvent || isLeadEvent) &&
-        (isJobEvent ? !duplicateLead.housecall_pro_job_id : !duplicateLead.housecall_pro_lead_id)
-      ) {
-        try {
-          await updateSupabaseLead(duplicate.id, {
-            status: duplicateLead.status,
-            adminNotes: duplicateLead.admin_notes ?? "",
-            ...(isJobEvent
-              ? { housecallProJobId: externalId }
-              : { housecallProLeadId: externalId }),
-          });
-        } catch (error) {
-          console.error("Housecall Pro lead ID backfill error:", error);
-        }
-      }
-
-      if (
-        duplicateLead &&
-        nextPipelineStage &&
-        (duplicateLead.pipeline_stage || "new_lead") !== nextPipelineStage
-      ) {
-        try {
-          await updateSupabaseLead(duplicate.id, {
-            status: duplicateLead.status,
-            adminNotes: duplicateLead.admin_notes ?? "",
-            pipelineStage: nextPipelineStage,
-          });
-          await createLeadActivity({
-            leadId: duplicate.id,
-            eventType: `housecall_pro_pipeline_stage_${nextPipelineStage}`,
-            title: "Housecall Pro updated Pipeline stage",
-            details: `${duplicateLead.pipeline_stage || "new_lead"} → ${nextPipelineStage}.`,
-            metadata: {
-              source: HCP_LEAD_SOURCE,
-              event: eventName,
-              externalId: externalId || null,
-              entity: isJobEvent ? "job" : isLeadEvent ? "lead" : isEstimateEvent ? "estimate" : "invoice",
-            },
-          });
-        } catch (error) {
-          console.error("Housecall Pro pipeline stage update error:", error);
-        }
-      }
-
-      if (
-        isHousecallProTelegramEnabled() &&
-        !eventName.endsWith(".created") &&
-        duplicateLead?.pipeline_telegram_enabled === true
-      ) {
-        try {
-          const pipelineTelegram = await sendPipelineTelegramMessage(
-            {
-              source: HCP_LEAD_SOURCE,
-              type:
-                eventName === "lead.converted" || eventName === "estimate.option.approval_status_changed"
-                  ? "status_change"
-                  : "update",
-              eventName,
-              lead: duplicateLead,
-              leadId: duplicate.id,
-              externalId,
-              previousStatus: duplicateLead.pipeline_stage || "new_lead",
-              nextStatus: nextPipelineStage || undefined,
-              status,
-              details: notes,
-            },
-            [
-              {
-                text: "Open lead",
-                url: getPipelineLeadUrl(duplicate.id),
-              },
-            ],
-          );
-          pipelineTelegramSent = pipelineTelegram.sent;
-        } catch (error) {
-          console.error("Housecall Pro pipeline Telegram error:", error);
-        }
-      }
-
-      return NextResponse.json({
-        ok: true,
-        duplicate: true,
-        leadId: duplicate.id,
-        pipelineTelegramSent,
-      });
-    }
   }
 
   if (!isLeadEvent && !isJobEvent) {
@@ -682,6 +679,10 @@ export async function POST(request: Request) {
       phone,
       windowMinutes: 30,
     });
+  }
+
+  if (duplicate) {
+    return processDuplicateLead(duplicate.id);
   }
 
   let storedLeadId: string | null = null;
