@@ -2,6 +2,9 @@
 alter table public.leads
   add column if not exists housecall_pro_lead_id text,
   add column if not exists housecall_pro_job_id text,
+  add column if not exists housecall_pro_appointment_id text,
+  add column if not exists scheduled_start timestamptz,
+  add column if not exists scheduled_end timestamptz,
   add column if not exists pipeline_stage text not null default 'new_lead',
   add column if not exists pipeline_telegram_enabled boolean not null default false;
 
@@ -25,3 +28,7 @@ create unique index if not exists leads_housecall_pro_lead_id_unique_idx
 create unique index if not exists leads_housecall_pro_job_id_unique_idx
   on public.leads (housecall_pro_job_id)
   where housecall_pro_job_id is not null;
+
+create unique index if not exists leads_housecall_pro_appointment_id_unique_idx
+  on public.leads (housecall_pro_appointment_id)
+  where housecall_pro_appointment_id is not null;

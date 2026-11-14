@@ -41,6 +41,21 @@ function formatDate(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
+function formatScheduleTime(start: string | null | undefined, end: string | null | undefined) {
+  if (!start) {
+    return "";
+  }
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  });
+  const startLabel = formatter.format(new Date(start));
+  const endLabel = end ? formatter.format(new Date(end)) : "";
+  return endLabel ? `${startLabel}–${endLabel}` : startLabel;
+}
+
 function getLocation(value: string) {
   return value.split(",").slice(1, 3).join(", ").trim() || value;
 }
@@ -273,6 +288,11 @@ export function PipelineBoard({
 
                     <div className="mt-3 flex flex-wrap gap-1.5 text-[0.65rem] font-bold text-muted">
                       <span className="rounded-full bg-slate-100 px-2 py-1">{formatDate(lead.scheduled_date)}</span>
+                      {formatScheduleTime(lead.scheduled_start, lead.scheduled_end) ? (
+                        <span className="rounded-full bg-sky-50 px-2 py-1 text-sky-700">
+                          {formatScheduleTime(lead.scheduled_start, lead.scheduled_end)}
+                        </span>
+                      ) : null}
                       {lead.assigned_technician ? (
                         <span className="rounded-full bg-primary/5 px-2 py-1 text-primary">
                           {lead.assigned_technician}

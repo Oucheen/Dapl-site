@@ -18,9 +18,14 @@ export type LeadInsertInput = {
   promoCode: string;
   leadSource: string;
   preferredDate: string;
+  scheduledDate?: string;
   message: string;
   housecallProLeadId?: string;
   housecallProJobId?: string;
+  housecallProAppointmentId?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  assignedTechnician?: string;
   pipelineStage?: PipelineStage;
 };
 
@@ -48,13 +53,19 @@ export type LeadRecord = {
   assigned_technician?: string | null;
   housecall_pro_lead_id?: string | null;
   housecall_pro_job_id?: string | null;
+  housecall_pro_appointment_id?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
   pipeline_stage?: PipelineStage;
   pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
 };
 
 type RecentVoiceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "message">;
-type RecentSourceLeadRecord = Pick<LeadRecord, "id" | "created_at" | "phone" | "message">;
+type RecentSourceLeadRecord = Pick<
+  LeadRecord,
+  "id" | "created_at" | "phone" | "message" | "status" | "admin_notes" | "pipeline_stage"
+>;
 
 export type LeadAdminUpdateInput = {
   status: LeadAdminStatus;
@@ -64,6 +75,9 @@ export type LeadAdminUpdateInput = {
   assignedTechnician?: string;
   housecallProLeadId?: string;
   housecallProJobId?: string;
+  housecallProAppointmentId?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
   pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
@@ -338,12 +352,21 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
         promo_code: input.promoCode || null,
         lead_source: input.leadSource || null,
         preferred_date: input.preferredDate || null,
+        ...(input.scheduledDate ? { scheduled_date: input.scheduledDate } : {}),
         message: input.message,
         ...(input.housecallProLeadId?.trim()
           ? { housecall_pro_lead_id: input.housecallProLeadId.trim() }
           : {}),
         ...(input.housecallProJobId?.trim()
           ? { housecall_pro_job_id: input.housecallProJobId.trim() }
+          : {}),
+        ...(input.housecallProAppointmentId?.trim()
+          ? { housecall_pro_appointment_id: input.housecallProAppointmentId.trim() }
+          : {}),
+        ...(input.scheduledStart?.trim() ? { scheduled_start: input.scheduledStart.trim() } : {}),
+        ...(input.scheduledEnd?.trim() ? { scheduled_end: input.scheduledEnd.trim() } : {}),
+        ...(input.assignedTechnician?.trim()
+          ? { assigned_technician: input.assignedTechnician.trim() }
           : {}),
         ...(input.pipelineStage ? { pipeline_stage: input.pipelineStage } : {}),
       }),
@@ -382,7 +405,7 @@ export async function findRecentVoiceLeadDuplicate(input: {
   const callId = input.callId?.trim() ?? "";
   const since = new Date(Date.now() - (input.windowMinutes ?? 15) * 60_000).toISOString();
   const params = new URLSearchParams({
-    select: "id,created_at,phone,message",
+    select: "id,created_at,phone,message,status,admin_notes,pipeline_stage",
     lead_source: "eq.voice-agent",
     created_at: `gte.${since}`,
     order: "created_at.desc",
@@ -437,7 +460,7 @@ export async function findRecentLeadBySourceReference(input: {
 
   const since = new Date(Date.now() - (input.windowMinutes ?? 24 * 60) * 60_000).toISOString();
   const params = new URLSearchParams({
-    select: "id,created_at,phone,message",
+    select: "id,created_at,phone,message,status,admin_notes,pipeline_stage",
     lead_source: `eq.${leadSource}`,
     created_at: `gte.${since}`,
     order: "created_at.desc",
@@ -479,7 +502,7 @@ export async function findRecentLeadBySourcePhone(input: {
 
   const since = new Date(Date.now() - (input.windowMinutes ?? 30) * 60_000).toISOString();
   const params = new URLSearchParams({
-    select: "id,created_at,phone,message",
+    select: "id,created_at,phone,message,status,admin_notes,pipeline_stage",
     lead_source: `eq.${leadSource}`,
     created_at: `gte.${since}`,
     order: "created_at.desc",
@@ -749,6 +772,18 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   if (input.housecallProJobId !== undefined) {
     payload.housecall_pro_job_id = input.housecallProJobId.trim() || null;
+  }
+
+  if (input.housecallProAppointmentId !== undefined) {
+    payload.housecall_pro_appointment_id = input.housecallProAppointmentId.trim() || null;
+  }
+
+  if (input.scheduledStart !== undefined) {
+    payload.scheduled_start = input.scheduledStart.trim() || null;
+  }
+
+  if (input.scheduledEnd !== undefined) {
+    payload.scheduled_end = input.scheduledEnd.trim() || null;
   }
 
   if (input.pipelineStage !== undefined) {

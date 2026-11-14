@@ -230,6 +230,135 @@ function hasScheduleInfo(payload: JsonRecord, primaryRecord: JsonRecord) {
   );
 }
 
+function getNestedValue(container: JsonRecord, ...names: string[]) {
+  for (const name of names) {
+    const matchingKey = Object.keys(container).find(
+      (key) => key.toLowerCase() === name.toLowerCase(),
+    );
+
+    if (matchingKey) {
+      return container[matchingKey];
+    }
+  }
+
+  return undefined;
+}
+
+function getScheduleValue(payload: JsonRecord, primaryRecord: JsonRecord, names: string[]) {
+  const data = asRecord(payload.data);
+  const appointment = asRecord(
+    getNestedValue(primaryRecord, "appointment") ??
+      getNestedValue(data, "appointment") ??
+      getNestedValue(payload, "appointment"),
+  );
+  const containers = [payload, data, primaryRecord, appointment];
+
+  for (const container of containers) {
+    const value = getNestedValue(container, ...names);
+    const text = getText(value);
+
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
+}
+
+function normalizeIsoDateTime(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
+}
+
+function getScheduleFields(payload: JsonRecord, primaryRecord: JsonRecord) {
+  const start = normalizeIsoDateTime(
+    getScheduleValue(payload, primaryRecord, [
+      "scheduledStart",
+      "scheduled_start",
+      "startTime",
+      "start_time",
+      "startsAt",
+      "starts_at",
+      "start",
+    ]),
+  );
+  const end = normalizeIsoDateTime(
+    getScheduleValue(payload, primaryRecord, [
+      "scheduledEnd",
+      "scheduled_end",
+      "endTime",
+      "end_time",
+      "endsAt",
+      "ends_at",
+      "end",
+    ]),
+  );
+  const appointmentId = getScheduleValue(payload, primaryRecord, [
+    "appointmentId",
+    "appointment_id",
+    "jobAppointmentId",
+    "job_appointment_id",
+  ]);
+
+  return {
+    scheduledStart: start,
+    scheduledEnd: end,
+    scheduledDate: start ? start.slice(0, 10) : "",
+    appointmentId,
+  };
+}
+
+function getTechnicianNames(payload: JsonRecord, primaryRecord: JsonRecord) {
+  const data = asRecord(payload.data);
+  const appointment = asRecord(
+    getNestedValue(primaryRecord, "appointment") ??
+      getNestedValue(data, "appointment") ??
+      getNestedValue(payload, "appointment"),
+  );
+  const candidates = [
+    getNestedValue(appointment, "assignedPros", "assigned_pros", "pros", "employees", "team"),
+    getNestedValue(primaryRecord, "assignedPros", "assigned_pros", "pros", "employees", "team"),
+    getNestedValue(data, "assignedPros", "assigned_pros", "pros", "employees", "team"),
+    getNestedValue(payload, "assignedPros", "assigned_pros", "pros", "employees", "team"),
+    getNestedValue(appointment, "assignedPro", "assigned_pro", "employee", "technician"),
+    getNestedValue(primaryRecord, "assignedPro", "assigned_pro", "employee", "technician"),
+  ];
+  const names: string[] = [];
+
+  function addCandidate(value: unknown) {
+    if (Array.isArray(value)) {
+      value.forEach(addCandidate);
+      return;
+    }
+
+    if (typeof value === "string") {
+      const name = value.trim();
+
+      if (name) {
+        names.push(name);
+      }
+
+      return;
+    }
+
+    const record = asRecord(value);
+    const name = firstText(
+      getNestedField(record, "name", "fullName", "full_name", "displayName", "display_name"),
+      [getNestedField(record, "firstName", "first_name"), getNestedField(record, "lastName", "last_name")]
+        .filter(Boolean)
+        .join(" "),
+    );
+
+    if (name) {
+      names.push(name);
+    }
+  }
+
+  candidates.forEach(addCandidate);
+
+  return Array.from(new Set(names)).join(", ");
+}
+
 function normalizeSignature(value: string) {
   return value.trim().replace(/^sha256=/i, "").replace(/^v1=/i, "");
 }
@@ -522,6 +651,8 @@ export async function POST(request: Request) {
   const status = firstText(getField(payload, "status"), eventName);
   const address = getAddress(payload, primaryRecord);
   const scheduledAtCreation = isJobEvent && hasScheduleInfo(payload, primaryRecord);
+  const schedule = getScheduleFields(payload, primaryRecord);
+  const assignedTechnician = getTechnicianNames(payload, primaryRecord);
   const notes = getField(payload, "notes", "description", "message", "customerMessage", "customer_message");
   const entityLabel = isJobEvent ? "HCP Job ID" : isLeadEvent ? "HCP ID" : "HCP Event ID";
   const referenceJobId = isJobEvent ? externalId : relatedJobId;
@@ -549,7 +680,7 @@ export async function POST(request: Request) {
     email,
     service_address: address,
     appliance: category,
-    assigned_technician: null,
+    assigned_technician: assignedTechnician || null,
     estimated_price: null,
   };
 
@@ -576,6 +707,13 @@ export async function POST(request: Request) {
           ...(isJobEvent
             ? { housecallProJobId: externalId }
             : { housecallProLeadId: externalId }),
+          ...(assignedTechnician ? { assignedTechnician } : {}),
+          ...(schedule.scheduledStart ? { scheduledStart: schedule.scheduledStart } : {}),
+          ...(schedule.scheduledEnd ? { scheduledEnd: schedule.scheduledEnd } : {}),
+          ...(schedule.appointmentId
+            ? { housecallProAppointmentId: schedule.appointmentId }
+            : {}),
+          ...(schedule.scheduledDate ? { scheduledDate: schedule.scheduledDate } : {}),
         });
       } catch (error) {
         console.error("Housecall Pro external ID backfill error:", error);
@@ -701,6 +839,11 @@ export async function POST(request: Request) {
       ...(isJobEvent
         ? { housecallProJobId: externalId || undefined }
         : { housecallProLeadId: externalId || undefined }),
+      housecallProAppointmentId: schedule.appointmentId || undefined,
+      scheduledStart: schedule.scheduledStart || undefined,
+      scheduledEnd: schedule.scheduledEnd || undefined,
+      assignedTechnician: assignedTechnician || undefined,
+      scheduledDate: schedule.scheduledDate || undefined,
       pipelineStage:
         getPipelineStageForHcpEvent(eventName, status, "new_lead", scheduledAtCreation) ||
         undefined,

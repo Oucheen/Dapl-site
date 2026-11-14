@@ -48,6 +48,7 @@ TELEGRAM_PIPELINE_BOT_TOKEN=...
 TELEGRAM_PIPELINE_CHAT_ID=...
 TELEGRAM_PIPELINE_MESSAGE_THREAD_ID=... # optional Telegram forum topic ID
 HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED=false # optional; HCP webhook Telegram messages are disabled unless true
+HOUSECALL_PRO_API_KEY=... # server-only HCP Public API key used by the Pipeline sync button
 TELEGRAM_TECH_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_SECRET=...
 VOICE_AGENT_API_KEY=...
@@ -144,6 +145,8 @@ For local development, create `.env.local` with the same keys if you want the fo
 - Housecall Pro job webhooks (`job.created`, `job.updated`, `job.scheduled`, `job.completed`, `job.canceled`, and `job.deleted`) use `housecall_pro_job_id` for the same idempotent Pipeline sync; run the latest `supabase/pipeline-telegram.sql` after this column is added
 - `/admin/pipeline` supports source filtering for all records, with quick filters for Housecall Pro and Google Local plus discovered sources from the database
 - HCP-originated Telegram notifications are controlled by `HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED`; the default is disabled while HCP-to-DAPL synchronization remains active
+- `/admin/pipeline` includes a server-side `Sync HCP jobs` action that imports existing HCP jobs, assigned technicians, appointments, and planned start/end times using `HOUSECALL_PRO_API_KEY`
+- `/admin/dispatch` groups synced HCP jobs by technician and date and opens planned addresses/routes in Google Maps; it does not use or expose GPS tracking
 - Login page: `/admin/leads/login`
 - Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`
