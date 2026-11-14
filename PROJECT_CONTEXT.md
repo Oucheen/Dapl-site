@@ -49,6 +49,7 @@ TELEGRAM_PIPELINE_CHAT_ID=...
 TELEGRAM_PIPELINE_MESSAGE_THREAD_ID=... # optional Telegram forum topic ID
 HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED=false # optional; HCP webhook Telegram messages are disabled unless true
 HOUSECALL_PRO_API_KEY=... # optional server-only HCP API key for future backfill tools
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=... # optional public Google Maps JavaScript key, restricted by production domain
 TELEGRAM_TECH_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_SECRET=...
 VOICE_AGENT_API_KEY=...
@@ -146,6 +147,7 @@ For local development, create `.env.local` with the same keys if you want the fo
 - `/admin/pipeline` supports source filtering for all records, with quick filters for Housecall Pro and Google Local plus discovered sources from the database
 - HCP-originated Telegram notifications are controlled by `HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED`; the default is disabled while HCP-to-DAPL synchronization remains active
 - `/admin/dispatch` reads the same HCP cards already stored for `/admin/pipeline`, groups them by technician and date, and opens planned addresses/routes in Google Maps; it does not use or expose GPS tracking
+- When `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is configured, `/admin/dispatch` also renders an embedded map with geocoded job markers; it is optional and should be restricted by HTTP referrer in Google Cloud
 - Login page: `/admin/leads/login`
 - Lead detail route: `/admin/leads/[leadId]`
 - Invoice list route: `/admin/invoices`

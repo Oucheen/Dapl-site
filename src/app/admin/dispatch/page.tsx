@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
+import { DispatchMap } from "@/components/admin/dispatch-map";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
 
@@ -157,6 +158,19 @@ export default async function DispatchPage({
         </form>
 
         {error ? <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-5 text-sm font-bold text-accent">{error}</div> : null}
+
+        <div className="mt-6">
+          <DispatchMap
+            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim()}
+            jobs={[...scheduledLeads, ...unscheduledLeads].map((lead) => ({
+              id: lead.id,
+              name: lead.name,
+              address: lead.service_address,
+              technician: getTechName(lead),
+              time: lead.scheduled_start ? formatTime(lead.scheduled_start) : "Time not set",
+            }))}
+          />
+        </div>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           {grouped.map(([technician, technicianLeads]) => {
