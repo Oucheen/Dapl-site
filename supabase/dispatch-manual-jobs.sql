@@ -27,3 +27,6 @@ drop trigger if exists set_dispatch_manual_jobs_updated_at on public.dispatch_ma
 create trigger set_dispatch_manual_jobs_updated_at
 before update on public.dispatch_manual_jobs
 for each row execute function public.set_updated_at();
+
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.dispatch_manual_jobs to service_role;

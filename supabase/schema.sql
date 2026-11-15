@@ -386,6 +386,7 @@ alter table public.admin_users enable row level security;
 
 grant usage on schema public to service_role;
 grant select, insert, update, delete on public.leads to service_role;
+grant select, insert, update, delete on public.dispatch_manual_jobs to service_role;
 grant select, insert, update, delete on public.invoices to service_role;
 grant select, insert, update, delete on public.invoice_items to service_role;
 grant select, insert, delete on public.invoice_payments to service_role;
