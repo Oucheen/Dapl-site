@@ -4,6 +4,7 @@ import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { DispatchMap } from "@/components/admin/dispatch-map";
 import { ManualDispatchJobDialog } from "@/components/admin/manual-dispatch-job-dialog";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
 import { listManualDispatchJobs, type ManualDispatchJobRecord } from "@/lib/supabase-dispatch-jobs";
 
@@ -118,12 +119,10 @@ export default async function DispatchPage({
     .filter((job) => job.service_date === selectedDate)
     .filter((job) => !selectedTech || job.assigned_technician === selectedTech)
     .sort((left, right) => left.scheduled_start.localeCompare(right.scheduled_start));
-  const technicians = Array.from(
-    new Set(
-      [...hcpLeads.map(getTechName), ...manualJobs.map((job) => job.assigned_technician.trim())]
-        .filter(Boolean),
-    ),
-  ).sort((left, right) => left.localeCompare(right));
+  const technicians = await getCrmTechnicianNames([
+    ...leads.map((lead) => lead.assigned_technician),
+    ...manualJobs.map((job) => job.assigned_technician),
+  ]);
   const grouped = Array.from(
     scheduledLeads.reduce((groups, lead) => {
       const technician = getTechName(lead);
@@ -148,7 +147,7 @@ export default async function DispatchPage({
             </Link>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-primary">Dispatch map</h1>
             <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
-              Scheduled HCP jobs grouped by technician. This shows planned work locations, not live GPS.
+              HCP Scheduled jobs and Bozman Fix appointments grouped by technician. This shows planned work locations, not live GPS.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

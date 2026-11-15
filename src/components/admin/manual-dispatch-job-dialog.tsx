@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { createManualDispatchJobAction } from "@/app/admin/dispatch/actions";
+import { TechnicianSelect } from "@/components/admin/technician-select";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -82,10 +83,13 @@ export function ManualDispatchJobDialog({
               </div>
               <label className="grid gap-1.5 text-sm font-bold text-primary">
                 Technician
-                <input name="assignedTechnician" required list="manual-technicians" defaultValue={selectedTechnician} placeholder="Technician name" className="rounded-xl border border-border px-3 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
-                <datalist id="manual-technicians">
-                  {technicians.map((technician) => <option key={technician} value={technician} />)}
-                </datalist>
+                <TechnicianSelect
+                  technicians={technicians.filter((technician) => technician !== "Unassigned")}
+                  defaultValue={selectedTechnician}
+                  required
+                  placeholder="Choose technician"
+                  className="rounded-xl border border-border bg-white px-3 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
               </label>
               <div className="flex justify-end gap-2 border-t border-border pt-4">
                 <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-muted hover:bg-slate-50">Cancel</button>
