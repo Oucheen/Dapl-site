@@ -274,6 +274,16 @@ export function PipelineBoard({
     setSelectedLeadIds(new Set(leads.map((lead) => lead.id)));
   }
 
+  function selectFollowUpLeads() {
+    setSelectedLeadIds(
+      new Set(
+        leads
+          .filter((lead) => (lead.pipeline_stage || "new_lead") === "follow_up_required")
+          .map((lead) => lead.id),
+      ),
+    );
+  }
+
   function clearSelectedLeads() {
     setSelectedLeadIds(new Set());
   }
@@ -373,6 +383,16 @@ export function PipelineBoard({
           >
             Select all {leads.length}
           </button>
+          {!showArchived && followUpCount > 0 ? (
+            <button
+              type="button"
+              onClick={selectFollowUpLeads}
+              disabled={isPending || selectedLeadIds.size === followUpCount}
+              className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-orange-800 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Select Follow-Up ({followUpCount})
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={clearSelectedLeads}
