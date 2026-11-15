@@ -64,7 +64,9 @@ function formatDate(value: string) {
 
 function getDateParam(value: string | string[] | undefined) {
   const date = Array.isArray(value) ? value[0] : value;
-  return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : getTodayDate();
+  const today = getTodayDate();
+
+  return date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= today ? date : today;
 }
 
 function getTechParam(value: string | string[] | undefined) {
@@ -168,7 +170,7 @@ export default async function DispatchPage({
         <form className="flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
             Date
-            <input type="date" name="date" defaultValue={selectedDate} className="rounded-xl border border-border px-3 py-2 text-sm font-bold text-primary" />
+            <input type="date" name="date" min={getTodayDate()} defaultValue={selectedDate} className="rounded-xl border border-border px-3 py-2 text-sm font-bold text-primary" />
           </label>
           <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
             Technician
