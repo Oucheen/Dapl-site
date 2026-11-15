@@ -27,7 +27,7 @@ export async function createManualDispatchJobAction(formData: FormData) {
   const technician = String(formData.get("assignedTechnician") || "").trim();
 
   await createManualDispatchJob({
-    name: String(formData.get("name") || ""),
+    name: "Bozman Fix",
     serviceAddress: String(formData.get("serviceAddress") || ""),
     serviceDate,
     scheduledStart: String(formData.get("scheduledStart") || ""),
