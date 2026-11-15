@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { DispatchMap } from "@/components/admin/dispatch-map";
+import { ManualDispatchJobDialog } from "@/components/admin/manual-dispatch-job-dialog";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
+import { listManualDispatchJobs, type ManualDispatchJobRecord } from "@/lib/supabase-dispatch-jobs";
 
 export const dynamic = "force-dynamic";
 
@@ -87,10 +89,14 @@ export default async function DispatchPage({
   const selectedDate = getDateParam(params?.date);
   const selectedTech = getTechParam(params?.tech);
   let leads: LeadRecord[] = [];
+  let manualJobs: ManualDispatchJobRecord[] = [];
   let error = "";
 
   try {
-    leads = await listSupabaseLeads(500);
+    [leads, manualJobs] = await Promise.all([
+      listSupabaseLeads(500),
+      listManualDispatchJobs(500),
+    ]);
   } catch (caught) {
     error = caught instanceof Error ? caught.message : "Could not load dispatch data.";
   }
@@ -108,10 +114,14 @@ export default async function DispatchPage({
   const unscheduledLeads = hcpLeads
     .filter((lead) => !lead.scheduled_date && !lead.scheduled_start)
     .sort((left, right) => left.name.localeCompare(right.name));
+  const selectedManualJobs = manualJobs
+    .filter((job) => job.service_date === selectedDate)
+    .filter((job) => !selectedTech || job.assigned_technician === selectedTech)
+    .sort((left, right) => left.scheduled_start.localeCompare(right.scheduled_start));
   const technicians = Array.from(
     new Set(
-      hcpLeads
-        .map(getTechName),
+      [...hcpLeads.map(getTechName), ...manualJobs.map((job) => job.assigned_technician.trim())]
+        .filter(Boolean),
     ),
   ).sort((left, right) => left.localeCompare(right));
   const grouped = Array.from(
@@ -120,6 +130,12 @@ export default async function DispatchPage({
       groups.set(technician, [...(groups.get(technician) ?? []), lead]);
       return groups;
     }, new Map<string, LeadRecord[]>()),
+  );
+  const manualGrouped = Array.from(
+    selectedManualJobs.reduce((groups, job) => {
+      groups.set(job.assigned_technician, [...(groups.get(job.assigned_technician) ?? []), job]);
+      return groups;
+    }, new Map<string, ManualDispatchJobRecord[]>()),
   );
 
   return (
@@ -137,6 +153,11 @@ export default async function DispatchPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <AdminGlobalSearch compact />
+            <ManualDispatchJobDialog
+              selectedDate={selectedDate}
+              selectedTechnician={selectedTech}
+              technicians={technicians}
+            />
             <Link href="/admin/pipeline" className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
               Pipeline
             </Link>
@@ -158,7 +179,7 @@ export default async function DispatchPage({
             </select>
           </label>
           <button type="submit" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground">Show schedule</button>
-          <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length} scheduled · {unscheduledLeads.length} without date</span>
+          <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length + selectedManualJobs.length} scheduled · {unscheduledLeads.length} without date</span>
         </form>
 
         {error ? <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/5 p-5 text-sm font-bold text-accent">{error}</div> : null}
@@ -166,15 +187,64 @@ export default async function DispatchPage({
         <div className="mt-6">
           <DispatchMap
             apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim()}
-            jobs={[...scheduledLeads, ...unscheduledLeads].map((lead) => ({
+            jobs={[
+              ...scheduledLeads.map((lead) => ({
               id: lead.id,
               name: lead.name,
               address: lead.service_address,
               technician: getTechName(lead),
               time: lead.scheduled_start ? formatTime(lead.scheduled_start) : "Time not set",
-            }))}
+                source: "hcp" as const,
+              })),
+              ...selectedManualJobs.map((job) => ({
+                id: job.id,
+                name: job.name,
+                address: job.service_address,
+                technician: job.assigned_technician,
+                time: formatTime(job.scheduled_start),
+                source: "manual" as const,
+              })),
+              ...unscheduledLeads.map((lead) => ({
+                id: lead.id,
+                name: lead.name,
+                address: lead.service_address,
+                technician: getTechName(lead),
+                time: "Time not set",
+                source: "hcp" as const,
+              })),
+            ]}
           />
         </div>
+
+        {manualGrouped.length ? (
+          <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/60 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black text-violet-950">Manual appointments</h2>
+                <p className="mt-1 text-sm font-semibold text-violet-800">Added in DAPL, not from Housecall Pro.</p>
+              </div>
+              <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-violet-900">{selectedManualJobs.length} manual</span>
+            </div>
+            <div className="mt-4 grid gap-5 lg:grid-cols-2">
+              {manualGrouped.map(([technician, jobs]) => (
+                <section key={technician} className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-black text-violet-950">{technician}</h3>
+                  <p className="mt-1 text-xs font-bold text-violet-700">{jobs.length} manual stop{jobs.length === 1 ? "" : "s"}</p>
+                  <div className="mt-4 grid gap-3">
+                    {jobs.map((job, index) => (
+                      <article key={job.id} className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+                        <p className="text-sm font-black text-violet-950">{index + 1}. {job.name}</p>
+                        <p className="mt-1 text-xs font-bold text-violet-800">{formatTime(job.scheduled_start)}{job.scheduled_end ? ` – ${formatTime(job.scheduled_end)}` : ""}</p>
+                        <p className="mt-3 text-sm font-bold text-foreground">{job.service_address}</p>
+                        <a href={getMapsSearchUrl(job.service_address)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-black text-violet-800 underline-offset-4 hover:underline">Open address in Google Maps</a>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           {grouped.map(([technician, technicianLeads]) => {
@@ -234,7 +304,7 @@ export default async function DispatchPage({
           </section>
         ) : null}
 
-        {!grouped.length && !unscheduledLeads.length ? <div className="mt-6 rounded-2xl border border-dashed border-border bg-white p-10 text-center text-sm font-bold text-muted">No Housecall Pro cards found for this filter. Dispatch reads the same Pipeline data, so new webhook cards will appear here automatically.</div> : null}
+        {!grouped.length && !manualGrouped.length && !unscheduledLeads.length ? <div className="mt-6 rounded-2xl border border-dashed border-border bg-white p-10 text-center text-sm font-bold text-muted">No scheduled jobs found for this filter.</div> : null}
       </section>
     </main>
   );

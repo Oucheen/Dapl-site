@@ -8,6 +8,7 @@ type DispatchMapJob = {
   address: string;
   technician: string;
   time: string;
+  source?: "hcp" | "manual";
 };
 
 type GoogleMapApi = {
@@ -106,6 +107,9 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
                 position: results[0].geometry.location,
                 title: `${job.name} · ${job.technician}`,
                 label: String(index + 1),
+                ...(job.source === "manual"
+                  ? { icon: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png" }
+                  : {}),
               });
               const infoWindow = new googleMaps.InfoWindow();
               infoWindow.setContent(`<strong>${job.name}</strong><br>${job.technician}<br>${job.time}<br>${job.address}`);
@@ -156,10 +160,13 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
       </div>
       <div className="grid gap-2 border-b border-border bg-slate-50 p-4 md:grid-cols-2">
         {visibleJobs.map((job, index) => (
-          <div key={job.id} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-white px-3 py-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">{index + 1}</span>
+          <div key={job.id} className={`flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 ${job.source === "manual" ? "border-violet-200 bg-violet-50" : "border-border bg-white"}`}>
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-primary-foreground ${job.source === "manual" ? "bg-violet-700" : "bg-primary"}`}>{index + 1}</span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-black text-primary">{job.name}</p>
+              <p className="flex items-center gap-2 truncate text-sm font-black text-primary">
+                <span className="truncate">{job.name}</span>
+                {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Manual</span> : null}
+              </p>
               <p className="mt-0.5 text-xs font-black text-foreground">{job.time} · {job.technician}</p>
               <p className="mt-0.5 truncate text-xs font-semibold text-muted">{job.address}</p>
             </div>
