@@ -21,6 +21,7 @@ import {
   deleteSupabaseLead,
   getSupabaseLeadById,
   updateSupabaseLead,
+  updateSupabaseLeadsArchive,
   updateSupabaseLeadAfterInvoice,
   updateSupabaseLeadStatus,
 } from "@/lib/supabase-leads";
@@ -487,6 +488,54 @@ export async function restoreLeadFromPipeline(formData: FormData) {
     title: "Pipeline card restored",
     details: "The card was restored to the active Pipeline view.",
   });
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+}
+
+export async function archiveSelectedLeadsFromPipeline(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    throw new Error("Your admin session has expired. Please sign in again.");
+  }
+
+  const ids = String(formData.get("ids") || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  await updateSupabaseLeadsArchive(ids, true);
+  await Promise.all(ids.map((id) => createLeadActivity({
+      leadId: id,
+      eventType: "pipeline_lead_archived",
+      title: "Pipeline card archived",
+      details: "The card was archived by a bulk Pipeline action.",
+    })));
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+}
+
+export async function restoreSelectedLeadsFromPipeline(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    throw new Error("Your admin session has expired. Please sign in again.");
+  }
+
+  const ids = String(formData.get("ids") || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  await updateSupabaseLeadsArchive(ids, false);
+  await Promise.all(ids.map((id) => createLeadActivity({
+      leadId: id,
+      eventType: "pipeline_lead_restored",
+      title: "Pipeline card restored",
+      details: "The card was restored by a bulk Pipeline action.",
+    })));
 
   revalidatePath("/admin/pipeline");
   revalidatePath("/admin/leads");

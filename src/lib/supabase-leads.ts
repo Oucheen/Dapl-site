@@ -885,6 +885,37 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
   }
 }
 
+export async function updateSupabaseLeadsArchive(ids: string[], archived: boolean) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const uniqueIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+
+  if (!uniqueIds.length || uniqueIds.length > 500) {
+    throw new Error("Select between 1 and 500 leads.");
+  }
+
+  uniqueIds.forEach(assertUuid);
+
+  const params = new URLSearchParams({ id: `in.(${uniqueIds.join(",")})` });
+  const response = await fetch(`${getSupabaseUrl(config)}?${params.toString()}`, {
+    method: "PATCH",
+    headers: {
+      ...headers(config),
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ pipeline_archived: archived }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase bulk archive update failed: ${response.status} ${details}`);
+  }
+}
+
 export async function updateSupabaseLeadAfterInvoice(
   id: string,
   input: LeadPostInvoiceUpdateInput,

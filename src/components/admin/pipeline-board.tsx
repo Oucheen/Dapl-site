@@ -7,8 +7,10 @@ import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES, type PipelineStage } from "@/li
 import type { LeadRecord } from "@/lib/supabase-leads";
 import {
   archiveLeadFromPipeline,
+  archiveSelectedLeadsFromPipeline,
   deleteLeadFromPipeline,
   restoreLeadFromPipeline,
+  restoreSelectedLeadsFromPipeline,
   updateLeadPipelineStage,
 } from "@/app/admin/leads/actions";
 
@@ -122,6 +124,7 @@ export function PipelineBoard({
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [actionError, setActionError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const newLeadCount = getColumnLeads(leads, "new_lead").length;
   const followUpCount = getColumnLeads(leads, "follow_up_required").length;
 
@@ -253,6 +256,78 @@ export function PipelineBoard({
     });
   }
 
+  function toggleLeadSelection(leadId: string, selected: boolean) {
+    setSelectedLeadIds((current) => {
+      const next = new Set(current);
+
+      if (selected) {
+        next.add(leadId);
+      } else {
+        next.delete(leadId);
+      }
+
+      return next;
+    });
+  }
+
+  function selectAllLeads() {
+    setSelectedLeadIds(new Set(leads.map((lead) => lead.id)));
+  }
+
+  function clearSelectedLeads() {
+    setSelectedLeadIds(new Set());
+  }
+
+  function archiveSelectedLeads() {
+    if (isPending || !selectedLeadIds.size) {
+      return;
+    }
+
+    const count = selectedLeadIds.size;
+    if (!window.confirm(`Archive ${count} selected card${count === 1 ? "" : "s"}?`)) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("ids", [...selectedLeadIds].join(","));
+    setActionError("");
+
+    startTransition(async () => {
+      try {
+        await archiveSelectedLeadsFromPipeline(formData);
+        clearSelectedLeads();
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Could not archive the selected cards.");
+      }
+    });
+  }
+
+  function restoreSelectedLeads() {
+    if (isPending || !selectedLeadIds.size) {
+      return;
+    }
+
+    const count = selectedLeadIds.size;
+    if (!window.confirm(`Restore ${count} selected card${count === 1 ? "" : "s"}?`)) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("ids", [...selectedLeadIds].join(","));
+    setActionError("");
+
+    startTransition(async () => {
+      try {
+        await restoreSelectedLeadsFromPipeline(formData);
+        clearSelectedLeads();
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Could not restore the selected cards.");
+      }
+    });
+  }
+
   return (
     <div className="relative">
       {isPending ? (
@@ -283,6 +358,38 @@ export function PipelineBoard({
           ) : null}
           {followUpCount > 0 ? (
             <span>{followUpCount} Follow-Up item{followUpCount === 1 ? "" : "s"} need action.</span>
+          ) : null}
+        </div>
+      ) : null}
+
+      {leads.length > 0 ? (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-white px-4 py-3 text-xs font-bold text-muted shadow-sm">
+          <span className="mr-2 text-primary">{selectedLeadIds.size} selected</span>
+          <button
+            type="button"
+            onClick={selectAllLeads}
+            disabled={isPending || selectedLeadIds.size === leads.length}
+            className="rounded-lg border border-primary/15 bg-primary/5 px-3 py-1.5 text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Select all {leads.length}
+          </button>
+          <button
+            type="button"
+            onClick={clearSelectedLeads}
+            disabled={isPending || selectedLeadIds.size === 0}
+            className="rounded-lg border border-border bg-white px-3 py-1.5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Clear selection
+          </button>
+          {selectedLeadIds.size > 0 ? (
+            <button
+              type="button"
+              onClick={showArchived ? restoreSelectedLeads : archiveSelectedLeads}
+              disabled={isPending}
+              className="rounded-lg border border-primary/20 bg-primary px-3 py-1.5 text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {showArchived ? "Restore selected" : "Archive selected"}
+            </button>
           ) : null}
         </div>
       ) : null}
@@ -353,6 +460,15 @@ export function PipelineBoard({
                     <div className="flex min-w-0 items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1.5 truncate text-sm font-black text-primary">
+                          <input
+                            type="checkbox"
+                            checked={selectedLeadIds.has(lead.id)}
+                            disabled={isPending}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={(event) => toggleLeadSelection(lead.id, event.target.checked)}
+                            className="h-3.5 w-3.5 shrink-0 accent-primary"
+                            aria-label={`Select ${lead.name}`}
+                          />
                           <span className="truncate">{lead.name}</span>
                         </p>
                         <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-muted">
