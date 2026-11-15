@@ -65,7 +65,10 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
   const mapRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const visibleJobs = useMemo(
-    () => jobs.filter((job) => job.address && !job.address.toLowerCase().startsWith("address pending")).slice(0, MAX_MARKERS),
+    () => jobs
+      .filter((job) => job.address && !job.address.toLowerCase().startsWith("address pending"))
+      .sort((left, right) => Number(right.source === "manual") - Number(left.source === "manual"))
+      .slice(0, MAX_MARKERS),
     [jobs],
   );
 
