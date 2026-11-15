@@ -165,7 +165,7 @@ export function DispatchMap({ jobs, apiKey }: { jobs: DispatchMapJob[]; apiKey?:
             <div className="min-w-0">
               <p className="flex items-center gap-2 truncate text-sm font-black text-primary">
                 <span className="truncate">{job.name}</span>
-                {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Manual</span> : null}
+                {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
               </p>
               <p className="mt-0.5 text-xs font-black text-foreground">{job.time} · {job.technician}</p>
               <p className="mt-0.5 truncate text-xs font-semibold text-muted">{job.address}</p>

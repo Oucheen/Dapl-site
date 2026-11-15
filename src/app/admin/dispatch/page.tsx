@@ -220,10 +220,10 @@ export default async function DispatchPage({
           <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/60 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-black text-violet-950">Manual appointments</h2>
-                <p className="mt-1 text-sm font-semibold text-violet-800">Added in DAPL, not from Housecall Pro.</p>
+                <h2 className="text-xl font-black text-violet-950">Bozman Fix</h2>
+                <p className="mt-1 text-sm font-semibold text-violet-800">Manual appointments kept separate from Housecall Pro Scheduled jobs.</p>
               </div>
-              <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-violet-900">{selectedManualJobs.length} manual</span>
+              <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-violet-900">{selectedManualJobs.length} Bozman Fix</span>
             </div>
             <div className="mt-4 grid gap-5 lg:grid-cols-2">
               {manualGrouped.map(([technician, jobs]) => (
@@ -233,7 +233,10 @@ export default async function DispatchPage({
                   <div className="mt-4 grid gap-3">
                     {jobs.map((job, index) => (
                       <article key={job.id} className="rounded-xl border border-violet-200 bg-violet-50 p-4">
-                        <p className="text-sm font-black text-violet-950">{index + 1}. {job.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="min-w-0 truncate text-sm font-black text-violet-950">{index + 1}. {job.name}</p>
+                          <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span>
+                        </div>
                         <p className="mt-1 text-xs font-bold text-violet-800">{formatTime(job.scheduled_start)}{job.scheduled_end ? ` – ${formatTime(job.scheduled_end)}` : ""}</p>
                         <p className="mt-3 text-sm font-bold text-foreground">{job.service_address}</p>
                         <a href={getMapsSearchUrl(job.service_address)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-black text-violet-800 underline-offset-4 hover:underline">Open address in Google Maps</a>
