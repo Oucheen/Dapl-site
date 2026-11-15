@@ -4,10 +4,6 @@
     {
       "path": "/api/google-reviews-sync",
       "schedule": "17 5 * * *"
-    },
-    {
-      "path": "/api/pipeline/follow-up",
-      "schedule": "*/15 * * * *"
     }
   ]
 }
