@@ -6,8 +6,9 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { PIPELINE_STAGE_CONFIG, PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
 import type { LeadRecord } from "@/lib/supabase-leads";
 import {
+  archiveLeadFromPipeline,
   deleteLeadFromPipeline,
-  updateLeadPipelineTelegramPreference,
+  restoreLeadFromPipeline,
   updateLeadPipelineStage,
 } from "@/app/admin/leads/actions";
 
@@ -15,6 +16,11 @@ const COLUMNS = PIPELINE_STAGES.map((value) => ({
   value,
   ...PIPELINE_STAGE_CONFIG[value],
 }));
+const ESTIMATE_COLUMN_VALUES: PipelineStage[] = [
+  "diagnosed_estimate_needed",
+  "estimate_sent_awaiting_approval",
+  "approved",
+];
 
 const INITIAL_VISIBLE_CARDS = 8;
 const LOAD_MORE_CARDS = 4;
@@ -94,11 +100,19 @@ function getColumnLeads(leads: LeadRecord[], stage: PipelineStage) {
 export function PipelineBoard({
   leads,
   canDeleteLeads,
+  showArchived,
+  view,
 }: {
   leads: LeadRecord[];
   canDeleteLeads: boolean;
+  showArchived: boolean;
+  view: "leads" | "estimates";
 }) {
   const router = useRouter();
+  const columns = view === "estimates"
+    ? COLUMNS.filter((column) => ESTIMATE_COLUMN_VALUES.includes(column.value))
+    : COLUMNS;
+  const minimumBoardWidth = view === "estimates" ? 1200 : 2800;
   const topScrollRef = useRef<HTMLDivElement>(null);
   const boardScrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -108,6 +122,8 @@ export function PipelineBoard({
   const [pendingStage, setPendingStage] = useState<PipelineStage | null>(null);
   const [actionError, setActionError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const newLeadCount = getColumnLeads(leads, "new_lead").length;
+  const followUpCount = getColumnLeads(leads, "follow_up_required").length;
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -117,7 +133,7 @@ export function PipelineBoard({
     }
 
     const updateWidth = () => {
-      setBoardWidth(Math.max(grid.scrollWidth, 2800));
+      setBoardWidth(Math.max(grid.scrollWidth, minimumBoardWidth));
     };
 
     updateWidth();
@@ -125,7 +141,7 @@ export function PipelineBoard({
     observer.observe(grid);
 
     return () => observer.disconnect();
-  }, [leads.length]);
+  }, [leads.length, minimumBoardWidth]);
 
   function syncHorizontalScroll(source: "top" | "board") {
     const sourceElement = source === "top" ? topScrollRef.current : boardScrollRef.current;
@@ -164,30 +180,6 @@ export function PipelineBoard({
     });
   }
 
-  function setTelegramPreference(leadId: string, enabled: boolean) {
-    if (isPending) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set("id", leadId);
-    formData.set("enabled", String(enabled));
-    setActionError("");
-
-    startTransition(async () => {
-      try {
-        await updateLeadPipelineTelegramPreference(formData);
-        router.refresh();
-      } catch (error) {
-        setActionError(
-          error instanceof Error
-            ? error.message
-            : "Could not save the Telegram preference. Check the Supabase migration.",
-        );
-      }
-    });
-  }
-
   function deleteLead(lead: LeadRecord) {
     if (isPending) {
       return;
@@ -215,6 +207,52 @@ export function PipelineBoard({
     });
   }
 
+  function archiveLead(lead: LeadRecord) {
+    if (isPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Archive ${lead.name} from the active Pipeline? The card will remain available in Archived.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("id", lead.id);
+    setActionError("");
+
+    startTransition(async () => {
+      try {
+        await archiveLeadFromPipeline(formData);
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Could not archive the lead.");
+      }
+    });
+  }
+
+  function restoreLead(lead: LeadRecord) {
+    if (isPending) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("id", lead.id);
+    setActionError("");
+
+    startTransition(async () => {
+      try {
+        await restoreLeadFromPipeline(formData);
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Could not restore the lead.");
+      }
+    });
+  }
+
   return (
     <div className="relative">
       {isPending ? (
@@ -230,6 +268,22 @@ export function PipelineBoard({
           <p className="mt-2 text-xs font-semibold text-foreground">
             Run <code className="rounded bg-white px-1.5 py-0.5">supabase/pipeline-telegram.sql</code> in the Supabase SQL Editor, then reload this page.
           </p>
+        </div>
+      ) : null}
+
+      {newLeadCount > 0 || followUpCount > 0 ? (
+        <div
+          className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950"
+          role="status"
+          aria-live="polite"
+        >
+          <span>Dispatcher reminder:</span>
+          {newLeadCount > 0 ? (
+            <span>{newLeadCount} new lead{newLeadCount === 1 ? "" : "s"} need first contact.</span>
+          ) : null}
+          {followUpCount > 0 ? (
+            <span>{followUpCount} Follow-Up item{followUpCount === 1 ? "" : "s"} need action.</span>
+          ) : null}
         </div>
       ) : null}
 
@@ -249,9 +303,9 @@ export function PipelineBoard({
       >
           <div
           ref={gridRef}
-          className="grid min-w-[5200px] grid-cols-[repeat(13,minmax(400px,1fr))] gap-3"
+          className={`grid gap-3 ${view === "estimates" ? "min-w-[1200px] grid-cols-[repeat(3,minmax(400px,1fr))]" : "min-w-[5200px] grid-cols-[repeat(13,minmax(400px,1fr))]"}`}
         >
-        {COLUMNS.map((column) => {
+        {columns.map((column) => {
           const columnLeads = getColumnLeads(leads, column.value);
           const visibleCardCount = visibleCardCounts[column.value] ?? INITIAL_VISIBLE_CARDS;
           const visibleColumnLeads = columnLeads.slice(0, visibleCardCount);
@@ -300,11 +354,6 @@ export function PipelineBoard({
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1.5 truncate text-sm font-black text-primary">
                           <span className="truncate">{lead.name}</span>
-                          {lead.pipeline_telegram_enabled ? (
-                            <span title="Telegram notifications enabled" aria-label="Telegram notifications enabled">
-                              🔔
-                            </span>
-                          ) : null}
                         </p>
                         <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-muted">
                           {lead.appliance || "Appliance repair"}
@@ -328,6 +377,14 @@ export function PipelineBoard({
                       ) : (
                         <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Tech: Unassigned</span>
                       )}
+                      {lead.pipeline_stage === "follow_up_required" ? (
+                        <span
+                          className="truncate rounded-full bg-orange-50 px-2 py-1 text-orange-800"
+                          title={lead.follow_up_reason || "Dispatcher action needed"}
+                        >
+                          Action: {lead.follow_up_reason || "Dispatcher action needed"}
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="mt-3 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5">
@@ -339,17 +396,6 @@ export function PipelineBoard({
                         Open lead
                       </Link>
                       <div className="flex min-w-0 items-center gap-2">
-                        <label className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/15 bg-primary/5 px-2 py-1 text-[0.65rem] font-black text-primary" title="Send Telegram notifications for this lead">
-                          <input
-                            type="checkbox"
-                            checked={lead.pipeline_telegram_enabled === true}
-                            disabled={isPending}
-                            onChange={(event) => setTelegramPreference(lead.id, event.target.checked)}
-                            className="h-3.5 w-3.5 accent-primary"
-                            aria-label={`Telegram notifications for ${lead.name}`}
-                          />
-                          TG
-                        </label>
                         <select
                           value={lead.pipeline_stage || "new_lead"}
                           disabled={isPending}
@@ -365,17 +411,28 @@ export function PipelineBoard({
                         </select>
                       </div>
                     </div>
-                    {canDeleteLeads ? (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => deleteLead(lead)}
+                        onClick={() => (showArchived ? restoreLead(lead) : archiveLead(lead))}
                         disabled={isPending}
-                        className="mt-2 w-full rounded-lg border border-accent/20 bg-white px-2 py-1.5 text-[0.65rem] font-black text-accent transition hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={`Delete ${lead.name}`}
+                        className="rounded-lg border border-primary/15 bg-white px-2 py-1.5 text-[0.65rem] font-black text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={`${showArchived ? "Restore" : "Archive"} ${lead.name}`}
                       >
-                        Delete card
+                        {showArchived ? "Restore" : "Archive"}
                       </button>
-                    ) : null}
+                      {canDeleteLeads ? (
+                        <button
+                          type="button"
+                          onClick={() => deleteLead(lead)}
+                          disabled={isPending}
+                          className="rounded-lg border border-accent/20 bg-white px-2 py-1.5 text-[0.65rem] font-black text-accent transition hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`Delete ${lead.name}`}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
                   </article>
                 ))}
 

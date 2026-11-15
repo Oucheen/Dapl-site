@@ -2,6 +2,10 @@ import type { LeadRecord, LeadAdminStatus } from "@/lib/supabase-leads";
 
 const DEFAULT_SITE_URL = "https://www.daplappliance.com";
 
+export function isPipelineTelegramNotificationsEnabled() {
+  return process.env.PIPELINE_TELEGRAM_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true";
+}
+
 export type PipelineTelegramEvent = {
   source: "Housecall Pro" | "DAPL" | string;
   type: "new_lead" | "status_change" | "assignment" | "estimate" | "payment" | "sync" | "update";

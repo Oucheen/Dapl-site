@@ -26,6 +26,7 @@ import {
 } from "@/lib/supabase-leads";
 import {
   getPipelineLeadUrl,
+  isPipelineTelegramNotificationsEnabled,
   sendPipelineTelegramMessage,
 } from "@/lib/telegram-pipeline";
 
@@ -76,7 +77,9 @@ async function notifyLeadStatusChange(
   notificationsEnabled?: boolean,
   previousStatus?: string,
 ) {
-  const shouldNotify = notificationsEnabled ?? lead?.pipeline_telegram_enabled === true;
+  const shouldNotify =
+    isPipelineTelegramNotificationsEnabled() &&
+    (notificationsEnabled ?? lead?.pipeline_telegram_enabled === true);
   const previousValue = previousStatus ?? lead?.status;
 
   if (!lead || previousValue === nextStatus || !shouldNotify) {
@@ -202,10 +205,23 @@ export async function updateLeadPipelineStage(formData: FormData) {
     throw new Error("Lead not found.");
   }
 
+  const currentStage = lead.pipeline_stage || "new_lead";
+  const isFollowUpStage = stageValue === "follow_up_required";
+
   await updateSupabaseLead(id, {
     status: lead.status,
     adminNotes: lead.admin_notes ?? "",
     pipelineStage: stageValue,
+    followUpRequired: isFollowUpStage,
+    followUpReason: isFollowUpStage
+      ? lead.follow_up_reason || "Manual dispatcher follow-up."
+      : "",
+    followUpDueAt: isFollowUpStage ? lead.follow_up_due_at || new Date().toISOString() : "",
+    followUpPreviousStage: isFollowUpStage
+      ? currentStage === "follow_up_required"
+        ? lead.follow_up_previous_stage || "new_lead"
+        : currentStage
+      : null,
   });
   await createLeadActivity({
     leadId: id,
@@ -401,6 +417,76 @@ export async function deleteLeadFromPipeline(formData: FormData) {
   }
 
   await deleteSupabaseLead(id);
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+}
+
+export async function archiveLeadFromPipeline(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    throw new Error("Your admin session has expired. Please sign in again.");
+  }
+
+  const id = String(formData.get("id") || "").trim();
+
+  if (!id) {
+    throw new Error("Lead ID is missing.");
+  }
+
+  const lead = await getSupabaseLeadById(id);
+
+  if (!lead) {
+    throw new Error("Lead not found.");
+  }
+
+  await updateSupabaseLead(id, {
+    status: lead.status,
+    adminNotes: lead.admin_notes ?? "",
+    pipelineArchived: true,
+  });
+  await createLeadActivity({
+    leadId: id,
+    eventType: "pipeline_lead_archived",
+    title: "Pipeline card archived",
+    details: "The card was archived from the active Pipeline view.",
+  });
+
+  revalidatePath("/admin/pipeline");
+  revalidatePath("/admin/leads");
+}
+
+export async function restoreLeadFromPipeline(formData: FormData) {
+  const permissions = await getCurrentAdminPermissions();
+
+  if (!permissions.user) {
+    throw new Error("Your admin session has expired. Please sign in again.");
+  }
+
+  const id = String(formData.get("id") || "").trim();
+
+  if (!id) {
+    throw new Error("Lead ID is missing.");
+  }
+
+  const lead = await getSupabaseLeadById(id);
+
+  if (!lead) {
+    throw new Error("Lead not found.");
+  }
+
+  await updateSupabaseLead(id, {
+    status: lead.status,
+    adminNotes: lead.admin_notes ?? "",
+    pipelineArchived: false,
+  });
+  await createLeadActivity({
+    leadId: id,
+    eventType: "pipeline_lead_restored",
+    title: "Pipeline card restored",
+    details: "The card was restored to the active Pipeline view.",
+  });
 
   revalidatePath("/admin/pipeline");
   revalidatePath("/admin/leads");

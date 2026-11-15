@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { PipelineBoard } from "@/components/admin/pipeline-board";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
+import type { PipelineStage } from "@/lib/pipeline-stages";
 import { listSupabaseLeads } from "@/lib/supabase-leads";
-import { getPipelineConfigStatus } from "@/lib/telegram-pipeline";
 import { logoutAdmin } from "../leads/actions";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +18,22 @@ function getSourceFilters(value: string | string[] | undefined) {
   const sources = Array.isArray(value) ? value : value ? [value] : [];
   return sources.filter(Boolean).map((source) => source.trim()).filter(Boolean);
 }
+
+function isArchivedView(value: string | string[] | undefined) {
+  const archiveValue = Array.isArray(value) ? value[0] : value;
+  return archiveValue === "1" || archiveValue === "true";
+}
+
+function getPipelineView(value: string | string[] | undefined): "leads" | "estimates" {
+  const selectedView = Array.isArray(value) ? value[0] : value;
+  return selectedView === "estimates" ? "estimates" : "leads";
+}
+
+const ESTIMATE_STAGES = new Set<PipelineStage>([
+  "diagnosed_estimate_needed",
+  "estimate_sent_awaiting_approval",
+  "approved",
+]);
 
 function normalizeSource(value: string | null | undefined) {
   return value?.trim().toLowerCase().replace(/\s+/g, " ") || "";
@@ -70,7 +86,12 @@ function matchesSearch(lead: Awaited<ReturnType<typeof listSupabaseLeads>>[numbe
 export default async function PipelineAdminPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string | string[]; source?: string | string[] }>;
+  searchParams?: Promise<{
+    q?: string | string[];
+    source?: string | string[];
+    archived?: string | string[];
+    view?: string | string[];
+  }>;
 }) {
   const permissions = await getCurrentAdminPermissions();
 
@@ -90,10 +111,14 @@ export default async function PipelineAdminPage({
   const params = await searchParams;
   const searchQuery = getSearchQuery(params?.q);
   const sourceFilters = getSourceFilters(params?.source);
+  const showArchived = isArchivedView(params?.archived);
+  const pipelineView = getPipelineView(params?.view);
+  const archivedCount = leads.filter((lead) => lead.pipeline_archived === true).length;
   const visibleLeads = leads.filter(
+    (lead) => (lead.pipeline_archived === true) === showArchived,
+  ).filter(
     (lead) => matchesSearch(lead, searchQuery) && matchesSource(lead, sourceFilters),
-  );
-  const pipelineTelegram = getPipelineConfigStatus();
+  ).filter((lead) => pipelineView === "leads" || ESTIMATE_STAGES.has(lead.pipeline_stage || "new_lead"));
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -108,6 +133,12 @@ export default async function PipelineAdminPage({
               <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-black text-primary">
                 {visibleLeads.length} records
               </span>
+              <Link
+                href={`/admin/pipeline?view=${pipelineView}${showArchived ? "" : "&archived=1"}`}
+                className="rounded-full border border-border bg-white px-3 py-1 text-xs font-black text-primary hover:bg-primary/5"
+              >
+                {showArchived ? "Active Pipeline" : `Archived (${archivedCount})`}
+              </Link>
             </div>
             <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
               Dispatcher board for leads and jobs. Housecall Pro remains the operational source while this board becomes the DAPL workspace.
@@ -139,26 +170,44 @@ export default async function PipelineAdminPage({
       <section className="container-shell py-8">
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-primary px-4 py-2 text-sm font-black text-primary-foreground">Leads</span>
-            <span className="rounded-full border border-border px-4 py-2 text-sm font-bold text-muted">Estimates · next</span>
+            <Link
+              href={`/admin/pipeline?view=leads${showArchived ? "&archived=1" : ""}`}
+              className={`rounded-full px-4 py-2 text-sm font-black ${pipelineView === "leads" ? "bg-primary text-primary-foreground" : "border border-border text-muted hover:bg-primary/5"}`}
+            >
+              Leads
+            </Link>
+            <Link
+              href={`/admin/pipeline?view=estimates${showArchived ? "&archived=1" : ""}`}
+              className={`rounded-full px-4 py-2 text-sm font-bold ${pipelineView === "estimates" ? "bg-primary text-primary-foreground" : "border border-border text-muted hover:bg-primary/5"}`}
+            >
+              Estimates
+            </Link>
             <span className="rounded-full border border-border px-4 py-2 text-sm font-bold text-muted">Jobs · next</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-muted">
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-2 ${pipelineTelegram.botToken && pipelineTelegram.chatId ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
-              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
-              Pipeline Telegram {pipelineTelegram.botToken && pipelineTelegram.chatId ? "ready" : "not configured"}
+            <span className="rounded-full bg-slate-100 px-3 py-2">
+              {showArchived ? "Archived cards are hidden from active work" : "Drag cards to change stage"}
             </span>
-            <span className="rounded-full bg-slate-100 px-3 py-2">Drag cards to change stage</span>
           </div>
         </div>
 
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-xl font-black text-primary">DAPL Repair Pipeline</h2>
+            <h2 className="text-xl font-black text-primary">
+              {pipelineView === "estimates"
+                ? showArchived
+                  ? "DAPL Estimates Archive"
+                  : "DAPL Estimates"
+                : showArchived
+                  ? "DAPL Pipeline Archive"
+                  : "DAPL Repair Pipeline"}
+            </h2>
             <p className="text-sm font-semibold text-muted">Move a request through the workflow as the dispatcher works it.</p>
           </div>
           <form action="/admin/pipeline" className="flex w-full shrink-0 flex-wrap gap-2 lg:w-auto lg:flex-nowrap">
+            <input type="hidden" name="view" value={pipelineView} />
+            {showArchived ? <input type="hidden" name="archived" value="1" /> : null}
             <input
               type="search"
               name="q"
@@ -203,7 +252,12 @@ export default async function PipelineAdminPage({
         ) : null}
 
         <div className="mt-5">
-          <PipelineBoard leads={visibleLeads} canDeleteLeads={permissions.canDeleteLeads} />
+          <PipelineBoard
+            leads={visibleLeads}
+            canDeleteLeads={permissions.canDeleteLeads}
+            showArchived={showArchived}
+            view={pipelineView}
+          />
         </div>
       </section>
     </main>

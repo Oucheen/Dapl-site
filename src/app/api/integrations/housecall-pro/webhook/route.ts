@@ -71,7 +71,10 @@ function getWebhookSecret() {
 }
 
 function isHousecallProTelegramEnabled() {
-  return process.env.HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true";
+  return (
+    process.env.HOUSECALL_PRO_TELEGRAM_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true" &&
+    process.env.PIPELINE_TELEGRAM_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === "true"
+  );
 }
 
 function asRecord(value: unknown): JsonRecord {
@@ -510,6 +513,27 @@ function getPipelineStageForHcpEvent(
   return null;
 }
 
+function shouldClearHousecallProFollowUp(eventName: string) {
+  return new Set([
+    "lead.converted",
+    "estimate.created",
+    "estimate.sent",
+    "estimate.option.approval_status_changed",
+    "job.created",
+    "job.updated",
+    "job.scheduled",
+    "job.started",
+    "job.on_my_way",
+    "job.completed",
+    "job.paid",
+    "job.canceled",
+    "job.deleted",
+    "job.appointment.scheduled",
+    "job.appointment.rescheduled",
+    "invoice.paid",
+  ]).has(eventName);
+}
+
 async function sendTelegram(text: string, buttons: { text: string; url: string }[] = []) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || "";
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim() || "";
@@ -700,6 +724,11 @@ export async function POST(request: Request) {
       duplicateLead?.pipeline_stage || "new_lead",
       scheduledAtCreation,
     );
+    const shouldClearFollowUp = Boolean(
+      duplicateLead &&
+        nextPipelineStage &&
+        shouldClearHousecallProFollowUp(eventName),
+    );
 
     const shouldBackfillExternalId = Boolean(
       duplicateLead &&
@@ -733,6 +762,14 @@ export async function POST(request: Request) {
             ? { housecallProAppointmentId: schedule.appointmentId }
             : {}),
           ...(schedule.scheduledDate ? { scheduledDate: schedule.scheduledDate } : {}),
+          ...(shouldClearFollowUp
+            ? {
+                followUpRequired: false,
+                followUpReason: "",
+                followUpDueAt: "",
+                followUpPreviousStage: null,
+              }
+            : {}),
         });
       } catch (error) {
         console.error("Housecall Pro external ID backfill error:", error);
@@ -749,6 +786,14 @@ export async function POST(request: Request) {
           status: duplicateLead.status,
           adminNotes: duplicateLead.admin_notes ?? "",
           pipelineStage: nextPipelineStage,
+          ...(shouldClearFollowUp
+            ? {
+                followUpRequired: false,
+                followUpReason: "",
+                followUpDueAt: "",
+                followUpPreviousStage: null,
+              }
+            : {}),
         });
         await createLeadActivity({
           leadId: duplicateId,

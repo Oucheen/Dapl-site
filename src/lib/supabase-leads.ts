@@ -26,6 +26,10 @@ export type LeadInsertInput = {
   scheduledStart?: string;
   scheduledEnd?: string;
   assignedTechnician?: string;
+  followUpRequired?: boolean;
+  followUpReason?: string;
+  followUpDueAt?: string;
+  followUpPreviousStage?: PipelineStage | null;
   pipelineStage?: PipelineStage;
 };
 
@@ -56,6 +60,11 @@ export type LeadRecord = {
   housecall_pro_appointment_id?: string | null;
   scheduled_start?: string | null;
   scheduled_end?: string | null;
+  follow_up_required?: boolean;
+  follow_up_reason?: string | null;
+  follow_up_due_at?: string | null;
+  follow_up_previous_stage?: PipelineStage | null;
+  pipeline_archived?: boolean;
   pipeline_stage?: PipelineStage;
   pipeline_telegram_enabled?: boolean;
   call_intake?: Record<string, unknown> | null;
@@ -84,6 +93,11 @@ export type LeadAdminUpdateInput = {
   housecallProAppointmentId?: string;
   scheduledStart?: string;
   scheduledEnd?: string;
+  followUpRequired?: boolean;
+  followUpReason?: string;
+  followUpDueAt?: string;
+  followUpPreviousStage?: PipelineStage | null;
+  pipelineArchived?: boolean;
   pipelineStage?: PipelineStage;
   pipelineTelegramEnabled?: boolean;
 };
@@ -373,6 +387,18 @@ export async function saveLeadToSupabase(input: LeadInsertInput): Promise<SaveLe
         ...(input.scheduledEnd?.trim() ? { scheduled_end: input.scheduledEnd.trim() } : {}),
         ...(input.assignedTechnician?.trim()
           ? { assigned_technician: input.assignedTechnician.trim() }
+          : {}),
+        ...(input.followUpRequired !== undefined
+          ? { follow_up_required: input.followUpRequired }
+          : {}),
+        ...(input.followUpReason !== undefined
+          ? { follow_up_reason: input.followUpReason.trim() || null }
+          : {}),
+        ...(input.followUpDueAt !== undefined
+          ? { follow_up_due_at: input.followUpDueAt.trim() || null }
+          : {}),
+        ...(input.followUpPreviousStage !== undefined
+          ? { follow_up_previous_stage: input.followUpPreviousStage || null }
           : {}),
         ...(input.pipelineStage ? { pipeline_stage: input.pipelineStage } : {}),
       }),
@@ -814,6 +840,26 @@ export async function updateSupabaseLead(id: string, input: LeadAdminUpdateInput
 
   if (input.scheduledEnd !== undefined) {
     payload.scheduled_end = input.scheduledEnd.trim() || null;
+  }
+
+  if (input.followUpRequired !== undefined) {
+    payload.follow_up_required = input.followUpRequired;
+  }
+
+  if (input.followUpReason !== undefined) {
+    payload.follow_up_reason = input.followUpReason.trim() || null;
+  }
+
+  if (input.followUpDueAt !== undefined) {
+    payload.follow_up_due_at = input.followUpDueAt.trim() || null;
+  }
+
+  if (input.followUpPreviousStage !== undefined) {
+    payload.follow_up_previous_stage = input.followUpPreviousStage || null;
+  }
+
+  if (input.pipelineArchived !== undefined) {
+    payload.pipeline_archived = input.pipelineArchived;
   }
 
   if (input.pipelineStage !== undefined) {

@@ -5,6 +5,11 @@ alter table public.leads
   add column if not exists housecall_pro_appointment_id text,
   add column if not exists scheduled_start timestamptz,
   add column if not exists scheduled_end timestamptz,
+  add column if not exists follow_up_required boolean not null default false,
+  add column if not exists follow_up_reason text,
+  add column if not exists follow_up_due_at timestamptz,
+  add column if not exists follow_up_previous_stage text,
+  add column if not exists pipeline_archived boolean not null default false,
   add column if not exists pipeline_stage text not null default 'new_lead',
   add column if not exists pipeline_telegram_enabled boolean not null default false;
 
