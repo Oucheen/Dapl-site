@@ -188,6 +188,10 @@ export default async function DispatchPage({
     ...scheduledStops.map((stop) => {
       const technician = stop.technician;
       const color = getDispatchTechnicianColor(technician, technicians);
+      const markerColor = stop.source === "manual" ? "#7e22ce" : color.markerColor;
+      const markerIcon = stop.source === "manual"
+        ? "https://maps.google.com/mapfiles/ms/icons/purple-dot.png"
+        : color.markerIcon;
 
       return {
         id: stop.id,
@@ -198,8 +202,8 @@ export default async function DispatchPage({
         source: stop.source,
         sequence: stopNumbers.get(stop.id),
         sortKey: getScheduleTimestamp(stop.start),
-        markerIcon: color.markerIcon,
-        markerColor: color.markerColor,
+        markerIcon,
+        markerColor,
       };
     }),
     ...unscheduledLeads.map((lead) => {
