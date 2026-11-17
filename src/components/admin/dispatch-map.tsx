@@ -205,17 +205,17 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS, ma
         </div>
         {error ? <span className="text-xs font-bold text-accent">{error}</span> : null}
       </div>
-      <div className="grid gap-2 border-b border-border bg-slate-50 p-4 md:grid-cols-2">
+      <div className="grid gap-1.5 border-b border-border bg-slate-50 p-2.5 md:grid-cols-2">
         {visibleJobs.map((job, index) => (
-          <div key={job.id} style={job.markerColor ? { borderColor: job.markerColor } : undefined} className={`flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 ${job.source === "manual" ? "bg-violet-50" : "bg-white"}`}>
-            <span style={job.markerColor ? { backgroundColor: job.markerColor } : undefined} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-primary-foreground">{job.sequence ?? index + 1}</span>
+          <div key={job.id} style={job.markerColor ? { borderColor: job.markerColor } : undefined} className={`flex min-w-0 items-start gap-2 rounded-lg border px-2.5 py-2 ${job.source === "manual" ? "bg-violet-50" : "bg-white"}`}>
+            <span style={job.markerColor ? { backgroundColor: job.markerColor } : undefined} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-primary-foreground">{job.sequence ?? index + 1}</span>
             <div className="min-w-0">
-              <p className="flex items-center gap-2 truncate text-base font-black text-primary">
+              <p className="flex items-center gap-1.5 truncate text-sm font-black text-primary">
                 <span className="truncate">{job.name}</span>
-                {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
+                {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1 py-0.5 text-[0.55rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
               </p>
-              <p className="mt-0.5 text-sm font-black text-foreground">{job.time} · {job.technician}</p>
-              <p className="mt-0.5 truncate text-sm font-semibold text-muted">{job.address}</p>
+              <p className="mt-0.5 text-xs font-black text-foreground">{job.time} · {job.technician}</p>
+              <p className="mt-0.5 truncate text-xs font-semibold text-muted">{job.address}</p>
             </div>
           </div>
         ))}
