@@ -22,6 +22,8 @@ type GoogleMapApi = {
     InfoWindow: new (options?: Record<string, unknown>) => GoogleInfoWindow;
     Geocoder: new () => GoogleGeocoder;
     LatLngBounds: new () => GoogleBounds;
+    Size: new (width: number, height: number) => unknown;
+    Point: new (x: number, y: number) => unknown;
   };
 };
 
@@ -119,7 +121,15 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: 
                   fontSize: "11px",
                   fontWeight: "700",
                 },
-                ...(job.markerIcon ? { icon: job.markerIcon } : {}),
+                ...(job.markerIcon
+                  ? {
+                      icon: {
+                        url: job.markerIcon,
+                        scaledSize: new googleMaps.Size(48, 48),
+                        labelOrigin: new googleMaps.Point(24, -5),
+                      },
+                    }
+                  : {}),
               });
               const infoWindow = new googleMaps.InfoWindow();
               infoWindow.setContent(`<strong>${job.name}</strong><br>${job.technician}<br>${job.time}<br>${job.address}`);
