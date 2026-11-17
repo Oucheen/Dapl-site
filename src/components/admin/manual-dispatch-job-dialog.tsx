@@ -34,7 +34,7 @@ function DeleteButton() {
       disabled={pending}
       className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-black text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
     >
-      {pending ? "Deleting…" : "Delete"}
+      {pending ? "Cancelling…" : "Cancel"}
     </button>
   );
 }
@@ -143,7 +143,7 @@ export function ManualDispatchJobDialog({
         <form
           action={deleteManualDispatchJobAction}
           onSubmit={(event) => {
-            if (!window.confirm("Delete this Bozman Fix appointment?")) {
+            if (!window.confirm("Cancel this Bozman Fix appointment?")) {
               event.preventDefault();
             }
           }}

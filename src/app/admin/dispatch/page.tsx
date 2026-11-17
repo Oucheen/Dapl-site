@@ -83,8 +83,10 @@ function getDateParam(value: string | string[] | undefined) {
   return date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= today ? date : today;
 }
 
-function getTechParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] || "" : value || "";
+function getTechParams(value: string | string[] | undefined) {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+
+  return Array.from(new Set(values.flatMap((item) => item.split(",")).map((item) => item.trim()).filter(Boolean)));
 }
 
 function getTechName(lead: LeadRecord) {
@@ -113,7 +115,8 @@ export default async function DispatchPage({
 
   const params = await searchParams;
   const selectedDate = getDateParam(params?.date);
-  const selectedTech = getTechParam(params?.tech);
+  const selectedTechnicians = getTechParams(params?.tech);
+  const selectedTechnician = selectedTechnicians.length === 1 ? selectedTechnicians[0] : "";
   let leads: LeadRecord[] = [];
   let manualJobs: ManualDispatchJobRecord[] = [];
   let error = "";
@@ -133,7 +136,7 @@ export default async function DispatchPage({
       lead.lead_source?.toLowerCase().includes("housecall pro") ||
       lead.pipeline_stage === "scheduled",
     )
-    .filter((lead) => !selectedTech || getTechName(lead) === selectedTech);
+    .filter((lead) => !selectedTechnicians.length || selectedTechnicians.includes(getTechName(lead)));
   const scheduledLeads = hcpLeads
     .filter((lead) => (lead.scheduled_date || lead.scheduled_start?.slice(0, 10)) === selectedDate)
     .sort((left, right) => (left.scheduled_start || "9999").localeCompare(right.scheduled_start || "9999"));
@@ -142,7 +145,7 @@ export default async function DispatchPage({
     .sort((left, right) => left.name.localeCompare(right.name));
   const selectedManualJobs = manualJobs
     .filter((job) => job.service_date === selectedDate)
-    .filter((job) => !selectedTech || job.assigned_technician === selectedTech)
+    .filter((job) => !selectedTechnicians.length || selectedTechnicians.includes(job.assigned_technician))
     .sort((left, right) => left.scheduled_start.localeCompare(right.scheduled_start));
   const technicians = await getCrmTechnicianNames([
     ...leads.map((lead) => lead.assigned_technician),
@@ -241,7 +244,7 @@ export default async function DispatchPage({
             <AdminGlobalSearch compact />
             <ManualDispatchJobDialog
               selectedDate={selectedDate}
-              selectedTechnician={selectedTech}
+              selectedTechnician={selectedTechnician}
               technicians={technicians}
             />
             <Link href="/admin/pipeline" className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
@@ -257,13 +260,17 @@ export default async function DispatchPage({
             Date
             <input type="date" name="date" min={getTodayDate()} defaultValue={selectedDate} className="rounded-xl border border-border px-3 py-2 text-sm font-bold text-primary" />
           </label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
-            Technician
-            <select name="tech" defaultValue={selectedTech} className="min-w-52 rounded-xl border border-border px-3 py-2 text-sm font-bold text-primary">
-              <option value="">All technicians</option>
-              {technicians.map((technician) => <option key={technician} value={technician}>{technician}</option>)}
-            </select>
-          </label>
+          <fieldset className="grid min-w-72 gap-1 text-xs font-black uppercase tracking-wide text-muted">
+            <legend>Technicians</legend>
+            <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto rounded-xl border border-border bg-white p-2 normal-case tracking-normal">
+              {technicians.map((technician) => (
+                <label key={technician} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold text-primary hover:bg-slate-50">
+                  <input type="checkbox" name="tech" value={technician} defaultChecked={selectedTechnicians.includes(technician)} className="h-4 w-4 accent-primary" />
+                  {technician}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <button type="submit" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground">Show schedule</button>
           <RefreshDispatchButton />
           <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length + selectedManualJobs.length} scheduled · {unscheduledLeads.length} without date</span>
@@ -274,42 +281,42 @@ export default async function DispatchPage({
         <div className="mt-6">
           <DispatchMap
             apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim()}
-            maxMarkers={selectedTech ? 10 : 2}
+            maxMarkers={selectedTechnicians.length === 1 ? 10 : 2}
             jobs={mapJobs}
           />
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 flex items-start gap-4 overflow-x-auto pb-3">
           {grouped.map(([technician, technicianStops]) => {
             const routeUrl = getRouteUrl(technicianStops.map((stop) => stop.address));
             const color = getDispatchTechnicianColor(technician, technicians);
 
             return (
-              <section key={technician} className={`rounded-2xl border p-5 shadow-sm ${color.section}`}>
-                <div className={`flex items-center justify-between gap-3 border-b pb-3 ${color.section.split(" ")[0]}`}>
+              <section key={technician} className={`w-[320px] shrink-0 rounded-2xl border p-3 shadow-sm ${color.section}`}>
+                <div className={`flex items-center justify-between gap-2 border-b pb-2 ${color.section.split(" ")[0]}`}>
                   <div>
-                    <h2 className={`text-xl font-black ${color.heading}`}>{technician}</h2>
-                    <p className={`mt-1 text-xs font-bold ${color.muted}`}>{technicianStops.length} planned stop{technicianStops.length === 1 ? "" : "s"}</p>
+                    <h2 className={`text-base font-black ${color.heading}`}>{technician}</h2>
+                    <p className={`mt-1 text-[11px] font-bold ${color.muted}`}>{technicianStops.length} planned stop{technicianStops.length === 1 ? "" : "s"}</p>
                   </div>
-                  {routeUrl ? <a href={routeUrl} target="_blank" rel="noreferrer" className="rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground">Open route</a> : null}
+                  {routeUrl ? <a href={routeUrl} target="_blank" rel="noreferrer" className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-black text-primary-foreground">Open route</a> : null}
                 </div>
-                <div className="mt-4 grid gap-3">
+                <div className="mt-3 grid gap-2">
                   {technicianStops.map((stop, index) => (
-                    <article key={stop.id} className={`rounded-xl border p-4 ${stop.source === "manual" ? "border-violet-300 bg-violet-50" : color.card}`}>
-                      <div className="flex items-start justify-between gap-3">
+                    <article key={stop.id} className={`rounded-xl border p-3 ${stop.source === "manual" ? "border-violet-300 bg-violet-50" : color.card}`}>
+                      <div className="flex items-start justify-between gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <p className={`text-sm font-black ${stop.source === "manual" ? "text-violet-950" : color.heading}`}>{stopNumbers.get(stop.id) || index + 1}. {stop.name}</p>
-                            {stop.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
+                            {stop.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.55rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
                           </div>
-                          <p className={`mt-1 text-xs font-bold ${stop.source === "manual" ? "text-violet-800" : "text-muted"}`}>{formatTime(stop.start)}{stop.end ? ` – ${formatTime(stop.end)}` : ""}</p>
+                          <p className={`mt-0.5 text-[11px] font-bold ${stop.source === "manual" ? "text-violet-800" : "text-muted"}`}>{formatTime(stop.start)}{stop.end ? ` – ${formatTime(stop.end)}` : ""}</p>
                         </div>
-                        {stop.lead ? <Link href={`/admin/leads/${stop.lead.id}`} className="text-xs font-black text-primary underline-offset-4 hover:underline">Open</Link> : null}
+                        {stop.lead ? <Link href={`/admin/leads/${stop.lead.id}`} className="text-[11px] font-black text-primary underline-offset-4 hover:underline">Open</Link> : null}
                       </div>
-                      <p className="mt-3 text-sm font-bold text-foreground">{stop.address}</p>
-                      <a href={getMapsSearchUrl(stop.address)} target="_blank" rel="noreferrer" className={`mt-2 inline-block text-xs font-black underline-offset-4 hover:underline ${stop.source === "manual" ? "text-violet-800" : "text-primary"}`}>Open address in Google Maps</a>
+                      <p className="mt-2 text-xs font-bold text-foreground">{stop.address}</p>
+                      <a href={getMapsSearchUrl(stop.address)} target="_blank" rel="noreferrer" className={`mt-1 inline-block text-[11px] font-black underline-offset-4 hover:underline ${stop.source === "manual" ? "text-violet-800" : "text-primary"}`}>Open address in Google Maps</a>
                       {stop.manualJob ? (
-                        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-violet-200 pt-3">
+                        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-200 pt-2">
                           <ManualDispatchJobDialog
                             selectedDate={selectedDate}
                             selectedTechnician={technician}
