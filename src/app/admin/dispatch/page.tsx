@@ -281,7 +281,8 @@ export default async function DispatchPage({
         <div className="mt-6">
           <DispatchMap
             apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim()}
-            maxMarkers={selectedTechnicians.length === 1 ? 10 : 2}
+            maxMarkers={2}
+            maxMarkersPerTechnician={selectedTechnicians.length ? 10 : undefined}
             jobs={mapJobs}
           />
         </div>

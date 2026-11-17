@@ -72,15 +72,33 @@ function loadGoogleMaps(apiKey: string) {
   });
 }
 
-export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: { jobs: DispatchMapJob[]; apiKey?: string; maxMarkers?: number }) {
+export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS, maxMarkersPerTechnician }: { jobs: DispatchMapJob[]; apiKey?: string; maxMarkers?: number; maxMarkersPerTechnician?: number }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const visibleJobs = useMemo(
-    () => jobs
-      .filter((job) => job.address && !job.address.toLowerCase().startsWith("address pending"))
-      .sort((left, right) => (left.sortKey ?? Number.MAX_SAFE_INTEGER) - (right.sortKey ?? Number.MAX_SAFE_INTEGER))
-      .slice(0, maxMarkers),
-    [jobs, maxMarkers],
+    () => {
+      const usableJobs = jobs
+        .filter((job) => job.address && !job.address.toLowerCase().startsWith("address pending"))
+        .sort((left, right) => (left.sortKey ?? Number.MAX_SAFE_INTEGER) - (right.sortKey ?? Number.MAX_SAFE_INTEGER));
+
+      if (!maxMarkersPerTechnician) {
+        return usableJobs.slice(0, maxMarkers);
+      }
+
+      const counts = new Map<string, number>();
+
+      return usableJobs.filter((job) => {
+        const count = counts.get(job.technician) || 0;
+
+        if (count >= maxMarkersPerTechnician) {
+          return false;
+        }
+
+        counts.set(job.technician, count + 1);
+        return true;
+      });
+    },
+    [jobs, maxMarkers, maxMarkersPerTechnician],
   );
 
   useEffect(() => {
@@ -179,7 +197,11 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: 
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
         <div>
           <h2 className="text-xl font-black text-primary">Jobs on map</h2>
-          <p className="mt-1 text-xs font-bold text-muted">Showing up to {maxMarkers} addresses on the current Dispatch view.</p>
+          <p className="mt-1 text-xs font-bold text-muted">
+            {maxMarkersPerTechnician
+              ? `Showing up to ${maxMarkersPerTechnician} addresses per selected technician.`
+              : `Showing up to ${maxMarkers} addresses on the current Dispatch view.`}
+          </p>
         </div>
         {error ? <span className="text-xs font-bold text-accent">{error}</span> : null}
       </div>
