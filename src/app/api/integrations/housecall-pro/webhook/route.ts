@@ -623,17 +623,18 @@ export async function POST(request: Request) {
   const job = asRecord(data.job ?? payload.job);
   const estimate = asRecord(data.estimate ?? payload.estimate);
   const invoice = asRecord(data.invoice ?? payload.invoice);
+  const resource = asRecord(data.resource ?? payload.resource);
   const isLeadEvent = eventName.startsWith("lead.");
   const isJobEvent = eventName.startsWith("job.");
   const isEstimateEvent = eventName.startsWith("estimate.");
   const isInvoiceEvent = eventName.startsWith("invoice.");
   const primaryRecord = isJobEvent
-    ? job
+    ? { ...resource, ...job }
     : isEstimateEvent
-      ? estimate
+      ? { ...resource, ...estimate }
       : isInvoiceEvent
-        ? invoice
-        : lead;
+        ? { ...resource, ...invoice }
+        : { ...resource, ...lead };
   const customer = asRecord(
     primaryRecord.customer ??
       job.customer ??

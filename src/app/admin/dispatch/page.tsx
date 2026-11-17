@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 import { DispatchMap } from "@/components/admin/dispatch-map";
 import { ManualDispatchJobDialog } from "@/components/admin/manual-dispatch-job-dialog";
+import { RefreshDispatchButton } from "@/components/admin/refresh-dispatch-button";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
@@ -180,6 +181,7 @@ export default async function DispatchPage({
             </select>
           </label>
           <button type="submit" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground">Show schedule</button>
+          <RefreshDispatchButton />
           <span className="text-sm font-bold text-muted">{formatDate(selectedDate)} · {scheduledLeads.length + selectedManualJobs.length} scheduled · {unscheduledLeads.length} without date</span>
         </form>
 
@@ -241,6 +243,14 @@ export default async function DispatchPage({
                         <p className="mt-1 text-xs font-bold text-violet-800">{formatTime(job.scheduled_start)}{job.scheduled_end ? ` – ${formatTime(job.scheduled_end)}` : ""}</p>
                         <p className="mt-3 text-sm font-bold text-foreground">{job.service_address}</p>
                         <a href={getMapsSearchUrl(job.service_address)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-black text-violet-800 underline-offset-4 hover:underline">Open address in Google Maps</a>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-violet-200 pt-3">
+                          <ManualDispatchJobDialog
+                            selectedDate={selectedDate}
+                            selectedTechnician={technician}
+                            technicians={technicians}
+                            job={job}
+                          />
+                        </div>
                       </article>
                     ))}
                   </div>

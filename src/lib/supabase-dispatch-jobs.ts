@@ -21,6 +21,12 @@ export type ManualDispatchJobInput = {
   assignedTechnician: string;
 };
 
+function assertManualDispatchJobId(id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id.trim())) {
+    throw new Error("Invalid manual dispatch job ID.");
+  }
+}
+
 function normalizeSupabaseUrl(url: string) {
   return url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
 }
@@ -120,4 +126,75 @@ export async function createManualDispatchJob(input: ManualDispatchJobInput) {
 
   const rows = (await response.json()) as ManualDispatchJobRecord[];
   return rows[0] ?? null;
+}
+
+export async function updateManualDispatchJob(id: string, input: ManualDispatchJobInput) {
+  const config = getConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  assertManualDispatchJobId(id);
+
+  const name = input.name.trim();
+  const serviceAddress = input.serviceAddress.trim();
+  const serviceDate = input.serviceDate.trim();
+  const assignedTechnician = input.assignedTechnician.trim();
+
+  if (!name || !serviceAddress || !serviceDate || !input.scheduledStart.trim() || !assignedTechnician) {
+    throw new Error("Address, date, start time, and technician are required.");
+  }
+
+  const scheduledStart = toManualRecordTimestamp(serviceDate, input.scheduledStart.trim());
+  const scheduledEnd = input.scheduledEnd?.trim()
+    ? toManualRecordTimestamp(serviceDate, input.scheduledEnd.trim())
+    : null;
+
+  const response = await fetch(`${getTableUrl(config)}?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: {
+      ...getHeaders(config),
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      name,
+      service_address: serviceAddress,
+      service_date: serviceDate,
+      scheduled_start: scheduledStart,
+      scheduled_end: scheduledEnd,
+      assigned_technician: assignedTechnician,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase manual dispatch job update failed: ${response.status} ${details}`);
+  }
+
+  const rows = (await response.json()) as ManualDispatchJobRecord[];
+  return rows[0] ?? null;
+}
+
+export async function deleteManualDispatchJob(id: string) {
+  const config = getConfig();
+
+  if (!config) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  assertManualDispatchJobId(id);
+
+  const response = await fetch(`${getTableUrl(config)}?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: {
+      ...getHeaders(config),
+      Prefer: "return=minimal",
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Supabase manual dispatch job delete failed: ${response.status} ${details}`);
+  }
 }
