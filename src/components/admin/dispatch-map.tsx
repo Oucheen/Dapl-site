@@ -41,6 +41,11 @@ declare global {
 
 const DEFAULT_MAX_MARKERS = 2;
 
+function getMarkerLabel(job: DispatchMapJob, index: number) {
+  const name = job.name.length > 28 ? `${job.name.slice(0, 27)}…` : job.name;
+  return `${job.sequence ?? index + 1} · ${job.time} · ${name}`;
+}
+
 function loadGoogleMaps(apiKey: string) {
   return new Promise<void>((resolve, reject) => {
     if (window.google?.maps) {
@@ -116,17 +121,17 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: 
                 position: results[0].geometry.location,
                 title: `${job.sequence ?? index + 1}. ${job.name} · ${job.time} · ${job.technician}`,
                 label: {
-                  text: `${job.sequence ?? index + 1} · ${job.time}`,
+                  text: getMarkerLabel(job, index),
                   color: job.markerColor || "#0f172a",
-                  fontSize: "11px",
-                  fontWeight: "700",
+                  fontSize: "13px",
+                  fontWeight: "800",
                 },
                 ...(job.markerIcon
                   ? {
                       icon: {
                         url: job.markerIcon,
-                        scaledSize: new googleMaps.Size(48, 48),
-                        labelOrigin: new googleMaps.Point(24, -5),
+                        scaledSize: new googleMaps.Size(36, 36),
+                        labelOrigin: new googleMaps.Point(18, -4),
                       },
                     }
                   : {}),
@@ -183,12 +188,12 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: 
           <div key={job.id} style={job.markerColor ? { borderColor: job.markerColor } : undefined} className={`flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 ${job.source === "manual" ? "bg-violet-50" : "bg-white"}`}>
             <span style={job.markerColor ? { backgroundColor: job.markerColor } : undefined} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-primary-foreground">{job.sequence ?? index + 1}</span>
             <div className="min-w-0">
-              <p className="flex items-center gap-2 truncate text-sm font-black text-primary">
+              <p className="flex items-center gap-2 truncate text-base font-black text-primary">
                 <span className="truncate">{job.name}</span>
                 {job.source === "manual" ? <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span> : null}
               </p>
-              <p className="mt-0.5 text-xs font-black text-foreground">{job.time} · {job.technician}</p>
-              <p className="mt-0.5 truncate text-xs font-semibold text-muted">{job.address}</p>
+              <p className="mt-0.5 text-sm font-black text-foreground">{job.time} · {job.technician}</p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-muted">{job.address}</p>
             </div>
           </div>
         ))}
