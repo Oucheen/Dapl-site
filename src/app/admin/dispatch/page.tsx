@@ -6,6 +6,7 @@ import { ManualDispatchJobDialog } from "@/components/admin/manual-dispatch-job-
 import { RefreshDispatchButton } from "@/components/admin/refresh-dispatch-button";
 import { getCurrentAdminPermissions } from "@/lib/admin-auth";
 import { getCrmTechnicianNames } from "@/lib/crm-technicians";
+import { getDispatchTechnicianColor } from "@/lib/dispatch-technician-colors";
 import { listSupabaseLeads, type LeadRecord } from "@/lib/supabase-leads";
 import { listManualDispatchJobs, type ManualDispatchJobRecord } from "@/lib/supabase-dispatch-jobs";
 
@@ -78,6 +79,15 @@ function getTechName(lead: LeadRecord) {
   return lead.assigned_technician?.trim() || "Unassigned";
 }
 
+function getScheduleTimestamp(value: string | null | undefined) {
+  if (!value) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
+}
+
 export default async function DispatchPage({
   searchParams,
 }: {
@@ -139,6 +149,69 @@ export default async function DispatchPage({
       return groups;
     }, new Map<string, ManualDispatchJobRecord[]>()),
   );
+  const scheduledStops = [
+    ...scheduledLeads.map((lead) => ({ id: lead.id, technician: getTechName(lead), start: lead.scheduled_start })),
+    ...selectedManualJobs.map((job) => ({ id: job.id, technician: job.assigned_technician, start: job.scheduled_start })),
+  ].sort((left, right) => getScheduleTimestamp(left.start) - getScheduleTimestamp(right.start));
+  const stopNumbers = new Map<string, number>();
+  const stopCounts = new Map<string, number>();
+
+  for (const stop of scheduledStops) {
+    const nextNumber = (stopCounts.get(stop.technician) || 0) + 1;
+    stopCounts.set(stop.technician, nextNumber);
+    stopNumbers.set(stop.id, nextNumber);
+  }
+  const mapJobs = [
+    ...scheduledLeads.map((lead) => {
+      const technician = getTechName(lead);
+      const color = getDispatchTechnicianColor(technician, technicians);
+
+      return {
+        id: lead.id,
+        name: lead.name,
+        address: lead.service_address,
+        technician,
+        time: lead.scheduled_start ? formatTime(lead.scheduled_start) : "Time not set",
+        source: "hcp" as const,
+        sequence: stopNumbers.get(lead.id),
+        sortKey: getScheduleTimestamp(lead.scheduled_start),
+        markerIcon: color.markerIcon,
+        markerColor: color.markerColor,
+      };
+    }),
+    ...selectedManualJobs.map((job) => {
+      const color = getDispatchTechnicianColor(job.assigned_technician, technicians);
+
+      return {
+        id: job.id,
+        name: job.name,
+        address: job.service_address,
+        technician: job.assigned_technician,
+        time: formatTime(job.scheduled_start),
+        source: "manual" as const,
+        sequence: stopNumbers.get(job.id),
+        sortKey: getScheduleTimestamp(job.scheduled_start),
+        markerIcon: color.markerIcon,
+        markerColor: color.markerColor,
+      };
+    }),
+    ...unscheduledLeads.map((lead) => {
+      const technician = getTechName(lead);
+      const color = getDispatchTechnicianColor(technician, technicians);
+
+      return {
+        id: lead.id,
+        name: lead.name,
+        address: lead.service_address,
+        technician,
+        time: "Time not set",
+        source: "hcp" as const,
+        sortKey: Number.MAX_SAFE_INTEGER,
+        markerIcon: color.markerIcon,
+        markerColor: color.markerColor,
+      };
+    }),
+  ];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -190,32 +263,8 @@ export default async function DispatchPage({
         <div className="mt-6">
           <DispatchMap
             apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim()}
-            jobs={[
-              ...scheduledLeads.map((lead) => ({
-              id: lead.id,
-              name: lead.name,
-              address: lead.service_address,
-              technician: getTechName(lead),
-              time: lead.scheduled_start ? formatTime(lead.scheduled_start) : "Time not set",
-                source: "hcp" as const,
-              })),
-              ...selectedManualJobs.map((job) => ({
-                id: job.id,
-                name: job.name,
-                address: job.service_address,
-                technician: job.assigned_technician,
-                time: formatTime(job.scheduled_start),
-                source: "manual" as const,
-              })),
-              ...unscheduledLeads.map((lead) => ({
-                id: lead.id,
-                name: lead.name,
-                address: lead.service_address,
-                technician: getTechName(lead),
-                time: "Time not set",
-                source: "hcp" as const,
-              })),
-            ]}
+            maxMarkers={selectedTech ? 10 : 2}
+            jobs={mapJobs}
           />
         </div>
 
@@ -229,15 +278,18 @@ export default async function DispatchPage({
               <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-violet-900">{selectedManualJobs.length} Bozman Fix</span>
             </div>
             <div className="mt-4 grid gap-5 lg:grid-cols-2">
-              {manualGrouped.map(([technician, jobs]) => (
-                <section key={technician} className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-violet-950">{technician}</h3>
-                  <p className="mt-1 text-xs font-bold text-violet-700">{jobs.length} manual stop{jobs.length === 1 ? "" : "s"}</p>
+              {manualGrouped.map(([technician, jobs]) => {
+                const color = getDispatchTechnicianColor(technician, technicians);
+
+                return (
+                <section key={technician} className={`rounded-2xl border p-5 shadow-sm ${color.section}`}>
+                  <h3 className={`text-lg font-black ${color.heading}`}>{technician}</h3>
+                  <p className={`mt-1 text-xs font-bold ${color.muted}`}>{jobs.length} manual stop{jobs.length === 1 ? "" : "s"}</p>
                   <div className="mt-4 grid gap-3">
                     {jobs.map((job, index) => (
-                      <article key={job.id} className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+                      <article key={job.id} className={`rounded-xl border p-4 ${color.card}`}>
                         <div className="flex items-center gap-2">
-                          <p className="min-w-0 truncate text-sm font-black text-violet-950">{index + 1}. {job.name}</p>
+                          <p className={`min-w-0 truncate text-sm font-black ${color.heading}`}>{stopNumbers.get(job.id) || index + 1}. {job.name}</p>
                           <span className="shrink-0 rounded-full bg-violet-200 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-violet-900">Bozman Fix</span>
                         </div>
                         <p className="mt-1 text-xs font-bold text-violet-800">{formatTime(job.scheduled_start)}{job.scheduled_end ? ` – ${formatTime(job.scheduled_end)}` : ""}</p>
@@ -255,7 +307,8 @@ export default async function DispatchPage({
                     ))}
                   </div>
                 </section>
-              ))}
+                );
+              })}
             </div>
           </section>
         ) : null}
@@ -263,22 +316,23 @@ export default async function DispatchPage({
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           {grouped.map(([technician, technicianLeads]) => {
             const routeUrl = getRouteUrl(technicianLeads);
+            const color = getDispatchTechnicianColor(technician, technicians);
 
             return (
-              <section key={technician} className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
+              <section key={technician} className={`rounded-2xl border p-5 shadow-sm ${color.section}`}>
+                <div className={`flex items-center justify-between gap-3 border-b pb-3 ${color.section.split(" ")[0]}`}>
                   <div>
-                    <h2 className="text-xl font-black text-primary">{technician}</h2>
-                    <p className="mt-1 text-xs font-bold text-muted">{technicianLeads.length} planned stop{technicianLeads.length === 1 ? "" : "s"}</p>
+                    <h2 className={`text-xl font-black ${color.heading}`}>{technician}</h2>
+                    <p className={`mt-1 text-xs font-bold ${color.muted}`}>{technicianLeads.length} planned stop{technicianLeads.length === 1 ? "" : "s"}</p>
                   </div>
                   {routeUrl ? <a href={routeUrl} target="_blank" rel="noreferrer" className="rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground">Open route</a> : null}
                 </div>
                 <div className="mt-4 grid gap-3">
                   {technicianLeads.map((lead, index) => (
-                    <article key={lead.id} className="rounded-xl border border-border bg-slate-50 p-4">
+                    <article key={lead.id} className={`rounded-xl border p-4 ${color.card}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-primary">{index + 1}. {lead.name}</p>
+                          <p className={`text-sm font-black ${color.heading}`}>{stopNumbers.get(lead.id) || index + 1}. {lead.name}</p>
                           <p className="mt-1 text-xs font-bold text-muted">{formatTime(lead.scheduled_start,)}{lead.scheduled_end ? ` – ${formatTime(lead.scheduled_end)}` : ""}</p>
                         </div>
                         <Link href={`/admin/leads/${lead.id}`} className="text-xs font-black text-primary underline-offset-4 hover:underline">Open</Link>
