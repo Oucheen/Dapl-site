@@ -198,7 +198,7 @@ export function DispatchMap({ jobs, apiKey, maxMarkers = DEFAULT_MAX_MARKERS }: 
           </div>
         ))}
       </div>
-      <div ref={mapRef} className="h-[34rem] w-full bg-slate-100" aria-label="Dispatch jobs map" />
+      <div ref={mapRef} className="h-[26rem] w-full bg-slate-100" aria-label="Dispatch jobs map" />
     </div>
   );
 }
